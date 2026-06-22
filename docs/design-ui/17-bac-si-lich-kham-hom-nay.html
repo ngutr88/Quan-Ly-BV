@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MediCare HMS - Lịch khám hôm nay</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9ff;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#c2c6d4",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "inverse-primary": "#acc7ff",
+                        "tertiary-fixed": "#ffddb8",
+                        "surface-container": "#e5eeff",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "on-secondary-container": "#00714d",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-surface-variant": "#424752",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "on-background": "#0b1c30",
+                        "secondary-container": "#6cf8bb",
+                        "surface-variant": "#d3e4fe",
+                        "on-primary-fixed-variant": "#004491",
+                        "surface-container-low": "#eff4ff",
+                        "surface": "#f8f9ff",
+                        "on-surface": "#0b1c30",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-secondary-fixed-variant": "#005236",
+                        "primary-fixed": "#d7e2ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "on-tertiary-fixed": "#2a1700",
+                        "outline": "#727784",
+                        "tertiary-container": "#7d4e00",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#001a40",
+                        "on-primary-container": "#bbd0ff",
+                        "secondary": "#006c49",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#ffc57f",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#d3e4fe",
+                        "background": "#f8f9ff",
+                        "primary-fixed-dim": "#acc7ff",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#115cb9",
+                        "primary": "#003f87",
+                        "surface-bright": "#f8f9ff",
+                        "tertiary": "#5e3900",
+                        "on-secondary-fixed": "#002113",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary-container": "#0056b3",
+                        "inverse-surface": "#213145"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit-xs": "4px",
+                        "unit-xl": "48px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "unit-sm": "8px",
+                        "unit-md": "16px",
+                        "unit-lg": "24px",
+                        "margin-desktop": "40px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "caption": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface overflow-hidden h-screen flex">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-screen w-[280px] flex flex-col py-unit-lg bg-surface-container-lowest border-r border-outline-variant z-50">
+<div class="px-unit-lg mb-unit-xl">
+<h1 class="text-title-lg font-title-lg font-bold text-primary">MediCare Portal</h1>
+<p class="text-body-md font-body-md text-outline">Hệ thống bác sĩ</p>
+</div>
+<nav class="flex-1 space-y-unit-xs px-unit-sm overflow-y-auto">
+<!-- Active Tab: Lịch khám hôm nay -->
+<a class="flex items-center gap-unit-md px-unit-md py-unit-sm text-primary border-r-4 border-primary font-bold hover:bg-surface-container-low transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="text-label-md font-label-md">Lịch khám hôm nay</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-unit-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="folder_shared">folder_shared</span>
+<span class="text-label-md font-label-md">Hồ sơ bệnh nhân</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-unit-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="stethoscope">stethoscope</span>
+<span class="text-label-md font-label-md">Khám bệnh</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-unit-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="prescriptions">prescriptions</span>
+<span class="text-label-md font-label-md">Đơn thuốc</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-unit-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+<span class="text-label-md font-label-md">Tin nhắn</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-unit-sm text-on-surface-variant hover:bg-surface-container-low transition-colors duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="text-label-md font-label-md">Thống kê cá nhân</span>
+</a>
+</nav>
+<div class="mt-auto px-unit-lg">
+<button class="w-full bg-primary-container text-white py-unit-sm rounded-xl font-bold flex items-center justify-center gap-unit-sm hover:opacity-90 transition-all">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                Khám mới
+            </button>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0 ml-[280px]">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 flex justify-between items-center px-unit-lg h-[64px] bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-unit-lg">
+<span class="text-headline-md font-headline-md font-black text-primary">MediCare HMS</span>
+<div class="relative w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Tìm kiếm bệnh nhân..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-unit-lg">
+<div class="flex items-center gap-unit-sm text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="event">event</span>
+<span class="text-label-md font-label-md">Thứ 3, 24 Tháng 5, 2024</span>
+</div>
+<div class="flex items-center gap-unit-sm">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="schedule">schedule</span>
+</button>
+</div>
+<div class="flex items-center gap-unit-md border-l border-outline-variant pl-unit-lg">
+<div class="text-right">
+<p class="text-label-md font-label-md font-bold text-on-surface">BS. Nguyễn Văn A</p>
+<p class="text-caption text-outline">Khoa Nội Tổng Quát</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary object-cover" data-alt="A professional close-up portrait of a male doctor in a clean white lab coat, smiling with confidence. He is standing against a soft blue clinical background with high-key lighting. The style is modern corporate photography, clean and polished, highlighting trust and medical authority within a bright healthcare setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDh3LBCOW6-4YpP3vahFHINOQdzc2R7f-UWazHJk54D_XyFo-OW_L7-L7eUHO4uHhe2cG3gQmN1NV_R2xUho9plnkUxc4uPeXdMrvvM8ScXD2w5fPQ-bnjzFmhQYeOz_EvioK7p5W4xCIejKCwhCnAIsFny6oLTv17CmaCRedbhyrAamTNmaC_gmc27A8E0VyFilJVrcxsiYUgTIgHLN9BvApaIPU_tJMTD4wX_KUXxW25hYjQ_jrrLDMaulFuiDGd9ryJDo3x-kls"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-hidden p-unit-lg flex gap-unit-lg">
+<!-- Left Column: Appointments List -->
+<section class="w-[45%] flex flex-col gap-unit-lg min-w-0">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-headline-md font-headline-md text-on-surface">Lịch khám hôm nay</h2>
+<p class="text-body-md text-outline">Tổng cộng: 24 bệnh nhân</p>
+</div>
+<div class="flex gap-unit-sm">
+<button class="px-unit-sm py-unit-xs border border-outline-variant rounded-lg flex items-center gap-unit-xs text-label-md hover:bg-surface-container-low">
+<span class="material-symbols-outlined text-[18px]" data-icon="filter_list">filter_list</span> Lọc
+                        </button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar pr-unit-xs flex flex-col gap-unit-lg">
+<!-- Session Group: Morning -->
+<div class="space-y-unit-md">
+<div class="flex items-center gap-unit-md">
+<div class="h-[1px] flex-1 bg-outline-variant"></div>
+<span class="text-label-md font-label-md text-outline uppercase tracking-wider">Sáng (08:00 - 12:00)</span>
+<div class="h-[1px] flex-1 bg-outline-variant"></div>
+</div>
+<!-- Appointment Card: Completed -->
+<div class="bg-white border border-outline-variant rounded-xl p-unit-md hover:border-primary transition-all cursor-pointer group relative">
+<div class="flex justify-between items-start mb-unit-sm">
+<div class="flex gap-unit-md items-center">
+<div class="bg-surface-container-low px-unit-sm py-unit-xs rounded text-primary font-bold text-label-md">01</div>
+<span class="text-label-md font-label-md font-bold text-on-surface">08:00 - 08:30</span>
+</div>
+<span class="px-unit-sm py-unit-xs bg-secondary/15 text-secondary rounded-lg text-label-md">Hoàn thành</span>
+</div>
+<h3 class="text-title-lg font-title-lg text-on-surface mb-unit-xs">Trần Hoàng Long</h3>
+<div class="flex justify-between items-end">
+<p class="text-body-md text-outline">32 tuổi • Nam • Khám sức khỏe định kỳ</p>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Appointment Card: In Progress -->
+<div class="bg-white border-2 border-primary rounded-xl p-unit-md shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+<div class="flex justify-between items-start mb-unit-sm">
+<div class="flex gap-unit-md items-center">
+<div class="bg-primary text-white px-unit-sm py-unit-xs rounded font-bold text-label-md">02</div>
+<span class="text-label-md font-label-md font-bold text-primary">08:30 - 09:00</span>
+</div>
+<span class="px-unit-sm py-unit-xs bg-primary/15 text-primary rounded-lg text-label-md animate-pulse">Đang khám</span>
+</div>
+<h3 class="text-title-lg font-title-lg text-on-surface mb-unit-xs">Lê Thị Minh Khai</h3>
+<div class="flex justify-between items-end">
+<p class="text-body-md text-outline">58 tuổi • Nữ • Đau ngực trái, khó thở</p>
+<span class="material-symbols-outlined text-primary" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Appointment Card: Waiting -->
+<div class="bg-white border border-outline-variant rounded-xl p-unit-md hover:border-primary transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-unit-sm">
+<div class="flex gap-unit-md items-center">
+<div class="bg-surface-container-low px-unit-sm py-unit-xs rounded text-primary font-bold text-label-md">03</div>
+<span class="text-label-md font-label-md font-bold text-on-surface">09:00 - 09:30</span>
+</div>
+<span class="px-unit-sm py-unit-xs bg-tertiary/15 text-tertiary rounded-lg text-label-md">Đang chờ</span>
+</div>
+<h3 class="text-title-lg font-title-lg text-on-surface mb-unit-xs">Nguyễn Mạnh Hùng</h3>
+<div class="flex justify-between items-end">
+<p class="text-body-md text-outline">45 tuổi • Nam • Tái khám cao huyết áp</p>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Appointment Card: Alert/Not Checked In -->
+<div class="bg-error-container/20 border border-error/30 rounded-xl p-unit-md group">
+<div class="flex justify-between items-start mb-unit-sm">
+<div class="flex gap-unit-md items-center">
+<div class="bg-error/10 text-error px-unit-sm py-unit-xs rounded font-bold text-label-md">04</div>
+<span class="text-label-md font-label-md font-bold text-on-surface">09:30 - 10:00</span>
+</div>
+<div class="flex items-center gap-unit-xs text-error">
+<span class="material-symbols-outlined text-[18px]" data-icon="report">report</span>
+<span class="text-label-md font-label-md">Chưa check-in</span>
+</div>
+</div>
+<h3 class="text-title-lg font-title-lg text-on-surface mb-unit-xs">Phạm Văn Đồng</h3>
+<p class="text-body-md text-outline">27 tuổi • Nam • Viêm họng cấp</p>
+</div>
+</div>
+<!-- Session Group: Afternoon -->
+<div class="space-y-unit-md">
+<div class="flex items-center gap-unit-md">
+<div class="h-[1px] flex-1 bg-outline-variant"></div>
+<span class="text-label-md font-label-md text-outline uppercase tracking-wider">Chiều (13:30 - 17:30)</span>
+<div class="h-[1px] flex-1 bg-outline-variant"></div>
+</div>
+<!-- Waiting Card -->
+<div class="bg-white border border-outline-variant rounded-xl p-unit-md hover:border-primary transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-unit-sm">
+<div class="flex gap-unit-md items-center">
+<div class="bg-surface-container-low px-unit-sm py-unit-xs rounded text-primary font-bold text-label-md">05</div>
+<span class="text-label-md font-label-md font-bold text-on-surface">13:30 - 14:00</span>
+</div>
+<span class="px-unit-sm py-unit-xs bg-outline-variant/30 text-outline rounded-lg text-label-md">Đã xác nhận</span>
+</div>
+<h3 class="text-title-lg font-title-lg text-on-surface mb-unit-xs">Vũ Thị Lan</h3>
+<div class="flex justify-between items-end">
+<p class="text-body-md text-outline">19 tuổi • Nữ • Kiểm tra da liễu</p>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Detail View -->
+<section class="flex-1 min-w-0 bg-white border border-outline-variant rounded-2xl overflow-hidden flex flex-col">
+<div class="p-unit-lg bg-surface border-b border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-unit-md">
+<img class="w-16 h-16 rounded-full border-2 border-primary-container object-cover" data-alt="A portrait of an elderly Vietnamese woman with silver hair, looking calm and patient. Her face shows wisdom and dignity. She is wearing a soft pastel blouse. The photo is shot with a shallow depth of field, using warm, natural lighting to create a compassionate and humane medical environment aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-4_swmRIL2IKtNKRo_EkorCEUdQcv3E3Uk2-3uQagyNFRV-_X1H4PWRQ6NH1HS2Fesd9Ta0PBmLPP2nbzvw_JsO0KH7TObOsiWX1hVcTX06qK7IFy1MQ84Y19LqXon-zoct856ITJNdnX1LNxiMaU5du2Vs4jawJwGR0f1210gxS1VQ4ruZgFA0Mk3QQc34b_TE1Dyr3s7ClsHxUPICRjkA91LSME_5AmaROR7d0hJDQkvklQDXlhsbvftu35ZRwrY06s3gwmA3s"/>
+<div>
+<h3 class="text-headline-md font-headline-md text-on-surface">Lê Thị Minh Khai</h3>
+<p class="text-body-lg font-body-lg text-outline">BN-2024-8892 • 58 tuổi • Nữ</p>
+</div>
+</div>
+<div class="flex gap-unit-md">
+<button class="bg-white text-primary border border-primary px-unit-lg py-unit-sm rounded-xl font-bold hover:bg-surface-container-low transition-all">Xem hồ sơ</button>
+<button class="bg-primary text-white px-unit-lg py-unit-sm rounded-xl font-bold shadow-md hover:bg-primary-container transition-all">Bắt đầu khám</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar p-unit-lg space-y-unit-xl">
+<!-- Patient Summary Bento Section -->
+<div class="grid grid-cols-2 gap-unit-lg">
+<div class="bg-surface-container-low p-unit-md rounded-xl border border-outline-variant">
+<h4 class="text-label-md font-label-md text-outline mb-unit-sm uppercase">Lý do thăm khám</h4>
+<p class="text-body-lg font-body-lg text-on-surface font-medium italic">"Bị đau thắt vùng ngực trái thường xuyên trong 2 ngày qua, cảm thấy khó thở khi vận động mạnh."</p>
+</div>
+<div class="bg-surface-container-low p-unit-md rounded-xl border border-outline-variant flex flex-col justify-center">
+<div class="flex items-center gap-unit-sm text-primary mb-unit-xs">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="text-label-md font-label-md font-bold">Lần khám cuối</span>
+</div>
+<p class="text-body-md text-on-surface">15/03/2024 • Khoa Nội Tổng Quát</p>
+<p class="text-caption text-outline">Chẩn đoán: Rối loạn lipid máu, trào ngược dạ dày.</p>
+</div>
+</div>
+<!-- Critical Alerts -->
+<div class="space-y-unit-md">
+<h4 class="text-title-lg font-title-lg text-on-surface flex items-center gap-unit-sm">
+<span class="material-symbols-outlined text-error" data-icon="warning">warning</span>
+                            Cảnh báo quan trọng
+                        </h4>
+<div class="flex gap-unit-md overflow-x-auto pb-unit-xs">
+<div class="min-w-[200px] bg-error-container/30 border border-error/20 p-unit-md rounded-xl">
+<p class="text-label-md font-label-md text-error mb-1">DỊ ỨNG</p>
+<p class="text-title-lg font-bold text-on-error-container">Penicillin</p>
+</div>
+<div class="min-w-[200px] bg-tertiary-fixed/30 border border-tertiary/20 p-unit-md rounded-xl">
+<p class="text-label-md font-label-md text-tertiary mb-1">TIỀN SỬ BỆNH</p>
+<p class="text-title-lg font-bold text-on-tertiary-fixed-variant">Huyết áp cao (Gđ 2)</p>
+</div>
+</div>
+</div>
+<!-- Vital Signs -->
+<div class="space-y-unit-md">
+<h4 class="text-title-lg font-title-lg text-on-surface">Chỉ số sinh tồn (Cập nhật 08:35)</h4>
+<div class="grid grid-cols-4 gap-unit-md">
+<div class="border border-outline-variant p-unit-md rounded-xl flex flex-col items-center">
+<span class="material-symbols-outlined text-primary mb-unit-xs" data-icon="favorite">favorite</span>
+<p class="text-caption text-outline">Nhịp tim</p>
+<p class="text-title-lg font-bold">82 <span class="text-body-md font-normal">bpm</span></p>
+</div>
+<div class="border border-outline-variant p-unit-md rounded-xl flex flex-col items-center">
+<span class="material-symbols-outlined text-error mb-unit-xs" data-icon="blood_pressure">blood_pressure</span>
+<p class="text-caption text-outline">Huyết áp</p>
+<p class="text-title-lg font-bold text-error">145/90 <span class="text-body-md font-normal">mmHg</span></p>
+</div>
+<div class="border border-outline-variant p-unit-md rounded-xl flex flex-col items-center">
+<span class="material-symbols-outlined text-secondary mb-unit-xs" data-icon="thermostat">thermostat</span>
+<p class="text-caption text-outline">Nhiệt độ</p>
+<p class="text-title-lg font-bold">36.8 <span class="text-body-md font-normal">°C</span></p>
+</div>
+<div class="border border-outline-variant p-unit-md rounded-xl flex flex-col items-center">
+<span class="material-symbols-outlined text-primary mb-unit-xs" data-icon="monitor_weight">monitor_weight</span>
+<p class="text-caption text-outline">BMI</p>
+<p class="text-title-lg font-bold">24.5</p>
+</div>
+</div>
+</div>
+<!-- Timeline of last treatments -->
+<div class="space-y-unit-md">
+<h4 class="text-title-lg font-title-lg text-on-surface">Lịch sử điều trị gần đây</h4>
+<div class="relative pl-unit-lg border-l-2 border-outline-variant space-y-unit-lg">
+<div class="relative">
+<div class="absolute -left-[33px] top-0 w-4 h-4 rounded-full bg-primary border-2 border-white"></div>
+<p class="text-label-md font-bold text-primary">15 THÁNG 03, 2024</p>
+<p class="text-body-md font-bold text-on-surface">Nội soi dạ dày &amp; Xét nghiệm máu</p>
+<p class="text-caption text-outline">BS. Trần Quốc Toản • Chẩn đoán: Viêm loét dạ dày nhẹ.</p>
+</div>
+<div class="relative">
+<div class="absolute -left-[33px] top-0 w-4 h-4 rounded-full bg-outline-variant border-2 border-white"></div>
+<p class="text-label-md font-bold text-outline">22 THÁNG 12, 2023</p>
+<p class="text-body-md text-on-surface">Tiêm chủng cúm mùa</p>
+<p class="text-caption text-outline">Y tá Trịnh Thu Thảo.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="p-unit-lg bg-surface border-t border-outline-variant flex justify-end">
+<p class="text-caption text-outline">Bệnh nhân đang chờ tại: <b>Phòng khám 102 - Tầng 1</b></p>
+</div>
+</section>
+</main>
+</div>
+<!-- Floating Action Button (Contextual) -->
+<button class="fixed bottom-unit-lg right-unit-lg w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50 md:flex hidden">
+<span class="material-symbols-outlined" data-icon="edit_square">edit_square</span>
+</button>
+<script>
+        // Simple micro-interaction for active cards
+        document.querySelectorAll('.cursor-pointer').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.border-primary').forEach(c => {
+                    if(!c.classList.contains('absolute')) {
+                        c.classList.remove('border-primary', 'border-2');
+                        c.classList.add('border-outline-variant', 'border');
+                    }
+                });
+                this.classList.remove('border-outline-variant', 'border');
+                this.classList.add('border-primary', 'border-2');
+            });
+        });
+    </script>
+</body></html>

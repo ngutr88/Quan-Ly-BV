@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HMS Admin - Quản lý thuốc &amp; Kho</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#f8f9ff",
+                        "on-secondary-fixed": "#002113",
+                        "on-error": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#2a1700",
+                        "tertiary-fixed": "#ffddb8",
+                        "surface-variant": "#d3e4fe",
+                        "on-primary-container": "#bbd0ff",
+                        "inverse-primary": "#acc7ff",
+                        "surface-container-low": "#eff4ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-primary-fixed-variant": "#004491",
+                        "surface-container": "#e5eeff",
+                        "secondary-fixed-dim": "#4edea3",
+                        "primary-fixed": "#d7e2ff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "primary-fixed-dim": "#acc7ff",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#0056b3",
+                        "outline-variant": "#c2c6d4",
+                        "tertiary-container": "#7d4e00",
+                        "on-surface-variant": "#424752",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "tertiary": "#5e3900",
+                        "outline": "#727784",
+                        "on-tertiary-container": "#ffc57f",
+                        "on-secondary-fixed-variant": "#005236",
+                        "primary": "#003f87",
+                        "background": "#f8f9ff",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-surface": "#0b1c30",
+                        "on-secondary-container": "#00714d",
+                        "surface-container-high": "#dce9ff",
+                        "secondary": "#006c49",
+                        "secondary-container": "#6cf8bb",
+                        "on-background": "#0b1c30",
+                        "on-primary-fixed": "#001a40",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-tint": "#115cb9",
+                        "surface-container-highest": "#d3e4fe",
+                        "inverse-surface": "#213145"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit-lg": "24px",
+                        "unit-xl": "48px",
+                        "margin-mobile": "16px",
+                        "unit-sm": "8px",
+                        "unit-md": "16px",
+                        "margin-desktop": "40px",
+                        "unit-xs": "4px",
+                        "container-max": "1440px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "caption": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9ff; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- SideNavBar -->
+<aside class="w-[280px] h-screen fixed left-0 top-0 flex flex-col h-full py-unit-md bg-surface-container-lowest dark:bg-inverse-surface border-r border-outline-variant dark:border-outline z-20">
+<div class="px-unit-md mb-unit-lg">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-primary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+</div>
+<div>
+<h1 class="font-title-lg text-title-lg font-bold text-primary dark:text-primary-fixed leading-tight">HMS Admin</h1>
+<p class="text-xs text-on-surface-variant opacity-70">Clinical Clarity System</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-unit-sm space-y-1 custom-scrollbar overflow-y-auto">
+<!-- Dashboard -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<!-- Appointments -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span>Appointments</span>
+</a>
+<!-- Doctors -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span>Doctors</span>
+</a>
+<!-- Patients -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">person</span>
+<span>Patients</span>
+</a>
+<!-- Departments -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">corporate_fare</span>
+<span>Departments</span>
+</a>
+<!-- Pharmacy (ACTIVE) -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-surface-container dark:bg-secondary-container text-primary dark:text-on-secondary-container font-semibold font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medication</span>
+<span>Pharmacy</span>
+</a>
+<!-- Invoices -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span>Invoices</span>
+</a>
+<!-- HR -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>HR</span>
+</a>
+<!-- Reports -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span>Reports</span>
+</a>
+<!-- Settings -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low transition-colors font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="px-unit-md pt-4 mt-auto border-t border-outline-variant">
+<div class="flex items-center gap-3 mb-2">
+<img class="w-10 h-10 rounded-full border border-outline-variant object-cover" data-alt="A professional medical administrator headshot with a friendly smile, set against a blurred clinical background. High-key lighting emphasizing clarity and competence, using the HMS primary blue tones in the professional attire. Modern corporate photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhKasmhQd1-7XLyBfCXhdtQRolI2lHQIyfosmdOw6EtplPA0qbDSzyXjOJCqjWlAW68spRx6efF-zhASYrDws6OitLgS-zcYza00JkTt-y2U-GKTyZvwm8Gul8eQq7EIO-eJX1H2P3dKwGB17k-LVNCpbFLeJvgcS3bJ-D4gZzuXGcKkTRV6VHdogGXjzRT7qO2VwHKFks3HLf6TVYicWIuZzxo9neFJ8IPqzSkxAPbA9_OrXxHeUYNFh0a-f_fMned33Y24VYKeI"/>
+<div class="overflow-hidden">
+<p class="text-sm font-semibold truncate">Admin User</p>
+<p class="text-xs text-on-surface-variant truncate">System Overlord</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="h-[64px] fixed top-0 right-0 left-[280px] z-10 bg-surface-container-lowest dark:bg-inverse-surface flex justify-between items-center px-unit-lg w-full border-b border-outline-variant dark:border-outline">
+<div class="flex items-center gap-4">
+<nav aria-label="Breadcrumb" class="flex text-xs font-medium text-on-surface-variant space-x-2">
+<a class="hover:text-primary" href="#">Dashboard</a>
+<span>/</span>
+<span class="text-primary font-bold">Thuốc &amp; Kho</span>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative w-64 group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full pl-10 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all" placeholder="Tìm kiếm hệ thống..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="pl-[280px] pt-[64px] min-h-screen">
+<div class="p-unit-lg max-w-[1440px] mx-auto space-y-unit-lg">
+<!-- Alert Banner -->
+<div class="flex items-center gap-4 p-4 bg-error-container text-on-error-container rounded-lg border border-error/20 shadow-sm animate-pulse">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div class="flex-1">
+<p class="font-semibold text-sm">Cảnh báo tồn kho!</p>
+<p class="text-xs opacity-90">Có 32 mặt hàng đang ở mức dưới ngưỡng an toàn hoặc đã hết hạn. Vui lòng kiểm tra và nhập thêm hàng.</p>
+</div>
+<button class="px-4 py-1.5 bg-error text-white text-xs font-bold rounded hover:bg-opacity-90 transition-all uppercase tracking-wider">Xử lý ngay</button>
+</div>
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Quản lý thuốc</h2>
+<p class="font-body-md text-on-surface-variant">Theo dõi thuốc, quản lý kho và báo cáo tồn kho định kỳ.</p>
+</div>
+<div class="flex flex-wrap gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border border-primary text-primary hover:bg-primary-fixed-dim transition-all rounded-lg font-label-md text-label-md">
+<span class="material-symbols-outlined">description</span>
+                        Xuất báo cáo tồn kho
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 border border-primary text-primary hover:bg-primary-fixed-dim transition-all rounded-lg font-label-md text-label-md">
+<span class="material-symbols-outlined">input</span>
+                        Nhập kho
+                    </button>
+<button class="flex items-center gap-2 px-5 py-2 bg-primary-container text-white hover:bg-primary transition-all rounded-lg font-label-md text-label-md shadow-sm">
+<span class="material-symbols-outlined">add</span>
+                        Thêm thuốc
+                    </button>
+</div>
+</div>
+<!-- KPI Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<div class="bg-white p-unit-md border border-outline-variant rounded-lg flex items-center gap-4 transition-transform hover:scale-[1.02]">
+<div class="w-12 h-12 bg-surface-container flex items-center justify-center rounded-full text-primary">
+<span class="material-symbols-outlined text-[28px]">inventory_2</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Total Items</p>
+<p class="font-headline-md text-headline-md font-bold">1,245 <span class="text-sm font-medium text-on-surface-variant">loại thuốc</span></p>
+</div>
+</div>
+<div class="bg-white p-unit-md border border-outline-variant border-l-4 border-l-secondary-fixed rounded-lg flex items-center gap-4 transition-transform hover:scale-[1.02]">
+<div class="w-12 h-12 bg-secondary-container flex items-center justify-center rounded-full text-on-secondary-container">
+<span class="material-symbols-outlined text-[28px]">low_priority</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Low Stock</p>
+<p class="font-headline-md text-headline-md font-bold text-on-secondary-container">24 <span class="text-sm font-medium opacity-80">sắp hết hàng</span></p>
+</div>
+</div>
+<div class="bg-white p-unit-md border border-outline-variant border-l-4 border-l-error rounded-lg flex items-center gap-4 transition-transform hover:scale-[1.02]">
+<div class="w-12 h-12 bg-error-container flex items-center justify-center rounded-full text-error">
+<span class="material-symbols-outlined text-[28px]">emergency</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Out of Stock</p>
+<p class="font-headline-md text-headline-md font-bold text-error">08 <span class="text-sm font-medium opacity-80">hết hàng</span></p>
+</div>
+</div>
+<div class="bg-white p-unit-md border border-outline-variant border-l-4 border-l-tertiary rounded-lg flex items-center gap-4 transition-transform hover:scale-[1.02]">
+<div class="w-12 h-12 bg-tertiary-fixed flex items-center justify-center rounded-full text-tertiary">
+<span class="material-symbols-outlined text-[28px]">event_busy</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-on-surface-variant uppercase tracking-widest">Expiring Soon</p>
+<p class="font-headline-md text-headline-md font-bold text-tertiary">12 <span class="text-sm font-medium opacity-80">sắp hết hạn</span></p>
+</div>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="bg-white p-4 border border-outline-variant rounded-lg flex flex-wrap gap-4 items-end">
+<div class="flex-1 min-w-[200px]">
+<label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Tìm kiếm</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 border border-outline-variant rounded text-sm focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Tên thuốc, SKU, hoạt chất..." type="text"/>
+</div>
+</div>
+<div class="w-full sm:w-48">
+<label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Nhóm thuốc</label>
+<select class="w-full border border-outline-variant rounded text-sm p-2 focus:ring-1 focus:ring-primary">
+<option>Tất cả nhóm</option>
+<option>Kháng sinh</option>
+<option>Giảm đau</option>
+<option>Vitamin</option>
+</select>
+</div>
+<div class="w-full sm:w-48">
+<label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Nhà sản xuất</label>
+<select class="w-full border border-outline-variant rounded text-sm p-2 focus:ring-1 focus:ring-primary">
+<option>Tất cả NSX</option>
+<option>Sanofi</option>
+<option>Abbott</option>
+<option>DHG</option>
+</select>
+</div>
+<div class="w-full sm:w-48">
+<label class="block text-xs font-bold text-on-surface-variant uppercase mb-1">Trạng thái</label>
+<select class="w-full border border-outline-variant rounded text-sm p-2 focus:ring-1 focus:ring-primary">
+<option>Tất cả trạng thái</option>
+<option>Còn hàng</option>
+<option>Sắp hết</option>
+<option>Hết hàng</option>
+</select>
+</div>
+<button class="px-6 py-2 bg-surface-container text-primary font-semibold rounded hover:bg-surface-container-high transition-colors text-sm">
+                    Lọc dữ liệu
+                </button>
+</div>
+<!-- Data Table -->
+<div class="bg-white border border-outline-variant rounded-lg overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="p-4 text-xs font-bold text-on-surface-variant uppercase whitespace-nowrap">SKU</th>
+<th class="p-4 text-xs font-bold text-on-surface-variant uppercase whitespace-nowrap">Tên thuốc</th>
+<th class="p-4 text-xs font-bold text-on-surface-variant uppercase whitespace-nowrap">Hoạt chất</th>
+<th class="p-4 text-xs font-bold text-on-surface-variant uppercase whitespace-nowrap text-center">ĐVT / Dạng</th>
+<th class="p-4 text-xs font-bold text-on-surface-variant uppercase whitespace-nowrap">Nhà sản xuất</th>
+<th class="p-4 text-xs font-bold text-on-surface-variant uppercase whitespace-nowrap text-right">Tồn hiện tại</th>
+<th class="p-4 text-xs font-bold text-on-surface-variant uppercase whitespace-nowrap text-right">Giá bán</th>
+<th class="p-4 text-xs font-bold text-on-surface-variant uppercase whitespace-nowrap text-center">Trạng thái</th>
+<th class="p-4 text-xs font-bold text-on-surface-variant uppercase whitespace-nowrap text-right">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1: Paracetamol -->
+<tr class="hover:bg-surface transition-colors">
+<td class="p-4 font-mono text-xs text-on-surface-variant">MED-00123</td>
+<td class="p-4 font-semibold text-primary">Paracetamol 500mg</td>
+<td class="p-4 font-body-md italic text-on-surface-variant">Paracetamol</td>
+<td class="p-4 text-center">
+<div class="flex flex-col items-center">
+<span class="text-sm font-medium">Viên</span>
+<span class="text-[10px] text-on-surface-variant opacity-70">Viên nén</span>
+</div>
+</td>
+<td class="p-4 text-sm">Sanofi</td>
+<td class="p-4 text-right">
+<div class="flex flex-col">
+<span class="font-bold text-primary">5,000</span>
+<span class="text-[10px] text-on-surface-variant">Min: 500</span>
+</div>
+</td>
+<td class="p-4 text-right font-semibold text-sm">1,200đ</td>
+<td class="p-4 text-center">
+<span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-secondary-container/30 text-secondary border border-secondary/20">Còn hàng</span>
+</td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-1">
+<button class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded transition-all" title="View Details"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+<button class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-all" title="Stock In"><span class="material-symbols-outlined text-[20px]">add_business</span></button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded transition-all" title="More Actions"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Amoxicillin -->
+<tr class="hover:bg-surface transition-colors bg-secondary-container/5">
+<td class="p-4 font-mono text-xs text-on-surface-variant">MED-00124</td>
+<td class="p-4 font-semibold text-primary">Amoxicillin 250mg</td>
+<td class="p-4 font-body-md italic text-on-surface-variant">Amoxicillin</td>
+<td class="p-4 text-center">
+<div class="flex flex-col items-center">
+<span class="text-sm font-medium">Hộp</span>
+<span class="text-[10px] text-on-surface-variant opacity-70">Bột pha</span>
+</div>
+</td>
+<td class="p-4 text-sm">Abbott</td>
+<td class="p-4 text-right">
+<div class="flex flex-col">
+<span class="font-bold text-on-secondary-container">15</span>
+<span class="text-[10px] text-error font-semibold">Min: 50</span>
+</div>
+</td>
+<td class="p-4 text-right font-semibold text-sm">85,000đ</td>
+<td class="p-4 text-center">
+<span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-tertiary-fixed text-tertiary border border-tertiary/20">Sắp hết</span>
+</td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-1">
+<button class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded transition-all" title="View Details"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+<button class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-all" title="Stock In"><span class="material-symbols-outlined text-[20px]">add_business</span></button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded transition-all" title="More Actions"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Vitamin C -->
+<tr class="hover:bg-surface transition-colors bg-error-container/5">
+<td class="p-4 font-mono text-xs text-on-surface-variant">MED-00125</td>
+<td class="p-4 font-semibold text-primary">Vitamin C 1000mg</td>
+<td class="p-4 font-body-md italic text-on-surface-variant">Ascorbic Acid</td>
+<td class="p-4 text-center">
+<div class="flex flex-col items-center">
+<span class="text-sm font-medium">Lọ</span>
+<span class="text-[10px] text-on-surface-variant opacity-70">Sủi</span>
+</div>
+</td>
+<td class="p-4 text-sm">DHG</td>
+<td class="p-4 text-right">
+<div class="flex flex-col">
+<span class="font-bold text-error">0</span>
+<span class="text-[10px] text-error font-semibold">Min: 20</span>
+</div>
+</td>
+<td class="p-4 text-right font-semibold text-sm">45,000đ</td>
+<td class="p-4 text-center">
+<span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-error-container text-error border border-error/20">Hết hàng</span>
+</td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-1">
+<button class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded transition-all" title="View Details"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+<button class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-all" title="Stock In"><span class="material-symbols-outlined text-[20px]">add_business</span></button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded transition-all" title="More Actions"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Example Expiring -->
+<tr class="hover:bg-surface transition-colors">
+<td class="p-4 font-mono text-xs text-on-surface-variant">MED-00126</td>
+<td class="p-4 font-semibold text-primary">Ibuprofen 400mg</td>
+<td class="p-4 font-body-md italic text-on-surface-variant">Ibuprofen</td>
+<td class="p-4 text-center">
+<div class="flex flex-col items-center">
+<span class="text-sm font-medium">Viên</span>
+<span class="text-[10px] text-on-surface-variant opacity-70">Viên nang</span>
+</div>
+</td>
+<td class="p-4 text-sm">Pharmedic</td>
+<td class="p-4 text-right">
+<div class="flex flex-col">
+<span class="font-bold">1,200</span>
+<span class="text-[10px] text-on-surface-variant">Min: 100</span>
+</div>
+</td>
+<td class="p-4 text-right font-semibold text-sm">2,500đ</td>
+<td class="p-4 text-center">
+<span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-tertiary-fixed text-on-tertiary-fixed-variant border border-tertiary/20">Sắp hết hạn</span>
+</td>
+<td class="p-4 text-right">
+<div class="flex justify-end gap-1">
+<button class="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container rounded transition-all" title="View Details"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+<button class="p-1.5 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded transition-all" title="Stock In"><span class="material-symbols-outlined text-[20px]">add_business</span></button>
+<button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded transition-all" title="More Actions"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-4 border-t border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<p class="text-xs text-on-surface-variant">Hiển thị 1-10 của 1,245 mặt hàng</p>
+<div class="flex gap-1">
+<button class="px-3 py-1 border border-outline-variant rounded text-xs hover:bg-surface-container transition-all">Trước</button>
+<button class="px-3 py-1 bg-primary text-white rounded text-xs font-bold">1</button>
+<button class="px-3 py-1 border border-outline-variant rounded text-xs hover:bg-surface-container transition-all">2</button>
+<button class="px-3 py-1 border border-outline-variant rounded text-xs hover:bg-surface-container transition-all">3</button>
+<span class="px-2 py-1 text-xs">...</span>
+<button class="px-3 py-1 border border-outline-variant rounded text-xs hover:bg-surface-container transition-all">125</button>
+<button class="px-3 py-1 border border-outline-variant rounded text-xs hover:bg-surface-container transition-all">Sau</button>
+</div>
+</div>
+</div>
+<!-- Dashboard Analytics Bottom Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter pb-unit-xl">
+<!-- Stock Movement Trend -->
+<div class="lg:col-span-2 bg-white border border-outline-variant rounded-lg p-unit-md">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-title-lg text-title-lg font-bold text-on-surface">Biến động nhập xuất (7 ngày qua)</h3>
+<button class="text-primary text-xs font-semibold hover:underline">Xem chi tiết</button>
+</div>
+<div class="h-48 flex items-end justify-between gap-2 px-2">
+<!-- Simplified bar chart -->
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full flex flex-col items-center gap-1">
+<div class="w-4 bg-primary-container rounded-t h-32"></div>
+<div class="w-4 bg-secondary rounded-t h-16"></div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">T2</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full flex flex-col items-center gap-1">
+<div class="w-4 bg-primary-container rounded-t h-24"></div>
+<div class="w-4 bg-secondary rounded-t h-28"></div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">T3</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full flex flex-col items-center gap-1">
+<div class="w-4 bg-primary-container rounded-t h-40"></div>
+<div class="w-4 bg-secondary rounded-t h-10"></div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">T4</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full flex flex-col items-center gap-1">
+<div class="w-4 bg-primary-container rounded-t h-20"></div>
+<div class="w-4 bg-secondary rounded-t h-32"></div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">T5</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full flex flex-col items-center gap-1">
+<div class="w-4 bg-primary-container rounded-t h-36"></div>
+<div class="w-4 bg-secondary rounded-t h-15"></div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">T6</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full flex flex-col items-center gap-1">
+<div class="w-4 bg-primary-container rounded-t h-12"></div>
+<div class="w-4 bg-secondary rounded-t h-5"></div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">T7</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full flex flex-col items-center gap-1">
+<div class="w-4 bg-primary-container rounded-t h-8"></div>
+<div class="w-4 bg-secondary rounded-t h-4"></div>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">CN</span>
+</div>
+</div>
+<div class="mt-4 flex justify-center gap-6 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+<div class="flex items-center gap-2"><span class="w-3 h-3 bg-primary-container rounded-sm"></span> Nhập kho</div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 bg-secondary rounded-sm"></span> Xuất kho</div>
+</div>
+</div>
+<!-- Recent Logs -->
+<div class="bg-white border border-outline-variant rounded-lg p-unit-md overflow-hidden">
+<h3 class="font-title-lg text-title-lg font-bold text-on-surface mb-4">Hoạt động gần đây</h3>
+<div class="space-y-4">
+<div class="flex gap-3 pb-3 border-b border-outline-variant last:border-0">
+<div class="w-8 h-8 bg-surface-container rounded flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-sm">history</span>
+</div>
+<div>
+<p class="text-xs font-bold">Admin A nhập 500 hộp Paracetamol</p>
+<p class="text-[10px] text-on-surface-variant">10 phút trước • Kho chính</p>
+</div>
+</div>
+<div class="flex gap-3 pb-3 border-b border-outline-variant last:border-0">
+<div class="w-8 h-8 bg-error-container rounded flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-error text-sm">report</span>
+</div>
+<div>
+<p class="text-xs font-bold">Cảnh báo: Vitamin C hết hàng</p>
+<p class="text-[10px] text-on-surface-variant">1 giờ trước • Tự động</p>
+</div>
+</div>
+<div class="flex gap-3 pb-3 border-b border-outline-variant last:border-0">
+<div class="w-8 h-8 bg-surface-container rounded flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-sm">print</span>
+</div>
+<div>
+<p class="text-xs font-bold">Đã xuất báo cáo tồn kho tháng 9</p>
+<p class="text-[10px] text-on-surface-variant">3 giờ trước • Admin B</p>
+</div>
+</div>
+<div class="flex gap-3 pb-3 border-b border-outline-variant last:border-0">
+<div class="w-8 h-8 bg-secondary-container rounded flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-secondary text-sm">check_circle</span>
+</div>
+<div>
+<p class="text-xs font-bold">Cập nhật giá bán: Amoxicillin</p>
+<p class="text-[10px] text-on-surface-variant">Hôm qua • Hệ thống</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Micro-interaction Scripts -->
+<script>
+        document.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('click', () => {
+                // Subtle feedback on row click
+                row.classList.add('bg-primary-fixed');
+                setTimeout(() => row.classList.remove('bg-primary-fixed'), 200);
+            });
+        });
+
+        // Floating dynamic effect for warning banner
+        const banner = document.querySelector('.animate-pulse');
+        if(banner) {
+            let intensity = 1;
+            setInterval(() => {
+                intensity = intensity === 1 ? 0.8 : 1;
+                banner.style.opacity = intensity;
+            }, 1500);
+        }
+    </script>
+</body></html>

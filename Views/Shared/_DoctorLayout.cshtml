@@ -1,0 +1,93 @@
+@{
+    Layout = "_Layout";
+}
+
+<div class="text-on-surface overflow-hidden flex h-screen w-screen">
+    <!-- Side Navigation Bar -->
+    <aside class="w-[280px] h-screen bg-surface-container-lowest border-r border-outline-variant flex flex-col py-unit-lg shrink-0 z-50">
+        <div class="px-unit-lg mb-unit-xl">
+            <div class="flex items-center gap-unit-md">
+                <div class="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">local_hospital</span>
+                </div>
+                <div>
+                    <h1 class="font-headline-md text-headline-md font-bold text-secondary">MediFlow</h1>
+                    <p class="text-caption text-on-surface-variant">Bác sĩ Chuyên khoa</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="flex-1 px-unit-sm space-y-1 overflow-y-auto custom-scrollbar">
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "text-secondary font-bold bg-secondary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")" 
+               href="/Doctor/Dashboard">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                <span class="font-body-md text-body-md">Bảng điều khiển</span>
+            </a>
+            
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Queue" || ViewContext.RouteData.Values["controller"]?.ToString() == "Exam" ? "text-secondary font-bold bg-secondary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")" 
+               href="/Doctor/Queue">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">patient_list</span>
+                <span class="font-body-md text-body-md">Lịch khám hôm nay</span>
+            </a>
+            
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "History" ? "text-secondary font-bold bg-secondary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")" 
+               href="/Doctor/History">
+                <span class="material-symbols-outlined">history_edu</span>
+                <span class="font-body-md text-body-md">Lịch sử điều trị</span>
+            </a>
+            
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Chat" ? "text-secondary font-bold bg-secondary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")" 
+               href="/Doctor/Chat">
+                <span class="material-symbols-outlined">forum</span>
+                <span class="font-body-md text-body-md">Tin nhắn tư vấn</span>
+            </a>
+        </nav>
+        
+        <div class="px-unit-sm mt-auto space-y-1">
+            <a class="flex items-center gap-unit-md px-unit-md py-3 text-error hover:bg-error-container/20 rounded-lg transition-colors font-medium" 
+               href="/Auth/Logout">
+                <span class="material-symbols-outlined text-error">logout</span>
+                <span class="font-body-md text-body-md">Đăng xuất</span>
+            </a>
+        </div>
+    </aside>
+    
+    <!-- Main Content Area -->
+    <main class="flex-1 h-screen overflow-y-auto flex flex-col">
+        <!-- Top Navigation Bar -->
+        <header class="h-16 w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-unit-lg gap-unit-md shrink-0 z-40">
+            <div class="flex items-center gap-unit-lg flex-1">
+                <p class="font-title-lg text-on-surface font-semibold">Khu vực chuyên môn Bác sĩ</p>
+            </div>
+            
+            <div class="flex items-center gap-unit-md">
+                <div class="flex items-center gap-unit-sm hover:bg-surface-container-high p-1 pr-3 rounded-lg transition-all">
+                    <div class="w-8 h-8 rounded-full overflow-hidden bg-secondary-container flex items-center justify-center text-secondary font-bold">
+                        Dr
+                    </div>
+                    <div class="hidden lg:block text-left">
+                        <p class="font-label-md text-label-md text-on-surface leading-none">@User.Identity?.Name</p>
+                        <p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-wider">Bác sĩ lâm sàng</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Page Canvas -->
+        <div class="p-unit-lg max-w-[1600px] mx-auto w-full flex-1">
+            @RenderBody()
+        </div>
+        
+        <!-- Footer -->
+        <footer class="p-unit-lg text-center text-caption text-on-surface-variant border-t border-outline-variant shrink-0 mt-auto">
+            HMS MediFlow Bác Sĩ © 2026 • Trạng thái: <span class="text-secondary font-bold">Hoạt động tốt</span>
+        </footer>
+    </main>
+</div>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}
+@section Styles {
+    @await RenderSectionAsync("Styles", required: false)
+}

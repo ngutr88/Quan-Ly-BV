@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chi tiết hóa đơn | HMS Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#e5eeff",
+                    "background": "#f8f9ff",
+                    "outline": "#727784",
+                    "tertiary-container": "#7d4e00",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "error": "#ba1a1a",
+                    "surface-container-low": "#eff4ff",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-secondary-fixed": "#002113",
+                    "on-secondary-container": "#00714d",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface": "#f8f9ff",
+                    "secondary-container": "#6cf8bb",
+                    "primary-fixed": "#d7e2ff",
+                    "surface-variant": "#d3e4fe",
+                    "primary-container": "#0056b3",
+                    "surface-bright": "#f8f9ff",
+                    "primary": "#003f87",
+                    "inverse-surface": "#213145",
+                    "tertiary-fixed": "#ffddb8",
+                    "on-error-container": "#93000a",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-tertiary": "#ffffff",
+                    "on-background": "#0b1c30",
+                    "primary-fixed-dim": "#acc7ff",
+                    "on-surface-variant": "#424752",
+                    "outline-variant": "#c2c6d4",
+                    "secondary": "#006c49",
+                    "on-secondary": "#ffffff",
+                    "surface-dim": "#cbdbf5",
+                    "on-primary-fixed-variant": "#004491",
+                    "on-primary-fixed": "#001a40",
+                    "surface-tint": "#115cb9",
+                    "surface-container-high": "#dce9ff",
+                    "tertiary": "#5e3900",
+                    "on-error": "#ffffff",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-tertiary-container": "#ffc57f",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "on-primary": "#ffffff",
+                    "inverse-primary": "#acc7ff",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-tertiary-fixed": "#2a1700",
+                    "error-container": "#ffdad6",
+                    "on-surface": "#0b1c30",
+                    "on-primary-container": "#bbd0ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "container-max": "1440px",
+                    "margin-mobile": "16px",
+                    "unit-lg": "24px",
+                    "unit-xl": "48px",
+                    "unit-sm": "8px",
+                    "margin-desktop": "40px",
+                    "gutter": "24px",
+                    "unit-xs": "4px",
+                    "unit-md": "16px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "caption": ["Inter"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9ff; color: #0b1c30; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body class="min-h-screen">
+<!-- Side Navigation Bar -->
+<aside class="fixed left-0 top-0 h-full flex flex-col p-unit-md gap-unit-sm z-50 bg-surface-container-lowest border-r border-outline-variant w-[280px] hidden md:flex">
+<div class="flex items-center gap-3 px-4 py-6 mb-4">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Medical Center</h1>
+<p class="text-xs text-on-surface-variant tracking-wider uppercase">Admin Terminal</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1 px-2 overflow-y-auto scrollbar-hide">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container font-semibold rounded-lg" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-body-md text-body-md">Invoices</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-body-md text-body-md">Appointments</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-body-md text-body-md">Patients</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-body-md text-body-md">Doctors</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">medication</span>
+<span class="font-body-md text-body-md">Pharmacy</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">corporate_fare</span>
+<span class="font-body-md text-body-md">Departments</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span class="font-body-md text-body-md">HR</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span class="font-body-md text-body-md">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto p-4 border-t border-outline-variant">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full border border-outline-variant" data-alt="A professional headshot of a hospital administrator in a clean white medical coat, soft clinical indoor lighting, high-quality digital photography, serene hospital environment in background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBx5pSdYHuyzfZhCFnDJA7HDTBd6QYM6HcZSJ1D8zvliIfmThJBCJtV3l0jqC-tMFs-iimbbd4-GuVVa5NDs3QUgRfejfEBzbVAgnaaEmiGjqe8eVuovDOAr9w-7xl5MsvcqLwEV_ids3xVSToy6XRcGKxk3WUB3d5CgdmoLSLhuICkciaekpQM8Z4YSjEmm-OF4hlcF9hSK2o-AGOXAyIe_HubJt8sWpY-P0b_mZA0XB_-n_gE6hgD0sEKCk8efrpTNyKmnQbL0gs"/>
+<div class="overflow-hidden">
+<p class="text-sm font-semibold truncate">Admin User</p>
+<p class="text-xs text-on-surface-variant truncate">Quản trị viên</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-[280px] min-h-screen">
+<!-- Top Bar -->
+<header class="flex justify-between items-center w-full px-10 h-16 z-40 bg-surface-container-lowest border-b border-outline-variant sticky top-0">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-outline cursor-pointer md:hidden">menu</span>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-md text-body-md">
+<span>Dashboard</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span>Hóa đơn</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-primary font-bold">Chi tiết hóa đơn</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-lg text-sm w-80 focus:ring-2 focus:ring-primary" placeholder="Tìm kiếm bệnh nhân, mã hóa đơn..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">help</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">settings</span>
+</div>
+</div>
+</header>
+<!-- Page Body -->
+<div class="p-10 max-w-7xl mx-auto">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+<div class="space-y-2">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">INV-2024-0892</h2>
+<span class="px-4 py-1.5 bg-tertiary-fixed text-on-tertiary-fixed font-semibold text-xs rounded-full flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                            Chưa thanh toán
+                        </span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-on-surface-variant text-body-md">Tổng số tiền:</span>
+<span class="text-3xl font-bold text-primary">2,450,000 VND</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-3">
+<button class="px-6 py-2.5 text-error font-semibold hover:bg-error-container transition-colors rounded-lg" onclick="document.getElementById('modal-cancel').classList.remove('hidden')">
+                        Hủy hóa đơn
+                    </button>
+<button class="px-6 py-2.5 border border-primary text-primary font-semibold hover:bg-surface-container transition-colors rounded-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">print</span>
+                        In hóa đơn
+                    </button>
+<button class="px-6 py-2.5 border border-primary text-primary font-semibold hover:bg-surface-container transition-colors rounded-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                        Xuất PDF
+                    </button>
+<button class="px-8 py-2.5 bg-primary text-white font-bold hover:opacity-90 transition-all rounded-lg flex items-center gap-2" onclick="document.getElementById('modal-confirm').classList.remove('hidden')">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                        Xác nhận thanh toán
+                    </button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+<!-- Left Column (Main Content) -->
+<div class="lg:col-span-2 space-y-unit-lg">
+<!-- Patient Info & Session Info - Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit-lg">
+<!-- Patient Card -->
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl">
+<div class="flex items-center gap-3 mb-4 border-b border-outline-variant pb-3">
+<span class="material-symbols-outlined text-primary">person</span>
+<h3 class="font-semibold text-on-surface">Thông tin bệnh nhân</h3>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between">
+<span class="text-sm text-on-surface-variant">Họ và tên:</span>
+<span class="text-sm font-semibold text-on-surface">Nguyen Van A</span>
+</div>
+<div class="flex justify-between">
+<span class="text-sm text-on-surface-variant">Mã bệnh nhân:</span>
+<span class="text-sm font-semibold text-on-surface">BN-2024-0012</span>
+</div>
+<div class="flex justify-between">
+<span class="text-sm text-on-surface-variant">Số điện thoại:</span>
+<span class="text-sm font-semibold text-on-surface">090 1234 567</span>
+</div>
+<div class="flex justify-between">
+<span class="text-sm text-on-surface-variant">Bảo hiểm (BHYT):</span>
+<span class="text-sm px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded font-bold">ĐÃ KÍCH HOẠT</span>
+</div>
+</div>
+</div>
+<!-- Session Card -->
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl">
+<div class="flex items-center gap-3 mb-4 border-b border-outline-variant pb-3">
+<span class="material-symbols-outlined text-primary">medical_information</span>
+<h3 class="font-semibold text-on-surface">Phiên khám lâm sàng</h3>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between">
+<span class="text-sm text-on-surface-variant">Ngày khám:</span>
+<span class="text-sm font-semibold text-on-surface">15/08/2024 08:30</span>
+</div>
+<div class="flex justify-between">
+<span class="text-sm text-on-surface-variant">Khoa:</span>
+<span class="text-sm font-semibold text-on-surface">Nội tổng quát</span>
+</div>
+<div class="flex justify-between">
+<span class="text-sm text-on-surface-variant">Bác sĩ:</span>
+<span class="text-sm font-semibold text-on-surface">BS. Lê Minh T.</span>
+</div>
+<div class="flex justify-between">
+<span class="text-sm text-on-surface-variant">Mã phiên (SID):</span>
+<span class="text-sm font-semibold text-on-surface">SID-99120</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Fee Breakdown Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-semibold text-on-surface">Chi tiết các hạng mục phí</h3>
+<span class="text-xs text-on-surface-variant uppercase tracking-widest font-bold">4 Hạng mục</span>
+</div>
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low text-xs text-on-surface-variant uppercase">
+<tr>
+<th class="px-6 py-3 font-semibold">Tên dịch vụ / Thuốc</th>
+<th class="px-6 py-3 font-semibold text-right">Số lượng</th>
+<th class="px-6 py-3 font-semibold text-right">Đơn giá</th>
+<th class="px-6 py-3 font-semibold text-right">Thành tiền</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface transition-colors">
+<td class="px-6 py-4 text-sm font-medium">Phí khám bệnh (Nội tổng quát)</td>
+<td class="px-6 py-4 text-sm text-right">1</td>
+<td class="px-6 py-4 text-sm text-right">200,000</td>
+<td class="px-6 py-4 text-sm font-semibold text-right">200,000</td>
+</tr>
+<tr class="hover:bg-surface transition-colors">
+<td class="px-6 py-4 text-sm font-medium">Xét nghiệm máu tổng quát (Huyết học)</td>
+<td class="px-6 py-4 text-sm text-right">1</td>
+<td class="px-6 py-4 text-sm text-right">850,000</td>
+<td class="px-6 py-4 text-sm font-semibold text-right">850,000</td>
+</tr>
+<tr class="hover:bg-surface transition-colors">
+<td class="px-6 py-4 text-sm font-medium">Gói thuốc điều trị (Kháng sinh, bổ trợ)</td>
+<td class="px-6 py-4 text-sm text-right">1</td>
+<td class="px-6 py-4 text-sm text-right">1,500,000</td>
+<td class="px-6 py-4 text-sm font-semibold text-right">1,500,000</td>
+</tr>
+<tr class="hover:bg-surface transition-colors">
+<td class="px-6 py-4 text-sm font-medium">Dịch vụ chăm sóc khác</td>
+<td class="px-6 py-4 text-sm text-right">1</td>
+<td class="px-6 py-4 text-sm text-right">100,000</td>
+<td class="px-6 py-4 text-sm font-semibold text-right">100,000</td>
+</tr>
+</tbody>
+</table>
+<div class="p-8 bg-surface-container-lowest border-t border-outline-variant flex justify-end">
+<div class="w-80 space-y-3">
+<div class="flex justify-between text-on-surface-variant">
+<span>Tạm tính:</span>
+<span>2,650,000 VND</span>
+</div>
+<div class="flex justify-between text-secondary font-semibold">
+<span>BHYT / Giảm giá:</span>
+<span>- 200,000 VND</span>
+</div>
+<div class="pt-3 border-t border-outline-variant flex justify-between items-baseline">
+<span class="text-on-surface font-bold">Tổng thanh toán:</span>
+<span class="text-2xl font-bold text-primary">2,450,000 VND</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Notes -->
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl">
+<div class="flex items-center gap-3 mb-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">notes</span>
+<span class="text-sm font-bold uppercase tracking-wider">Ghi chú hóa đơn</span>
+</div>
+<p class="text-sm text-on-surface leading-relaxed italic">
+                            Bệnh nhân có lịch hẹn tái khám sau 7 ngày. Hóa đơn bao gồm thuốc đặc trị được hưởng bảo hiểm một phần. Vui lòng kiểm tra lại mã giao dịch nếu thanh toán qua VNPay.
+                        </p>
+</div>
+</div>
+<!-- Right Column (Panels) -->
+<div class="space-y-unit-lg">
+<!-- Payment Status Panel -->
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl">
+<h3 class="font-semibold text-on-surface mb-6 border-b border-outline-variant pb-3">Hình thức thanh toán</h3>
+<div class="space-y-5">
+<div>
+<label class="block text-xs font-bold text-on-surface-variant mb-2 uppercase">Phương thức</label>
+<div class="grid grid-cols-2 gap-2">
+<button class="flex items-center justify-center gap-2 border-2 border-primary bg-primary-fixed py-2 rounded-lg text-primary text-xs font-bold">
+                                        Tiền mặt
+                                    </button>
+<button class="flex items-center justify-center gap-2 border border-outline-variant hover:border-primary py-2 rounded-lg text-on-surface-variant text-xs font-medium">
+                                        Chuyển khoản
+                                    </button>
+<button class="flex items-center justify-center gap-2 border border-outline-variant hover:border-primary py-2 rounded-lg text-on-surface-variant text-xs font-medium">
+                                        Thẻ ATM
+                                    </button>
+<button class="flex items-center justify-center gap-2 border border-outline-variant hover:border-primary py-2 rounded-lg text-on-surface-variant text-xs font-medium">
+                                        VNPay/Momo
+                                    </button>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold text-on-surface-variant mb-2 uppercase">Mã giao dịch (N/A)</label>
+<input class="w-full bg-background border border-outline-variant rounded-lg px-4 py-2 text-sm focus:ring-1 focus:ring-primary outline-none" placeholder="Nhập mã tham chiếu..." type="text"/>
+</div>
+<div class="pt-4 space-y-2 text-xs">
+<div class="flex justify-between">
+<span class="text-on-surface-variant">Xác nhận bởi:</span>
+<span class="font-semibold">---</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant">Thời gian thanh toán:</span>
+<span class="font-semibold">Đang chờ...</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Audit Trail Section -->
+<div class="bg-surface-container-lowest border border-outline-variant p-6 rounded-xl">
+<h3 class="font-semibold text-on-surface mb-6 border-b border-outline-variant pb-3">Lịch sử thay đổi</h3>
+<div class="relative space-y-6 before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-outline-variant">
+<!-- Entry 1 -->
+<div class="relative flex gap-4 pl-8">
+<div class="absolute left-0 w-7 h-7 bg-surface-container flex items-center justify-center rounded-full border border-outline-variant z-10">
+<span class="material-symbols-outlined text-xs text-primary">add</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-on-surface">Hóa đơn được tạo</p>
+<p class="text-xs text-on-surface-variant">Hệ thống • 15/08/2024 08:35</p>
+</div>
+</div>
+<!-- Entry 2 -->
+<div class="relative flex gap-4 pl-8">
+<div class="absolute left-0 w-7 h-7 bg-surface-container flex items-center justify-center rounded-full border border-outline-variant z-10">
+<span class="material-symbols-outlined text-xs text-primary">edit</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-on-surface">Cập nhật phí xét nghiệm</p>
+<p class="text-xs text-on-surface-variant">Admin (BS. Tùng) • 15/08/2024 09:12</p>
+</div>
+</div>
+<!-- Entry 3 -->
+<div class="relative flex gap-4 pl-8">
+<div class="absolute left-0 w-7 h-7 bg-surface-container flex items-center justify-center rounded-full border border-outline-variant z-10">
+<span class="material-symbols-outlined text-xs text-primary">notifications</span>
+</div>
+<div>
+<p class="text-sm font-semibold text-on-surface">Gửi nhắc thanh toán (SMS)</p>
+<p class="text-xs text-on-surface-variant">Hệ thống • 15/08/2024 10:00</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Modal: Confirm Payment -->
+<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden" id="modal-confirm">
+<div class="bg-surface-container-lowest w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-outline-variant">
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-bold text-on-surface">Xác nhận thanh toán</h3>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-error" onclick="document.getElementById('modal-confirm').classList.add('hidden')">close</button>
+</div>
+<div class="p-6 space-y-4">
+<div class="bg-surface-container p-4 rounded-lg flex justify-between items-center">
+<span class="text-sm font-medium text-on-surface-variant">Tổng tiền cần thu:</span>
+<span class="text-xl font-bold text-primary">2,450,000 VND</span>
+</div>
+<div>
+<label class="block text-sm font-semibold mb-2">Số tiền nhận từ khách</label>
+<input class="w-full text-lg font-bold border-2 border-primary rounded-lg px-4 py-3 outline-none" type="text" value="2,450,000"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-3 border border-outline-variant rounded-lg">
+<span class="block text-xs text-on-surface-variant uppercase font-bold mb-1">Tiền thừa</span>
+<span class="text-sm font-bold">0 VND</span>
+</div>
+<div class="p-3 border border-outline-variant rounded-lg">
+<span class="block text-xs text-on-surface-variant uppercase font-bold mb-1">Phương thức</span>
+<span class="text-sm font-bold">Tiền mặt</span>
+</div>
+</div>
+</div>
+<div class="px-6 py-4 bg-surface border-t border-outline-variant flex justify-end gap-3">
+<button class="px-4 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg" onclick="document.getElementById('modal-confirm').classList.add('hidden')">Quay lại</button>
+<button class="px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg shadow-lg shadow-primary/20">Xác nhận &amp; In biên lai</button>
+</div>
+</div>
+</div>
+<!-- Modal: Cancel Invoice -->
+<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden" id="modal-cancel">
+<div class="bg-surface-container-lowest w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-outline-variant">
+<div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-2 text-error">
+<span class="material-symbols-outlined">warning</span>
+<h3 class="font-bold">Hủy hóa đơn</h3>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-error" onclick="document.getElementById('modal-cancel').classList.add('hidden')">close</button>
+</div>
+<div class="p-6 space-y-4">
+<p class="text-sm text-on-surface-variant">Bạn đang thực hiện hủy hóa đơn <span class="font-bold text-on-surface">INV-2024-0892</span>. Hành động này không thể hoàn tác và sẽ được ghi lại trong nhật ký hệ thống.</p>
+<div>
+<label class="block text-sm font-semibold mb-2">Lý do hủy <span class="text-error">*</span></label>
+<textarea class="w-full border border-outline-variant rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-error outline-none" placeholder="Vui lòng nhập lý do chi tiết..." rows="4"></textarea>
+</div>
+</div>
+<div class="px-6 py-4 bg-surface border-t border-outline-variant flex justify-end gap-3">
+<button class="px-4 py-2 text-sm font-semibold text-on-surface-variant hover:bg-surface-container rounded-lg" onclick="document.getElementById('modal-cancel').classList.add('hidden')">Bỏ qua</button>
+<button class="px-6 py-2 bg-error text-white text-sm font-bold rounded-lg shadow-lg shadow-error/20">Xác nhận hủy</button>
+</div>
+</div>
+</div>
+<script>
+        // Simple Micro-interactions
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => btn.style.transform = 'scale(0.98)');
+            btn.addEventListener('mouseup', () => btn.style.transform = 'scale(1)');
+            btn.addEventListener('mouseleave', () => btn.style.transform = 'scale(1)');
+        });
+    </script>
+</body></html>

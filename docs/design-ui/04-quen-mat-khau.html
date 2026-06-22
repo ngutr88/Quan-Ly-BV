@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Khôi phục mật khẩu | MediSystem HMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#dce9ff",
+                    "background": "#f8f9ff",
+                    "outline": "#727784",
+                    "tertiary-fixed": "#ffddb8",
+                    "surface-tint": "#115cb9",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed": "#001a40",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed-dim": "#acc7ff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-dim": "#cbdbf5",
+                    "tertiary-container": "#7d4e00",
+                    "surface-variant": "#d3e4fe",
+                    "secondary-container": "#6cf8bb",
+                    "primary-container": "#0056b3",
+                    "surface-container-low": "#eff4ff",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "surface-bright": "#f8f9ff",
+                    "on-secondary-container": "#00714d",
+                    "on-primary-container": "#bbd0ff",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#424752",
+                    "on-tertiary-container": "#ffc57f",
+                    "error-container": "#ffdad6",
+                    "secondary": "#006c49",
+                    "primary-fixed": "#d7e2ff",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-tertiary-fixed": "#2a1700",
+                    "on-primary-fixed-variant": "#004491",
+                    "on-background": "#0b1c30",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "inverse-surface": "#213145",
+                    "surface-container": "#e5eeff",
+                    "surface": "#f8f9ff",
+                    "on-secondary-fixed": "#002113",
+                    "primary": "#003f87",
+                    "on-surface": "#0b1c30",
+                    "secondary-fixed-dim": "#4edea3",
+                    "tertiary": "#5e3900",
+                    "outline-variant": "#c2c6d4",
+                    "on-error-container": "#93000a",
+                    "inverse-primary": "#acc7ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-mobile": "16px",
+                    "container-max": "1440px",
+                    "unit-xs": "4px",
+                    "unit-lg": "24px",
+                    "unit-sm": "8px",
+                    "margin-desktop": "40px",
+                    "unit-xl": "48px",
+                    "unit-md": "16px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "caption": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "title-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #f8f9ff;
+            font-family: 'Inter', sans-serif;
+        }
+        .step-hidden {
+            display: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .otp-input:focus {
+            border-color: #003f87;
+            box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.1);
+        }
+        .error-shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+<!-- Top AppBar (from Shared Components) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-4 h-16 md:px-margin-desktop bg-surface-container-lowest border-b border-outline-variant">
+<div class="font-headline-md text-headline-md font-bold text-primary">MediSystem HMS</div>
+<div class="flex gap-unit-md items-center">
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors">help_outline</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-colors">dark_mode</button>
+</div>
+</header>
+<main class="flex-grow flex items-center justify-center pt-16 px-margin-mobile">
+<!-- Main Card -->
+<div class="w-full max-w-[480px] bg-surface-container-lowest border border-outline-variant p-unit-xl rounded-xl shadow-sm overflow-hidden relative">
+<!-- Progress Bar (Subtle) -->
+<div class="absolute top-0 left-0 w-full h-1 bg-surface-container">
+<div class="h-full bg-primary transition-all duration-500 w-1/4" id="progress-indicator"></div>
+</div>
+<!-- Header Section -->
+<div class="text-center mb-unit-xl">
+<div class="inline-flex items-center justify-center w-16 h-16 bg-surface-container-high text-primary rounded-full mb-unit-md">
+<span class="material-symbols-outlined text-4xl" id="header-icon" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-on-surface mb-unit-xs" id="flow-title">Khôi phục mật khẩu</h1>
+<p class="font-body-md text-body-md text-on-surface-variant" id="flow-description">Nhập email hoặc số điện thoại đã đăng ký để nhận mã xác thực</p>
+</div>
+<!-- Step 1: Identify -->
+<div class="space-y-unit-lg" id="step-1">
+<div class="space-y-unit-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="identity">Email hoặc Số điện thoại</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">mail</span>
+<input class="w-full pl-10 pr-4 py-3 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all font-body-md text-body-md" id="identity" placeholder="name@hospital.com" type="text"/>
+</div>
+<p class="text-error font-caption text-caption hidden mt-1" id="error-step-1">Không tìm thấy tài khoản với thông tin này.</p>
+</div>
+<button class="w-full h-11 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2" onclick="handleStep1()">
+                    Gửi mã xác thực
+                    <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+<!-- Step 2: Verify -->
+<div class="step-hidden space-y-unit-lg" id="step-2">
+<div class="space-y-unit-md">
+<div class="flex justify-between gap-unit-sm">
+<input class="otp-input w-12 h-14 text-center text-xl font-bold border border-outline-variant rounded-lg focus:outline-none" maxlength="1" type="text"/>
+<input class="otp-input w-12 h-14 text-center text-xl font-bold border border-outline-variant rounded-lg focus:outline-none" maxlength="1" type="text"/>
+<input class="otp-input w-12 h-14 text-center text-xl font-bold border border-outline-variant rounded-lg focus:outline-none" maxlength="1" type="text"/>
+<input class="otp-input w-12 h-14 text-center text-xl font-bold border border-outline-variant rounded-lg focus:outline-none" maxlength="1" type="text"/>
+<input class="otp-input w-12 h-14 text-center text-xl font-bold border border-outline-variant rounded-lg focus:outline-none" maxlength="1" type="text"/>
+<input class="otp-input w-12 h-14 text-center text-xl font-bold border border-outline-variant rounded-lg focus:outline-none" maxlength="1" type="text"/>
+</div>
+<p class="text-error font-caption text-caption text-center hidden" id="error-step-2">Mã OTP không hợp lệ hoặc đã hết hạn.</p>
+</div>
+<div class="text-center">
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        Không nhận được mã? 
+                        <button class="text-primary font-semibold opacity-50 cursor-not-allowed transition-colors" disabled="" id="resend-btn">Gửi lại mã (<span id="countdown">30</span>s)</button>
+</p>
+</div>
+<button class="w-full h-11 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:opacity-90 active:scale-[0.98] transition-all" onclick="handleStep2()">Xác thực mã</button>
+</div>
+<!-- Step 3: Reset -->
+<div class="step-hidden space-y-unit-lg" id="step-3">
+<div class="space-y-unit-md">
+<div class="space-y-unit-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="new-password">Mật khẩu mới</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">lock</span>
+<input class="w-full pl-10 pr-10 py-3 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary outline-none font-body-md" id="new-password" type="password"/>
+<button class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" onclick="togglePassword('new-password')" type="button">visibility</button>
+</div>
+</div>
+<div class="space-y-unit-xs">
+<label class="font-label-md text-label-md text-on-surface-variant" for="confirm-password">Nhập lại mật khẩu mới</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">lock_reset</span>
+<input class="w-full pl-10 pr-10 py-3 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary outline-none font-body-md" id="confirm-password" type="password"/>
+<button class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors" onclick="togglePassword('confirm-password')" type="button">visibility</button>
+</div>
+</div>
+<p class="text-error font-caption text-caption hidden" id="error-step-3">Mật khẩu không khớp hoặc quá yếu (tối thiểu 8 ký tự).</p>
+</div>
+<button class="w-full h-11 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:opacity-90 active:scale-[0.98] transition-all" onclick="handleStep3()">Đổi mật khẩu</button>
+</div>
+<!-- Step 4: Success -->
+<div class="step-hidden space-y-unit-lg text-center" id="step-4">
+<div class="py-unit-md">
+<p class="font-headline-md text-headline-md text-secondary">Đổi mật khẩu thành công</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2">Bạn có thể sử dụng mật khẩu mới để đăng nhập ngay bây giờ.</p>
+</div>
+<a class="inline-block w-full h-11 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center" href="#">Quay lại Đăng nhập</a>
+</div>
+<!-- Footer Link -->
+<div class="mt-unit-xl text-center border-t border-outline-variant pt-unit-md" id="footer-actions">
+<a class="inline-flex items-center gap-1 font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">keyboard_backspace</span>
+                    Quay lại Đăng nhập
+                </a>
+</div>
+</div>
+</main>
+<!-- Footer (from Shared Components) -->
+<footer class="w-full py-unit-md px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-unit-sm bg-surface-container-lowest border-t border-outline-variant">
+<div class="font-title-lg text-title-lg font-semibold text-primary">MediSystem HMS</div>
+<div class="flex flex-wrap justify-center gap-unit-md font-body-md text-body-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#">Support</a>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">© 2024 MediSystem Healthcare Management. All rights reserved.</p>
+</footer>
+<script>
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        // OTP Input focus management
+        const otpInputs = document.querySelectorAll('.otp-input');
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+
+        function updateFlow(step) {
+            document.querySelectorAll('[id^="step-"]').forEach(el => el.classList.add('step-hidden'));
+            const targetStep = document.getElementById(`step-${step}`);
+            targetStep.classList.remove('step-hidden');
+            
+            // Progress Bar
+            const progress = (step / totalSteps) * 100;
+            document.getElementById('progress-indicator').style.width = `${progress}%`;
+
+            // Update Header
+            const titleEl = document.getElementById('flow-title');
+            const descEl = document.getElementById('flow-description');
+            const iconEl = document.getElementById('header-icon');
+
+            if (step === 2) {
+                titleEl.textContent = 'Xác thực mã OTP';
+                descEl.textContent = 'Vui lòng nhập mã 6 số được gửi tới thiết bị của bạn';
+                iconEl.textContent = 'password';
+                startCountdown();
+            } else if (step === 3) {
+                titleEl.textContent = 'Thiết lập mật khẩu mới';
+                descEl.textContent = 'Tạo mật khẩu mạnh để bảo vệ hồ sơ y tế của bạn';
+                iconEl.textContent = 'lock_open';
+            } else if (step === 4) {
+                titleEl.textContent = 'Hoàn tất';
+                descEl.classList.add('hidden');
+                iconEl.textContent = 'verified_user';
+                iconEl.parentElement.classList.replace('bg-surface-container-high', 'bg-secondary-container');
+                iconEl.parentElement.classList.replace('text-primary', 'text-on-secondary-container');
+                document.getElementById('footer-actions').classList.add('hidden');
+            }
+        }
+
+        function handleStep1() {
+            const val = document.getElementById('identity').value;
+            const error = document.getElementById('error-step-1');
+            
+            // Simulation: Error if field is empty
+            if (!val) {
+                error.classList.remove('hidden');
+                document.getElementById('step-1').classList.add('error-shake');
+                setTimeout(() => document.getElementById('step-1').classList.remove('error-shake'), 400);
+                return;
+            }
+            
+            error.classList.add('hidden');
+            currentStep = 2;
+            updateFlow(2);
+        }
+
+        function handleStep2() {
+            const otp = Array.from(otpInputs).map(i => i.value).join('');
+            const error = document.getElementById('error-step-2');
+
+            // Simulation: Error if OTP is not 6 digits
+            if (otp.length < 6) {
+                error.classList.remove('hidden');
+                document.getElementById('step-2').classList.add('error-shake');
+                setTimeout(() => document.getElementById('step-2').classList.remove('error-shake'), 400);
+                return;
+            }
+
+            error.classList.add('hidden');
+            currentStep = 3;
+            updateFlow(3);
+        }
+
+        function handleStep3() {
+            const p1 = document.getElementById('new-password').value;
+            const p2 = document.getElementById('confirm-password').value;
+            const error = document.getElementById('error-step-3');
+
+            if (p1.length < 8 || p1 !== p2) {
+                error.classList.remove('hidden');
+                document.getElementById('step-3').classList.add('error-shake');
+                setTimeout(() => document.getElementById('step-3').classList.remove('error-shake'), 400);
+                return;
+            }
+
+            error.classList.add('hidden');
+            currentStep = 4;
+            updateFlow(4);
+        }
+
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            const btn = event.currentTarget;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                btn.textContent = 'visibility';
+            }
+        }
+
+        function startCountdown() {
+            let timeLeft = 30;
+            const btn = document.getElementById('resend-btn');
+            const countEl = document.getElementById('countdown');
+            
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                countEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.textContent = "Gửi lại mã";
+                }
+            }, 1000);
+        }
+    </script>
+</body></html>

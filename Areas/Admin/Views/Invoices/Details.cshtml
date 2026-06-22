@@ -1,0 +1,129 @@
+@model QuanLyBenhVien.Models.Invoice
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết hóa đơn";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/Invoices" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách biên lai
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Chi tiết Hóa đơn #HD-@Model.Id.ToString("D5")</h2>
+    <p class="text-body-md text-on-surface-variant">Thông tin thanh toán viện phí của bệnh nhân.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    <!-- Invoice details & itemized receipt (2 cols) -->
+    <div class="lg:col-span-2 space-y-unit-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md">
+            <div class="flex justify-between items-center border-b border-outline-variant pb-unit-sm">
+                <h3 class="font-title-lg text-title-lg font-bold text-primary">Biên lai thu tiền</h3>
+                <span class="text-caption text-on-surface-variant">Ngày lập: @Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+
+            <!-- Items Table -->
+            <table class="w-full text-left text-body-md">
+                <thead>
+                    <tr class="border-b border-outline-variant text-on-surface-variant font-semibold">
+                        <th class="py-2">Danh mục dịch vụ y tế</th>
+                        <th class="py-2 text-right">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant/40">
+                    @foreach (var detail in Model.InvoiceDetails)
+                    {
+                        <tr>
+                            <td class="py-3 text-on-surface">@detail.LoaiPhi</td>
+                            <td class="py-3 text-right font-semibold">@detail.SoTien.ToString("N0") đ</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="border-t-2 border-outline-variant font-bold text-[16px] text-primary">
+                        <td class="py-3">Tổng cộng thanh toán</td>
+                        <td class="py-3 text-right">@Model.TongTien.ToString("N0") đ</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Role Action Panel for Cashier -->
+        @if (Model.TrangThaiThanhToan == "ChuaThanhToan")
+        {
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg mb-unit-md font-bold text-primary">Xác nhận thanh toán tại quầy</h3>
+                
+                <form method="POST" action="/Admin/Invoices/PayCounter/@Model.Id" class="flex flex-col md:flex-row gap-unit-md items-end">
+                    <div class="w-full md:w-64">
+                        <label class="block text-caption font-semibold text-on-surface-variant mb-1" for="phuongThuc">Hình thức thu tiền</label>
+                        <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                                id="phuongThuc" name="phuongThuc" required>
+                            <option value="TienMat">Tiền mặt (Cash)</option>
+                            <option value="ChuyenKhoan">Chuyển khoản / QR Code</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="bg-secondary text-white font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-on-secondary-container transition-all active:scale-[0.98] flex items-center gap-1 shadow-md w-full md:w-auto">
+                        <span class="material-symbols-outlined">payments</span> Xác nhận thanh toán
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+
+    <!-- Related Information (1 col) -->
+    <div class="space-y-unit-lg">
+        <!-- Patient Block -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h4 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-primary">Đối tượng nộp viện phí</h4>
+            <div class="space-y-unit-sm text-body-md">
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Bệnh nhân</span>
+                    <span class="font-semibold text-on-surface">@Model.ExaminationRecord.Appointment.Patient.User.HoTen</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Mã số thẻ BHYT</span>
+                    <span class="font-mono">@(string.IsNullOrEmpty(Model.ExaminationRecord.Appointment.Patient.SoBHYT) ? "Không sử dụng BHYT" : Model.ExaminationRecord.Appointment.Patient.SoBHYT)</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Điện thoại liên hệ</span>
+                    <span>@Model.ExaminationRecord.Appointment.Patient.User.Sdt</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settlement Status Block -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h4 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-primary">Thông tin thanh toán</h4>
+            <div class="space-y-unit-sm text-body-md">
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Trạng thái</span>
+                    @if (Model.TrangThaiThanhToan == "DaThanhToan")
+                    {
+                        <span class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Đã thanh toán</span>
+                    }
+                    else if (Model.TrangThaiThanhToan == "ChuaThanhToan")
+                    {
+                        <span class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full bg-error-container text-error text-[11px] font-bold">Chưa thanh toán</span>
+                    }
+                    else
+                    {
+                        <span class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[11px] font-bold">Đã hủy</span>
+                    }
+                </div>
+                @if (Model.TrangThaiThanhToan == "DaThanhToan")
+                {
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Phương thức áp dụng</span>
+                        <span class="font-semibold">@Model.PhuongThuc</span>
+                    </div>
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Thời gian giao dịch</span>
+                        <span>@Model.NgayThanhToan?.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

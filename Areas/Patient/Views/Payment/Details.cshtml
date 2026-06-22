@@ -1,0 +1,82 @@
+@model QuanLyBenhVien.Models.Invoice
+
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Chi tiết hóa đơn";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Patient/Payment" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách hóa đơn
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Chi tiết Hóa đơn #HD-@Model.Id.ToString("D5")</h2>
+    <p class="text-body-md text-on-surface-variant">Chi tiết viện phí và các khoản thanh toán y khoa.</p>
+</div>
+
+<div class="glass-card rounded-xl p-unit-lg shadow-sm max-w-2xl mx-auto bg-white space-y-unit-lg">
+    <div class="flex justify-between items-center border-b border-outline-variant/60 pb-unit-sm">
+        <div>
+            <h3 class="font-title-lg font-bold text-primary">BIÊN LAI ĐIỆN TỬ</h3>
+            <span class="text-caption text-on-surface-variant font-mono">Mã số giao dịch: #HD-@Model.Id.ToString("D5")</span>
+        </div>
+        <span class="text-caption text-on-surface-variant">Ngày lập: @Model.NgayTao.ToString("dd/MM/yyyy HH:mm")</span>
+    </div>
+
+    <!-- Items Table -->
+    <table class="w-full text-left text-body-md">
+        <thead>
+            <tr class="border-b border-outline-variant text-on-surface-variant font-semibold">
+                <th class="py-2">Hạng mục thanh toán</th>
+                <th class="py-2 text-right">Đơn giá</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-outline-variant/40">
+            @foreach (var detail in Model.InvoiceDetails)
+            {
+                <tr>
+                    <td class="py-3 text-on-surface">@detail.LoaiPhi</td>
+                    <td class="py-3 text-right font-semibold text-on-surface">@detail.SoTien.ToString("N0") đ</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr class="border-t-2 border-outline-variant font-bold text-[16px] text-primary">
+                <td class="py-3">Tổng cộng thanh toán</td>
+                <td class="py-3 text-right">@Model.TongTien.ToString("N0") đ</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- Billing detail -->
+    <div class="bg-surface p-unit-md rounded border border-outline-variant/30 text-body-md space-y-unit-xs">
+        <div>Trạng thái: 
+            @if (Model.TrangThaiThanhToan == "DaThanhToan")
+            {
+                <span class="font-bold text-secondary">Đã thanh toán</span>
+            }
+            else if (Model.TrangThaiThanhToan == "ChuaThanhToan")
+            {
+                <span class="font-bold text-error animate-pulse">Chưa thanh toán</span>
+            }
+            else
+            {
+                <span class="font-bold text-on-surface-variant">Đã hủy</span>
+            }
+        </div>
+        @if (Model.TrangThaiThanhToan == "DaThanhToan")
+        {
+            <div>Phương thức thanh toán: <strong>@Model.PhuongThuc</strong></div>
+            <div>Thời gian thanh toán: <strong>@Model.NgayThanhToan?.ToString("dd/MM/yyyy HH:mm:ss")</strong></div>
+        }
+    </div>
+
+    <!-- Action Section -->
+    @if (Model.TrangThaiThanhToan == "ChuaThanhToan")
+    {
+        <div class="flex justify-end pt-unit-md border-t border-outline-variant/60">
+            <a href="/Patient/Payment/Simulate/@Model.Id" class="bg-secondary text-white font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-on-secondary-container transition-all active:scale-[0.98] flex items-center gap-1 shadow-md">
+                <span class="material-symbols-outlined">credit_card</span> Thanh toán trực tuyến
+            </a>
+        </div>
+    }
+</div>

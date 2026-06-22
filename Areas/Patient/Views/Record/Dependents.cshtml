@@ -1,0 +1,228 @@
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Hồ sơ người thân";
+    var patient = ViewBag.Patient as QuanLyBenhVien.Models.Patient;
+}
+
+<!-- Alert Messages -->
+<div id="alertContainer"></div>
+
+<div class="mb-unit-lg flex flex-col md:flex-row md:items-end justify-between gap-unit-md">
+    <div>
+        <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant mb-2">
+            <a href="/Patient/Dashboard" class="hover:text-primary">Dashboard</a>
+            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span class="text-primary font-bold">Hồ sơ người thân</span>
+        </nav>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Người thân của tôi</h2>
+        <p class="text-body-md text-on-surface-variant">Quản lý danh sách hồ sơ người thân để tiện đặt lịch khám bệnh hộ hoặc theo dõi sức khỏe.</p>
+    </div>
+    <div>
+        <button onclick="openAddModal()" class="px-6 py-2.5 bg-primary hover:bg-primary-container text-white font-semibold rounded-xl flex items-center gap-unit-sm shadow-md transition-all active:scale-95 cursor-pointer">
+            <span class="material-symbols-outlined text-[20px]">person_add</span> Thêm người thân
+        </button>
+    </div>
+</div>
+
+<!-- Dependents Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit-lg" id="dependentsGrid">
+    
+    <!-- Dependent Card 1 -->
+    <div class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm flex flex-col justify-between group hover:border-primary transition-all relative">
+        <span class="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded font-bold uppercase">Con trai</span>
+        <div class="flex items-start gap-4">
+            <div class="w-14 h-14 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xl uppercase">
+                MH
+            </div>
+            <div>
+                <h3 class="text-title-lg font-bold text-on-surface group-hover:text-primary transition-colors">Trần Minh Hải</h3>
+                <p class="text-body-md text-on-surface-variant mt-0.5">5 tuổi (2021) • Nam</p>
+                <div class="mt-3 space-y-1 text-caption text-on-surface-variant">
+                    <p class="flex items-center gap-1"><span class="font-semibold text-on-surface">Mã số thẻ BHYT:</span> TE1011242352</p>
+                    <p class="flex items-center gap-1"><span class="font-semibold text-on-surface">Nhóm máu:</span> O+</p>
+                    <p class="flex items-center gap-1"><span class="font-semibold text-on-surface">Tiền sử bệnh lý:</span> Viêm phế quản co thắt</p>
+                </div>
+            </div>
+        </div>
+        <div class="mt-6 pt-4 border-t border-outline-variant/60 flex gap-unit-md">
+            <a href="/Patient/Book?dependent=Trần Minh Hải" class="flex-1 text-center bg-secondary text-white hover:bg-on-secondary-container py-2 rounded-lg font-semibold text-body-md transition-colors shadow-sm">
+                Đặt lịch khám hộ
+            </a>
+            <button onclick="alert('Đang hiển thị lịch sử khám của Trần Minh Hải (tính năng demo)')" class="flex-1 text-center border border-outline text-on-surface-variant hover:bg-surface-container-low py-2 rounded-lg font-semibold text-body-md transition-all cursor-pointer">
+                Lịch sử khám
+            </button>
+        </div>
+    </div>
+
+    <!-- Dependent Card 2 -->
+    <div class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm flex flex-col justify-between group hover:border-primary transition-all relative">
+        <span class="absolute top-4 right-4 bg-tertiary-fixed/40 text-on-tertiary-fixed-variant text-[10px] px-2 py-0.5 rounded font-bold uppercase">Mẹ ruột</span>
+        <div class="flex items-start gap-4">
+            <div class="w-14 h-14 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xl uppercase">
+                NH
+            </div>
+            <div>
+                <h3 class="text-title-lg font-bold text-on-surface group-hover:text-primary transition-colors">Nguyễn Thị Hoa</h3>
+                <p class="text-body-md text-on-surface-variant mt-0.5">62 tuổi (1964) • Nữ</p>
+                <div class="mt-3 space-y-1 text-caption text-on-surface-variant">
+                    <p class="flex items-center gap-1"><span class="font-semibold text-on-surface">Mã số thẻ BHYT:</span> GD4797920102</p>
+                    <p class="flex items-center gap-1"><span class="font-semibold text-on-surface">Nhóm máu:</span> B+</p>
+                    <p class="flex items-center gap-1"><span class="font-semibold text-on-surface">Tiền sử bệnh lý:</span> Rối loạn tuần hoàn não</p>
+                </div>
+            </div>
+        </div>
+        <div class="mt-6 pt-4 border-t border-outline-variant/60 flex gap-unit-md">
+            <a href="/Patient/Book?dependent=Nguyễn Thị Hoa" class="flex-1 text-center bg-secondary text-white hover:bg-on-secondary-container py-2 rounded-lg font-semibold text-body-md transition-colors shadow-sm">
+                Đặt lịch khám hộ
+            </a>
+            <button onclick="alert('Đang hiển thị lịch sử khám của Nguyễn Thị Hoa (tính năng demo)')" class="flex-1 text-center border border-outline text-on-surface-variant hover:bg-surface-container-low py-2 rounded-lg font-semibold text-body-md transition-all cursor-pointer">
+                Lịch sử khám
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Dependent Modal -->
+<div id="addModal" class="fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Thêm Người Thân Mới</h3>
+            <button onclick="closeAddModal()" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="addForm" onsubmit="saveDependent(event)">
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Họ và tên <span class="text-error">*</span></label>
+                    <input type="text" id="depName" required class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Ví dụ: Nguyễn Văn B" />
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Mối quan hệ <span class="text-error">*</span></label>
+                        <select id="depRelation" required class="w-full border border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface">
+                            <option value="Con trai">Con trai</option>
+                            <option value="Con gái">Con gái</option>
+                            <option value="Cha ruột">Cha ruột</option>
+                            <option value="Mẹ ruột">Mẹ ruột</option>
+                            <option value="Vợ/Chồng">Vợ/Chồng</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Giới tính <span class="text-error">*</span></label>
+                        <select id="depGender" required class="w-full border border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface">
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Năm sinh <span class="text-error">*</span></label>
+                        <input type="number" id="depBirthYear" required min="1900" max="2026" class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Ví dụ: 2018" />
+                    </div>
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Nhóm máu</label>
+                        <input type="text" id="depBlood" class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Ví dụ: O+" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Số thẻ BHYT</label>
+                    <input type="text" id="depBHYT" class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Ví dụ: GD4797920102" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tiền sử bệnh lý</label>
+                    <input type="text" id="depHistory" class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Tiểu đường, dị ứng thuốc..." />
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeAddModal()" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAddModal() {
+        const modal = document.getElementById('addModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modal.firstElementChild.classList.remove('scale-95');
+            modal.firstElementChild.classList.add('scale-100');
+        }, 10);
+    }
+
+    function closeAddModal() {
+        const modal = document.getElementById('addModal');
+        modal.firstElementChild.classList.remove('scale-100');
+        modal.firstElementChild.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 150);
+    }
+
+    function saveDependent(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('depName').value;
+        const relation = document.getElementById('depRelation').value;
+        const gender = document.getElementById('depGender').value;
+        const birthYear = document.getElementById('depBirthYear').value;
+        const blood = document.getElementById('depBlood').value || 'Chưa rõ';
+        const bhyt = document.getElementById('depBHYT').value || 'Không có';
+        const history = document.getElementById('depHistory').value || 'Không';
+
+        const initials = name.substring(0, Math.Min(2, name.Length)).toUpperCase();
+        const age = 2026 - parseInt(birthYear);
+
+        const cardHtml = `
+            <div class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm flex flex-col justify-between group hover:border-primary transition-all relative">
+                <span class="absolute top-4 right-4 bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded font-bold uppercase">${relation}</span>
+                <div class="flex items-start gap-4">
+                    <div class="w-14 h-14 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xl uppercase">
+                        ${initials}
+                    </div>
+                    <div>
+                        <h3 class="text-title-lg font-bold text-on-surface group-hover:text-primary transition-colors">${name}</h3>
+                        <p class="text-body-md text-on-surface-variant mt-0.5">${age} tuổi (${birthYear}) • ${gender}</p>
+                        <div class="mt-3 space-y-1 text-caption text-on-surface-variant">
+                            <p class="flex items-center gap-1"><span class="font-semibold text-on-surface">Mã số thẻ BHYT:</span> ${bhyt}</p>
+                            <p class="flex items-center gap-1"><span class="font-semibold text-on-surface">Nhóm máu:</span> ${blood}</p>
+                            <p class="flex items-center gap-1"><span class="font-semibold text-on-surface">Tiền sử bệnh lý:</span> ${history}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-outline-variant/60 flex gap-unit-md">
+                    <a href="/Patient/Book?dependent=${encodeURIComponent(name)}" class="flex-1 text-center bg-secondary text-white hover:bg-on-secondary-container py-2 rounded-lg font-semibold text-body-md transition-colors shadow-sm">
+                        Đặt lịch khám hộ
+                    </a>
+                    <button onclick="alert('Đang hiển thị lịch sử khám của ${name} (tính năng demo)')" class="flex-1 text-center border border-outline text-on-surface-variant hover:bg-surface-container-low py-2 rounded-lg font-semibold text-body-md transition-all cursor-pointer">
+                        Lịch sử khám
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('dependentsGrid').insertAdjacentHTML('beforeend', cardHtml);
+        
+        // Show success alert
+        const alertHtml = `
+            <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-xl flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">check_circle</span>
+                <span class="font-body-md font-semibold">Đã thêm hồ sơ người thân ${name} thành công.</span>
+            </div>
+        `;
+        document.getElementById('alertContainer').innerHTML = alertHtml;
+        
+        closeAddModal();
+        document.getElementById('addForm').reset();
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeAddModal();
+    });
+</script>

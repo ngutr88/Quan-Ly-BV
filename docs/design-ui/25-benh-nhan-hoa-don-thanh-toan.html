@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hóa đơn &amp; Thanh toán | Clinical Clarity Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#2a1700",
+                    "inverse-surface": "#213145",
+                    "tertiary": "#5e3900",
+                    "surface-bright": "#f8f9ff",
+                    "on-primary-container": "#bbd0ff",
+                    "on-error-container": "#93000a",
+                    "on-background": "#0b1c30",
+                    "error-container": "#ffdad6",
+                    "background": "#f8f9ff",
+                    "on-secondary-fixed-variant": "#005236",
+                    "on-surface-variant": "#424752",
+                    "on-secondary-container": "#00714d",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#ffc57f",
+                    "outline-variant": "#c2c6d4",
+                    "surface-variant": "#d3e4fe",
+                    "surface-dim": "#cbdbf5",
+                    "on-tertiary": "#ffffff",
+                    "secondary-container": "#6cf8bb",
+                    "inverse-primary": "#acc7ff",
+                    "tertiary-container": "#7d4e00",
+                    "surface-container-high": "#dce9ff",
+                    "secondary-fixed": "#6ffbbe",
+                    "secondary": "#006c49",
+                    "outline": "#727784",
+                    "on-primary-fixed": "#001a40",
+                    "primary-container": "#0056b3",
+                    "surface-tint": "#115cb9",
+                    "surface-container-highest": "#d3e4fe",
+                    "error": "#ba1a1a",
+                    "on-error": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "primary": "#003f87",
+                    "primary-fixed-dim": "#acc7ff",
+                    "primary-fixed": "#d7e2ff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "tertiary-fixed": "#ffddb8",
+                    "surface-container-low": "#eff4ff",
+                    "surface-container": "#e5eeff",
+                    "surface": "#f8f9ff",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed-variant": "#004491",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "on-secondary-fixed": "#002113"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "unit-xs": "4px",
+                    "unit-xl": "48px",
+                    "unit-md": "16px",
+                    "unit-lg": "24px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "40px",
+                    "container-max": "1440px",
+                    "unit-sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "caption": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex">
+<!-- SideNavBar (Authority Source: JSON) -->
+<aside class="hidden lg:flex flex-col h-screen sticky top-0 p-unit-md gap-unit-sm bg-surface-container-low border-r border-outline-variant w-[280px] shrink-0">
+<div class="flex items-center gap-3 mb-unit-lg px-2">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined">festival</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-primary leading-tight">Patient Portal</h2>
+<p class="text-label-md font-label-md text-on-surface-variant">St. Mary's Hospital</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all scale-95 duration-75 rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Home</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all scale-95 duration-75 rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">folder_shared</span>
+<span>Health Records</span>
+</a>
+<!-- Active Tab: Billing & Insurance -->
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg transition-all scale-95 duration-75 font-label-md text-label-md font-bold" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span>Billing &amp; Insurance</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all scale-95 duration-75 rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span>Messages</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant transition-all scale-95 duration-75 rounded-lg font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Help Center</span>
+</a>
+</nav>
+<div class="mt-auto p-4 bg-surface-container-highest rounded-xl border border-outline-variant">
+<p class="text-caption font-caption text-on-surface-variant mb-2">Hỗ trợ 24/7</p>
+<p class="text-label-md font-label-md text-primary font-bold">1900 1234</p>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar (Authority Source: JSON) -->
+<header class="fixed top-0 left-0 lg:left-[280px] right-0 z-50 flex justify-between items-center px-gutter h-16 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-unit-md">
+<span class="lg:hidden material-symbols-outlined text-on-surface-variant cursor-pointer">menu</span>
+<h1 class="font-headline-md text-headline-md text-primary">Clinical Clarity Portal</h1>
+</div>
+<div class="hidden md:flex items-center gap-unit-lg">
+<nav class="flex gap-unit-lg h-full items-center">
+<a class="text-on-surface-variant hover:bg-surface-container-low transition-colors px-2 py-1 font-label-md" href="#">Dashboard</a>
+<a class="text-on-surface-variant hover:bg-surface-container-low transition-colors px-2 py-1 font-label-md" href="#">Medical Records</a>
+<a class="text-primary border-b-2 border-primary font-bold pb-1 font-label-md" href="#">Billing</a>
+<a class="text-on-surface-variant hover:bg-surface-container-low transition-colors px-2 py-1 font-label-md" href="#">Appointments</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded-full text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 w-64" placeholder="Tìm kiếm hóa đơn..." type="text"/>
+</div>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden ml-2 border border-outline">
+<img class="w-full h-full object-cover" data-alt="A professional medical headshot of a middle-aged male patient with a friendly and calm expression, wearing casual business attire. The lighting is soft and natural, suggesting a modern hospital setting with blurred medical equipment in the background. The visual style is clean, high-definition, and corporate minimalist." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUpGesfUhTNtetWjOEoUTb3lyu2D_Z56jZwZqXEAbGBYF4KVVq_NZxSYsM8puQEcbfb1cEcINmmim_5yLDtPPdZjSRFfuxzjTWiNksudlE5ejnAvGXUJHJaGHc30ap3n4zp3m8zWABxAZGJoRfckdMi_UMZVs3r53142WrbJnCZdAN4xjN8I8J_BD8fH-dlGqKmROpbNB0DFPRP-8_p8rmPMUvHtAfiOtsY1H1Ndk6tsBqI5rX2YcNkqjoSbowzSOlV1nypKwsOvU"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="mt-16 p-gutter flex flex-col gap-unit-lg max-w-container-max mx-auto w-full">
+<!-- Warning Banner -->
+<div class="bg-error-container text-on-error-container p-unit-md rounded-xl flex items-center gap-3 border border-error/20 animate-pulse">
+<span class="material-symbols-outlined">warning</span>
+<p class="text-body-md font-semibold">Cảnh báo: Bạn có 1 hóa đơn quá hạn thanh toán từ ngày 15/10/2023. Vui lòng thanh toán sớm để tránh gián đoạn dịch vụ.</p>
+</div>
+<!-- Page Header & Summary Bento -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+<div class="lg:col-span-2">
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-unit-sm">Hóa đơn &amp; Thanh toán</h2>
+<p class="text-body-lg text-on-surface-variant">Quản lý các khoản phí y tế, xem lịch sử giao dịch và thanh toán trực tuyến bảo mật.</p>
+</div>
+<div class="bg-surface border border-outline-variant rounded-xl p-unit-lg flex flex-col justify-between shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[80px]">account_balance_wallet</span>
+</div>
+<p class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Tổng nợ hiện tại</p>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="text-headline-lg font-bold text-primary">2,000,000</span>
+<span class="text-title-lg font-semibold text-on-surface-variant">VND</span>
+</div>
+<div class="mt-4 flex items-center gap-2 text-error font-semibold">
+<span class="material-symbols-outlined text-[18px]">event_busy</span>
+<span class="text-caption font-caption">Hạn cuối: 25/10/2023</span>
+</div>
+</div>
+</div>
+<!-- Tabs & Filters -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-unit-sm">
+<div class="flex p-1 bg-surface-container-low rounded-lg w-fit border border-outline-variant">
+<button class="px-6 py-2 rounded-md bg-white shadow-sm text-primary font-bold text-label-md transition-all">Tất cả</button>
+<button class="px-6 py-2 rounded-md text-on-surface-variant hover:text-primary font-semibold text-label-md transition-all">Chưa thanh toán</button>
+<button class="px-6 py-2 rounded-md text-on-surface-variant hover:text-primary font-semibold text-label-md transition-all">Đã thanh toán</button>
+</div>
+<div class="flex items-center gap-unit-md">
+<button class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg text-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+<span>Lọc theo ngày</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg text-label-md hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Xuất báo cáo</span>
+</button>
+</div>
+</div>
+<!-- Content Area: Bento Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-unit-lg items-start">
+<!-- Invoice List Table (Desktop View) -->
+<div class="xl:col-span-8 bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-6 py-4 text-label-md font-bold text-on-surface-variant uppercase tracking-wider">Mã hóa đơn</th>
+<th class="px-6 py-4 text-label-md font-bold text-on-surface-variant uppercase tracking-wider">Ngày tạo</th>
+<th class="px-6 py-4 text-label-md font-bold text-on-surface-variant uppercase tracking-wider">Dịch vụ</th>
+<th class="px-6 py-4 text-label-md font-bold text-on-surface-variant uppercase tracking-wider">Tổng tiền</th>
+<th class="px-6 py-4 text-label-md font-bold text-on-surface-variant uppercase tracking-wider">Trạng thái</th>
+<th class="px-6 py-4 text-label-md font-bold text-on-surface-variant uppercase tracking-wider text-right">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1: Overdue -->
+<tr class="hover:bg-surface-container transition-colors cursor-pointer group active">
+<td class="px-6 py-5 font-mono text-body-md text-primary font-bold">INV-88291</td>
+<td class="px-6 py-5 text-body-md text-on-surface-variant">10/10/2023</td>
+<td class="px-6 py-5 text-body-md font-medium">Khám sức khỏe tổng quát</td>
+<td class="px-6 py-5 text-body-md font-bold">2,000,000đ</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-error-container/20 text-error text-[11px] font-bold rounded-full border border-error/20 flex items-center w-fit gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                                            Chưa thanh toán
+                                        </span>
+</td>
+<td class="px-6 py-5 text-right">
+<div class="flex justify-end gap-2">
+<button class="text-primary hover:underline text-label-md font-bold">Xem chi tiết</button>
+<button class="bg-primary text-white px-3 py-1.5 rounded-md text-label-md font-bold hover:bg-primary-container transition-colors">Thanh toán</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Paid -->
+<tr class="hover:bg-surface-container transition-colors cursor-pointer group">
+<td class="px-6 py-5 font-mono text-body-md text-on-surface-variant">INV-88102</td>
+<td class="px-6 py-5 text-body-md text-on-surface-variant">25/09/2023</td>
+<td class="px-6 py-5 text-body-md font-medium">Xét nghiệm máu định kỳ</td>
+<td class="px-6 py-5 text-body-md font-bold">450,000đ</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-secondary-container/20 text-secondary text-[11px] font-bold rounded-full border border-secondary/20 flex items-center w-fit gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                                            Đã thanh toán
+                                        </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary hover:underline text-label-md font-bold">Tải hóa đơn</button>
+</td>
+</tr>
+<!-- Row 3: Pending -->
+<tr class="hover:bg-surface-container transition-colors cursor-pointer group">
+<td class="px-6 py-5 font-mono text-body-md text-on-surface-variant">INV-88055</td>
+<td class="px-6 py-5 text-body-md text-on-surface-variant">12/09/2023</td>
+<td class="px-6 py-5 text-body-md font-medium">Mua thuốc đơn ngoại trú</td>
+<td class="px-6 py-5 text-body-md font-bold">1,200,000đ</td>
+<td class="px-6 py-5">
+<span class="px-3 py-1 bg-tertiary-fixed-dim/20 text-tertiary text-[11px] font-bold rounded-full border border-tertiary/20 flex items-center w-fit gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                                            Đang xử lý
+                                        </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary hover:underline text-label-md font-bold">Xem chi tiết</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Empty State (Hidden by default, shown via JS if no data) -->
+<div class="hidden p-unit-xl flex flex-col items-center text-center" id="empty-state">
+<div class="w-64 h-64 mb-6 bg-surface-container-low rounded-full flex items-center justify-center border border-dashed border-outline-variant">
+<span class="material-symbols-outlined text-[100px] text-outline-variant">receipt_long</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-2">Chưa có hóa đơn nào</h3>
+<p class="text-body-md text-on-surface-variant max-w-sm">Hiện tại bạn không có hóa đơn nào cần xử lý hoặc trong lịch sử. Các hóa đơn mới sẽ xuất hiện tại đây sau khi bạn sử dụng dịch vụ.</p>
+<button class="mt-unit-lg bg-primary text-white px-8 py-3 rounded-xl font-bold hover:shadow-lg transition-all">Làm mới dữ liệu</button>
+</div>
+</div>
+<!-- Right Sidebar: Details & Payment -->
+<div class="xl:col-span-4 flex flex-col gap-unit-lg">
+<!-- Detail Section -->
+<section class="bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="p-unit-md border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+<h3 class="font-title-lg text-title-lg text-primary">Chi tiết hóa đơn</h3>
+<span class="text-caption font-mono bg-white px-2 py-1 border border-outline-variant rounded">#INV-88291</span>
+</div>
+<div class="p-unit-lg flex flex-col gap-4">
+<div class="flex justify-between items-center py-2">
+<span class="text-body-md text-on-surface-variant">Phí khám bệnh</span>
+<span class="text-body-md font-semibold">200,000 VND</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-body-md text-on-surface-variant">Xét nghiệm (Siêu âm, X-Quang)</span>
+<span class="text-body-md font-semibold">1,500,000 VND</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-dashed border-outline-variant pb-4">
+<span class="text-body-md text-on-surface-variant">Thuốc &amp; Vật tư y tế</span>
+<span class="text-body-md font-semibold">800,000 VND</span>
+</div>
+<div class="flex justify-between items-center py-2 text-secondary">
+<span class="text-body-md">Giảm trừ (Bảo hiểm Y tế)</span>
+<span class="text-body-md font-bold">-500,000 VND</span>
+</div>
+<div class="mt-4 p-4 bg-primary-fixed text-on-primary-fixed rounded-xl flex justify-between items-center">
+<span class="font-bold text-label-md uppercase tracking-wider">Tổng cộng</span>
+<span class="font-headline-md text-headline-md">2,000,000 VND</span>
+</div>
+</div>
+</section>
+<!-- Payment Options -->
+<section class="bg-surface border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+<h3 class="font-title-lg text-title-lg text-on-background mb-4">Phương thức thanh toán</h3>
+<div class="grid grid-cols-2 gap-3 mb-6">
+<label class="relative flex flex-col items-center gap-2 p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+<input checked="" class="absolute top-2 right-2 accent-primary" name="payment" type="radio"/>
+<img class="w-12 h-12 object-contain grayscale group-hover:grayscale-0 transition-all" data-alt="Official logo of VNPay payment service, featuring high-contrast blue and red colors on a white background, minimalist and professional for a financial application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0y0s8Y8k7DVQXcDdFl-uUOeBJnD3Vn9lYucgaViDlj7dgf22d9ODHoaxZ8-4L1hywHZuBLo84Vz5FASVtv8jKO1HveIPsRw_HXtAod6c6lAUKRGvRU58O-xXX2KZp8qPFWegYFnJF-g2Yrab4zsOXjImS59w8ioHalFuqS_JAEUO8QmNxwonTZKBWIa3C7H_sg33u8t7gmXqwRbmiBy6zpRANKLQZKTcl6W6mRqn9e3J5CTEV6lO7BTb3biak3qlLaY9-6n-Si8c"/>
+<span class="text-caption font-bold">VNPay</span>
+</label>
+<label class="relative flex flex-col items-center gap-2 p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+<input class="absolute top-2 right-2 accent-primary" name="payment" type="radio"/>
+<img class="w-12 h-12 object-contain grayscale group-hover:grayscale-0 transition-all" data-alt="Official logo of Momo e-wallet, a vibrant pink icon with a stylized minimalist mascot face, representing modern digital payment systems in a sleek, high-tech style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvKWGBnJMWWOFYp3nk2-UJpu5CJejqhDIOenoH6gKeoiT3kEy59xtSIeUN5djbUBzUkLpqhDoJnajayAy9SiQ3qFWJZpVMMXBwO2IgaJC8DsdyWZ89np7dRWPIydFrZYl4bc2Vru6GIqNJzzTLKpn7Qme6r03kpDyN3Hy7BlZ9BAvxbZJ84hB5FEKCCIpsU_JW7wo9XVLg77E6q4WDmNLZjgN-YOPirmabVGsc9tj8YrW8X592ZIU1Z2RBhZYf2GnijDkca13OnU4"/>
+<span class="text-caption font-bold">MoMo</span>
+</label>
+<label class="relative flex flex-col items-center gap-2 p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+<input class="absolute top-2 right-2 accent-primary" name="payment" type="radio"/>
+<img class="w-12 h-12 object-contain grayscale group-hover:grayscale-0 transition-all" data-alt="Official logo of ZaloPay digital wallet, featuring a bright green and white color scheme with modern sans-serif typography, presented in a clean and minimal corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4OlogZoAbG3tPk0MSysDQGi8VO0QV1PrwS8nDFhMVTxStT8J24MJyffNPCHFgrqVcbNmebTo6dQQIG8MW3x7dED2tFlRORmAVuofg8s5ETWMd6k7tWE6ISZuLalTX7QPfUJC9V0cK96FlpXRPleOyvbariAqq-x1Bg7SrOAtsPeA7VjFlXFIjAarhK1uKE9i4kMW4YbHDKhbN1xyqfEmtn-c7lxgD7nUZpB6TwvRaBgo6mewz-2FWZKRiZohTNefbHDgp2WiAauc"/>
+<span class="text-caption font-bold">ZaloPay</span>
+</label>
+<label class="relative flex flex-col items-center gap-2 p-4 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+<input class="absolute top-2 right-2 accent-primary" name="payment" type="radio"/>
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container-highest rounded-full text-on-surface-variant">
+<span class="material-symbols-outlined text-[32px]">account_balance</span>
+</div>
+<span class="text-caption font-bold">Chuyển khoản</span>
+</label>
+</div>
+<button class="w-full bg-primary text-white py-4 rounded-xl font-headline-md text-label-md flex items-center justify-center gap-2 hover:bg-primary-container transition-all active:scale-[0.98] shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">lock</span>
+                            Tiến hành thanh toán
+                        </button>
+<p class="text-[10px] text-center text-on-surface-variant mt-4 opacity-70">Giao dịch được bảo mật bởi chuẩn PCI-DSS Level 1.</p>
+</section>
+</div>
+</div>
+</main>
+<!-- Footer (Authority Source: JSON) -->
+<footer class="w-full py-unit-lg px-gutter flex flex-col md:flex-row justify-between items-center mt-auto bg-surface-container-lowest border-t border-outline-variant">
+<div class="mb-4 md:mb-0">
+<p class="font-label-md text-label-md text-on-surface-variant">© 2024 Clinical Clarity Health Systems. Secure Patient Access.</p>
+</div>
+<div class="flex gap-unit-lg">
+<a class="text-caption font-caption text-on-surface-variant hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-caption font-caption text-on-surface-variant hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="text-caption font-caption text-on-surface-variant hover:text-primary transition-colors" href="#">Contact Support</a>
+</div>
+</footer>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', () => {
+                document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('bg-surface-container', 'border-l-4', 'border-primary'));
+                row.classList.add('bg-surface-container', 'border-l-4', 'border-primary');
+                // Simulate detail update animation
+                const detailPanel = document.querySelector('section:first-of-type');
+                detailPanel.style.opacity = '0.5';
+                setTimeout(() => {
+                    detailPanel.style.opacity = '1';
+                    detailPanel.style.transition = 'opacity 0.3s ease-in-out';
+                }, 100);
+            });
+        });
+
+        // Search highlight effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-2', 'ring-primary/20');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-2', 'ring-primary/20');
+        });
+    </script>
+</body></html>

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MediCare HMS - Nhập kho & Lô thuốc</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .form-input-focus:focus {
+            outline: none;
+            border-color: #0056b3;
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#eaf1ff",
+                        "secondary": "#006c49",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-secondary-container": "#00714d",
+                        "on-background": "#0b1c30",
+                        "surface-bright": "#f8f9ff",
+                        "on-primary-container": "#bbd0ff",
+                        "surface-variant": "#d3e4fe",
+                        "surface": "#f8f9ff",
+                        "outline-variant": "#c2c6d4",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#2a1700",
+                        "on-surface": "#0b1c30",
+                        "inverse-surface": "#213145",
+                        "outline": "#727784",
+                        "on-primary-fixed-variant": "#004491",
+                        "inverse-primary": "#acc7ff",
+                        "surface-container-high": "#dce9ff",
+                        "on-surface-variant": "#424752",
+                        "on-error": "#ffffff",
+                        "primary-container": "#0056b3",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#6cf8bb",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "background": "#f8f9ff",
+                        "primary-fixed": "#d7e2ff",
+                        "tertiary-container": "#7d4e00",
+                        "surface-container-low": "#eff4ff",
+                        "on-tertiary-container": "#ffc57f",
+                        "surface-dim": "#cbdbf5",
+                        "surface-container": "#e5eeff",
+                        "tertiary": "#5e3900",
+                        "surface-tint": "#115cb9",
+                        "on-primary-fixed": "#001a40",
+                        "primary-fixed-dim": "#acc7ff",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-error-container": "#93000a",
+                        "primary": "#003f87",
+                        "on-secondary-fixed": "#002113",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "secondary-fixed-dim": "#4edea3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px",
+                        "unit-sm": "8px",
+                        "unit-lg": "24px",
+                        "unit-xl": "48px",
+                        "unit-md": "16px",
+                        "margin-desktop": "40px",
+                        "unit-xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "caption": ["Inter"],
+                        "label-md": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background font-body-md text-on-surface">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface dark:bg-on-background border-r border-outline-variant flex flex-col py-unit-lg z-50">
+<div class="px-gutter mb-unit-xl">
+<h1 class="text-title-lg font-title-lg text-primary">MediCare Admin</h1>
+<p class="text-caption text-on-surface-variant">Clinical Management</p>
+</div>
+<nav class="flex-1 px-unit-md space-y-unit-xs overflow-y-auto">
+<a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body-md">Appointments</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-body-md">Doctors</span>
+</a>
+<!-- Active Pharmacy Tab -->
+<a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg bg-primary-container text-on-primary-container font-semibold" href="#">
+<span class="material-symbols-outlined">pill</span>
+<span class="font-body-md">Pharmacy</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-body-md">Patients</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-md">Departments</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-body-md">Invoices</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span class="font-body-md">Reports</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-colors mt-auto" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md">Settings</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[280px] min-h-screen flex flex-col">
+<!-- TopNavBar Shell -->
+<header class="h-16 bg-surface border-b border-outline-variant flex justify-between items-center px-gutter sticky top-0 z-40">
+<div class="flex items-center gap-unit-md w-1/2">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md focus:outline-none focus:border-primary" placeholder="Tìm kiếm hệ thống..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-unit-lg">
+<button class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-low p-2 rounded-full transition-all">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="flex items-center gap-unit-sm pl-unit-md border-l border-outline-variant">
+<div class="w-8 h-8 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Professional headshot of a hospital administrator in a clean white office setting, with soft natural lighting and a confident but approachable expression, embodying clinical leadership and corporate reliability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAP92TvVBmYvuJtvYb1C1SM8gq25JGYsndRstmhGtx4pjkkHoq_UiNboXsCsebYB5iVvTmWvg9TEfrXR_SqOHNeZm3_0_j138yeWF0ywJq3XFI77sFgDy7o9wvez7tvGhViZCxodKkXQoiOfwXmCVP1Vauv55KPyPjnA39Q4gzUKHs7G2nnO6KJL_rKT6bURl7wltl6nNMsqT0_5HjZ222MIToX6feX8RbpvE_nHZQzEx05TE8XIFYFaMF3hYNgit_JzarN3l8lds8"/>
+</div>
+<span class="font-label-md text-on-surface">Admin MediCare</span>
+</div>
+</div>
+</header>
+<!-- Page Canvas -->
+<div class="p-gutter space-y-gutter">
+<!-- Breadcrumb & Header -->
+<section class="space-y-unit-sm">
+<nav class="flex text-caption text-on-surface-variant gap-unit-xs">
+<span>Thuốc & Kho</span>
+<span>/</span>
+<span class="text-primary font-semibold">Nhập kho & Lô thuốc</span>
+</nav>
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Nhập kho thuốc</h2>
+<p class="text-body-md text-on-surface-variant">Quản lý lô và tồn kho</p>
+</div>
+<button class="bg-primary text-on-primary px-unit-lg py-unit-md rounded-lg font-label-md flex items-center gap-unit-sm hover:brightness-110 transition-all">
+<span class="material-symbols-outlined">save</span>
+                        Xác nhận nhập kho
+                    </button>
+</div>
+</section>
+<!-- Top Section: Form and Preview -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Left: Form -->
+<div class="col-span-12 lg:col-span-8">
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden">
+<div class="px-unit-lg py-unit-md border-b border-outline-variant bg-surface-container-lowest">
+<h3 class="font-title-lg text-title-lg text-primary">Thông tin nhập kho</h3>
+</div>
+<div class="p-unit-lg">
+<form class="grid grid-cols-2 gap-unit-lg">
+<div class="col-span-2 space-y-1">
+<label class="font-label-md text-on-surface-variant">Chọn thuốc</label>
+<select class="w-full border border-outline-variant rounded-lg p-2.5 bg-white text-body-md form-input-focus">
+<option>Paracetamol 500mg (Viên nén)</option>
+<option>Amoxicillin 250mg (Gói bột)</option>
+<option>Vitamin C 1000mg (Sủi)</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Số lô (Lot Number)</label>
+<input class="w-full border border-outline-variant rounded-lg p-2.5 text-body-md form-input-focus" type="text" value="LOT-202310-001"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Số lượng</label>
+<input class="w-full border border-outline-variant rounded-lg p-2.5 text-body-md form-input-focus" placeholder="0" type="number"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Hạn sử dụng</label>
+<input class="w-full border border-outline-variant rounded-lg p-2.5 text-body-md form-input-focus" type="date"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Ngày nhập</label>
+<input class="w-full border border-outline-variant rounded-lg p-2.5 text-body-md form-input-focus" type="date" value="2023-10-27"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Nhà cung cấp</label>
+<input class="w-full border border-outline-variant rounded-lg p-2.5 text-body-md form-input-focus" placeholder="Tìm hoặc nhập tên NCC" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Giá nhập (VNĐ)</label>
+<input class="w-full border border-outline-variant rounded-lg p-2.5 text-body-md form-input-focus" placeholder="1.200" type="number"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Số hóa đơn</label>
+<input class="w-full border border-outline-variant rounded-lg p-2.5 text-body-md form-input-focus" placeholder="HD-9921" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="font-label-md text-on-surface-variant">Ghi chú</label>
+<textarea class="w-full border border-outline-variant rounded-lg p-2.5 text-body-md form-input-focus" rows="1"></textarea>
+</div>
+</form>
+</div>
+</div>
+</div>
+<!-- Right: Preview -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden">
+<div class="px-unit-lg py-unit-md border-b border-outline-variant bg-surface-container-lowest">
+<h3 class="font-title-lg text-title-lg text-primary">Xem trước thay đổi</h3>
+</div>
+<div class="p-unit-lg space-y-unit-lg">
+<!-- Stock Summary -->
+<div class="grid grid-cols-2 gap-unit-md">
+<div class="p-unit-md bg-surface-container-low rounded-lg text-center">
+<p class="text-caption text-on-surface-variant uppercase tracking-wider">Tồn hiện tại</p>
+<p class="text-headline-md text-on-surface">1,250</p>
+</div>
+<div class="p-unit-md bg-primary-container/10 rounded-lg text-center border border-primary-container/20">
+<p class="text-caption text-primary uppercase tracking-wider">Tồn sau nhập</p>
+<p class="text-headline-md text-primary">1,750</p>
+</div>
+</div>
+<!-- Medication Card -->
+<div class="flex gap-unit-md p-unit-md bg-surface-bright border border-outline-variant rounded-lg">
+<div class="w-16 h-16 bg-surface-container rounded flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[32px]">medication</span>
+</div>
+<div>
+<p class="font-semibold text-body-lg">Paracetamol 500mg</p>
+<p class="text-caption text-on-surface-variant">Nhóm: Giảm đau - Hạ sốt</p>
+<p class="text-caption text-on-surface-variant">Vị trí: Kệ A1 - Tầng 2</p>
+</div>
+</div>
+<!-- Alerts -->
+<div class="p-unit-md bg-error-container/20 border border-error/20 rounded-lg flex gap-unit-sm items-start">
+<span class="material-symbols-outlined text-error">warning</span>
+<div>
+<p class="font-semibold text-error text-body-md">Cảnh báo hạn dùng</p>
+<p class="text-caption text-on-error-container">Lô hiện tại đang có hạn dùng dưới 6 tháng (30/03/2024).</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Section: Data Table -->
+<section class="bg-white border border-outline-variant rounded-xl overflow-hidden">
+<div class="px-unit-lg py-unit-md border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+<h3 class="font-title-lg text-title-lg text-primary">Danh sách lô thuốc</h3>
+<div class="flex gap-unit-md">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="pl-9 pr-4 py-1.5 border border-outline-variant rounded-lg text-body-md focus:outline-none focus:border-primary w-64" placeholder="Tìm kiếm thuốc..." type="text"/>
+</div>
+<select class="border border-outline-variant rounded-lg px-unit-md py-1.5 text-body-md">
+<option>Tất cả trạng thái</option>
+<option>Đang sử dụng</option>
+<option>Sắp hết hạn</option>
+<option>Đã hết hạn</option>
+</select>
+<button class="border border-outline-variant p-2 rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="px-unit-lg py-unit-md font-label-md text-on-surface-variant uppercase">Số lô</th>
+<th class="px-unit-lg py-unit-md font-label-md text-on-surface-variant uppercase">Thuốc</th>
+<th class="px-unit-lg py-unit-md font-label-md text-on-surface-variant uppercase">Ngày nhập</th>
+<th class="px-unit-lg py-unit-md font-label-md text-on-surface-variant uppercase">Hạn sử dụng</th>
+<th class="px-unit-lg py-unit-md font-label-md text-on-surface-variant uppercase text-right">Số lượng còn</th>
+<th class="px-unit-lg py-unit-md font-label-md text-on-surface-variant uppercase text-center">Trạng thái</th>
+<th class="px-unit-lg py-unit-md font-label-md text-on-surface-variant uppercase">Nhà cung cấp</th>
+<th class="px-unit-lg py-unit-md font-label-md text-on-surface-variant uppercase text-right">Hành động</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-unit-lg py-4 font-semibold text-primary">LOT-230911-A</td>
+<td class="px-unit-lg py-4">
+<div class="font-semibold text-on-surface">Amoxicillin 250mg</div>
+<div class="text-caption text-on-surface-variant">Kháng sinh</div>
+</td>
+<td class="px-unit-lg py-4 text-on-surface-variant">11/09/2023</td>
+<td class="px-unit-lg py-4 text-on-surface-variant">15/02/2025</td>
+<td class="px-unit-lg py-4 text-right font-medium">5,400</td>
+<td class="px-unit-lg py-4 text-center">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container text-caption font-semibold rounded-full">Active</span>
+</td>
+<td class="px-unit-lg py-4 text-on-surface-variant">PharmaCorp VN</td>
+<td class="px-unit-lg py-4 text-right">
+<div class="flex justify-end gap-1">
+<button class="p-2 text-primary hover:bg-primary-container/10 rounded-full">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-unit-lg py-4 font-semibold text-primary">LOT-221201-B</td>
+<td class="px-unit-lg py-4">
+<div class="font-semibold text-on-surface">Paracetamol 500mg</div>
+<div class="text-caption text-on-surface-variant">Giảm đau</div>
+</td>
+<td class="px-unit-lg py-4 text-on-surface-variant">01/12/2022</td>
+<td class="px-unit-lg py-4 text-error font-medium">20/03/2024</td>
+<td class="px-unit-lg py-4 text-right font-medium text-error">850</td>
+<td class="px-unit-lg py-4 text-center">
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-caption font-semibold rounded-full">Near Expiry</span>
+</td>
+<td class="px-unit-lg py-4 text-on-surface-variant">MediGate Importers</td>
+<td class="px-unit-lg py-4 text-right">
+<div class="flex justify-end gap-1">
+<button class="p-2 text-primary hover:bg-primary-container/10 rounded-full">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-unit-lg py-4 font-semibold text-primary">LOT-220115-X</td>
+<td class="px-unit-lg py-4">
+<div class="font-semibold text-on-surface">Augmentin 625mg</div>
+<div class="text-caption text-on-surface-variant">Kháng sinh</div>
+</td>
+<td class="px-unit-lg py-4 text-on-surface-variant">15/01/2022</td>
+<td class="px-unit-lg py-4 text-error font-bold">15/01/2023</td>
+<td class="px-unit-lg py-4 text-right font-medium">120</td>
+<td class="px-unit-lg py-4 text-center">
+<span class="px-3 py-1 bg-error-container text-on-error-container text-caption font-semibold rounded-full">Expired</span>
+</td>
+<td class="px-unit-lg py-4 text-on-surface-variant">GSK Distribution</td>
+<td class="px-unit-lg py-4 text-right">
+<div class="flex justify-end gap-1">
+<button class="p-2 text-primary hover:bg-primary-container/10 rounded-full">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-unit-lg py-4 font-semibold text-primary">LOT-230510-C</td>
+<td class="px-unit-lg py-4">
+<div class="font-semibold text-on-surface">Vitamin C 1000mg</div>
+<div class="text-caption text-on-surface-variant">Thực phẩm bổ sung</div>
+</td>
+<td class="px-unit-lg py-4 text-on-surface-variant">10/05/2023</td>
+<td class="px-unit-lg py-4 text-on-surface-variant">10/05/2025</td>
+<td class="px-unit-lg py-4 text-right font-medium">12,000</td>
+<td class="px-unit-lg py-4 text-center">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container text-caption font-semibold rounded-full">Active</span>
+</td>
+<td class="px-unit-lg py-4 text-on-surface-variant">HealthyPharma</td>
+<td class="px-unit-lg py-4 text-right">
+<div class="flex justify-end gap-1">
+<button class="p-2 text-primary hover:bg-primary-container/10 rounded-full">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-unit-lg py-4 border-t border-outline-variant flex justify-between items-center bg-surface-bright">
+<p class="text-caption text-on-surface-variant">Hiển thị 1 - 4 của 128 lô thuốc</p>
+<div class="flex gap-unit-xs">
+<button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-10 h-10 bg-primary text-on-primary rounded-lg font-semibold text-body-md">1</button>
+<button class="w-10 h-10 hover:bg-surface-container-high rounded-lg font-semibold text-body-md">2</button>
+<button class="w-10 h-10 hover:bg-surface-container-high rounded-lg font-semibold text-body-md">3</button>
+<button class="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer Info -->
+<footer class="mt-auto p-gutter border-t border-outline-variant text-caption text-on-surface-variant flex justify-between items-center">
+<span>© 2023 MediCare Hospital Management System. All rights reserved.</span>
+<div class="flex gap-unit-lg">
+<a class="hover:text-primary transition-colors" href="#">Điều khoản bảo mật</a>
+<a class="hover:text-primary transition-colors" href="#">Hỗ trợ kỹ thuật</a>
+</div>
+</footer>
+</main>
+<!-- FAB for Quick Actions (Only on Primary Dashboard screens but here for demonstration) -->
+<!-- Suppressed on detailed management page as per instructions, but would look like this: -->
+<!-- <button class="fixed bottom-gutter right-gutter bg-primary text-on-primary w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform">
+        <span class="material-symbols-outlined">add</span>
+    </button> -->
+<script>
+        // Micro-interactions
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('focus', () => {
+                element.parentElement.classList.add('text-primary');
+            });
+            element.addEventListener('blur', () => {
+                element.parentElement.classList.remove('text-primary');
+            });
+        });
+
+        // Simple notification toggle simulation
+        const notificationBtn = document.querySelector('button .material-symbols-outlined:contains("notifications")');
+        if(notificationBtn) {
+            notificationBtn.parentElement.addEventListener('click', () => {
+                console.log('Open notification panel');
+            });
+        }
+    </script>
+</body></html>

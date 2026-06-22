@@ -1,0 +1,189 @@
+@model QuanLyBenhVien.Models.Patient
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Bệnh án điện tử";
+    var appointments = ViewBag.Appointments as List<QuanLyBenhVien.Models.Appointment> ?? new List<QuanLyBenhVien.Models.Appointment>();
+    var examRecords = ViewBag.ExaminationRecords as List<QuanLyBenhVien.Models.ExaminationRecord> ?? new List<QuanLyBenhVien.Models.ExaminationRecord>();
+    var invoices = ViewBag.Invoices as List<QuanLyBenhVien.Models.Invoice> ?? new List<QuanLyBenhVien.Models.Invoice>();
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/Patients" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách bệnh nhân
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Bệnh án điện tử (EMR)</h2>
+    <p class="text-body-md text-on-surface-variant">Thông tin cá nhân, tiền sử dị ứng, và nhật ký điều trị chi tiết.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    <!-- Patient info card (1 col) -->
+    <div class="space-y-unit-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <div class="flex items-center gap-unit-md mb-unit-lg">
+                <div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-[24px]">
+                    @Model.User.HoTen.Substring(Model.User.HoTen.LastIndexOf(' ') + 1, 1)
+                </div>
+                <div>
+                    <h3 class="font-title-lg text-on-surface font-bold">@Model.User.HoTen</h3>
+                    <span class="text-caption text-primary font-bold bg-primary-container/10 px-2 py-0.5 rounded">BN-@Model.Id.ToString("D4")</span>
+                </div>
+            </div>
+
+            <!-- Allergy warnings (Vô cùng quan trọng trong y tế) -->
+            @if (!string.IsNullOrEmpty(Model.DiUng) && Model.DiUng != "Không")
+            {
+                <div class="p-unit-sm bg-error-container/20 border-l-4 border-error text-error text-caption rounded-r mb-unit-md flex gap-2">
+                    <span class="material-symbols-outlined text-[18px] shrink-0">warning</span>
+                    <div>
+                        <strong class="font-bold">Cảnh báo dị ứng:</strong> @Model.DiUng
+                    </div>
+                </div>
+            }
+
+            <div class="space-y-unit-sm text-body-md border-t border-outline-variant pt-unit-md">
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Ngày sinh (Tuổi)</span>
+                    <span class="font-medium text-on-surface">@Model.NgaySinh.ToString("dd/MM/yyyy") (@(DateTime.Today.Year - Model.NgaySinh.Year) tuổi)</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Giới tính</span>
+                    <span class="font-medium text-on-surface">@Model.GioiTinh</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Nhóm máu</span>
+                    <span class="font-semibold text-secondary">@Model.NhomMau</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Mã số thẻ BHYT</span>
+                    <span class="font-medium font-mono text-on-surface">@(string.IsNullOrEmpty(Model.SoBHYT) ? "Chưa cung cấp" : Model.SoBHYT)</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Số điện thoại</span>
+                    <span class="font-medium text-on-surface">@Model.User.Sdt</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Tiền sử bệnh án</span>
+                    <span class="font-medium text-on-surface">@Model.TienSuBenh</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Content area tabs (2 cols) -->
+    <div class="lg:col-span-2 space-y-unit-lg">
+        <!-- Tab: Consultations logs -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h3 class="font-title-lg text-title-lg mb-unit-md">Nhật ký khám chữa bệnh</h3>
+            
+            <div class="space-y-unit-lg">
+                @if (!examRecords.Any())
+                {
+                    <p class="text-on-surface-variant py-4 text-center">Bệnh nhân chưa có lượt khám nào.</p>
+                }
+                else
+                {
+                    @foreach (var record in examRecords)
+                    {
+                        <div class="border border-outline-variant rounded-lg p-unit-md bg-surface-container-low/20 space-y-unit-sm">
+                            <div class="flex items-center justify-between border-b border-outline-variant pb-unit-sm">
+                                <div>
+                                    <span class="text-caption text-on-surface-variant">Ngày khám:</span>
+                                    <strong class="font-body-md text-primary">@record.NgayKham.ToString("dd/MM/yyyy HH:mm")</strong>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-caption text-on-surface-variant">Bác sĩ khám:</span>
+                                    <span class="font-body-md font-semibold">@record.Appointment.Doctor?.User.HoTen</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-sm text-body-md pt-unit-xs">
+                                <div>
+                                    <strong class="text-caption text-on-surface-variant block">Triệu chứng lâm sàng:</strong>
+                                    <p class="text-on-surface">@record.TrieuChung</p>
+                                </div>
+                                <div>
+                                    <strong class="text-caption text-on-surface-variant block">Chẩn đoán y khoa:</strong>
+                                    <p class="text-on-surface font-semibold text-primary">@record.ChanDoan</p>
+                                </div>
+                                
+                                <div class="md:col-span-2 mt-unit-xs border-t border-outline-variant/30 pt-unit-xs">
+                                    <strong class="text-caption text-on-surface-variant block">Chỉ định / Kết quả Cận lâm sàng:</strong>
+                                    <p class="text-on-surface">
+                                        @if (string.IsNullOrEmpty(record.ChiDinhCLS))
+                                        {
+                                            <span>Không có</span>
+                                        }
+                                        else
+                                        {
+                                            <strong>@record.ChiDinhCLS</strong> @(string.IsNullOrEmpty(record.KetQuaCLS) ? "" : $" - Kết quả: {record.KetQuaCLS}")
+                                        }
+                                    </p>
+                                </div>
+
+                                <div class="md:col-span-2 mt-unit-xs border-t border-outline-variant/30 pt-unit-xs">
+                                    <strong class="text-caption text-on-surface-variant block">Lời dặn bác sĩ:</strong>
+                                    <p class="text-on-surface italic text-on-surface-variant">@record.LoiDan</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Tab: Invoices -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+            <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30">
+                <h3 class="font-title-lg text-title-lg">Lịch sử hóa đơn thanh toán</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                            <th class="px-unit-md py-3">Mã HD</th>
+                            <th class="px-unit-md py-3">Ngày phát sinh</th>
+                            <th class="px-unit-md py-3">Tổng cộng</th>
+                            <th class="px-unit-md py-3">Phương thức</th>
+                            <th class="px-unit-md py-3">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant text-body-md">
+                        @if (!invoices.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="px-unit-md py-6 text-center text-on-surface-variant">Không có lịch sử hóa đơn tài chính.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var invoice in invoices)
+                            {
+                                <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="location.href='/Admin/Invoices/Details/@invoice.Id'">
+                                    <td class="px-unit-md py-4 font-mono font-bold text-primary">HD-@invoice.Id.ToString("D5")</td>
+                                    <td class="px-unit-md py-4">@invoice.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="px-unit-md py-4 font-bold">@invoice.TongTien.ToString("N0") đ</td>
+                                    <td class="px-unit-md py-4">@invoice.PhuongThuc</td>
+                                    <td class="px-unit-md py-4">
+                                        @if (invoice.TrangThaiThanhToan == "DaThanhToan")
+                                        {
+                                            <span class="px-2.5 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">Đã thanh toán</span>
+                                        }
+                                        else if (invoice.TrangThaiThanhToan == "ChuaThanhToan")
+                                        {
+                                            <span class="px-2.5 py-0.5 rounded-full bg-error-container text-error text-[11px] font-bold">Chưa trả</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[11px] font-bold">Đã hủy</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

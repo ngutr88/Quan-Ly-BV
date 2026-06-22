@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Departments &amp; Services | MediLink HMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f8f9ff",
+                    "surface-dim": "#cbdbf5",
+                    "primary-container": "#0056b3",
+                    "secondary-container": "#6cf8bb",
+                    "on-error-container": "#93000a",
+                    "tertiary-fixed": "#ffddb8",
+                    "on-tertiary-container": "#ffc57f",
+                    "on-primary-fixed": "#001a40",
+                    "on-error": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-secondary-container": "#00714d",
+                    "on-secondary": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "tertiary": "#5e3900",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "surface-container-highest": "#d3e4fe",
+                    "surface-tint": "#115cb9",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-surface": "#0b1c30",
+                    "on-primary-container": "#bbd0ff",
+                    "background": "#f8f9ff",
+                    "on-background": "#0b1c30",
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#7d4e00",
+                    "on-primary-fixed-variant": "#004491",
+                    "surface-container": "#e5eeff",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface": "#f8f9ff",
+                    "secondary-fixed": "#6ffbbe",
+                    "outline-variant": "#c2c6d4",
+                    "surface-container-high": "#dce9ff",
+                    "on-secondary-fixed": "#002113",
+                    "surface-container-low": "#eff4ff",
+                    "surface-variant": "#d3e4fe",
+                    "primary-fixed-dim": "#acc7ff",
+                    "on-tertiary-fixed": "#2a1700",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "secondary": "#006c49",
+                    "on-surface-variant": "#424752",
+                    "outline": "#727784",
+                    "inverse-surface": "#213145",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed": "#d7e2ff",
+                    "primary": "#003f87",
+                    "inverse-primary": "#acc7ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit-lg": "24px",
+                    "margin-desktop": "40px",
+                    "container-max": "1440px",
+                    "unit-xs": "4px",
+                    "unit-sm": "8px",
+                    "unit-md": "16px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "unit-xl": "48px"
+            },
+            "fontFamily": {
+                    "title-lg": ["Inter"],
+                    "caption": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-md": ["Inter"]
+            },
+            "fontSize": {
+                    "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-background">
+<!-- Side Navigation Bar -->
+<aside class="w-[280px] h-screen fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant flex flex-col p-unit-md gap-unit-xs z-50">
+<div class="flex items-center gap-unit-sm mb-unit-lg px-unit-xs">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">health_metrics</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-extrabold text-primary leading-none">City General</h1>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-70">Admin Portal</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1 sidebar-scroll overflow-y-auto">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">calendar_today</span> Appointments
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">medical_services</span> Doctors
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">person</span> Patients
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary-container text-on-primary-container font-semibold rounded-lg" href="#">
+<span class="material-symbols-outlined">domain</span> Departments
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">pill</span> Pharmacy
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">receipt_long</span> Invoices
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">groups</span> HR
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">assessment</span> Reports
+            </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span> Settings
+            </a>
+</nav>
+<div class="mt-auto border-t border-outline-variant pt-unit-md">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant font-label-md text-label-md hover:bg-error-container hover:text-on-error-container rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">logout</span> Logout
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[280px] min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="w-full h-16 sticky top-0 bg-surface-lowest border-b border-outline-variant flex justify-between items-center px-unit-lg z-40">
+<div class="flex items-center gap-unit-md">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined text-[20px]">search</span>
+<input class="bg-surface-container-low border-none rounded-full pl-10 pr-4 py-1.5 text-body-md font-body-md focus:ring-2 focus:ring-primary-container w-64 transition-all" placeholder="Search data..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-unit-md">
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="text-right hidden sm:block">
+<p class="text-body-md font-bold text-primary">Admin User</p>
+<p class="text-[11px] text-on-surface-variant">System Administrator</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" data-alt="A professional headshot of a middle-aged hospital administrator wearing a crisp white medical coat and a blue tie. The background is a blurred high-end medical facility with soft daylight and clean white walls. The person is smiling confidently, reflecting a mood of professional authority and systematic reliability in a clinical environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlVCiairDRk9q_WF6Ubj8iY8KdzQVn8GyK4wjFQuvEOvc_cRMgGeHMlgv_xuEg1vvqUAq4fD9EUZxJs_L6Tf0dlF2bldsbEk6tHPclfU21rIuwJcYLOFAcJ1DBCt2_Ti8DP2IFuXesBl4xuBSDxoXGXPkBvtFhso1P4NVmyW3C8pS-jegRcRbf8JYO9lHeEOO2swCo8Rc2klHDpe1b12TMTaPItHzzlny5lRjm3hdZ726UMig-NOcOjHqlrh4QU6fpvcI_pl-ezuY"/>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="p-unit-lg flex flex-col gap-unit-lg max-w-[1600px] mx-auto w-full">
+<!-- Breadcrumb and Header Actions -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-unit-md">
+<div>
+<nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant mb-2">
+<span>Dashboard</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">Khoa &amp; Dịch vụ</span>
+</nav>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Khoa và dịch vụ</h2>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-6 py-2.5 border-2 border-primary-container text-primary-container font-semibold rounded-xl hover:bg-primary-container hover:text-white transition-all flex items-center gap-2 active:scale-95">
+<span class="material-symbols-outlined">add_circle</span> Thêm khoa
+                    </button>
+<button class="px-6 py-2.5 bg-primary-container text-white font-semibold rounded-xl hover:bg-primary transition-all flex items-center gap-2 shadow-md active:scale-95">
+<span class="material-symbols-outlined">medical_services</span> Thêm dịch vụ
+                    </button>
+</div>
+</div>
+<!-- Two-Pane Layout -->
+<div class="flex flex-col lg:flex-row gap-gutter">
+<!-- Left Pane: Department List (30%) -->
+<div class="lg:w-[350px] flex flex-col gap-unit-md">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md h-fit">
+<div class="flex items-center justify-between mb-unit-md">
+<h3 class="font-title-lg text-title-lg text-on-surface">Danh sách khoa</h3>
+<button class="p-1 hover:bg-surface-container-low rounded"><span class="material-symbols-outlined text-on-surface-variant">filter_list</span></button>
+</div>
+<div class="space-y-unit-sm">
+<!-- Dept Item Active -->
+<div class="p-unit-sm border-2 border-primary-container bg-primary-container/5 rounded-lg cursor-pointer transition-all">
+<div class="flex justify-between items-start mb-1">
+<span class="font-bold text-on-surface text-body-lg">Nội tổng quát</span>
+<span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold uppercase rounded">Active</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-on-surface-variant">
+<span>Code: <span class="font-semibold">K-NTQ</span></span>
+<span>12 Bác sĩ</span>
+</div>
+</div>
+<!-- Dept Item -->
+<div class="p-unit-sm border border-outline-variant hover:border-primary-container/50 bg-surface-container-lowest rounded-lg cursor-pointer transition-all group">
+<div class="flex justify-between items-start mb-1">
+<span class="font-semibold text-on-surface text-body-lg group-hover:text-primary">Tim mạch</span>
+<span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold uppercase rounded">Active</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-on-surface-variant">
+<span>Code: <span class="font-semibold">K-TM</span></span>
+<span>8 Bác sĩ</span>
+</div>
+</div>
+<!-- Dept Item -->
+<div class="p-unit-sm border border-outline-variant hover:border-primary-container/50 bg-surface-container-lowest rounded-lg cursor-pointer transition-all group">
+<div class="flex justify-between items-start mb-1">
+<span class="font-semibold text-on-surface text-body-lg group-hover:text-primary">Sản phụ khoa</span>
+<span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold uppercase rounded">Active</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-on-surface-variant">
+<span>Code: <span class="font-semibold">K-SPK</span></span>
+<span>15 Bác sĩ</span>
+</div>
+</div>
+<!-- Dept Item Inactive -->
+<div class="p-unit-sm border border-outline-variant hover:border-error/50 bg-surface-container-lowest rounded-lg cursor-pointer transition-all group opacity-75">
+<div class="flex justify-between items-start mb-1">
+<span class="font-semibold text-on-surface text-body-lg">Nhi khoa</span>
+<span class="px-2 py-0.5 bg-error-container/40 text-on-error-container text-[10px] font-bold uppercase rounded">Inactive</span>
+</div>
+<div class="flex items-center justify-between text-caption font-caption text-on-surface-variant">
+<span>Code: <span class="font-semibold">K-NK</span></span>
+<span>10 Bác sĩ</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Statistics Snapshot -->
+<div class="bg-primary-container p-unit-md rounded-xl text-white">
+<p class="text-label-md font-label-md opacity-80 uppercase tracking-wider mb-2">Tổng nhân lực</p>
+<div class="flex items-end justify-between">
+<h4 class="text-[32px] font-bold leading-none">156</h4>
+<span class="text-secondary-container font-bold flex items-center text-body-md"><span class="material-symbols-outlined text-[18px]">trending_up</span> +12%</span>
+</div>
+<p class="text-caption font-caption opacity-70 mt-2">Dữ liệu cập nhật 15 phút trước</p>
+</div>
+</div>
+<!-- Right Pane: Details (70%) -->
+<div class="flex-1 flex flex-col gap-unit-lg">
+<!-- Department Summary Card -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+<div class="p-unit-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 bg-primary-container/10 text-primary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-[28px]">stethoscope</span>
+</div>
+<div>
+<h3 class="text-headline-md font-headline-md text-on-surface">Nội tổng quát</h3>
+<p class="text-body-md text-on-surface-variant">Khoa mũi nhọn của bệnh viện</p>
+</div>
+</div>
+<button class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">edit</span>
+</button>
+</div>
+<div class="p-unit-md">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-unit-md mb-unit-lg">
+<div class="p-3 bg-surface-container-low rounded-lg">
+<p class="text-label-md font-label-md text-on-surface-variant uppercase mb-1">Vị trí</p>
+<p class="font-bold text-on-surface">Tầng 2 - Tòa A</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg">
+<p class="text-label-md font-label-md text-on-surface-variant uppercase mb-1">Trưởng khoa</p>
+<p class="font-bold text-on-surface">TS.BS. Nguyễn Văn A</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg">
+<p class="text-label-md font-label-md text-on-surface-variant uppercase mb-1">Bác sĩ</p>
+<p class="font-bold text-on-surface">12 Chuyên gia</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg">
+<p class="text-label-md font-label-md text-on-surface-variant uppercase mb-1">Bệnh nhân/Ngày</p>
+<p class="font-bold text-on-surface">~150 Lượt</p>
+</div>
+<div class="p-3 bg-surface-container-low rounded-lg hidden lg:block">
+<p class="text-label-md font-label-md text-on-surface-variant uppercase mb-1">Lượt khám/Tháng</p>
+<p class="font-bold text-on-surface">1,245</p>
+</div>
+</div>
+<div>
+<h4 class="text-label-md font-label-md text-on-surface-variant uppercase mb-2">Chuyên môn &amp; Đặc thù</h4>
+<p class="text-body-md text-on-surface leading-relaxed max-w-3xl">
+                                    Khoa Nội tổng quát chuyên cung cấp các dịch vụ khám bệnh, chẩn đoán và điều trị các bệnh lý nội khoa bao gồm Tim mạch, Hô hấp, Tiêu hóa, Nội tiết và Thận - Tiết niệu. Khoa được trang bị hệ thống thiết bị chẩn đoán hiện đại và đội ngũ chuyên gia giàu kinh nghiệm, cam kết mang lại sự chăm sóc toàn diện nhất cho bệnh nhân.
+                                </p>
+</div>
+</div>
+</section>
+<!-- Services Management Section -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex-1">
+<div class="p-unit-md border-b border-outline-variant flex justify-between items-center">
+<h3 class="text-title-lg font-title-lg text-on-surface">Danh sách dịch vụ</h3>
+<div class="flex gap-2">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined text-[18px]">search</span>
+<input class="bg-surface-container-low border border-outline-variant rounded-lg pl-9 pr-4 py-1.5 text-label-md font-label-md focus:ring-1 focus:ring-primary-container w-48" placeholder="Tìm dịch vụ..." type="text"/>
+</div>
+<button class="px-4 py-1.5 bg-primary-container text-white text-label-md font-bold rounded-lg hover:bg-primary transition-all">Xuất File</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-bright">
+<tr>
+<th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Tên dịch vụ</th>
+<th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Giá niêm yết</th>
+<th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-center">Thời gian</th>
+<th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-center">Trạng thái</th>
+<th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-right">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-unit-md py-4">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface text-body-md">Khám nội tổng quát</span>
+<span class="text-[11px] text-on-surface-variant">Mã: SVC-001</span>
+</div>
+</td>
+<td class="px-unit-md py-4 font-semibold text-primary">200.000 VND</td>
+<td class="px-unit-md py-4 text-center text-body-md">20 phút</td>
+<td class="px-unit-md py-4 text-center">
+<div class="flex justify-center">
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+</td>
+<td class="px-unit-md py-4 text-right space-x-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-error/5 rounded-lg transition-all">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-unit-md py-4">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface text-body-md">Tầm soát tiểu đường</span>
+<span class="text-[11px] text-on-surface-variant">Mã: SVC-042</span>
+</div>
+</td>
+<td class="px-unit-md py-4 font-semibold text-primary">450.000 VND</td>
+<td class="px-unit-md py-4 text-center text-body-md">45 phút</td>
+<td class="px-unit-md py-4 text-center">
+<div class="flex justify-center">
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+</td>
+<td class="px-unit-md py-4 text-right space-x-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error hover:bg-error/5 rounded-lg transition-all">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group opacity-60">
+<td class="px-unit-md py-4">
+<div class="flex flex-col">
+<span class="font-bold text-on-surface text-body-md">Khám tư vấn dinh dưỡng</span>
+<span class="text-[11px] text-on-surface-variant">Mã: SVC-115</span>
+</div>
+</td>
+<td class="px-unit-md py-4 font-semibold text-primary">150.000 VND</td>
+<td class="px-unit-md py-4 text-center text-body-md">30 phút</td>
+<td class="px-unit-md py-4 text-center">
+<div class="flex justify-center">
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary"></div>
+</label>
+</div>
+</td>
+<td class="px-unit-md py-4 text-right space-x-2">
+<button class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-2 text-primary hover:bg-primary/10 rounded-lg transition-all">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Empty State Example (Hidden by default, used when no services) -->
+<div class="hidden flex flex-col items-center justify-center py-unit-xl px-unit-md text-center" id="empty-state">
+<div class="w-64 h-64 mb-unit-md opacity-20">
+<span class="material-symbols-outlined text-[120px] text-outline">clinical_notes</span>
+</div>
+<h4 class="text-title-lg font-title-lg text-on-surface mb-2">Chưa có dịch vụ nào</h4>
+<p class="text-body-md text-on-surface-variant max-w-md mb-unit-lg">
+                                Khoa này hiện chưa được thiết lập bất kỳ dịch vụ khám chữa bệnh nào. Hãy bắt đầu bằng cách thêm dịch vụ đầu tiên.
+                            </p>
+<button class="px-8 py-3 bg-primary-container text-white font-bold rounded-xl hover:bg-primary shadow-lg flex items-center gap-2 transition-transform active:scale-95">
+<span class="material-symbols-outlined">add</span> Thêm dịch vụ đầu tiên
+                            </button>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action for Mobile (Hidden on Desktop) -->
+<div class="md:hidden fixed bottom-6 right-6 flex flex-col gap-3">
+<button class="w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+</div>
+<script>
+        // Toggle Department Selection Interaction (Simple Mock)
+        const deptItems = document.querySelectorAll('.lg\\:w-\\[350px\\] .space-y-unit-sm > div');
+        deptItems.forEach(item => {
+            item.addEventListener('click', function() {
+                deptItems.forEach(i => {
+                    i.classList.remove('border-primary-container', 'bg-primary-container/5');
+                    i.classList.add('border-outline-variant', 'bg-surface-container-lowest');
+                    i.querySelector('.text-on-surface')?.classList.remove('font-bold');
+                    i.querySelector('.text-on-surface')?.classList.add('font-semibold');
+                });
+                this.classList.add('border-primary-container', 'bg-primary-container/5', 'border-2');
+                this.classList.remove('border-outline-variant', 'bg-surface-container-lowest');
+                this.querySelector('.text-on-surface')?.classList.add('font-bold');
+                this.querySelector('.text-on-surface')?.classList.remove('font-semibold');
+                
+                // Mock: Switching to an empty state for demonstration if "Nhi khoa" selected
+                const deptName = this.querySelector('span').innerText;
+                const serviceTable = document.querySelector('table');
+                const emptyState = document.getElementById('empty-state');
+                
+                if(deptName === 'Nhi khoa') {
+                    serviceTable.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                } else {
+                    serviceTable.classList.remove('hidden');
+                    emptyState.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body></html>

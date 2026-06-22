@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cấu hình hệ thống | Clinical Clarity HMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#00714d",
+                        "on-background": "#0b1c30",
+                        "surface-dim": "#cbdbf5",
+                        "primary": "#003f87",
+                        "on-primary-container": "#bbd0ff",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#7d4e00",
+                        "on-tertiary-fixed": "#2a1700",
+                        "error": "#ba1a1a",
+                        "surface-variant": "#d3e4fe",
+                        "surface": "#f8f9ff",
+                        "outline": "#727784",
+                        "on-surface-variant": "#424752",
+                        "secondary-fixed-dim": "#4edea3",
+                        "secondary": "#006c49",
+                        "on-tertiary-container": "#ffc57f",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#6cf8bb",
+                        "primary-fixed": "#d7e2ff",
+                        "primary-fixed-dim": "#acc7ff",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-secondary-fixed": "#002113",
+                        "surface-container": "#e5eeff",
+                        "on-primary-fixed-variant": "#004491",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "surface-container-highest": "#d3e4fe",
+                        "surface-tint": "#115cb9",
+                        "inverse-primary": "#acc7ff",
+                        "outline-variant": "#c2c6d4",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container-high": "#dce9ff",
+                        "primary-container": "#0056b3",
+                        "tertiary": "#5e3900",
+                        "on-secondary-fixed-variant": "#005236",
+                        "inverse-surface": "#213145",
+                        "surface-bright": "#f8f9ff",
+                        "on-error": "#ffffff",
+                        "on-surface": "#0b1c30",
+                        "on-primary-fixed": "#001a40",
+                        "surface-container-low": "#eff4ff",
+                        "tertiary-fixed": "#ffddb8",
+                        "background": "#f8f9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit-lg": "24px",
+                        "margin-desktop": "40px",
+                        "unit-sm": "8px",
+                        "unit-md": "16px",
+                        "unit-xs": "4px",
+                        "container-max": "1440px",
+                        "gutter": "24px",
+                        "unit-xl": "48px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #0b1c30; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .tab-active { color: #003f87; border-bottom: 2px solid #003f87; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c2c6d4; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="w-[280px] h-screen fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant flex flex-col py-unit-lg px-unit-md z-20">
+<div class="mb-unit-xl">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Clinical Clarity</h1>
+<p class="text-on-surface-variant font-body-md text-body-md">Admin Portal</p>
+</div>
+<nav class="flex-1 space-y-unit-xs overflow-y-auto custom-scrollbar">
+<!-- Nav Items -->
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-body-md text-body-md">Appointments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-body-md text-body-md">Doctors</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-body-md text-body-md">Patients</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">corporate_fare</span>
+<span class="font-body-md text-body-md">Departments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">medication</span>
+<span class="font-body-md text-body-md">Pharmacy</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-body-md text-body-md">Invoices</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-body-md text-body-md">HR</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span class="font-body-md text-body-md">Reports</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-3 py-2 bg-primary-container text-on-primary-container font-semibold rounded-lg transition-colors duration-200 cursor-pointer active:scale-95" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-unit-md border-t border-outline-variant flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="A portrait of a professional male hospital administrator in a clean office setting, wearing a modern blue suit and a hospital ID badge. The lighting is bright and clinical, reflecting a high-end medical environment with soft focus medical equipment in the background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTOZZr-mrZugVAOHZaqWemvikF-20sAAeLFyEiXJ4-A8JSrULryDCk_Li2Q9IanN7RqBKQZ5XkUp6uY_-874UN0MjKYJbJpEThXHfDSaQA2ZwzB8_F1CXtnjNxFaVajMmQ13trBVhyI8NGkznTLe3W3OZ2k2MFSVQTGPrhtVYKHRNd4bC1tZ_gR7BpEWUA982xowJb3ng0Kii1C_X2-hKX-z7g_wh4XDUwyCYmoDWhcBsAvpk4UHqgUazcPG_LORi0vWfsrgdTCVE"/>
+</div>
+<div>
+<p class="font-label-md text-label-md font-bold text-on-surface">Dr. Nguyen Admin</p>
+<p class="font-caption text-caption text-on-surface-variant">System Manager</p>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-[280px] flex-1 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="h-[64px] sticky top-0 bg-surface border-b border-outline-variant flex items-center justify-between px-margin-desktop z-10">
+<div class="flex items-center gap-4">
+<nav class="flex text-on-surface-variant font-body-md">
+<span class="hover:text-primary cursor-pointer transition-all duration-200">Dashboard</span>
+<span class="mx-2 text-outline-variant">/</span>
+<span class="text-primary font-semibold">Cấu hình</span>
+</nav>
+</div>
+<div class="flex items-center gap-unit-md">
+<div class="relative">
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border border-surface"></span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">help</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer">settings</span>
+</div>
+</header>
+<!-- Page Header -->
+<div class="p-margin-desktop">
+<div class="mb-unit-lg">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Cấu hình hệ thống</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Quản lý các tham số vận hành và thiết lập nghiệp vụ toàn hệ thống.</p>
+</div>
+<!-- Tab Navigation -->
+<div class="border-b border-outline-variant flex gap-unit-lg mb-unit-lg">
+<button class="pb-3 px-1 font-title-lg text-title-lg transition-all duration-200 tab-active" id="tab-giolamviec" onclick="switchTab('giolamviec')">Giờ làm việc</button>
+<button class="pb-3 px-1 font-title-lg text-title-lg text-on-surface-variant hover:text-primary transition-all duration-200" id="tab-lichkham" onclick="switchTab('lichkham')">Lịch khám</button>
+<button class="pb-3 px-1 font-title-lg text-title-lg text-on-surface-variant hover:text-primary transition-all duration-200" id="tab-khothuoc" onclick="switchTab('khothuoc')">Kho thuốc</button>
+<button class="pb-3 px-1 font-title-lg text-title-lg text-on-surface-variant hover:text-primary transition-all duration-200" id="tab-thongbao" onclick="switchTab('thongbao')">Thông báo</button>
+<button class="pb-3 px-1 font-title-lg text-title-lg text-on-surface-variant hover:text-primary transition-all duration-200" id="tab-thanhtoan" onclick="switchTab('thanhtoan')">Thanh toán</button>
+<button class="pb-3 px-1 font-title-lg text-title-lg text-on-surface-variant hover:text-primary transition-all duration-200" id="tab-chung" onclick="switchTab('chung')">Chung</button>
+</div>
+<!-- Content Area -->
+<div class="pb-unit-xl" id="tab-content">
+<!-- Tab: Giờ làm việc -->
+<section class="space-y-unit-lg" id="content-giolamviec">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+<div class="p-unit-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<h3 class="font-title-lg text-title-lg">Lịch làm việc tuần</h3>
+<div class="flex items-center gap-2">
+<span class="text-body-md text-on-surface-variant">Nghỉ lễ vào cuối tuần</span>
+<button class="relative inline-flex h-6 w-11 items-center rounded-full bg-secondary">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
+</button>
+</div>
+</div>
+<table class="w-full text-left font-body-md">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="p-unit-md border-b border-outline-variant">Ngày</th>
+<th class="p-unit-md border-b border-outline-variant text-center">Ca Sáng (Bắt đầu)</th>
+<th class="p-unit-md border-b border-outline-variant text-center">Ca Sáng (Kết thúc)</th>
+<th class="p-unit-md border-b border-outline-variant text-center">Ca Chiều (Bắt đầu)</th>
+<th class="p-unit-md border-b border-outline-variant text-center">Ca Chiều (Kết thúc)</th>
+<th class="p-unit-md border-b border-outline-variant">Trạng thái</th>
+</tr>
+</thead>
+<tbody>
+<script>
+                                    const days = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
+                                    days.forEach((day, index) => {
+                                        document.write(`
+                                            <tr class="hover:bg-surface-container-low transition-colors duration-200">
+                                                <td class="p-unit-md border-b border-outline-variant font-semibold">${day}</td>
+                                                <td class="p-unit-md border-b border-outline-variant text-center">
+                                                    <input type="time" value="08:00" class="border border-outline-variant rounded p-1 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                                                </td>
+                                                <td class="p-unit-md border-b border-outline-variant text-center">
+                                                    <input type="time" value="12:00" class="border border-outline-variant rounded p-1 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                                                </td>
+                                                <td class="p-unit-md border-b border-outline-variant text-center">
+                                                    <input type="time" value="13:30" class="border border-outline-variant rounded p-1 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                                                </td>
+                                                <td class="p-unit-md border-b border-outline-variant text-center">
+                                                    <input type="time" value="17:30" class="border border-outline-variant rounded p-1 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
+                                                </td>
+                                                <td class="p-unit-md border-b border-outline-variant">
+                                                    <span class="px-2 py-1 rounded bg-secondary-container text-on-secondary-container text-label-md">${index < 5 ? 'Làm việc' : 'Nghỉ'}</span>
+                                                </td>
+                                            </tr>
+                                        `);
+                                    });
+                                </script>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Tab: Lịch khám (Hidden by default) -->
+<section class="hidden space-y-unit-lg" id="content-lichkham">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit-lg">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg">
+<h3 class="font-title-lg text-title-lg mb-4">Thông số cơ bản</h3>
+<div class="space-y-4">
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-1">Thời gian khám mặc định (phút)</label>
+<input class="w-full border border-outline-variant rounded-lg p-unit-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" type="number" value="15"/>
+<p class="text-caption text-on-surface-variant mt-1 italic">Dành cho các ca khám tổng quát.</p>
+</div>
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-1">Số lượng bệnh nhân tối đa/ngày/bác sĩ</label>
+<input class="w-full border border-outline-variant rounded-lg p-unit-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" type="number" value="40"/>
+</div>
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-1">Thời gian nghỉ giữa các ca (phút)</label>
+<input class="w-full border border-outline-variant rounded-lg p-unit-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" type="number" value="5"/>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg">
+<h3 class="font-title-lg text-title-lg mb-4">Quy định Hủy/Dời lịch</h3>
+<div class="space-y-4">
+<div class="flex items-start gap-3">
+<input checked="" class="mt-1 rounded text-primary" type="checkbox"/>
+<div>
+<p class="text-body-md font-semibold">Cho phép bệnh nhân tự hủy lịch</p>
+<p class="text-caption text-on-surface-variant">Ít nhất 24 giờ trước giờ hẹn.</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<input checked="" class="mt-1 rounded text-primary" type="checkbox"/>
+<div>
+<p class="text-body-md font-semibold">Tự động khóa lịch khi bác sĩ vắng mặt</p>
+<p class="text-caption text-on-surface-variant">Dựa trên lịch nghỉ phép đã được duyệt.</p>
+</div>
+</div>
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-1">Ghi chú chính sách</label>
+<textarea class="w-full border border-outline-variant rounded-lg p-unit-sm h-24 focus:ring-2 focus:ring-primary focus:border-primary outline-none">Bệnh nhân vui lòng đến trước 15 phút để làm thủ tục. Hủy lịch sau 2 giờ quy định sẽ không được hoàn phí đặt cọc.</textarea>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Tab: Kho thuốc (Hidden by default) -->
+<section class="hidden space-y-unit-lg" id="content-khothuoc">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg">
+<h3 class="font-title-lg text-title-lg mb-6">Quản lý kho &amp; Cảnh báo</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit-xl">
+<div class="space-y-6">
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-1">Ngưỡng cảnh báo tồn kho thấp (%)</label>
+<div class="flex items-center gap-4">
+<input class="flex-1 accent-primary" type="range"/>
+<span class="w-12 text-center border border-outline-variant p-1 rounded font-bold">15%</span>
+</div>
+</div>
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-4">Thông báo hạn sử dụng</label>
+<div class="flex gap-4">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded text-primary" type="checkbox"/>
+<span class="text-body-md">30 ngày</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="rounded text-primary" type="checkbox"/>
+<span class="text-body-md">60 ngày</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="rounded text-primary" type="checkbox"/>
+<span class="text-body-md">90 ngày</span>
+</label>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<label class="block text-label-md font-bold text-on-surface mb-1">Danh mục nhóm thuốc đặc biệt (Cần kiểm soát)</label>
+<div class="flex flex-wrap gap-2 mb-2">
+<span class="bg-error-container text-on-error-container px-3 py-1 rounded-full text-label-md flex items-center gap-1">
+                                        Thuốc gây nghiện <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<span class="bg-error-container text-on-error-container px-3 py-1 rounded-full text-label-md flex items-center gap-1">
+                                        Hướng thần <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<span class="bg-error-container text-on-error-container px-3 py-1 rounded-full text-label-md flex items-center gap-1">
+                                        Thuốc phóng xạ <span class="material-symbols-outlined text-[14px] cursor-pointer">close</span>
+</span>
+<button class="bg-surface-container-high px-3 py-1 rounded-full text-label-md border border-outline-variant hover:bg-outline-variant transition-colors">+ Thêm mới</button>
+</div>
+<p class="text-caption text-on-surface-variant italic">Các nhóm này yêu cầu phê duyệt lãnh đạo khi xuất kho.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Tab: Thông báo (Hidden by default) -->
+<section class="hidden space-y-unit-lg" id="content-thongbao">
+<div class="grid grid-cols-1 gap-unit-md">
+<script>
+                            const templates = [
+                                { name: 'Xác nhận lịch hẹn', type: 'SMS/Email', status: 'Hoạt động', last: '2 giờ trước' },
+                                { name: 'Nhắc lịch tái khám', type: 'App Push', status: 'Hoạt động', last: 'Hôm qua' },
+                                { name: 'Hủy lịch khám', type: 'SMS/Email', status: 'Tạm dừng', last: '1 tuần trước' },
+                                { name: 'Xác nhận thanh toán', type: 'Email', status: 'Hoạt động', last: '5 phút trước' },
+                                { name: 'Mã OTP đăng nhập', type: 'SMS', status: 'Hoạt động', last: 'Vừa xong' }
+                            ];
+                            templates.forEach(t => {
+                                document.write(`
+                                    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md flex items-center justify-between hover:border-primary transition-all">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center text-primary">
+                                                <span class="material-symbols-outlined">mail</span>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-body-lg font-bold">${t.name}</h4>
+                                                <div class="flex items-center gap-3 mt-1">
+                                                    <span class="text-caption text-on-surface-variant">Kênh: ${t.type}</span>
+                                                    <span class="text-caption text-on-surface-variant">•</span>
+                                                    <span class="text-caption ${t.status === 'Hoạt động' ? 'text-secondary' : 'text-error'} font-semibold">${t.status}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-unit-md">
+                                            <button class="px-4 py-2 border border-primary text-primary font-semibold rounded hover:bg-primary hover:text-white transition-all duration-200">Edit Template</button>
+                                            <button class="px-4 py-2 text-on-surface-variant hover:underline font-semibold">Preview</button>
+                                        </div>
+                                    </div>
+                                `);
+                            });
+                        </script>
+</div>
+</section>
+<!-- Tab: Thanh toán (Hidden by default) -->
+<section class="hidden space-y-unit-lg" id="content-thanhtoan">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+<div class="p-unit-lg space-y-8">
+<div>
+<h3 class="font-title-lg text-title-lg mb-6">Cổng thanh toán trực tuyến</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-unit-lg">
+<!-- VNPay -->
+<div class="border border-outline-variant rounded-xl p-unit-md">
+<div class="flex justify-between items-start mb-4">
+<div class="w-16 h-8 bg-surface-container rounded flex items-center justify-center font-bold text-primary">VNPAY</div>
+<button class="relative inline-flex h-5 w-9 items-center rounded-full bg-secondary">
+<span class="translate-x-4 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
+</button>
+</div>
+<div class="space-y-3">
+<input class="w-full text-xs border border-outline-variant rounded p-1 outline-none focus:ring-1 focus:ring-primary" placeholder="Merchant ID" type="text" value="VNP_998273"/>
+<input class="w-full text-xs border border-outline-variant rounded p-1 outline-none focus:ring-1 focus:ring-primary" placeholder="Secret Key" type="password" value="********"/>
+</div>
+</div>
+<!-- Momo -->
+<div class="border border-outline-variant rounded-xl p-unit-md">
+<div class="flex justify-between items-start mb-4">
+<div class="w-16 h-8 bg-surface-container rounded flex items-center justify-center font-bold text-[#A50064]">MOMO</div>
+<button class="relative inline-flex h-5 w-9 items-center rounded-full bg-secondary">
+<span class="translate-x-4 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
+</button>
+</div>
+<div class="space-y-3">
+<input class="w-full text-xs border border-outline-variant rounded p-1 outline-none focus:ring-1 focus:ring-primary" placeholder="Partner Code" type="text" value="MOMO_ADM_01"/>
+<input class="w-full text-xs border border-outline-variant rounded p-1 outline-none focus:ring-1 focus:ring-primary" placeholder="Access Key" type="password" value="********"/>
+</div>
+</div>
+<!-- ZaloPay -->
+<div class="border border-outline-variant rounded-xl p-unit-md">
+<div class="flex justify-between items-start mb-4">
+<div class="w-16 h-8 bg-surface-container rounded flex items-center justify-center font-bold text-[#0086FF]">ZaloPay</div>
+<button class="relative inline-flex h-5 w-9 items-center rounded-full bg-outline-variant">
+<span class="translate-x-0 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
+</button>
+</div>
+<div class="space-y-3 opacity-50 pointer-events-none">
+<input class="w-full text-xs border border-outline-variant rounded p-1 outline-none" placeholder="App ID" type="text"/>
+<input class="w-full text-xs border border-outline-variant rounded p-1 outline-none" placeholder="Key 1" type="password"/>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-8 border-t border-outline-variant">
+<h3 class="font-title-lg text-title-lg mb-6">Thanh toán truyền thống</h3>
+<div class="space-y-4 max-w-2xl">
+<div class="flex items-center justify-between p-4 border border-outline-variant rounded-lg">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">payments</span>
+<span class="font-body-lg font-semibold">Tiền mặt tại quầy</span>
+</div>
+<button class="relative inline-flex h-6 w-11 items-center rounded-full bg-secondary">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
+</button>
+</div>
+<div class="flex items-center justify-between p-4 border border-outline-variant rounded-lg">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">account_balance</span>
+<span class="font-body-lg font-semibold">Chuyển khoản ngân hàng (QR dynamic)</span>
+</div>
+<button class="relative inline-flex h-6 w-11 items-center rounded-full bg-secondary">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Tab: Chung (Hidden by default) -->
+<section class="hidden space-y-unit-lg" id="content-chung">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg">
+<h3 class="font-title-lg text-title-lg mb-6">Thông tin bệnh viện</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-unit-xl">
+<div class="md:col-span-2 space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-1">Tên bệnh viện</label>
+<input class="w-full border border-outline-variant rounded-lg p-unit-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" type="text" value="Bệnh viện Đa khoa Clinical Clarity"/>
+</div>
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-1">Hotline cấp cứu</label>
+<div class="relative">
+<input class="w-full border border-secondary rounded-lg p-unit-sm focus:ring-2 focus:ring-secondary focus:border-secondary outline-none pr-10" type="text" value="1900 8188"/>
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-secondary">check_circle</span>
+</div>
+</div>
+</div>
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-1">Địa chỉ trụ sở chính</label>
+<input class="w-full border border-outline-variant rounded-lg p-unit-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" type="text" value="Số 10, Đường Yersin, Quận 1, TP. Hồ Chí Minh"/>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-1">Email liên hệ</label>
+<input class="w-full border border-outline-variant rounded-lg p-unit-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" type="email" value="contact@clinicalclarity.vn"/>
+</div>
+<div>
+<label class="block text-label-md font-bold text-on-surface mb-1">Mã số thuế</label>
+<input class="w-full border border-outline-variant rounded-lg p-unit-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none" type="text" value="0312456789"/>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<label class="block text-label-md font-bold text-on-surface mb-1">Logo bệnh viện</label>
+<div class="border-2 border-dashed border-outline-variant rounded-xl p-unit-lg flex flex-col items-center justify-center text-center hover:border-primary cursor-pointer transition-all">
+<div class="w-24 h-24 bg-surface-container flex items-center justify-center rounded-lg mb-4 overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-contain p-2" data-alt="A clean, professional minimalist logo for a medical clinic. The design features a stylized blue 'C' merging with a green leaf or cross, symbolizing health and precision. It sits on a pure white background with soft, modern lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcWEBSaK2BOj358oYJcp-KOlNRtzvtvyBUlyqzyCh50RXyq7HxZf9oLMadkbUGH8i1eI4Y8RxBCqvb2UUyODyrjkECQNknq9_cwHtbdVt9FA1sTSM3BBo203xPZ31sbmFIIzOz37e2mbEU3q7pMtdIl9dWKlerfN2JnTrfLyRhEtg4y_NIdVqvWIN2g6xXAhebdmRbpzLjYuYMVckZxOJv8XGHNHSmoWzlChKCt3_gS_xPnTSbFjcySak5hG87CRHdThismqG5e3A"/>
+</div>
+<span class="material-symbols-outlined text-primary mb-2">upload</span>
+<p class="text-body-md font-semibold text-primary">Tải lên logo mới</p>
+<p class="text-caption text-on-surface-variant">PNG, JPG tối đa 2MB. Tỷ lệ 1:1 khuyến nghị.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Sticky Footer -->
+<footer class="sticky bottom-0 bg-surface-container-lowest border-t border-outline-variant px-margin-desktop py-4 flex justify-end gap-unit-md z-20">
+<button class="px-6 py-2.5 text-on-surface-variant font-semibold hover:bg-surface-container-low transition-all duration-200 border border-outline-variant rounded-lg active:scale-95">Khôi phục mặc định</button>
+<button class="px-8 py-2.5 bg-primary text-white font-bold rounded-lg shadow-sm hover:bg-primary-container transition-all duration-200 active:scale-95 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">save</span>
+                Lưu thay đổi
+            </button>
+</footer>
+</main>
+<script>
+        function switchTab(tabId) {
+            // Update Tab styles
+            const tabs = ['giolamviec', 'lichkham', 'khothuoc', 'thongbao', 'thanhtoan', 'chung'];
+            tabs.forEach(t => {
+                const tabEl = document.getElementById(`tab-${t}`);
+                const contentEl = document.getElementById(`content-${t}`);
+                
+                if (t === tabId) {
+                    tabEl.classList.add('tab-active');
+                    tabEl.classList.remove('text-on-surface-variant');
+                    contentEl.classList.remove('hidden');
+                } else {
+                    tabEl.classList.remove('tab-active');
+                    tabEl.classList.add('text-on-surface-variant');
+                    contentEl.classList.add('hidden');
+                }
+            });
+            
+            // Scroll to top of content area
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Simple animation for the save button click
+        const saveBtn = document.querySelector('button.bg-primary');
+        saveBtn.addEventListener('click', () => {
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = `<span class="material-symbols-outlined animate-spin">sync</span> Đang lưu...`;
+            saveBtn.disabled = true;
+            setTimeout(() => {
+                saveBtn.innerHTML = `<span class="material-symbols-outlined">check</span> Đã lưu thành công!`;
+                saveBtn.classList.replace('bg-primary', 'bg-secondary');
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalText;
+                    saveBtn.classList.replace('bg-secondary', 'bg-primary');
+                    saveBtn.disabled = false;
+                }, 2000);
+            }, 1000);
+        });
+    </script>
+</body></html>

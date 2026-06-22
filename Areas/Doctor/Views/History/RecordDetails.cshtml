@@ -1,0 +1,229 @@
+@model QuanLyBenhVien.Models.ExaminationRecord
+
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Chi tiết bệnh án";
+    var prescription = ViewBag.Prescription as QuanLyBenhVien.Models.Prescription;
+    var invoice = ViewBag.Invoice as QuanLyBenhVien.Models.Invoice;
+}
+
+<div class="mb-unit-lg">
+    <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant mb-2">
+        <a href="/Doctor/Dashboard" class="hover:text-primary">Dashboard</a>
+        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+        <a href="/Doctor/History" class="hover:text-primary">Lịch sử điều trị</a>
+        <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+        <span class="text-primary font-bold">Chi tiết bệnh án</span>
+    </nav>
+    <div class="flex items-center justify-between">
+        <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Bệnh án điện tử</h2>
+        <span class="bg-secondary/15 text-secondary px-3 py-1 rounded-xl text-body-md font-bold border border-secondary/20">Mã ca khám: EXM-@Model.Id.ToString("D4")</span>
+    </div>
+</div>
+
+<!-- Grid Layout: Details on left, quick info & bill on right -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+    
+    <!-- Left column: Clinical info (2/3) -->
+    <div class="lg:col-span-2 space-y-gutter">
+        
+        <!-- Patient Information Card -->
+        <section class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm">
+            <h3 class="text-title-lg font-bold text-on-surface mb-unit-md flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">person</span>
+                Hồ sơ Bệnh nhân
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-unit-md text-body-md">
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Họ và tên</span>
+                    <strong class="text-on-surface text-body-lg">@Model.Appointment.Patient.User.HoTen</strong>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Ngày sinh</span>
+                    <strong class="text-on-surface">@Model.Appointment.Patient.NgaySinh.ToString("dd/MM/yyyy")</strong>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Giới tính</span>
+                    <strong class="text-on-surface">@Model.Appointment.Patient.GioiTinh</strong>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Nhóm máu / BHYT</span>
+                    <strong class="text-on-surface">@Model.Appointment.Patient.NhomMau / @(string.IsNullOrEmpty(Model.Appointment.Patient.SoBHYT) ? "Không có" : Model.Appointment.Patient.SoBHYT)</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- Clinical Exam Results Card -->
+        <section class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm space-y-unit-lg">
+            <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">clinical_notes</span>
+                Kết quả khám lâm sàng
+            </h3>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-unit-md bg-surface-container-low p-unit-md rounded-xl border border-outline-variant/60 text-center">
+                <div>
+                    <span class="text-caption text-on-surface-variant block mb-1">Huyết áp</span>
+                    <strong class="text-body-lg text-on-surface">@(string.IsNullOrEmpty(Model.HuyetAp) ? "--" : Model.HuyetAp) <span class="text-caption font-normal">mmHg</span></strong>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block mb-1">Nhịp tim</span>
+                    <strong class="text-body-lg text-on-surface">@(Model.NhipTim?.ToString() ?? "--") <span class="text-caption font-normal">bpm</span></strong>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block mb-1">Nhiệt độ</span>
+                    <strong class="text-body-lg text-on-surface">@(Model.NhietDo?.ToString("F1") ?? "--") <span class="text-caption font-normal">°C</span></strong>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block mb-1">Chỉ số BMI</span>
+                    <strong class="text-body-lg text-on-surface">@(Model.BMI?.ToString("F2") ?? "--")</strong>
+                </div>
+            </div>
+
+            <div class="space-y-unit-sm">
+                <span class="text-caption text-on-surface-variant block font-bold uppercase tracking-wider">Triệu chứng lâm sàng</span>
+                <p class="text-body-lg text-on-surface bg-surface-bright p-unit-md rounded-lg border border-outline-variant/30 leading-relaxed font-medium">@Model.TrieuChung</p>
+            </div>
+
+            <div class="space-y-unit-sm">
+                <span class="text-caption text-on-surface-variant block font-bold uppercase tracking-wider">Chẩn đoán chuyên khoa</span>
+                <p class="text-body-lg text-primary bg-primary/5 p-unit-md rounded-lg border border-primary/20 leading-relaxed font-bold">@Model.ChanDoan</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.LoiDan))
+            {
+                <div class="space-y-unit-sm">
+                    <span class="text-caption text-on-surface-variant block font-bold uppercase tracking-wider">Lời dặn bác sĩ</span>
+                    <p class="text-body-md text-on-surface bg-surface-bright p-unit-md rounded-lg border border-outline-variant/30 leading-relaxed italic">@Model.LoiDan</p>
+                </div>
+            }
+        </section>
+
+        <!-- Lab Indications & Results Card -->
+        @if (!string.IsNullOrEmpty(Model.ChiDinhCLS))
+        {
+            <section class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm space-y-unit-md">
+                <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">biotech</span>
+                    Chỉ định cận lâm sàng &amp; Xét nghiệm
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-lg">
+                    <div>
+                        <span class="text-caption text-on-surface-variant block font-bold uppercase mb-1">Dịch vụ chỉ định</span>
+                        <p class="text-body-md text-on-surface bg-surface-container-low p-3 rounded-lg border border-outline-variant/40 font-semibold">@Model.ChiDinhCLS</p>
+                    </div>
+                    <div>
+                        <span class="text-caption text-on-surface-variant block font-bold uppercase mb-1">Kết quả xét nghiệm/Hình ảnh</span>
+                        <p class="text-body-md text-on-surface bg-surface-container-low p-3 rounded-lg border border-outline-variant/40 leading-relaxed">
+                            @(string.IsNullOrEmpty(Model.KetQuaCLS) ? "Chưa cập nhật kết quả." : Model.KetQuaCLS)
+                        </p>
+                    </div>
+                </div>
+            </section>
+        }
+
+        <!-- Prescription Details -->
+        <section class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm space-y-unit-md">
+            <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-secondary">pill</span>
+                Đơn thuốc điều trị
+            </h3>
+            
+            @if (prescription == null || !prescription.PrescriptionDetails.Any())
+            {
+                <p class="text-body-md text-on-surface-variant italic">Không có thuốc được kê cho ca khám này.</p>
+            }
+            else
+            {
+                <div class="overflow-x-auto border border-outline-variant rounded-xl">
+                    <table class="w-full text-left text-body-md">
+                        <thead class="bg-surface-container-low text-on-surface-variant">
+                            <tr>
+                                <th class="px-4 py-3 font-bold uppercase text-[11px]">Tên thuốc</th>
+                                <th class="px-4 py-3 font-bold uppercase text-[11px] text-center">Số lượng</th>
+                                <th class="px-4 py-3 font-bold uppercase text-[11px]">Cách dùng &amp; Liều lượng</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant">
+                            @foreach (var detail in prescription.PrescriptionDetails)
+                            {
+                                <tr>
+                                    <td class="px-4 py-3 font-semibold text-on-surface">@detail.Medicine.TenThuoc <br/><span class="text-caption text-on-surface-variant font-normal">Hoạt chất: @detail.Medicine.HoatChat</span></td>
+                                    <td class="px-4 py-3 text-center font-bold text-secondary">@detail.SoLuong @detail.Medicine.DonViTinh</td>
+                                    <td class="px-4 py-3 text-on-surface-variant italic">@detail.LieuDung</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+
+    <!-- Right column: Bill, status & actions (1/3) -->
+    <div class="space-y-gutter">
+        
+        <!-- Summary Stats Card -->
+        <section class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm space-y-4">
+            <h3 class="text-title-lg font-bold text-on-surface border-b border-outline-variant pb-2">Thông tin ca khám</h3>
+            <div class="space-y-3 text-body-md">
+                <div class="flex justify-between">
+                    <span class="text-on-surface-variant">Thời gian khám:</span>
+                    <span class="font-semibold">@Model.NgayKham.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-on-surface-variant">Bác sĩ phụ trách:</span>
+                    <span class="font-semibold">@Model.Appointment.Doctor?.User.HoTen</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-on-surface-variant">Chuyên khoa:</span>
+                    <span class="font-semibold text-primary">@Model.Appointment.Doctor?.Department.TenKhoa</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Invoice / Payment Card -->
+        @if (invoice != null)
+        {
+            <section class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm space-y-unit-md">
+                <div class="flex items-center justify-between border-b border-outline-variant pb-2">
+                    <h3 class="text-title-lg font-bold text-on-surface">Hóa đơn dịch vụ</h3>
+                    @if (invoice.TrangThaiThanhToan == "DaThanhToan")
+                    {
+                        <span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container rounded text-caption font-bold uppercase">Đã thanh toán</span>
+                    }
+                    else
+                    {
+                        <span class="px-2 py-0.5 bg-error-container text-error rounded text-caption font-bold uppercase">Chưa thanh toán</span>
+                    }
+                </div>
+                
+                <div class="space-y-3">
+                    @foreach (var detail in invoice.InvoiceDetails)
+                    {
+                        <div class="flex justify-between text-body-md">
+                            <span class="text-on-surface-variant">@detail.LoaiPhi</span>
+                            <span class="font-semibold">@detail.SoTien.ToString("N0") VND</span>
+                        </div>
+                    }
+                    <div class="h-[1px] bg-outline-variant my-2"></div>
+                    <div class="flex justify-between text-body-lg font-bold">
+                        <span>Tổng chi phí:</span>
+                        <span class="text-primary">@invoice.TongTien.ToString("N0") VND</span>
+                    </div>
+                    @if (invoice.TrangThaiThanhToan == "DaThanhToan")
+                    {
+                        <div class="text-caption text-on-surface-variant text-right italic mt-2">
+                            Thanh toán lúc: @(invoice.NgayThanhToan?.ToString("dd/MM/yyyy HH:mm") ?? invoice.NgayTao.ToString("dd/MM/yyyy HH:mm")) <br/>
+                            Phương thức: @invoice.PhuongThuc
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        <!-- Back button -->
+        <a href="/Doctor/History" class="w-full border-2 border-outline-variant text-on-surface hover:bg-surface-container-low font-semibold py-3 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined">arrow_back</span> Quay lại danh sách lịch sử
+        </a>
+    </div>
+</div>

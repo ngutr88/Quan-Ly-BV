@@ -1,0 +1,90 @@
+@model IEnumerable<QuanLyBenhVien.Models.MedicineBatch>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Danh sách Lô thuốc";
+}
+
+<div class="mb-unit-lg flex justify-between items-end">
+    <div>
+        <a href="/Admin/Medicines" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại kho dược phẩm
+        </a>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Danh sách Lô thuốc</h2>
+        <p class="text-body-md text-on-surface-variant">Kiểm kê tồn kho chi tiết theo từng lô hàng và hạn sử dụng (FEFO).</p>
+    </div>
+    <a href="/Admin/Medicines/ReceiveBatch" class="flex items-center gap-1 bg-primary text-white px-unit-md py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-semibold">
+        <span class="material-symbols-outlined text-[20px]">input</span>
+        Nhập kho lô mới
+    </a>
+</div>
+
+<!-- Batches Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Số Lô</th>
+                    <th class="px-unit-md py-3">Tên thuốc</th>
+                    <th class="px-unit-md py-3">Ngày nhập</th>
+                    <th class="px-unit-md py-3">Hạn sử dụng</th>
+                    <th class="px-unit-md py-3">Nhập / Tồn</th>
+                    <th class="px-unit-md py-3">Cảnh báo hạn</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant text-body-md">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="px-unit-md py-8 text-center text-on-surface-variant">Không có lô thuốc nào được ghi nhận.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var batch in Model)
+                    {
+                        var daysLeft = (batch.HanSuDung.Date - DateTime.Today).Days;
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="px-unit-md py-4 font-mono font-bold text-primary">@batch.SoLo</td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-semibold text-on-surface">@batch.Medicine.TenThuoc</div>
+                                <div class="text-caption text-on-surface-variant">Hoạt chất: @batch.Medicine.HoatChat</div>
+                            </td>
+                            <td class="px-unit-md py-4 text-on-surface-variant">--/--/----</td> <!-- Seeder inputs are relative -->
+                            <td class="px-unit-md py-4">
+                                <span class="font-medium">@batch.HanSuDung.ToString("dd/MM/yyyy")</span>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <div>Tồn: <strong class="@(batch.SoLuongTon == 0 ? "text-outline" : "text-primary")">@batch.SoLuongTon</strong> @batch.Medicine.DonViTinh</div>
+                                <div class="text-caption text-on-surface-variant">Nhập: @batch.SoLuongNhap</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                @if (daysLeft <= 0)
+                                {
+                                    <span class="px-2.5 py-0.5 rounded-full bg-error-container text-error text-[10px] font-bold uppercase tracking-tight">Hết hạn sử dụng</span>
+                                }
+                                else if (daysLeft <= 30)
+                                {
+                                    <span class="px-2.5 py-0.5 rounded-full bg-error-container text-error text-[10px] font-bold uppercase tracking-tight flex items-center gap-0.5 max-w-fit">
+                                        <span class="material-symbols-outlined text-[12px]">alarm</span> Cận hạn (@daysLeft ngày)
+                                    </span>
+                                }
+                                else if (daysLeft <= 90)
+                                {
+                                    <span class="px-2.5 py-0.5 rounded-full bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[10px] font-bold uppercase tracking-tight flex items-center gap-0.5 max-w-fit">
+                                        <span class="material-symbols-outlined text-[12px]">alarm</span> @daysLeft ngày
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="px-2.5 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold uppercase tracking-tight">An toàn</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

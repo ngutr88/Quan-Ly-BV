@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Đăng ký tài khoản bệnh nhân | HMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#727784",
+                    "on-tertiary-fixed": "#2a1700",
+                    "on-surface": "#0b1c30",
+                    "inverse-surface": "#213145",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#ffddb8",
+                    "on-secondary-fixed-variant": "#005236",
+                    "primary-container": "#0056b3",
+                    "surface-container-high": "#dce9ff",
+                    "on-surface-variant": "#424752",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed-variant": "#004491",
+                    "inverse-primary": "#acc7ff",
+                    "on-secondary-container": "#00714d",
+                    "surface-container-highest": "#d3e4fe",
+                    "inverse-on-surface": "#eaf1ff",
+                    "secondary": "#006c49",
+                    "error": "#ba1a1a",
+                    "surface-variant": "#d3e4fe",
+                    "surface": "#f8f9ff",
+                    "outline-variant": "#c2c6d4",
+                    "on-background": "#0b1c30",
+                    "surface-bright": "#f8f9ff",
+                    "on-primary-container": "#bbd0ff",
+                    "primary-fixed-dim": "#acc7ff",
+                    "tertiary": "#5e3900",
+                    "surface-tint": "#115cb9",
+                    "on-primary-fixed": "#001a40",
+                    "surface-container": "#e5eeff",
+                    "on-tertiary-container": "#ffc57f",
+                    "surface-dim": "#cbdbf5",
+                    "primary": "#003f87",
+                    "on-secondary-fixed": "#002113",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed": "#6ffbbe",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "secondary-container": "#6cf8bb",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#7d4e00",
+                    "surface-container-low": "#eff4ff",
+                    "background": "#f8f9ff",
+                    "primary-fixed": "#d7e2ff",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit-lg": "24px",
+                    "unit-xl": "48px",
+                    "unit-md": "16px",
+                    "margin-desktop": "40px",
+                    "unit-xs": "4px",
+                    "gutter": "24px",
+                    "container-max": "1440px",
+                    "margin-mobile": "16px",
+                    "unit-sm": "8px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "caption": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "label-md": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .step-active { color: #003f87; font-weight: 600; }
+        .step-line-active { background-color: #003f87; }
+        .form-transition { transition: all 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="bg-surface border-b border-outline-variant docked full-width top-0 flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 z-50">
+<div class="font-headline-md text-headline-md font-extrabold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+            HMS
+        </div>
+<div class="flex items-center gap-unit-md">
+<a class="font-body-md text-primary font-semibold hover:bg-surface-container-low transition-colors px-unit-sm py-unit-xs rounded" href="#">Đăng nhập</a>
+</div>
+</header>
+<main class="flex-grow flex flex-col items-center py-unit-xl px-margin-mobile md:px-margin-desktop bg-surface-container-lowest">
+<!-- Registration Heading -->
+<div class="max-w-4xl w-full text-center mb-unit-xl">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-unit-xs">Đăng ký tài khoản bệnh nhân</h1>
+<p class="font-body-lg text-on-surface-variant">Tạo tài khoản để đặt lịch khám, xem đơn thuốc và thanh toán hóa đơn</p>
+</div>
+<!-- Progress Stepper -->
+<div class="max-w-4xl w-full mb-unit-xl">
+<div class="flex items-center justify-between relative">
+<!-- Progress Line Background -->
+<div class="absolute top-1/2 left-0 w-full h-[2px] bg-outline-variant -translate-y-1/2 z-0"></div>
+<!-- Progress Line Active (Width controlled by step) -->
+<div class="absolute top-1/2 left-0 w-0 h-[2px] bg-primary -translate-y-1/2 z-0 transition-all duration-500" id="progress-bar"></div>
+<!-- Step 1 -->
+<div class="relative z-10 flex flex-col items-center text-center">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold shadow-sm transition-colors duration-300" id="step-circle-1">1</div>
+<span class="mt-2 font-label-md text-primary" id="step-label-1">Thông tin tài khoản</span>
+</div>
+<!-- Step 2 -->
+<div class="relative z-10 flex flex-col items-center text-center">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold shadow-sm transition-colors duration-300" id="step-circle-2">2</div>
+<span class="mt-2 font-label-md text-on-surface-variant" id="step-label-2">Thông tin cá nhân</span>
+</div>
+<!-- Step 3 -->
+<div class="relative z-10 flex flex-col items-center text-center">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-bold shadow-sm transition-colors duration-300" id="step-circle-3">3</div>
+<span class="mt-2 font-label-md text-on-surface-variant" id="step-label-3">Xác thực OTP</span>
+</div>
+</div>
+</div>
+<!-- Form Container -->
+<div class="max-w-4xl w-full bg-surface border border-outline-variant rounded-xl shadow-none p-unit-lg md:p-unit-xl overflow-hidden relative">
+<form class="space-y-unit-lg" id="registration-form">
+<!-- Section 1: Thông tin tài khoản -->
+<div class="form-transition" id="form-section-1">
+<h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-unit-sm mb-unit-lg flex items-center gap-2">
+<span class="material-symbols-outlined">lock_person</span>
+                        Thông tin tài khoản
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="md:col-span-2">
+<label class="block font-label-md text-on-surface-variant mb-unit-xs">Email hoặc Số điện thoại *</label>
+<input class="w-full h-11 border border-outline-variant rounded focus:ring-2 focus:ring-primary-container focus:border-primary px-unit-md font-body-md transition-all outline-none" placeholder="example@gmail.com hoặc 09xxxx" type="text"/>
+<p class="hidden text-error text-caption mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">error</span> Email hoặc số điện thoại không hợp lệ
+                            </p>
+</div>
+<div class="relative">
+<label class="block font-label-md text-on-surface-variant mb-unit-xs">Mật khẩu *</label>
+<div class="relative">
+<input class="w-full h-11 border border-outline-variant rounded focus:ring-2 focus:ring-primary-container focus:border-primary px-unit-md font-body-md transition-all outline-none pr-12" id="password" placeholder="••••••••" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors" onclick="togglePassword('password')" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+<p class="text-caption text-on-surface-variant mt-1">Sử dụng ít nhất 8 ký tự, bao gồm chữ và số.</p>
+</div>
+<div class="relative">
+<label class="block font-label-md text-on-surface-variant mb-unit-xs">Nhập lại mật khẩu *</label>
+<div class="relative">
+<input class="w-full h-11 border border-outline-variant rounded focus:ring-2 focus:ring-primary-container focus:border-primary px-unit-md font-body-md transition-all outline-none pr-12" id="confirm-password" placeholder="••••••••" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors" onclick="togglePassword('confirm-password')" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 2: Thông tin cá nhân -->
+<div class="form-transition hidden" id="form-section-2">
+<h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-unit-sm mb-unit-lg flex items-center gap-2">
+<span class="material-symbols-outlined">person</span>
+                        Thông tin cá nhân
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="md:col-span-2">
+<label class="block font-label-md text-on-surface-variant mb-unit-xs">Họ và tên *</label>
+<input class="w-full h-11 border border-outline-variant rounded focus:ring-2 focus:ring-primary-container focus:border-primary px-unit-md font-body-md transition-all outline-none" placeholder="Nguyễn Văn A" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-on-surface-variant mb-unit-xs">Ngày sinh *</label>
+<input class="w-full h-11 border border-outline-variant rounded focus:ring-2 focus:ring-primary-container focus:border-primary px-unit-md font-body-md transition-all outline-none" type="date"/>
+</div>
+<div>
+<label class="block font-label-md text-on-surface-variant mb-unit-xs">Giới tính *</label>
+<div class="flex gap-unit-lg h-11 items-center">
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="gender" type="radio"/>
+<span class="font-body-md">Nam</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="gender" type="radio"/>
+<span class="font-body-md">Nữ</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="w-5 h-5 text-primary border-outline-variant focus:ring-primary" name="gender" type="radio"/>
+<span class="font-body-md">Khác</span>
+</label>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-on-surface-variant mb-unit-xs">Số CCCD (Tùy chọn)</label>
+<input class="w-full h-11 border border-outline-variant rounded focus:ring-2 focus:ring-primary-container focus:border-primary px-unit-md font-body-md transition-all outline-none" placeholder="12 chữ số" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-on-surface-variant mb-unit-xs">Số thẻ BHYT (Tùy chọn)</label>
+<input class="w-full h-11 border border-outline-variant rounded focus:ring-2 focus:ring-primary-container focus:border-primary px-unit-md font-body-md transition-all outline-none" placeholder="Ví dụ: GD479..." type="text"/>
+</div>
+<div class="md:col-span-2">
+<label class="block font-label-md text-on-surface-variant mb-unit-xs">Địa chỉ thường trú *</label>
+<textarea class="w-full border border-outline-variant rounded focus:ring-2 focus:ring-primary-container focus:border-primary p-unit-md font-body-md transition-all outline-none resize-none" placeholder="Số nhà, tên đường, xã/phường, quận/huyện, tỉnh/thành phố" rows="2"></textarea>
+</div>
+<div class="md:col-span-2">
+<label class="block font-label-md text-on-surface-variant mb-unit-xs">Người liên hệ khẩn cấp (Họ tên - SĐT)</label>
+<input class="w-full h-11 border border-outline-variant rounded focus:ring-2 focus:ring-primary-container focus:border-primary px-unit-md font-body-md transition-all outline-none" placeholder="Nguyễn Văn B - 0912xxxxxx" type="text"/>
+</div>
+</div>
+</div>
+<!-- Section 3: OTP Verification -->
+<div class="form-transition hidden" id="form-section-3">
+<div class="text-center py-unit-lg">
+<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-container text-white mb-unit-md">
+<span class="material-symbols-outlined text-4xl">verified_user</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-primary mb-unit-xs">Xác thực tài khoản</h3>
+<p class="font-body-md text-on-surface-variant mb-unit-lg">Chúng tôi đã gửi mã OTP 6 chữ số đến email/số điện thoại của bạn.</p>
+<div class="flex justify-center gap-unit-sm mb-unit-lg">
+<input class="w-12 h-14 border-2 border-outline-variant rounded text-center text-headline-md font-bold focus:border-primary focus:ring-0 outline-none" maxlength="1" type="text"/>
+<input class="w-12 h-14 border-2 border-outline-variant rounded text-center text-headline-md font-bold focus:border-primary focus:ring-0 outline-none" maxlength="1" type="text"/>
+<input class="w-12 h-14 border-2 border-outline-variant rounded text-center text-headline-md font-bold focus:border-primary focus:ring-0 outline-none" maxlength="1" type="text"/>
+<input class="w-12 h-14 border-2 border-outline-variant rounded text-center text-headline-md font-bold focus:border-primary focus:ring-0 outline-none" maxlength="1" type="text"/>
+<input class="w-12 h-14 border-2 border-outline-variant rounded text-center text-headline-md font-bold focus:border-primary focus:ring-0 outline-none" maxlength="1" type="text"/>
+<input class="w-12 h-14 border-2 border-outline-variant rounded text-center text-headline-md font-bold focus:border-primary focus:ring-0 outline-none" maxlength="1" type="text"/>
+</div>
+<button class="text-primary font-label-md hover:underline mb-unit-xl" type="button">Gửi lại mã (sau 59s)</button>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="pt-unit-md space-y-unit-md" id="form-actions">
+<div class="flex items-start gap-unit-sm" id="consent-wrapper">
+<input class="mt-1 w-5 h-5 text-primary border-outline-variant rounded focus:ring-primary cursor-pointer" id="consent" type="checkbox"/>
+<label class="font-body-md text-on-surface-variant cursor-pointer" for="consent">
+                            Tôi đồng ý với <a class="text-primary font-semibold hover:underline" href="#">điều khoản sử dụng</a> và <a class="text-primary font-semibold hover:underline" href="#">chính sách bảo mật dữ liệu y tế</a>.
+                        </label>
+</div>
+<div class="flex flex-col md:flex-row gap-unit-md pt-unit-md">
+<button class="flex-1 h-12 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] flex items-center justify-center gap-2" id="next-btn" onclick="nextStep()" type="button">
+                            Tiếp tục xác thực
+                            <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button class="hidden flex-1 h-12 bg-white text-primary border border-primary font-semibold rounded-lg hover:bg-surface-container-low transition-all" id="prev-btn" onclick="prevStep()" type="button">
+                            Quay lại
+                        </button>
+</div>
+<p class="text-center font-body-md">
+                        Đã có tài khoản? <a class="text-primary font-bold hover:underline" href="#">Đăng nhập</a>
+</p>
+</div>
+</form>
+<!-- Success Overlay (Hidden by default) -->
+<div class="hidden absolute inset-0 bg-white/95 z-50 flex flex-col items-center justify-center text-center p-unit-xl" id="success-overlay">
+<div class="w-20 h-20 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center mb-unit-lg">
+<span class="material-symbols-outlined text-5xl">check_circle</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-secondary mb-unit-xs">Đăng ký thành công!</h2>
+<p class="font-body-lg text-on-surface-variant mb-unit-xl">Tài khoản của bạn đã được xác thực. Hệ thống đang chuyển hướng đến trang chủ.</p>
+<div class="w-full max-w-xs h-2 bg-outline-variant rounded-full overflow-hidden">
+<div class="w-full h-full bg-secondary animate-[loading_2s_ease-in-out_infinite] origin-left"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer Component -->
+<footer class="bg-surface-container-low border-t border-outline-variant py-unit-md px-margin-mobile md:px-margin-desktop w-full flex flex-col md:flex-row justify-between items-center gap-unit-sm">
+<div class="flex flex-col items-center md:items-start gap-1">
+<div class="font-label-md text-label-md font-semibold text-primary">HMS - BỆNH VIỆN ĐA KHOA</div>
+<p class="font-caption text-caption text-on-surface-variant">© 2024 Hệ thống Quản lý Bệnh viện HMS. Bảo mật &amp; Chuyên nghiệp.</p>
+</div>
+<div class="flex gap-unit-lg">
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Điều khoản sử dụng</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Chính sách bảo mật</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Hỗ trợ kỹ thuật</a>
+</div>
+</footer>
+<script>
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        function updateUI() {
+            // Update sections
+            for (let i = 1; i <= totalSteps; i++) {
+                const section = document.getElementById(`form-section-${i}`);
+                if (i === currentStep) {
+                    section.classList.remove('hidden');
+                } else {
+                    section.classList.add('hidden');
+                }
+
+                // Update Stepper circles
+                const circle = document.getElementById(`step-circle-${i}`);
+                const label = document.getElementById(`step-label-${i}`);
+                if (i < currentStep) {
+                    circle.classList.replace('bg-primary', 'bg-secondary');
+                    circle.classList.replace('bg-surface-container-high', 'bg-secondary');
+                    circle.classList.replace('text-on-primary', 'text-white');
+                    circle.innerHTML = '<span class="material-symbols-outlined">check</span>';
+                    label.classList.add('text-secondary');
+                    label.classList.remove('text-primary', 'text-on-surface-variant');
+                } else if (i === currentStep) {
+                    circle.classList.remove('bg-secondary', 'bg-surface-container-high');
+                    circle.classList.add('bg-primary');
+                    circle.classList.add('text-on-primary');
+                    circle.innerText = i;
+                    label.classList.add('text-primary');
+                    label.classList.remove('text-secondary', 'text-on-surface-variant');
+                } else {
+                    circle.classList.remove('bg-primary', 'bg-secondary');
+                    circle.classList.add('bg-surface-container-high');
+                    circle.classList.replace('text-on-primary', 'text-on-surface-variant');
+                    circle.innerText = i;
+                    label.classList.add('text-on-surface-variant');
+                    label.classList.remove('text-primary', 'text-secondary');
+                }
+            }
+
+            // Update Progress Bar Line
+            const progressBar = document.getElementById('progress-bar');
+            const width = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            progressBar.style.width = `${width}%`;
+
+            // Navigation Buttons
+            const nextBtn = document.getElementById('next-btn');
+            const prevBtn = document.getElementById('prev-btn');
+            const consentWrapper = document.getElementById('consent-wrapper');
+
+            if (currentStep === 1) {
+                prevBtn.classList.add('hidden');
+                nextBtn.innerHTML = 'Tiếp tục <span class="material-symbols-outlined">arrow_forward</span>';
+                consentWrapper.classList.remove('hidden');
+            } else if (currentStep === 2) {
+                prevBtn.classList.remove('hidden');
+                nextBtn.innerHTML = 'Gửi mã xác thực <span class="material-symbols-outlined">send</span>';
+                consentWrapper.classList.add('hidden');
+            } else if (currentStep === 3) {
+                prevBtn.classList.remove('hidden');
+                nextBtn.innerHTML = 'Hoàn tất đăng ký <span class="material-symbols-outlined">task_alt</span>';
+                consentWrapper.classList.add('hidden');
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                // Mock loading state
+                const nextBtn = document.getElementById('next-btn');
+                const originalText = nextBtn.innerHTML;
+                nextBtn.disabled = true;
+                nextBtn.innerHTML = '<span class="animate-spin material-symbols-outlined">progress_activity</span> Đang xử lý...';
+                
+                setTimeout(() => {
+                    currentStep++;
+                    nextBtn.disabled = false;
+                    nextBtn.innerHTML = originalText;
+                    updateUI();
+                }, 800);
+            } else {
+                showSuccess();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateUI();
+            }
+        }
+
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            const icon = input.nextElementSibling.querySelector('span');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerText = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.innerText = 'visibility';
+            }
+        }
+
+        function showSuccess() {
+            document.getElementById('success-overlay').classList.remove('hidden');
+            setTimeout(() => {
+                // Redirect logic would go here
+                console.log("Redirecting to login...");
+            }, 3000);
+        }
+
+        // Initialize UI
+        updateUI();
+
+        // Auto focus for OTP inputs
+        const otpInputs = document.querySelectorAll('#form-section-3 input');
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('keyup', (e) => {
+                if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+                if (e.key === 'Backspace' && index > 0 && e.target.value === '') {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+    </script>
+<style>
+        @keyframes loading {
+            0% { transform: scaleX(0); }
+            50% { transform: scaleX(0.7); }
+            100% { transform: scaleX(1); }
+        }
+    </style>
+</body></html>

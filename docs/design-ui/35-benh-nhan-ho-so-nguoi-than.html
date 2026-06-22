@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hồ sơ người thân - MediCare Patient Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#dce9ff",
+                        "primary": "#003f87",
+                        "on-tertiary-container": "#ffc57f",
+                        "outline": "#727784",
+                        "tertiary-container": "#7d4e00",
+                        "on-primary": "#ffffff",
+                        "background": "#f8f9ff",
+                        "secondary-fixed": "#6ffbbe",
+                        "secondary-fixed-dim": "#4edea3",
+                        "error": "#ba1a1a",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f8f9ff",
+                        "on-secondary-fixed": "#002113",
+                        "on-primary-fixed-variant": "#004491",
+                        "inverse-surface": "#213145",
+                        "surface-dim": "#cbdbf5",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "on-surface": "#0b1c30",
+                        "primary-fixed": "#d7e2ff",
+                        "on-surface-variant": "#424752",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#115cb9",
+                        "surface-variant": "#d3e4fe",
+                        "surface-container": "#e5eeff",
+                        "inverse-primary": "#acc7ff",
+                        "surface-container-highest": "#d3e4fe",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-low": "#eff4ff",
+                        "outline-variant": "#c2c6d4",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#005236",
+                        "primary-container": "#0056b3",
+                        "on-primary-fixed": "#001a40",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#5e3900",
+                        "primary-fixed-dim": "#acc7ff",
+                        "on-secondary-container": "#00714d",
+                        "on-primary-container": "#bbd0ff",
+                        "secondary": "#006c49",
+                        "surface-bright": "#f8f9ff",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#6cf8bb",
+                        "on-tertiary-fixed": "#2a1700",
+                        "on-background": "#0b1c30"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit-md": "16px",
+                        "unit-sm": "8px",
+                        "unit-xl": "48px",
+                        "margin-mobile": "16px",
+                        "unit-xs": "4px",
+                        "unit-lg": "24px",
+                        "container-max": "1440px",
+                        "gutter": "24px",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "caption": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .modal-backdrop {
+            background-color: rgba(11, 28, 48, 0.4);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="bg-surface-container-lowest dark:bg-inverse-surface w-full top-0 sticky z-50 border-b border-outline-variant dark:border-outline">
+<div class="flex justify-between items-center px-margin-desktop py-unit-sm w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-unit-lg">
+<span class="font-title-lg text-title-lg font-bold text-primary dark:text-primary-fixed">MediCare Patient Portal</span>
+<nav class="hidden md:flex gap-unit-md items-center h-full">
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-dim transition-colors px-3 py-2 cursor-pointer active:opacity-80 font-body-md text-body-md" href="#">Records</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-dim transition-colors px-3 py-2 cursor-pointer active:opacity-80 font-body-md text-body-md" href="#">Appointments</a>
+<a class="text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-dim transition-colors px-3 py-2 cursor-pointer active:opacity-80 font-body-md text-body-md" href="#">Prescriptions</a>
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary pb-1 cursor-pointer font-body-md text-body-md" href="#">Family</a>
+</nav>
+</div>
+<div class="flex items-center gap-unit-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container border border-outline-variant rounded-full text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 w-64" placeholder="Tìm kiếm..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-primary p-2 rounded-full hover:bg-surface-container-low transition-colors">notifications</button>
+<button class="material-symbols-outlined text-primary p-2 rounded-full hover:bg-surface-container-low transition-colors">help</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="A professional portrait of a smiling middle-aged male patient with a kind expression, wearing a casual light blue shirt. The background is a clean, modern medical office with soft natural lighting and a minimalist aesthetic. High-quality corporate photography style with a shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKNIoFABRcuj7Z7Z8nks2duSa8MZ5ZjzuPWgJFfPFRas3m1kyQRBsHbNR3rS4w5ZpD-4iQI3zQCJks87i4FIASFnBidc2_oDDmXlADs_GLxjwfXP1LRgn7hsLa2TlK6BJ4-tQS7gCosdGrzLGdZf8kQ-byj6gohaIVWiOazAyfscqnqEGXpEGfN0BbSmDKNf-Zu83g0SZdNXYHdy1Yxn7vAZ5QbR7GxNGfNCf271LnDjEqmYWBMAAbDESOu7gsKXjLNU1GCGRq_Pw"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-desktop py-unit-lg">
+<!-- Breadcrumb -->
+<nav class="flex items-center gap-unit-xs text-caption font-caption text-on-surface-variant mb-unit-lg">
+<a class="hover:text-primary transition-colors" href="#">Trang chủ</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Hồ sơ</a>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-primary font-semibold">Người thân</span>
+</nav>
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-unit-md mb-unit-xl">
+<div class="space-y-unit-xs">
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Hồ sơ người thân</h1>
+<p class="text-body-lg text-on-surface-variant">Quản lý hồ sơ phụ thuộc để đặt lịch hộ trẻ em hoặc người thân</p>
+</div>
+<button class="flex items-center gap-unit-sm bg-primary text-on-primary px-unit-lg py-unit-md rounded-lg font-semibold hover:opacity-90 transition-all shadow-sm h-[44px]">
+<span class="material-symbols-outlined">add</span>
+                Thêm người thân
+            </button>
+</div>
+<!-- Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:shadow-md transition-shadow flex flex-col group">
+<div class="p-unit-lg flex-grow">
+<div class="flex justify-between items-start mb-unit-md">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center text-primary overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A high-quality studio portrait of a cheerful 6-year-old Vietnamese boy with short black hair and a bright smile. He is wearing a clean white t-shirt against a soft blue professional backdrop. The lighting is bright and even, conveying a sense of health and well-being in a modern medical portal context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCq2T7Jl4bGPuFTRf0mOsZAwll7UD8AAxuQUK5SbTp7nz7krWRe-2wXu0ACpSreUBZLSMf_7IAaosmNOHKJrsPDBT4PalHMlcymdkUpRtnLWkcRwrO0Eow8aRajXBDqlopauM82SQfjv4qBSDuI5FxZuE717V0PHRdrd6YdEFGNMMyZAFIBqPDpXpJO40jesNZnE243A0eXJsxHmzmZIDFpx_vtFtRjE2Sj-TaQ8pTMPYGOv0Q8bO4j2V89KMBrJrh9AxEH83eOzxI"/>
+</div>
+<span class="bg-secondary-container/20 text-on-secondary-container px-unit-sm py-unit-xs rounded-full font-label-md text-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                            Đã xác thực
+                        </span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-1">Nguyễn Minh Anh</h3>
+<p class="text-primary font-semibold text-body-md mb-unit-md">Con trai</p>
+<div class="space-y-unit-sm border-t border-outline-variant pt-unit-md">
+<div class="flex justify-between">
+<span class="text-on-surface-variant text-body-md">Ngày sinh:</span>
+<span class="text-on-surface font-medium text-body-md">12/05/2018 (6 tuổi)</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant text-body-md">Giới tính:</span>
+<span class="text-on-surface font-medium text-body-md">Nam</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant text-body-md">Số BHYT:</span>
+<span class="text-on-surface font-medium text-body-md">HS 4 79 79 123 45678</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-unit-md flex gap-unit-sm border-t border-outline-variant">
+<button class="flex-1 bg-white border border-primary text-primary py-unit-sm rounded font-semibold text-body-md hover:bg-primary/5 transition-colors">Xem hồ sơ</button>
+<button class="flex-1 bg-primary text-on-primary py-unit-sm rounded font-semibold text-body-md hover:opacity-90 transition-colors">Đặt lịch hộ</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors" onclick="openDeleteModal('Nguyễn Minh Anh')">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden hover:shadow-md transition-shadow flex flex-col group">
+<div class="p-unit-lg flex-grow">
+<div class="flex justify-between items-start mb-unit-md">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center text-primary overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A gentle and warm portrait of an elderly Vietnamese woman in her late 60s, with silver-streaked black hair tied back. She has a serene expression and kind eyes, wearing a traditional yet modern soft-colored blouse. The lighting is warm and comforting, set against a clean, light-colored background suitable for a professional healthcare application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2mDIsdZdleqidIp8Q-6QYj3NvdHigmmKjq9kTYaS-YFvEtLWWfo87ENWZA88cOa_wJbT1Y6JGBMnLwjivvuM5SzQBmU20nGm1yxAmXN2LnLmzfWmOPCFNOGLGAAOOLVBkjSuUVEwUz8CJakJnkw3NGw8mAUo09HGAx57YBajf7wY2ZrWO2hW4ZVETc272WBWJ70Rr2zfWqCE9N0ccegWSoBjXPGClrBjUfQre1klcKosXjbQwM_PrgPfrfw0lffACFDtF-qy05cA"/>
+</div>
+<span class="bg-secondary-container/20 text-on-secondary-container px-unit-sm py-unit-xs rounded-full font-label-md text-label-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+                            Đã xác thực
+                        </span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-1">Trần Thị Bích</h3>
+<p class="text-primary font-semibold text-body-md mb-unit-md">Mẹ ruột</p>
+<div class="space-y-unit-sm border-t border-outline-variant pt-unit-md">
+<div class="flex justify-between">
+<span class="text-on-surface-variant text-body-md">Ngày sinh:</span>
+<span class="text-on-surface font-medium text-body-md">15/08/1955 (69 tuổi)</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant text-body-md">Giới tính:</span>
+<span class="text-on-surface font-medium text-body-md">Nữ</span>
+</div>
+<div class="flex justify-between">
+<span class="text-on-surface-variant text-body-md">Số BHYT:</span>
+<span class="text-on-surface font-medium text-body-md">GD 4 79 79 888 99999</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-unit-md flex gap-unit-sm border-t border-outline-variant">
+<button class="flex-1 bg-white border border-primary text-primary py-unit-sm rounded font-semibold text-body-md hover:bg-primary/5 transition-colors">Xem hồ sơ</button>
+<button class="flex-1 bg-primary text-on-primary py-unit-sm rounded font-semibold text-body-md hover:opacity-90 transition-colors">Đặt lịch hộ</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-error transition-colors" onclick="openDeleteModal('Trần Thị Bích')">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<!-- Empty State / Add Card -->
+<div class="border-2 border-dashed border-outline-variant rounded-xl flex flex-col items-center justify-center p-unit-xl text-center hover:bg-surface-container-low/50 hover:border-primary transition-all cursor-pointer group min-h-[340px]">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-unit-md group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[32px]">person_add</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-2">Thêm hồ sơ người thân mới</h3>
+<p class="text-body-md text-on-surface-variant max-w-[200px] mx-auto">Thêm con cái, cha mẹ hoặc người thân để quản lý y tế tập trung.</p>
+</div>
+<!-- Loading Skeleton (Simulated) -->
+<div class="hidden bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden p-unit-lg space-y-unit-md" id="loading-skeleton">
+<div class="flex justify-between">
+<div class="w-16 h-16 rounded-full skeleton"></div>
+<div class="w-24 h-6 rounded-full skeleton"></div>
+</div>
+<div class="w-3/4 h-8 skeleton"></div>
+<div class="w-1/4 h-5 skeleton"></div>
+<div class="space-y-2 pt-4">
+<div class="w-full h-4 skeleton"></div>
+<div class="w-full h-4 skeleton"></div>
+<div class="w-full h-4 skeleton"></div>
+</div>
+<div class="flex gap-2 pt-4">
+<div class="flex-1 h-10 skeleton rounded"></div>
+<div class="flex-1 h-10 skeleton rounded"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- Delete Confirmation Modal -->
+<div class="fixed inset-0 z-[100] hidden items-center justify-center p-unit-md modal-backdrop" id="deleteModal">
+<div class="bg-surface-container-lowest rounded-xl max-w-md w-full shadow-xl overflow-hidden border border-outline-variant">
+<div class="p-unit-lg">
+<div class="w-12 h-12 bg-error-container text-error rounded-full flex items-center justify-center mb-unit-md">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-unit-xs">Xóa liên kết hồ sơ?</h3>
+<p class="text-body-lg text-on-surface-variant">Bạn có chắc chắn muốn xóa liên kết với <span class="font-bold text-on-surface" id="targetName"></span>? Hành động này không thể hoàn tác và bạn sẽ không thể đặt lịch hộ cho người này.</p>
+</div>
+<div class="bg-surface-container-low p-unit-lg flex gap-unit-md justify-end">
+<button class="px-unit-lg py-unit-sm rounded border border-outline text-on-surface-variant font-semibold hover:bg-surface-container transition-colors" onclick="closeDeleteModal()">Hủy</button>
+<button class="px-unit-lg py-unit-sm rounded bg-error text-on-error font-semibold hover:opacity-90 transition-colors">Xác nhận xóa</button>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="bg-surface-container dark:bg-surface-dim w-full mt-auto border-t border-outline-variant dark:border-outline">
+<div class="flex flex-col md:flex-row justify-between items-center gap-unit-md px-margin-desktop py-unit-lg w-full max-w-container-max mx-auto">
+<div class="flex flex-col items-center md:items-start gap-unit-xs">
+<span class="font-label-md text-label-md font-bold text-on-surface">MediCare Patient Portal</span>
+<p class="font-caption text-caption text-on-surface-variant text-center md:text-left">© 2024 Global Health Systems. All rights reserved. Medical compliance certified.</p>
+</div>
+<div class="flex gap-unit-lg">
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer" href="#">Privacy Policy</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer" href="#">Terms of Service</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer" href="#">Patient Rights</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed transition-colors cursor-pointer" href="#">Support</a>
+</div>
+</div>
+</footer>
+<script>
+        function openDeleteModal(name) {
+            const modal = document.getElementById('deleteModal');
+            document.getElementById('targetName').textContent = name;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDeleteModal();
+        });
+
+        // Close modal when clicking outside content
+        document.getElementById('deleteModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('deleteModal')) closeDeleteModal();
+        });
+    </script>
+</body></html>

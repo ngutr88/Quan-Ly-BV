@@ -1,0 +1,194 @@
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Đặt lịch khám bệnh";
+    var depts = ViewBag.Departments as List<QuanLyBenhVien.Models.Department> ?? new List<QuanLyBenhVien.Models.Department>();
+}
+
+<div class="mb-unit-lg">
+    <a href="/Patient/Dashboard" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại trang chủ
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Đăng ký Lịch hẹn khám</h2>
+    <p class="text-body-md text-on-surface-variant">Vui lòng điền thông tin để đăng ký ca khám trực tuyến tại bệnh viện.</p>
+</div>
+
+<div class="glass-card rounded-xl p-unit-lg shadow-sm max-w-2xl mx-auto">
+    <form action="/Patient/Book/ConfirmBooking" method="POST" class="space-y-unit-md">
+        @Html.AntiForgeryToken()
+
+        <!-- Choose Department -->
+        <div class="space-y-unit-xs">
+            <label class="block text-caption font-semibold text-on-surface-variant" for="deptSelector">Chọn Khoa khám chuyên khoa <span class="text-error">*</span></label>
+            <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                    id="deptSelector" name="deptId" required onchange="loadDoctors()">
+                <option value="">-- Chọn chuyên khoa --</option>
+                @foreach (var dept in depts)
+                {
+                    <option value="@dept.Id">@dept.TenKhoa (@dept.ViTri)</option>
+                }
+            </select>
+        </div>
+
+        <!-- Choose Doctor -->
+        <div class="space-y-unit-xs">
+            <label class="block text-caption font-semibold text-on-surface-variant" for="doctorSelector">Chọn Bác sĩ điều trị <span class="text-error">*</span></label>
+            <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                    id="doctorSelector" name="doctorId" required disabled onchange="checkSlotsTrigger()">
+                <option value="">-- Vui lòng chọn khoa trước --</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+            <!-- Choose Date -->
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="bookingDate">Chọn Ngày khám <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="bookingDate" name="bookingDate" required type="date" min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" max="@DateTime.Today.AddDays(14).ToString("yyyy-MM-dd")" onchange="loadSlots()" disabled />
+            </div>
+
+            <!-- Selected Slot (hidden, set by click) -->
+            <input type="hidden" id="selectedTime" name="bookingTime" required />
+            
+            <!-- Slots Info -->
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Chọn Giờ khám trống <span class="text-error">*</span></label>
+                <div class="text-[11px] text-on-surface-variant italic py-2" id="slots-info">
+                    Chọn bác sĩ và ngày khám để hiển thị khung giờ.
+                </div>
+            </div>
+        </div>
+
+        <!-- Slot Badges Grid -->
+        <div class="grid grid-cols-4 gap-unit-sm pt-unit-xs hidden" id="slots-container">
+            <!-- Badges populated by JS -->
+        </div>
+
+        <!-- Reason -->
+        <div class="space-y-unit-xs">
+            <label class="block text-caption font-semibold text-on-surface-variant" for="lyDo">Triệu chứng lâm sàng / Lý do đăng ký khám <span class="text-error">*</span></label>
+            <textarea class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                      id="lyDo" name="lyDo" rows="3" placeholder="Ví dụ: Đau tức ngực trái kéo dài, khó thở khi leo cầu thang..." required></textarea>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="flex items-center gap-unit-md pt-unit-md border-t border-outline-variant mt-unit-lg">
+            <button class="bg-primary text-on-primary font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] shadow-md flex items-center gap-1" type="submit" id="submitBtn" disabled>
+                <span class="material-symbols-outlined">check_circle</span> Xác nhận đặt lịch khám
+            </button>
+            <a href="/Patient/Dashboard" class="text-on-surface-variant hover:underline font-label-md">Hủy bỏ</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        async function loadDoctors() {
+            const deptId = document.getElementById('deptSelector').value;
+            const docSelector = document.getElementById('doctorSelector');
+            const dateInput = document.getElementById('bookingDate');
+
+            // Reset
+            docSelector.innerHTML = '<option value="">-- Chọn bác sĩ --</option>';
+            docSelector.disabled = true;
+            dateInput.disabled = true;
+            dateInput.value = "";
+            resetSlots();
+
+            if (!deptId) return;
+
+            const response = await fetch(`/Patient/Book/GetDoctors?deptId=${deptId}`);
+            const doctors = await response.json();
+
+            if (doctors.length === 0) {
+                docSelector.innerHTML = '<option value="">Không có bác sĩ làm việc ở khoa này</option>';
+                return;
+            }
+
+            doctors.forEach(doc => {
+                const opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.innerText = doc.name;
+                docSelector.appendChild(opt);
+            });
+
+            docSelector.disabled = false;
+        }
+
+        function checkSlotsTrigger() {
+            const docId = document.getElementById('doctorSelector').value;
+            const dateInput = document.getElementById('bookingDate');
+            resetSlots();
+            
+            if (docId) {
+                dateInput.disabled = false;
+            } else {
+                dateInput.disabled = true;
+                dateInput.value = "";
+            }
+        }
+
+        function resetSlots() {
+            const container = document.getElementById('slots-container');
+            const info = document.getElementById('slots-info');
+            container.classList.add('hidden');
+            container.innerHTML = "";
+            info.classList.remove('hidden');
+            info.innerText = "Chọn bác sĩ và ngày khám để hiển thị khung giờ.";
+            document.getElementById('selectedTime').value = "";
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        async function loadSlots() {
+            const docId = document.getElementById('doctorSelector').value;
+            const date = document.getElementById('bookingDate').value;
+            const container = document.getElementById('slots-container');
+            const info = document.getElementById('slots-info');
+
+            resetSlots();
+            if (!docId || !date) return;
+
+            info.innerText = "Đang kiểm tra lịch trống của bác sĩ...";
+
+            const response = await fetch(`/Patient/Book/GetSlots?doctorId=${docId}&date=${date}`);
+            const result = await response.json();
+
+            if (result.success === false) {
+                info.innerText = result.message;
+                return;
+            }
+
+            const slots = result.slots;
+            if (slots.length === 0) {
+                info.innerText = "Rất tiếc! Bác sĩ đã kín lịch khám trong ngày này. Vui lòng chọn ngày khác.";
+                return;
+            }
+
+            info.classList.add('hidden');
+            container.classList.remove('hidden');
+
+            slots.forEach(slot => {
+                const btn = document.createElement('button');
+                btn.type = "button";
+                btn.className = "slot-pill py-2 bg-surface hover:bg-surface-container-high border border-outline-variant text-body-md rounded-lg font-bold transition-all text-center";
+                btn.innerText = slot.time;
+                btn.onclick = () => selectSlot(btn, slot.time);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectSlot(element, time) {
+            // Remove active classes
+            document.querySelectorAll('.slot-pill').forEach(pill => {
+                pill.classList.remove('bg-primary', 'text-white', 'border-primary');
+                pill.classList.add('bg-surface', 'text-on-surface', 'border-outline-variant');
+            });
+
+            // Add active to selected
+            element.classList.remove('bg-surface', 'text-on-surface', 'border-outline-variant');
+            element.classList.add('bg-primary', 'text-white', 'border-primary');
+
+            document.getElementById('selectedTime').value = time;
+            document.getElementById('submitBtn').disabled = false;
+        }
+    </script>
+}

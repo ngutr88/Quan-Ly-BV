@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Kê đơn thuốc - Clinical Clarity HMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary": "#003f87",
+                        "tertiary": "#5e3900",
+                        "secondary-fixed-dim": "#4edea3",
+                        "primary-container": "#0056b3",
+                        "surface-container": "#e5eeff",
+                        "on-primary-fixed": "#001a40",
+                        "surface-container-high": "#dce9ff",
+                        "on-secondary": "#ffffff",
+                        "outline": "#727784",
+                        "on-tertiary-fixed": "#2a1700",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-secondary-container": "#00714d",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#424752",
+                        "on-background": "#0b1c30",
+                        "primary-fixed": "#d7e2ff",
+                        "on-primary": "#ffffff",
+                        "surface-tint": "#115cb9",
+                        "secondary-container": "#6cf8bb",
+                        "on-surface": "#0b1c30",
+                        "on-primary-container": "#bbd0ff",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "secondary": "#006c49",
+                        "outline-variant": "#c2c6d4",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#eff4ff",
+                        "surface-variant": "#d3e4fe",
+                        "secondary-fixed": "#6ffbbe",
+                        "background": "#f8f9ff",
+                        "primary-fixed-dim": "#acc7ff",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-tertiary-container": "#ffc57f",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "inverse-primary": "#acc7ff",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "surface": "#f8f9ff",
+                        "on-secondary-fixed": "#002113",
+                        "inverse-surface": "#213145"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "unit-sm": "8px",
+                        "unit-xl": "48px",
+                        "unit-md": "16px",
+                        "margin-mobile": "16px",
+                        "unit-lg": "24px",
+                        "margin-desktop": "40px",
+                        "unit-xs": "4px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "body-md": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen">
+<!-- SideNavBar Anchor -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-surface-container-lowest border-r border-outline-variant flex flex-col z-20">
+<div class="p-gutter h-20 flex items-center">
+<span class="text-primary font-bold text-headline-md tracking-tight">Clarity HMS</span>
+</div>
+<nav class="flex-1 px-unit-md space-y-unit-xs">
+<!-- Navigation Items Mapping -->
+<a class="flex items-center gap-unit-md p-unit-md text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-unit-md p-unit-md text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">patient_list</span>
+<span class="font-label-md text-label-md">Patient Queue</span>
+</a>
+<a class="flex items-center gap-unit-md p-unit-md text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">stethoscope</span>
+<span class="font-label-md text-label-md">Khám bệnh</span>
+</a>
+<a class="flex items-center gap-unit-md p-unit-md bg-surface-container text-primary font-bold transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medication</span>
+<span class="font-label-md text-label-md">Đơn thuốc</span>
+</a>
+<a class="flex items-center gap-unit-md p-unit-md text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-label-md text-label-md">Tin nhắn</span>
+</a>
+<a class="flex items-center gap-unit-md p-unit-md text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="font-label-md text-label-md">Thống kê</span>
+</a>
+</nav>
+<div class="mt-auto p-unit-md border-t border-outline-variant">
+<div class="flex items-center gap-unit-md p-unit-md">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Close-up professional portrait of a male doctor in a white clinical coat, minimalist hospital office background, natural daylight, soft professional lighting, sharp focus, medical authority aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWgXWPc8HFYDjQik3zYyvGcDOq2SexKIfo6g7rSWn0k5yt7sH5JQkRqs0pBxx8i8vRuZr8SoP_LpiZyrF_R1n5SIFf8ucyDuR2Tp1nkKA2BfipRsWkaGwEomH7gv1XMl-odutMPpYqX8_dkkO_EenZiZoClzpz9I1Cl03BV6yawNI3fClKWYfVB37LkHfrSJ6ZI9zOQf95jtSDpkceCIDkDQU3xHNwxOiRXMJuZg2XlbKecNiLwDOj9cbusD8ZyxWfhlTaxtKEASY"/>
+<div>
+<p class="font-bold text-label-md">Dr. Smith</p>
+<p class="text-caption text-on-surface-variant">Cardiology Dept</p>
+</div>
+</div>
+<a class="flex items-center gap-unit-md p-unit-md text-on-surface-variant hover:bg-surface-container-low transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[280px] flex-1 flex flex-col">
+<!-- TopNavBar Anchor (Patient Context) -->
+<header class="h-16 bg-surface-container-lowest border-b border-outline-variant flex items-center px-gutter sticky top-0 z-10">
+<div class="flex items-center gap-unit-lg flex-1">
+<div class="flex items-center gap-unit-md">
+<span class="material-symbols-outlined text-primary">person</span>
+<div>
+<span class="font-bold text-body-lg">Nguyen Van A</span>
+<span class="text-on-surface-variant text-body-md ml-unit-sm">ID: 10293847</span>
+</div>
+</div>
+<div class="h-4 w-px bg-outline-variant"></div>
+<div class="flex gap-unit-lg text-body-md text-on-surface-variant">
+<span>Tuổi: <strong>34</strong></span>
+<span>Giới tính: <strong>Nam</strong></span>
+<span>Nhóm máu: <strong>O+</strong></span>
+</div>
+</div>
+<div class="flex items-center gap-unit-md">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">emergency_home</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer">account_circle</span>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-gutter space-y-unit-lg">
+<!-- Page Header -->
+<div class="flex justify-between items-end">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Kê đơn thuốc</h1>
+<p class="text-body-md text-on-surface-variant">Phiên khám: <span class="font-mono text-primary font-bold">SID-99120</span> • 24/05/2024</p>
+</div>
+<div class="flex gap-unit-md">
+<button class="px-unit-lg py-unit-sm border border-primary text-primary font-bold rounded hover:bg-surface-container transition-colors flex items-center gap-unit-sm">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                        Quay lại phiên khám
+                    </button>
+<button class="px-unit-lg py-unit-sm bg-primary-container text-on-primary font-bold rounded hover:opacity-90 transition-opacity flex items-center gap-unit-sm shadow-sm">
+<span class="material-symbols-outlined text-[20px]">save</span>
+                        Lưu đơn thuốc
+                    </button>
+</div>
+</div>
+<!-- Safety Alerts -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+<!-- Allergy Alert -->
+<div class="bg-error-container text-on-error-container p-unit-md rounded border border-error/20 flex gap-unit-md items-start">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div>
+<p class="font-bold text-label-md uppercase tracking-wider">Cảnh báo dị ứng (Patient Allergy)</p>
+<p class="text-body-md">Bệnh nhân có tiền sử dị ứng với <strong>Penicillin</strong>. Vui lòng kiểm tra kỹ các thuốc nhóm Beta-lactam.</p>
+</div>
+</div>
+<!-- Interaction Alert -->
+<div class="bg-tertiary-fixed text-on-tertiary-fixed p-unit-md rounded border border-tertiary/20 flex gap-unit-md items-start">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<div>
+<p class="font-bold text-label-md uppercase tracking-wider">Tương tác thuốc (Interaction Alert)</p>
+<p class="text-body-md">Phát hiện tương tác mức độ Trung bình giữa <strong>Amoxicillin</strong> và <strong>Warfarin</strong>. Có thể làm tăng nguy cơ chảy máu.</p>
+</div>
+</div>
+</div>
+<!-- Main Layout Grid -->
+<div class="grid grid-cols-12 gap-unit-lg">
+<!-- Left Column: Search & Catalog -->
+<div class="col-span-12 lg:col-span-5 space-y-unit-md">
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm">
+<div class="flex flex-col gap-unit-md">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-outline">search</span>
+<input class="w-full pl-10 pr-unit-md py-2.5 border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-body-md transition-all" placeholder="Tìm tên thuốc, SKU hoặc hoạt chất..." type="text"/>
+</div>
+<div class="flex gap-unit-sm overflow-x-auto pb-2 custom-scrollbar">
+<button class="px-unit-md py-1 bg-primary text-on-primary text-label-md rounded-full whitespace-nowrap">Tất cả</button>
+<button class="px-unit-md py-1 border border-outline-variant text-on-surface-variant text-label-md rounded-full whitespace-nowrap hover:bg-surface-container">Kháng sinh</button>
+<button class="px-unit-md py-1 border border-outline-variant text-on-surface-variant text-label-md rounded-full whitespace-nowrap hover:bg-surface-container">Giảm đau</button>
+<button class="px-unit-md py-1 border border-outline-variant text-on-surface-variant text-label-md rounded-full whitespace-nowrap hover:bg-surface-container">Tim mạch</button>
+<button class="px-unit-md py-1 border border-outline-variant text-on-surface-variant text-label-md rounded-full whitespace-nowrap hover:bg-surface-container">Tiểu đường</button>
+</div>
+</div>
+</div>
+<div class="space-y-unit-sm h-[calc(100vh-420px)] overflow-y-auto pr-2 custom-scrollbar">
+<!-- Drug Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-lg flex justify-between items-center hover:border-primary transition-colors cursor-pointer group">
+<div class="flex-1">
+<div class="flex items-center gap-unit-sm mb-unit-xs">
+<h4 class="font-bold text-body-lg text-primary">Amoxicillin 500mg</h4>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase">In Stock</span>
+</div>
+<p class="text-body-md text-on-surface-variant">Hoạt chất: Amoxicillin • Viên nén</p>
+<p class="text-label-md font-bold text-on-surface mt-1">2,400 đ / Viên</p>
+</div>
+<button class="bg-surface-container-low group-hover:bg-primary-container group-hover:text-on-primary p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Drug Card 2 (Low Stock) -->
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-lg flex justify-between items-center hover:border-primary transition-colors cursor-pointer group">
+<div class="flex-1">
+<div class="flex items-center gap-unit-sm mb-unit-xs">
+<h4 class="font-bold text-body-lg text-on-surface">Panadol Extra</h4>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded text-[10px] font-bold uppercase">Low Stock</span>
+</div>
+<p class="text-body-md text-on-surface-variant">Hoạt chất: Paracetamol + Caffeine • Viên sủi</p>
+<p class="text-label-md font-bold text-on-surface mt-1">1,500 đ / Viên</p>
+</div>
+<button class="bg-surface-container-low group-hover:bg-primary-container group-hover:text-on-primary p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Drug Card 3 (Out of Stock) -->
+<div class="bg-surface-container-low/50 border border-outline-variant p-unit-md rounded-lg opacity-80">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-unit-sm mb-unit-xs">
+<h4 class="font-bold text-body-lg text-on-surface-variant line-through">Augmentin 1g</h4>
+<span class="bg-error-container text-on-error-container px-2 py-0.5 rounded text-[10px] font-bold uppercase">Out of Stock</span>
+</div>
+<p class="text-body-md text-on-surface-variant italic">Thay thế gợi ý: Amoxicillin + Clavulanic 1g</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">block</span>
+</div>
+</div>
+<!-- Drug Card 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-lg flex justify-between items-center hover:border-primary transition-colors cursor-pointer group">
+<div class="flex-1">
+<div class="flex items-center gap-unit-sm mb-unit-xs">
+<h4 class="font-bold text-body-lg text-on-surface">Metformin 850mg</h4>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase">In Stock</span>
+</div>
+<p class="text-body-md text-on-surface-variant">Hoạt chất: Metformin Hydrochloride • Viên nén</p>
+<p class="text-label-md font-bold text-on-surface mt-1">3,200 đ / Viên</p>
+</div>
+<button class="bg-surface-container-low group-hover:bg-primary-container group-hover:text-on-primary p-2 rounded-full transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Column: Prescription Table -->
+<div class="col-span-12 lg:col-span-7">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm flex flex-col h-full">
+<div class="p-unit-md border-b border-outline-variant flex justify-between items-center bg-surface-bright rounded-t-xl">
+<h3 class="font-bold text-title-lg flex items-center gap-unit-sm">
+<span class="material-symbols-outlined text-primary">receipt_long</span>
+                                Đơn thuốc hiện tại
+                            </h3>
+<span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-label-md font-bold">3 Thuốc đã chọn</span>
+</div>
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant text-label-md uppercase tracking-wider">
+<th class="px-unit-md py-4 font-bold border-b border-outline-variant">Tên thuốc</th>
+<th class="px-unit-md py-4 font-bold border-b border-outline-variant w-24">Liều dùng</th>
+<th class="px-unit-md py-4 font-bold border-b border-outline-variant w-32">Tần suất</th>
+<th class="px-unit-md py-4 font-bold border-b border-outline-variant w-16">Ngày</th>
+<th class="px-unit-md py-4 font-bold border-b border-outline-variant w-16">SL</th>
+<th class="px-unit-md py-4 font-bold border-b border-outline-variant">Đường dùng</th>
+<th class="px-unit-md py-4 font-bold border-b border-outline-variant text-right"></th>
+</tr>
+</thead>
+<tbody class="text-body-md">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-unit-md py-4 border-b border-outline-variant font-bold text-primary">Amoxicillin 500mg</td>
+<td class="px-unit-md py-4 border-b border-outline-variant">
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-bold" type="text" value="1 viên"/>
+</td>
+<td class="px-unit-md py-4 border-b border-outline-variant">
+<select class="w-full bg-transparent border-none p-0 focus:ring-0">
+<option>3 lần/ngày</option>
+<option>2 lần/ngày</option>
+</select>
+</td>
+<td class="px-unit-md py-4 border-b border-outline-variant font-bold text-center">7</td>
+<td class="px-unit-md py-4 border-b border-outline-variant font-bold text-center">21</td>
+<td class="px-unit-md py-4 border-b border-outline-variant text-on-surface-variant">Uống</td>
+<td class="px-unit-md py-4 border-b border-outline-variant text-right">
+<button class="text-outline hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-unit-md py-4 border-b border-outline-variant font-bold text-on-surface">Panadol Extra</td>
+<td class="px-unit-md py-4 border-b border-outline-variant">
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-bold" type="text" value="1 viên"/>
+</td>
+<td class="px-unit-md py-4 border-b border-outline-variant">
+<select class="w-full bg-transparent border-none p-0 focus:ring-0">
+<option>Khi đau</option>
+<option>3 lần/ngày</option>
+</select>
+</td>
+<td class="px-unit-md py-4 border-b border-outline-variant font-bold text-center">5</td>
+<td class="px-unit-md py-4 border-b border-outline-variant font-bold text-center">10</td>
+<td class="px-unit-md py-4 border-b border-outline-variant text-on-surface-variant">Uống</td>
+<td class="px-unit-md py-4 border-b border-outline-variant text-right">
+<button class="text-outline hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 (Alerted Interaction) -->
+<tr class="hover:bg-surface-container-low transition-colors bg-tertiary-fixed/10 group">
+<td class="px-unit-md py-4 border-b border-outline-variant">
+<div class="flex items-center gap-unit-sm">
+<span class="font-bold text-on-surface">Warfarin 5mg</span>
+<span class="material-symbols-outlined text-tertiary text-sm" title="Tương tác thuốc">bolt</span>
+</div>
+</td>
+<td class="px-unit-md py-4 border-b border-outline-variant">
+<input class="w-full bg-transparent border-none p-0 focus:ring-0 font-bold" type="text" value="0.5 viên"/>
+</td>
+<td class="px-unit-md py-4 border-b border-outline-variant">
+<select class="w-full bg-transparent border-none p-0 focus:ring-0">
+<option>1 lần (tối)</option>
+<option>1 lần (sáng)</option>
+</select>
+</td>
+<td class="px-unit-md py-4 border-b border-outline-variant font-bold text-center">30</td>
+<td class="px-unit-md py-4 border-b border-outline-variant font-bold text-center">15</td>
+<td class="px-unit-md py-4 border-b border-outline-variant text-on-surface-variant">Uống</td>
+<td class="px-unit-md py-4 border-b border-outline-variant text-right">
+<button class="text-outline hover:text-error transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-unit-md bg-surface-bright rounded-b-xl border-t border-outline-variant">
+<div class="flex flex-col gap-unit-sm">
+<label class="text-label-md font-bold text-on-surface-variant">Ghi chú bác sĩ</label>
+<textarea class="w-full border border-outline-variant rounded-lg p-unit-sm text-body-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none" placeholder="Nhập lời dặn thêm cho bệnh nhân..." rows="2"></textarea>
+</div>
+<div class="mt-unit-md flex justify-between items-center">
+<div>
+<p class="text-body-md text-on-surface-variant">Tổng cộng (tạm tính): <span class="font-bold text-on-surface">124,500 đ</span></p>
+</div>
+<p class="text-caption text-outline italic">Hệ thống tự động kiểm tra tương tác khi cập nhật đơn thuốc.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recommendations/Quick Access Bento -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-unit-md">
+<div class="md:col-span-1 bg-surface-container-high p-unit-md rounded-xl border border-outline-variant">
+<h5 class="font-bold text-label-md text-primary flex items-center gap-unit-sm mb-unit-sm">
+<span class="material-symbols-outlined text-[18px]">history</span>
+                        Đơn thuốc cũ
+                    </h5>
+<ul class="space-y-unit-xs">
+<li class="text-body-md hover:text-primary cursor-pointer flex justify-between">
+<span>12/03/2024</span>
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</li>
+<li class="text-body-md hover:text-primary cursor-pointer flex justify-between">
+<span>05/11/2023</span>
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+</li>
+</ul>
+</div>
+<div class="md:col-span-3 bg-white p-unit-md rounded-xl border border-outline-variant flex items-center justify-between overflow-hidden relative group">
+<div class="relative z-10">
+<h5 class="font-bold text-label-md text-on-surface mb-unit-xs">Cẩm nang hướng dẫn sử dụng thuốc</h5>
+<p class="text-body-md text-on-surface-variant max-w-md">Tra cứu nhanh liều dùng khuyến cáo theo độ tuổi và cân nặng dựa trên phác đồ Bộ Y Tế mới nhất.</p>
+<button class="mt-unit-sm text-primary font-bold text-label-md flex items-center gap-unit-xs hover:gap-unit-sm transition-all">
+                            Xem cẩm nang <span class="material-symbols-outlined text-[18px]">trending_flat</span>
+</button>
+</div>
+<div class="absolute right-[-20px] top-0 bottom-0 w-48 bg-cover bg-center opacity-40 group-hover:opacity-100 transition-opacity" data-alt="A clean, minimalist 3D rendering of medicine pills and medical documents on a desk, soft clinical lighting, turquoise and white color palette, professional healthcare background." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDc0SpZkdKdfqrlyIuL2nBNz2T5EknmVbPf-g4gAp_yPmwm-Uis7bROrsP7x0iH8bP1LPWqgCYA0zXMQd5WB8rTq2iUm7Q12y-TVufHETgb1wUNo6rv0g7tZYmKIQ7xaIJu8L7ybrq6z_RdcC9a_UsTv50wPmyQosdHHFnMq4y2JVx5iRdhrBxvjAYR9Fxn4c1_X0ooa4PwezF6t4ETGcAFvMZTjK5GyskkSDARq-c0SyjkCGZRi5EORMHt5Vq7vxPrG9taoAlXe38')"></div>
+</div>
+</section>
+</div>
+<footer class="mt-auto py-unit-md px-gutter text-center border-t border-outline-variant">
+<p class="text-caption text-outline">Clinical Clarity HMS v2.4.1 • © 2024 Secure Medical Data Systems</p>
+</footer>
+</main>
+<script>
+        // Micro-interaction for quantity calculation or visual feedback
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.parentElement.classList.add('bg-primary/5');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.parentElement.classList.remove('bg-primary/5');
+            });
+        });
+
+        // Toggle status for drug cards (demo purpose)
+        const drugCards = document.querySelectorAll('.group.cursor-pointer');
+        drugCards.forEach(card => {
+            card.addEventListener('click', function() {
+                this.classList.add('ring-2', 'ring-primary');
+                setTimeout(() => this.classList.remove('ring-2', 'ring-primary'), 500);
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,295 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Hàng đợi khám bệnh";
+    var doctor = ViewBag.DoctorProfile as QuanLyBenhVien.Models.Doctor;
+    var queue = ViewBag.Queue as List<QuanLyBenhVien.Models.Appointment> ?? new List<QuanLyBenhVien.Models.Appointment>();
+    var selectedApp = ViewBag.SelectedAppointment as QuanLyBenhVien.Models.Appointment;
+    var lastRecord = ViewBag.LastRecord as QuanLyBenhVien.Models.ExaminationRecord;
+    var historyExams = ViewBag.HistoryExams as List<QuanLyBenhVien.Models.ExaminationRecord> ?? new List<QuanLyBenhVien.Models.ExaminationRecord>();
+
+    // Split queue into Morning and Afternoon sessions
+    var morningQueue = queue.Where(a => a.ThoiGian.Hour < 13).ToList();
+    var afternoonQueue = queue.Where(a => a.ThoiGian.Hour >= 13).ToList();
+}
+
+<div class="flex flex-col lg:flex-row gap-gutter">
+    <!-- Left Column: Appointments List (45%) -->
+    <section class="lg:w-[400px] flex flex-col gap-unit-md min-w-0 shrink-0">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-headline-md font-headline-md text-on-surface font-bold">Lịch khám hôm nay</h2>
+                <p class="text-body-md text-on-surface-variant font-medium">Tổng cộng: @queue.Count bệnh nhân</p>
+            </div>
+            <div class="bg-secondary/10 text-secondary px-2.5 py-1 rounded-lg text-caption font-bold">
+                @DateTime.Today.ToString("dd/MM/yyyy")
+            </div>
+        </div>
+        
+        <div class="flex flex-col gap-unit-md overflow-y-auto max-h-[calc(100vh-220px)] pr-unit-xs custom-scrollbar">
+            <!-- Morning Session -->
+            @if (morningQueue.Any())
+            {
+                <div class="space-y-unit-sm">
+                    <div class="flex items-center gap-unit-sm">
+                        <span class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Sáng (08:00 - 12:00)</span>
+                        <div class="h-[1px] flex-1 bg-outline-variant/50"></div>
+                    </div>
+                    
+                    @foreach (var app in morningQueue)
+                    {
+                        var isSelected = selectedApp != null && app.Id == selectedApp.Id;
+                        var isCompleted = app.TrangThai == "HoanThanh";
+                        var isCanceled = app.TrangThai == "DaHuy";
+                        
+                        <a href="/Doctor/Queue?id=@app.Id" 
+                           class="block bg-white border rounded-xl p-unit-md hover:border-secondary transition-all cursor-pointer group relative @(isSelected ? "border-secondary border-2" : "border-outline-variant")">
+                            @if (isSelected)
+                            {
+                                <div class="absolute top-0 left-0 w-1 h-full bg-secondary"></div>
+                            }
+                            <div class="flex justify-between items-start mb-unit-sm">
+                                <div class="flex gap-unit-sm items-center">
+                                    <div class="bg-surface-container-low px-2 py-0.5 rounded text-primary font-bold text-label-md">@app.ThoiGian.ToString("HH:mm")</div>
+                                </div>
+                                
+                                @if (app.TrangThai == "ChoXacNhan")
+                                {
+                                    <span class="px-2 py-0.5 bg-primary-container/20 text-primary-fixed-dim rounded-lg text-[10px] font-bold uppercase">Chờ duyệt</span>
+                                }
+                                else if (app.TrangThai == "DaXacNhan")
+                                {
+                                    <span class="px-2 py-0.5 bg-tertiary-fixed/30 text-on-tertiary-fixed-variant rounded-lg text-[10px] font-bold uppercase">Đã Check-in</span>
+                                }
+                                else if (app.TrangThai == "DangKham")
+                                {
+                                    <span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container rounded-lg text-[10px] font-bold uppercase animate-pulse">Đang khám</span>
+                                }
+                                else if (app.TrangThai == "HoanThanh")
+                                {
+                                    <span class="px-2 py-0.5 bg-secondary/15 text-secondary rounded-lg text-[10px] font-bold uppercase">Xong</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2 py-0.5 bg-error-container text-error rounded-lg text-[10px] font-bold uppercase">Hủy</span>
+                                }
+                            </div>
+                            <h3 class="text-title-lg font-title-lg font-bold text-on-surface mb-unit-xs">@app.Patient.User.HoTen</h3>
+                            <div class="flex justify-between items-end">
+                                <p class="text-body-md text-on-surface-variant">@(DateTime.Today.Year - app.Patient.NgaySinh.Year) tuổi • @app.Patient.GioiTinh</p>
+                                <span class="material-symbols-outlined text-outline group-hover:text-secondary transition-colors">chevron_right</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+
+            <!-- Afternoon Session -->
+            @if (afternoonQueue.Any())
+            {
+                <div class="space-y-unit-sm">
+                    <div class="flex items-center gap-unit-sm">
+                        <span class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider">Chiều (13:30 - 17:30)</span>
+                        <div class="h-[1px] flex-1 bg-outline-variant/50"></div>
+                    </div>
+                    
+                    @foreach (var app in afternoonQueue)
+                    {
+                        var isSelected = selectedApp != null && app.Id == selectedApp.Id;
+                        var isCompleted = app.TrangThai == "HoanThanh";
+                        var isCanceled = app.TrangThai == "DaHuy";
+                        
+                        <a href="/Doctor/Queue?id=@app.Id" 
+                           class="block bg-white border rounded-xl p-unit-md hover:border-secondary transition-all cursor-pointer group relative @(isSelected ? "border-secondary border-2" : "border-outline-variant")">
+                            @if (isSelected)
+                            {
+                                <div class="absolute top-0 left-0 w-1 h-full bg-secondary"></div>
+                            }
+                            <div class="flex justify-between items-start mb-unit-sm">
+                                <div class="flex gap-unit-sm items-center">
+                                    <div class="bg-surface-container-low px-2 py-0.5 rounded text-primary font-bold text-label-md">@app.ThoiGian.ToString("HH:mm")</div>
+                                </div>
+                                
+                                @if (app.TrangThai == "ChoXacNhan")
+                                {
+                                    <span class="px-2 py-0.5 bg-primary-container/20 text-primary-fixed-dim rounded-lg text-[10px] font-bold uppercase">Chờ duyệt</span>
+                                }
+                                else if (app.TrangThai == "DaXacNhan")
+                                {
+                                    <span class="px-2 py-0.5 bg-tertiary-fixed/30 text-on-tertiary-fixed-variant rounded-lg text-[10px] font-bold uppercase">Đã Check-in</span>
+                                }
+                                else if (app.TrangThai == "DangKham")
+                                {
+                                    <span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container rounded-lg text-[10px] font-bold uppercase animate-pulse">Đang khám</span>
+                                }
+                                else if (app.TrangThai == "HoanThanh")
+                                {
+                                    <span class="px-2 py-0.5 bg-secondary/15 text-secondary rounded-lg text-[10px] font-bold uppercase">Xong</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2 py-0.5 bg-error-container text-error rounded-lg text-[10px] font-bold uppercase">Hủy</span>
+                                }
+                            </div>
+                            <h3 class="text-title-lg font-title-lg font-bold text-on-surface mb-unit-xs">@app.Patient.User.HoTen</h3>
+                            <div class="flex justify-between items-end">
+                                <p class="text-body-md text-on-surface-variant">@(DateTime.Today.Year - app.Patient.NgaySinh.Year) tuổi • @app.Patient.GioiTinh</p>
+                                <span class="material-symbols-outlined text-outline group-hover:text-secondary transition-colors">chevron_right</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+
+            @if (!queue.Any())
+            {
+                <div class="bg-white border border-outline-variant rounded-xl p-unit-xl text-center">
+                    <span class="material-symbols-outlined text-[64px] text-outline opacity-30 mb-2">calendar_today</span>
+                    <p class="text-body-md text-on-surface-variant">Hôm nay không có lịch hẹn khám nào được đặt.</p>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- Right Column: Detail View (55%) -->
+    <section class="flex-1 min-w-0 bg-white border border-outline-variant rounded-2xl overflow-hidden flex flex-col shadow-sm">
+        @if (selectedApp != null)
+        {
+            <div class="p-unit-lg bg-surface border-b border-outline-variant flex justify-between items-center">
+                <div class="flex items-center gap-unit-md">
+                    <div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center text-secondary font-bold text-2xl uppercase">
+                        @selectedApp.Patient.User.HoTen.Substring(0, Math.Min(2, selectedApp.Patient.User.HoTen.Length))
+                    </div>
+                    <div>
+                        <h3 class="text-headline-md font-headline-md font-bold text-on-surface">@selectedApp.Patient.User.HoTen</h3>
+                        <p class="text-body-lg text-on-surface-variant">Mã BN: BN-@selectedApp.Patient.Id.ToString("D4") • @(DateTime.Today.Year - selectedApp.Patient.NgaySinh.Year) tuổi • @selectedApp.Patient.GioiTinh</p>
+                    </div>
+                </div>
+                <div class="flex gap-unit-md">
+                    @if (selectedApp.TrangThai == "DaXacNhan" || selectedApp.TrangThai == "DangKham")
+                    {
+                        <a href="/Doctor/Exam/Session/@selectedApp.Id" class="bg-secondary text-white hover:bg-on-secondary-container px-unit-lg py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-1 active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-[20px]">clinical_notes</span> Bắt đầu khám
+                        </a>
+                    }
+                    else if (selectedApp.TrangThai == "HoanThanh")
+                    {
+                        <a href="/Doctor/History/RecordDetails/@selectedApp.Id" class="bg-primary text-white hover:bg-primary-container px-unit-lg py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-1 active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-[20px]">visibility</span> Xem bệnh án
+                        </a>
+                    }
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-unit-lg space-y-unit-xl max-h-[calc(100vh-280px)] custom-scrollbar">
+                <!-- Chief Complaint & Last Visit Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-lg">
+                    <div class="bg-surface-container-low p-unit-md rounded-xl border border-outline-variant">
+                        <h4 class="text-label-md font-label-md text-on-surface-variant mb-unit-sm uppercase tracking-wider">Lý do thăm khám</h4>
+                        <p class="text-body-lg text-on-surface font-medium italic">
+                            "@selectedApp.LyDoKham"
+                        </p>
+                    </div>
+                    <div class="bg-surface-container-low p-unit-md rounded-xl border border-outline-variant flex flex-col justify-center">
+                        <div class="flex items-center gap-unit-sm text-primary mb-unit-xs">
+                            <span class="material-symbols-outlined">history</span>
+                            <span class="text-label-md font-label-md font-bold">Lần khám gần nhất</span>
+                        </div>
+                        @if (lastRecord != null)
+                        {
+                            <p class="text-body-md text-on-surface font-semibold">@lastRecord.NgayKham.ToString("dd/MM/yyyy") • @lastRecord.Appointment.Doctor?.User.HoTen</p>
+                            <p class="text-caption text-on-surface-variant mt-1">Chẩn đoán: @lastRecord.ChanDoan</p>
+                        }
+                        else
+                        {
+                            <p class="text-body-md text-on-surface-variant italic">Chưa có hồ sơ khám bệnh án cũ trong hệ thống.</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Critical Alerts -->
+                <div class="space-y-unit-md">
+                    <h4 class="text-title-lg font-title-lg text-on-surface font-bold flex items-center gap-unit-sm">
+                        <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+                        Cảnh báo lâm sàng quan trọng
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+                        <div class="bg-error-container/30 border border-error/20 p-unit-md rounded-xl">
+                            <p class="text-label-md font-label-md text-error font-bold mb-1 uppercase tracking-wider">DỊ ỨNG THUỐC</p>
+                            <p class="text-title-lg font-bold text-on-error-container">
+                                @(string.IsNullOrEmpty(selectedApp.Patient.DiUng) ? "Không" : selectedApp.Patient.DiUng)
+                            </p>
+                        </div>
+                        <div class="bg-tertiary-fixed/30 border border-tertiary/20 p-unit-md rounded-xl">
+                            <p class="text-label-md font-label-md text-tertiary font-bold mb-1 uppercase tracking-wider">TIỀN SỬ BỆNH LÝ</p>
+                            <p class="text-title-lg font-bold text-on-tertiary-fixed-variant">
+                                @(string.IsNullOrEmpty(selectedApp.Patient.TienSuBenh) ? "Không" : selectedApp.Patient.TienSuBenh)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vital Signs -->
+                <div class="space-y-unit-md">
+                    <h4 class="text-title-lg font-title-lg text-on-surface font-bold">Chỉ số sinh tồn lâm sàng gần nhất</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-unit-md">
+                        <div class="border border-outline-variant p-unit-md rounded-xl flex flex-col items-center">
+                            <span class="material-symbols-outlined text-primary mb-unit-xs">favorite</span>
+                            <p class="text-caption text-on-surface-variant">Nhịp tim</p>
+                            <p class="text-title-lg font-bold">@(lastRecord?.NhipTim?.ToString() ?? "--") <span class="text-body-md font-normal">bpm</span></p>
+                        </div>
+                        <div class="border border-outline-variant p-unit-md rounded-xl flex flex-col items-center">
+                            <span class="material-symbols-outlined text-error mb-unit-xs">blood_pressure</span>
+                            <p class="text-caption text-on-surface-variant">Huyết áp</p>
+                            <p class="text-title-lg font-bold text-on-surface">@(string.IsNullOrEmpty(lastRecord?.HuyetAp) ? "--" : lastRecord.HuyetAp) <span class="text-body-md font-normal">mmHg</span></p>
+                        </div>
+                        <div class="border border-outline-variant p-unit-md rounded-xl flex flex-col items-center">
+                            <span class="material-symbols-outlined text-secondary mb-unit-xs">thermostat</span>
+                            <p class="text-caption text-on-surface-variant">Nhiệt độ</p>
+                            <p class="text-title-lg font-bold">@(lastRecord?.NhietDo?.ToString("F1") ?? "--") <span class="text-body-md font-normal">°C</span></p>
+                        </div>
+                        <div class="border border-outline-variant p-unit-md rounded-xl flex flex-col items-center">
+                            <span class="material-symbols-outlined text-primary mb-unit-xs">monitor_weight</span>
+                            <p class="text-caption text-on-surface-variant">BMI</p>
+                            <p class="text-title-lg font-bold">@(lastRecord?.BMI?.ToString("F2") ?? "--")</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Treatment History Timeline -->
+                <div class="space-y-unit-md">
+                    <h4 class="text-title-lg font-title-lg text-on-surface font-bold">Lịch sử điều trị đã thực hiện</h4>
+                    @if (historyExams.Any())
+                    {
+                        <div class="relative pl-unit-lg border-l-2 border-outline-variant space-y-unit-lg">
+                            @foreach (var record in historyExams)
+                            {
+                                <div class="relative">
+                                    <div class="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-primary border-2 border-white"></div>
+                                    <p class="text-label-md font-bold text-primary">@record.NgayKham.ToString("dd/MM/yyyy")</p>
+                                    <p class="text-body-md font-bold text-on-surface">Chẩn đoán: @record.ChanDoan</p>
+                                    <p class="text-caption text-on-surface-variant">Bác sĩ: @record.Appointment.Doctor?.User.HoTen • Triệu chứng: @record.TrieuChung</p>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-body-md text-on-surface-variant italic">Chưa ghi nhận lịch sử điều trị trước đó.</p>
+                    }
+                </div>
+            </div>
+            
+            <div class="p-unit-lg bg-surface border-t border-outline-variant flex justify-end">
+                <p class="text-caption text-on-surface-variant">Bệnh nhân đang chờ tại: <b>Phòng trực chuyên khoa</b></p>
+            </div>
+        }
+        else
+        {
+            <div class="flex-grow flex flex-col items-center justify-center p-unit-xl text-center">
+                <span class="material-symbols-outlined text-[80px] text-outline opacity-30 mb-2">patient_list</span>
+                <h4 class="text-headline-md font-headline-md text-on-surface mb-2 font-bold">Hàng đợi trống</h4>
+                <p class="text-body-lg text-on-surface-variant max-w-md mx-auto">Chọn một bệnh nhân từ cột bên trái để xem thông tin chi tiết và tiến hành phiên khám bệnh.</p>
+            </div>
+        }
+    </section>
+</div>

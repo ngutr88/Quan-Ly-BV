@@ -1,0 +1,56 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Xác thực OTP";
+}
+
+<body class="bg-surface min-h-screen flex flex-col items-center justify-center p-margin-mobile">
+    <main class="w-full max-w-lg flex flex-col items-center py-unit-xl">
+        <!-- Header -->
+        <header class="text-center mb-unit-lg">
+            <div class="inline-flex items-center justify-center bg-primary rounded-full w-14 h-14 mb-unit-md text-white">
+                <span class="material-symbols-outlined text-headline-lg">sms</span>
+            </div>
+            <h1 class="font-headline-md text-primary font-bold tracking-tight">Xác thực OTP</h1>
+            <p class="font-body-md text-on-surface-variant mt-unit-sm">
+                Chúng tôi đã gửi mã xác thực gồm 6 số tới địa chỉ email: <strong class="text-on-surface">@ViewBag.Email</strong>
+            </p>
+        </header>
+
+        <!-- OTP Card -->
+        <div class="glass-card w-full rounded-xl p-unit-lg shadow-sm text-center">
+            <form action="/Auth/VerifyOtp" method="POST" class="space-y-unit-lg">
+                <div class="space-y-unit-sm">
+                    <label class="block text-body-md font-semibold text-on-surface-variant" for="otp">Nhập mã xác thực của bạn</label>
+                    <div class="flex justify-center gap-unit-sm">
+                        <!-- We can render a clean single input box or separate 6 input boxes. A single clean centered input is responsive and easy to handle in standard forms. -->
+                        <input class="w-64 tracking-[1em] text-center text-headline-lg font-bold px-4 py-3 bg-surface border border-outline-variant rounded-lg input-focus" 
+                               id="otp" name="otp" placeholder="123456" required maxlength="6" minlength="6" type="text" autocomplete="one-time-code" />
+                    </div>
+                    <p class="text-caption text-on-surface-variant">Mã OTP trải nghiệm nhanh là: <strong class="text-primary">123456</strong></p>
+                </div>
+
+                <!-- Submit Button -->
+                <button class="w-full bg-primary text-on-primary font-body-lg font-semibold py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] flex items-center justify-center gap-unit-sm shadow-md" type="submit">
+                    <span>Xác nhận tài khoản</span>
+                    <span class="material-symbols-outlined">verified</span>
+                </button>
+            </form>
+
+            <div class="mt-unit-lg pt-unit-md border-t border-outline-variant text-center space-y-unit-sm">
+                <p class="text-caption text-on-surface-variant">
+                    Không nhận được mã? 
+                    <button class="text-primary font-bold hover:underline" onclick="resendOtp()">Gửi lại mã OTP</button>
+                </p>
+                <a href="/Auth/Register" class="text-caption text-outline hover:text-primary hover:underline transition-colors block">
+                    Sửa thông tin liên hệ đăng ký
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function resendOtp() {
+            showGlobalToast('Gửi lại thành công', 'Mã xác thực mới (123456) đã được gửi lại.', 'success');
+        }
+    </script>
+</body>

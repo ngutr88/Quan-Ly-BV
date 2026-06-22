@@ -1,0 +1,99 @@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Thêm Bác sĩ mới";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/Doctors" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách bác sĩ
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Đăng ký Hồ sơ Bác sĩ mới</h2>
+    <p class="text-body-md text-on-surface-variant">Tạo tài khoản đăng nhập và cấu hình thông tin chuyên môn công tác.</p>
+</div>
+
+<div class="glass-card rounded-xl p-unit-lg shadow-sm max-w-3xl">
+    <form action="/Admin/Doctors/Create" method="POST" class="space-y-unit-md">
+        @Html.AntiForgeryToken()
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="p-unit-md bg-error-container/20 border-l-4 border-error text-error text-body-md rounded-r mb-unit-md">
+                @Html.ValidationSummary(true)
+            </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+            <!-- Basic User Fields -->
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="hoTen">Họ và tên bác sĩ <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="hoTen" name="hoTen" placeholder="Ví dụ: BS. Nguyễn Văn A" required type="text" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="sdt">Số điện thoại di động <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="sdt" name="sdt" placeholder="Ví dụ: 0912345678" required type="tel" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="email">Địa chỉ Email liên hệ <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="email" name="email" placeholder="example@hms.com" required type="email" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="matKhau">Mật khẩu tài khoản <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="matKhau" name="matKhau" placeholder="Tối thiểu 6 ký tự" required minlength="6" type="password" />
+            </div>
+
+            <!-- Professional Fields -->
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="khoaId">Khoa lâm sàng <span class="text-error">*</span></label>
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        id="khoaId" name="khoaId" asp-items="ViewBag.KhoaId" required>
+                    <option value="">Chọn khoa công tác</option>
+                </select>
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="chuyenKhoa">Chuyên khoa chuyên sâu <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="chuyenKhoa" name="chuyenKhoa" placeholder="Ví dụ: Tim mạch can thiệp" required type="text" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="hocVi">Học hàm / Học vị <span class="text-error">*</span></label>
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        id="hocVi" name="hocVi" required>
+                    <option value="">Chọn học vị</option>
+                    <option value="BS">BS</option>
+                    <option value="ThS.BS">ThS.BS (Thạc sĩ Bác sĩ)</option>
+                    <option value="TS.BS">TS.BS (Tiến sĩ Bác sĩ)</option>
+                    <option value="PGS.TS.BS">PGS.TS.BS</option>
+                    <option value="GS.TS.BS">GS.TS.BS</option>
+                </select>
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="soNamKinhNghiem">Số năm kinh nghiệm <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="soNamKinhNghiem" name="soNamKinhNghiem" min="0" required type="number" />
+            </div>
+
+            <div class="space-y-unit-xs md:col-span-2">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="lichLamViec">Lịch trực / Thời gian làm việc <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="lichLamViec" name="lichLamViec" value="Ca sáng (08:00 - 12:00) & Chiều (13:30 - 17:30) các ngày làm việc" required type="text" />
+            </div>
+        </div>
+
+        <div class="flex items-center gap-unit-md pt-unit-md border-t border-outline-variant mt-unit-lg">
+            <button class="bg-primary text-on-primary font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98]" type="submit">
+                Thêm tài khoản bác sĩ
+            </button>
+            <a href="/Admin/Doctors" class="text-on-surface-variant hover:underline font-label-md">Hủy bỏ</a>
+        </div>
+    </form>
+</div>

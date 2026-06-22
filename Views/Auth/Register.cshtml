@@ -1,0 +1,101 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Đăng ký bệnh nhân mới";
+}
+
+<body class="bg-surface min-h-screen flex flex-col items-center justify-center p-margin-mobile">
+    <main class="w-full max-w-2xl flex flex-col items-center py-unit-xl">
+        <!-- Header -->
+        <header class="text-center mb-unit-lg">
+            <div class="inline-flex items-center justify-center bg-primary rounded-full w-14 h-14 mb-unit-md text-white">
+                <span class="material-symbols-outlined text-headline-lg">person_add</span>
+            </div>
+            <h1 class="font-headline-md text-primary font-bold tracking-tight">Đăng ký tài khoản Bệnh nhân</h1>
+            <p class="font-body-md text-on-surface-variant mt-unit-sm">
+                Đăng ký tài khoản để dễ dàng đặt lịch trực tuyến, theo dõi đơn thuốc và thanh toán nhanh chóng.
+            </p>
+        </header>
+
+        <!-- Register Card -->
+        <div class="glass-card w-full rounded-xl p-unit-lg shadow-sm">
+            <form class="space-y-unit-md" action="/Auth/Register" method="POST">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+                    <!-- Full Name -->
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="fullName">Họ và tên bệnh nhân <span class="text-error">*</span></label>
+                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               id="fullName" name="fullName" placeholder="Nhập đầy đủ họ tên" required type="text" />
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="phone">Số điện thoại liên hệ <span class="text-error">*</span></label>
+                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               id="phone" name="phone" placeholder="Ví dụ: 0901234567" required type="tel" />
+                    </div>
+
+                    <!-- Email -->
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="email">Địa chỉ Email <span class="text-error">*</span></label>
+                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               id="email" name="email" placeholder="example@mail.com" required type="email" />
+                    </div>
+
+                    <!-- Password -->
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="password">Mật khẩu đăng nhập <span class="text-error">*</span></label>
+                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               id="password" name="password" placeholder="Tối thiểu 6 ký tự" required minlength="6" type="password" />
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="dob">Ngày sinh <span class="text-error">*</span></label>
+                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               id="dob" name="dob" required type="date" />
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="gender">Giới tính <span class="text-error">*</span></label>
+                        <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                                id="gender" name="gender" required>
+                            <option value="">Chọn giới tính</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+
+                    <!-- Health Insurance Card (BHYT) -->
+                    <div class="space-y-unit-xs md:col-span-2">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="bhyt">Mã số thẻ Bảo hiểm Y tế (BHYT)</label>
+                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               id="bhyt" name="bhyt" placeholder="Mã số gồm 15 ký tự (Không bắt buộc)" type="text" />
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-unit-sm pt-2">
+                    <input class="mt-1 w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary" required id="agree" type="checkbox" />
+                    <label class="text-caption text-on-surface-variant" for="agree">
+                        Tôi cam kết thông tin y khoa và thông tin cá nhân khai báo ở trên là hoàn toàn chính xác và chịu trách nhiệm trước pháp luật.
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button class="w-full bg-primary text-on-primary font-body-lg font-semibold py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] flex items-center justify-center gap-unit-sm shadow-md" type="submit">
+                    <span>Đăng ký &amp; Nhận mã OTP</span>
+                    <span class="material-symbols-outlined">send</span>
+                </button>
+            </form>
+
+            <div class="mt-unit-lg pt-unit-md border-t border-outline-variant text-center">
+                <p class="text-body-md text-on-surface-variant">
+                    Đã có tài khoản? 
+                    <a class="text-primary font-bold hover:underline" href="/Auth/Login">Đăng nhập ngay</a>
+                </p>
+            </div>
+        </div>
+    </main>
+</body>

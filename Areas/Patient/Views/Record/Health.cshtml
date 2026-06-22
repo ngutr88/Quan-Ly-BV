@@ -1,0 +1,199 @@
+@model QuanLyBenhVien.Models.Patient
+
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Sổ sức khỏe điện tử";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Patient/Dashboard" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại trang chủ
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Sổ sức khỏe cá nhân</h2>
+    <p class="text-body-md text-on-surface-variant">Theo dõi biểu đồ thay đổi các chỉ số sinh tồn qua từng ca khám bệnh.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    <!-- Profile summary (1 col) -->
+    <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md h-fit">
+        <div class="flex items-center gap-unit-md">
+            <div class="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-white text-[20px] font-bold">
+                @Model.User.HoTen.Substring(Model.User.HoTen.LastIndexOf(' ') + 1, 1)
+            </div>
+            <div>
+                <h3 class="font-title-lg font-bold">@Model.User.HoTen</h3>
+                <span class="text-caption text-on-surface-variant">Hồ sơ sức khỏe cá nhân</span>
+            </div>
+        </div>
+
+        <div class="border-t border-outline-variant pt-unit-md text-body-md space-y-unit-sm">
+            <div>
+                <span class="text-caption text-on-surface-variant block">Nhóm máu</span>
+                <span class="font-semibold text-secondary text-[16px]">@Model.NhomMau</span>
+            </div>
+            <div>
+                <span class="text-caption text-on-surface-variant block">Ngày sinh (Tuổi)</span>
+                <span>@Model.NgaySinh.ToString("dd/MM/yyyy") (@(DateTime.Today.Year - Model.NgaySinh.Year) tuổi)</span>
+            </div>
+            <div>
+                <span class="text-caption text-on-surface-variant block">Tiền sử bệnh án</span>
+                <span class="italic text-on-surface-variant">@Model.TienSuBenh</span>
+            </div>
+            <div>
+                <span class="text-caption text-on-surface-variant block">Khai báo dị ứng</span>
+                <span class="font-semibold text-error">@Model.DiUng</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts area (2 cols) -->
+    <div class="lg:col-span-2 space-y-unit-lg">
+        <!-- Chart 1: Weight and BMI -->
+        <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h3 class="font-title-lg text-title-lg font-bold text-primary mb-unit-md flex items-center gap-1">
+                <span class="material-symbols-outlined">monitoring</span> Biểu đồ Cân nặng &amp; Chỉ số BMI
+            </h3>
+            <div class="w-full h-64">
+                <canvas id="weightChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 2: Blood Pressure and Heart Rate -->
+        <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h3 class="font-title-lg text-title-lg font-bold text-primary mb-unit-md flex items-center gap-1">
+                <span class="material-symbols-outlined">heart_check</span> Biểu đồ Huyết áp &amp; Nhịp tim
+            </h3>
+            <div class="w-full h-64">
+                <canvas id="bpChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Load Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Parse logs from ViewBag
+            const rawLogs = @Html.Raw(ViewBag.HealthLogsJson);
+            
+            if (rawLogs.length === 0) {
+                return;
+            }
+
+            const dates = rawLogs.map(l => l.date);
+            const weights = rawLogs.map(l => l.weight);
+            const bmis = rawLogs.map(l => l.bmi);
+            const hrs = rawLogs.map(l => l.hr);
+
+            // Parse blood pressure (systolic and diastolic)
+            const systolic = [];
+            const diastolic = [];
+            rawLogs.forEach(l => {
+                if (l.bp) {
+                    const parts = l.bp.split('/');
+                    if (parts.length === 2) {
+                        systolic.push(parseInt(parts[0]));
+                        diastolic.push(parseInt(parts[1]));
+                    } else {
+                        systolic.push(120);
+                        diastolic.push(80);
+                    }
+                } else {
+                    systolic.push(null);
+                    diastolic.push(null);
+                }
+            });
+
+            // 1. Weight & BMI Chart
+            new Chart(document.getElementById('weightChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Cân nặng (kg)',
+                            data: weights,
+                            borderColor: '#003f87',
+                            backgroundColor: 'rgba(0, 63, 135, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.1,
+                            fill: true
+                        },
+                        {
+                            label: 'BMI',
+                            data: bmis,
+                            borderColor: '#006c49',
+                            backgroundColor: 'rgba(0, 108, 73, 0.1)',
+                            yAxisID: 'y1',
+                            tension: 0.1,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Cân nặng (kg)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'BMI' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+
+            // 2. BP & HR Chart
+            new Chart(document.getElementById('bpChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Huyết áp Tâm thu (Tối đa)',
+                            data: systolic,
+                            borderColor: '#ba1a1a',
+                            borderDash: [5, 5],
+                            tension: 0.1,
+                            fill: false
+                        },
+                        {
+                            label: 'Huyết áp Tâm trương (Tối thiểu)',
+                            data: diastolic,
+                            borderColor: '#ffb95f',
+                            borderDash: [2, 2],
+                            tension: 0.1,
+                            fill: false
+                        },
+                        {
+                            label: 'Nhịp tim (lần/phút)',
+                            data: hrs,
+                            borderColor: '#006c49',
+                            tension: 0.1,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'Chỉ số đo' }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

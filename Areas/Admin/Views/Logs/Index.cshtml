@@ -1,0 +1,270 @@
+@model IEnumerable<QuanLyBenhVien.Models.AuditLog>
+@using System.Text.Encodings.Web
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Nhật ký hệ thống";
+    var actionsList = ViewBag.ActionsList as List<string> ?? new List<string>();
+    var searchString = ViewBag.SearchString as string;
+    var roleFilter = ViewBag.RoleFilter as string;
+    var actionFilter = ViewBag.ActionFilter as string;
+}
+
+<!-- Breadcrumb & Title -->
+<nav class="flex items-center gap-1 text-on-surface-variant font-caption mb-1">
+    <a class="hover:text-primary" href="/Admin/Dashboard">Dashboard</a>
+    <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+    <span class="text-primary font-bold">Nhật ký hệ thống</span>
+</nav>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-unit-lg">Nhật ký hoạt động</h2>
+
+<!-- Filter Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md mb-unit-lg shadow-sm">
+    <form method="GET" action="/Admin/Logs" class="grid grid-cols-1 md:grid-cols-4 gap-unit-md">
+        <div class="flex flex-col gap-1">
+            <label class="font-label-md text-label-md text-on-surface-variant">Từ khóa tìm kiếm</label>
+            <input name="searchString" value="@searchString" class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Tên, hành động, chi tiết..." type="text"/>
+        </div>
+        
+        <div class="flex flex-col gap-1">
+            <label class="font-label-md text-label-md text-on-surface-variant">Vai trò</label>
+            <select name="roleFilter" class="form-select w-full border border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface">
+                <option value="">Tất cả vai trò</option>
+                <option value="Admin" selected="@(roleFilter == "Admin")">Quản trị viên (Admin)</option>
+                <option value="Doctor" selected="@(roleFilter == "Doctor")">Bác sĩ (Doctor)</option>
+                <option value="Patient" selected="@(roleFilter == "Patient")">Bệnh nhân (Patient)</option>
+            </select>
+        </div>
+        
+        <div class="flex flex-col gap-1">
+            <label class="font-label-md text-label-md text-on-surface-variant">Loại hành động</label>
+            <select name="actionFilter" class="form-select w-full border border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface">
+                <option value="">Tất cả hành động</option>
+                @foreach (var act in actionsList)
+                {
+                    <option value="@act" selected="@(actionFilter == act)">@act</option>
+                }
+            </select>
+        </div>
+
+        <div class="flex flex-col gap-1 justify-end">
+            <button type="submit" class="w-full bg-primary hover:bg-primary-container text-white py-2 rounded-lg font-semibold transition-colors cursor-pointer shadow-sm">
+                Áp dụng bộ lọc
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Activity Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-surface-container-low border-b border-outline-variant">
+                    <th class="px-4 py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Thời gian</th>
+                    <th class="px-4 py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Người thao tác</th>
+                    <th class="px-4 py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Hành động</th>
+                    <th class="px-4 py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Địa chỉ IP</th>
+                    <th class="px-4 py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-center">Mức độ</th>
+                    <th class="px-4 py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-center">Kết quả</th>
+                    <th class="px-4 py-3 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-right">Xem</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-on-surface-variant">Không tìm thấy dữ liệu nhật ký hệ thống phù hợp.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var log in Model)
+                    {
+                        // Compute severity and module based on action
+                        string severity = "Thông tin";
+                        string severityClass = "bg-primary-container/10 text-primary-fixed-dim border border-primary/20";
+                        
+                        if (log.HanhDong.Contains("Xóa") || log.HanhDong.Contains("Khóa") || log.HanhDong.Contains("Hủy"))
+                        {
+                            severity = "Cảnh báo";
+                            severityClass = "bg-error-container text-error border border-error/20";
+                        }
+                        else if (log.HanhDong.Contains("Đổi quyền") || log.HanhDong.Contains("đơn thuốc") || log.HanhDong.Contains("bệnh án"))
+                        {
+                            severity = "Nhạy cảm";
+                            severityClass = "bg-tertiary-fixed/30 text-on-tertiary-fixed-variant border border-tertiary/20";
+                        }
+
+                        var userName = log.User != null ? log.User.HoTen : "Hệ thống";
+                        var userRole = log.User != null ? log.User.VaiTro : "System";
+                        var roleBadge = userRole == "Admin" ? "bg-primary-container/20 text-primary-fixed-dim" : 
+                                        userRole == "Doctor" ? "bg-secondary-container/20 text-on-secondary-container" : "bg-surface-variant text-on-surface-variant";
+
+                        <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer" 
+                            onclick="openDetail('@log.Id', '@log.ThoiGian.ToString("dd/MM/yyyy HH:mm:ss")', '@userName', '@userRole', '@log.HanhDong', '@Html.Raw(JavaScriptEncoder.Default.Encode(log.ChiTiet))', '@severity', '@log.IpAddress')">
+                            <td class="px-4 py-3 font-body-md text-on-surface">
+                                @log.ThoiGian.ToString("HH:mm:ss") <br/> 
+                                <span class="text-caption text-on-surface-variant">@log.ThoiGian.ToString("dd/MM/yyyy")</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs uppercase">
+                                        @userName.Substring(0, Math.Min(2, userName.Length))
+                                    </div>
+                                    <div>
+                                        <p class="font-body-md font-semibold text-on-surface">@userName</p>
+                                        <span class="text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase @roleBadge">@userRole</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 font-body-md text-on-surface font-semibold">@log.HanhDong</td>
+                            <td class="px-4 py-3 font-body-md text-on-surface-variant font-mono">@log.IpAddress</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex px-2 py-1 rounded text-[10px] font-bold uppercase @severityClass">@severity</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                <button class="p-1 hover:bg-surface-container-high rounded text-on-surface-variant cursor-pointer">
+                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Detail Drawer Overlay -->
+<div class="fixed inset-0 bg-on-background/40 z-[60] hidden opacity-0 transition-opacity duration-300" id="drawerOverlay" onclick="closeDetail()"></div>
+<!-- Detail Drawer -->
+<div class="fixed top-0 right-0 h-full w-full max-w-md bg-surface-container-lowest shadow-2xl z-[70] translate-x-full transition-transform duration-300 flex flex-col" id="logDetailDrawer">
+    <!-- Drawer Header -->
+    <div class="p-unit-lg border-b border-outline-variant flex items-center justify-between bg-surface-bright">
+        <div>
+            <h3 class="font-title-lg text-title-lg text-on-surface font-bold">Chi tiết hành động</h3>
+            <p class="text-caption text-on-surface-variant font-mono" id="drawerLogId">Log ID: #0000</p>
+        </div>
+        <button class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant" onclick="closeDetail()">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+    
+    <!-- Drawer Content -->
+    <div class="flex-1 overflow-y-auto p-unit-lg space-y-unit-lg custom-scrollbar">
+        <!-- Section: Summary -->
+        <section>
+            <h4 class="font-label-md text-label-md text-on-surface-variant uppercase mb-unit-sm tracking-wider">Tóm tắt hành động</h4>
+            <div class="p-unit-md bg-surface-container-low rounded-xl border border-outline-variant">
+                <p class="font-body-lg text-on-surface font-bold mb-1" id="drawerAction">Hành động</p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase" id="drawerSeverityBadge">Cấp độ</span>
+                    <span class="text-caption text-on-surface-variant" id="drawerTime">• Thời gian</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Detail Details -->
+        <section>
+            <h4 class="font-label-md text-label-md text-on-surface-variant uppercase mb-unit-sm tracking-wider">Thông tin chi tiết nhật ký</h4>
+            <div class="p-unit-md bg-surface-container-low rounded-xl border border-outline-variant font-body-md text-on-surface leading-relaxed break-words" id="drawerDetail">
+                Chi tiết
+            </div>
+        </section>
+        
+        <!-- Section: Performer -->
+        <section>
+            <h4 class="font-label-md text-label-md text-on-surface-variant uppercase mb-unit-sm tracking-wider">Người thực hiện</h4>
+            <div class="flex items-center gap-4 p-unit-sm border border-outline-variant rounded-xl bg-surface-container-lowest">
+                <div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-lg uppercase" id="drawerUserInitials">
+                    AD
+                </div>
+                <div>
+                    <p class="font-body-md font-bold text-on-surface" id="drawerUserName">Họ tên người thao tác</p>
+                    <p class="text-caption text-on-surface-variant" id="drawerUserRole">Vai trò: Admin</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Section: Metadata -->
+        <section>
+            <h4 class="font-label-md text-label-md text-on-surface-variant uppercase mb-unit-sm tracking-wider">Thông tin thiết bị</h4>
+            <div class="space-y-3 bg-surface-container-low/40 p-unit-md rounded-xl border border-outline-variant">
+                <div class="flex justify-between items-center py-1 border-b border-outline-variant/50">
+                    <span class="text-body-md text-on-surface-variant">Địa chỉ IP</span>
+                    <span class="font-body-md text-on-surface font-mono font-semibold" id="drawerIp">127.0.0.1</span>
+                </div>
+                <div class="flex justify-between items-center py-1 border-b border-outline-variant/50">
+                    <span class="text-body-md text-on-surface-variant">Kết quả hành động</span>
+                    <div class="flex items-center gap-1 text-secondary font-bold">
+                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                        <span class="text-body-md">Thành công</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center py-1">
+                    <span class="text-body-md text-on-surface-variant">Trạng thái xác thực</span>
+                    <span class="font-body-md text-secondary font-semibold">Đã xác minh</span>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <!-- Drawer Footer -->
+    <div class="p-unit-lg bg-surface border-t border-outline-variant flex gap-unit-md">
+        <button class="flex-1 bg-primary text-white font-semibold py-2.5 rounded-lg hover:bg-primary-container shadow-md cursor-pointer" onclick="closeDetail()">Đóng chi tiết</button>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openDetail(id, time, userName, userRole, action, detail, severity, ip) {
+            document.getElementById('drawerLogId').innerText = `Log ID: #${id}`;
+            document.getElementById('drawerAction').innerText = action;
+            document.getElementById('drawerTime').innerText = `• ${time}`;
+            document.getElementById('drawerDetail').innerText = detail;
+            document.getElementById('drawerUserName').innerText = userName;
+            document.getElementById('drawerUserRole').innerText = `Vai trò: ${userRole}`;
+            document.getElementById('drawerIp').innerText = ip;
+            document.getElementById('drawerUserInitials').innerText = userName.substring(0, Math.Min(2, userName.Length)).toUpperCase();
+
+            const badge = document.getElementById('drawerSeverityBadge');
+            badge.innerText = severity;
+            badge.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase ";
+            if (severity === 'Cảnh báo') {
+                badge.className += "bg-error-container text-error border border-error/20";
+            } else if (severity === 'Nhạy cảm') {
+                badge.className += "bg-tertiary-fixed/30 text-on-tertiary-fixed-variant border border-tertiary/20";
+            } else {
+                badge.className += "bg-primary-container/10 text-primary-fixed-dim border border-primary/20";
+            }
+
+            const overlay = document.getElementById('drawerOverlay');
+            const drawer = document.getElementById('logDetailDrawer');
+
+            overlay.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.add('opacity-100');
+                drawer.classList.remove('translate-x-full');
+            }, 50);
+        }
+
+        function closeDetail() {
+            const overlay = document.getElementById('drawerOverlay');
+            const drawer = document.getElementById('logDetailDrawer');
+
+            drawer.classList.add('translate-x-full');
+            overlay.classList.remove('opacity-100');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeDetail();
+        });
+    </script>
+}

@@ -1,0 +1,139 @@
+@model QuanLyBenhVien.Models.Appointment
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết Lịch khám";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/Appointments" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách điều phối
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Chi tiết Lịch hẹn #LK-@Model.Id.ToString("D4")</h2>
+    <p class="text-body-md text-on-surface-variant">Phê duyệt hoặc điều chỉnh trạng thái cho ca khám của bệnh nhân.</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    <!-- Main Appointment Information (2 cols) -->
+    <div class="lg:col-span-2 space-y-unit-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md">
+            <h3 class="font-title-lg text-title-lg text-primary font-bold border-b border-outline-variant pb-unit-sm">Nội dung ca hẹn</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md text-body-md">
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Thời gian đặt hẹn</span>
+                    <span class="font-semibold text-on-surface text-[16px]">@Model.ThoiGian.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Trạng thái hiện tại</span>
+                    @if (Model.TrangThai == "ChoXacNhan")
+                    {
+                        <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed-dim text-[11px] font-bold">Chờ duyệt</span>
+                    }
+                    else if (Model.TrangThai == "DaXacNhan")
+                    {
+                        <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[11px] font-bold">Đã xác nhận</span>
+                    }
+                    else if (Model.TrangThai == "DangKham")
+                    {
+                        <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Đang khám</span>
+                    }
+                    else if (Model.TrangThai == "HoanThanh")
+                    {
+                        <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-secondary/20 text-secondary text-[11px] font-bold">Đã hoàn thành</span>
+                    }
+                    else
+                    {
+                        <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-error-container text-error text-[11px] font-bold">Đã hủy</span>
+                    }
+                </div>
+                
+                <div class="md:col-span-2">
+                    <span class="text-caption text-on-surface-variant block">Triệu chứng lâm sàng / Lý do khám</span>
+                    <p class="text-on-surface bg-surface p-unit-md rounded border border-outline-variant/30 italic">
+                        @Model.LyDoKham
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Action Panel -->
+        @if (Model.TrangThai == "ChoXacNhan")
+        {
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg mb-unit-md font-bold text-primary">Phê duyệt lịch khám</h3>
+                
+                <div class="flex flex-col md:flex-row gap-unit-md items-start">
+                    <!-- Approve Button -->
+                    <form method="POST" action="/Admin/Appointments/Confirm/@Model.Id">
+                        <button type="submit" class="bg-secondary text-white font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-on-secondary-container transition-all active:scale-[0.98] flex items-center gap-1 shadow-md">
+                            <span class="material-symbols-outlined">check_circle</span> Phê duyệt lịch
+                        </button>
+                    </form>
+
+                    <!-- Cancel Form -->
+                    <div class="flex-grow border-t md:border-t-0 md:border-l border-outline-variant/40 pt-unit-md md:pt-0 md:pl-unit-lg w-full">
+                        <form method="POST" action="/Admin/Appointments/Cancel/@Model.Id" class="space-y-unit-sm">
+                            <div class="space-y-unit-xs">
+                                <label class="block text-caption font-semibold text-on-surface-variant" for="lyDoHuy">Từ chối và hủy lịch (Nhập lý do)</label>
+                                <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                                       id="lyDoHuy" name="lyDoHuy" placeholder="Lý do hủy (gửi thông báo cho BN)" required type="text" />
+                            </div>
+                            <button type="submit" class="bg-error text-white font-body-md font-semibold px-unit-md py-2 rounded-lg hover:bg-red-700 transition-all active:scale-[0.98] flex items-center gap-1">
+                                <span class="material-symbols-outlined">cancel</span> Hủy lịch hẹn
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Related Information (1 col) -->
+    <div class="space-y-unit-lg">
+        <!-- Patient Block -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h4 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-primary">Thông tin Bệnh nhân</h4>
+            <div class="space-y-unit-sm text-body-md">
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Họ và tên</span>
+                    <a href="/Admin/Patients/Details/@Model.Patient.Id" class="font-semibold text-primary hover:underline">@Model.Patient.User.HoTen</a>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Mã số thẻ BHYT</span>
+                    <span class="font-mono">@(string.IsNullOrEmpty(Model.Patient.SoBHYT) ? "Không có BHYT" : Model.Patient.SoBHYT)</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Số điện thoại liên hệ</span>
+                    <span>@Model.Patient.User.Sdt</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor Block -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h4 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-primary">Bác sĩ &amp; Phòng khám</h4>
+            <div class="space-y-unit-sm text-body-md">
+                @if (Model.Doctor != null)
+                {
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Bác sĩ phụ trách</span>
+                        <a href="/Admin/Doctors/Details/@Model.Doctor.Id" class="font-semibold text-primary hover:underline">@Model.Doctor.User.HoTen</a>
+                    </div>
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Chuyên khoa</span>
+                        <span>@Model.Doctor.Department.TenKhoa (@Model.Doctor.ChuyenKhoa)</span>
+                    </div>
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Vị trí phòng khám</span>
+                        <span class="font-medium text-secondary">@Model.Doctor.Department.ViTri</span>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-on-surface-variant italic">Chưa phân công bác sĩ. Lịch khám này ở chế độ Tự động phân công.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

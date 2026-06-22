@@ -1,0 +1,104 @@
+@model QuanLyBenhVien.Models.Doctor
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chỉnh sửa Bác sĩ";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/Doctors" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách bác sĩ
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Chỉnh sửa hồ sơ: @Model.User.HoTen</h2>
+    <p class="text-body-md text-on-surface-variant">Cập nhật thông tin chuyên môn, lịch làm việc hoặc quản lý trạng thái tài khoản.</p>
+</div>
+
+<div class="glass-card rounded-xl p-unit-lg shadow-sm max-w-3xl">
+    <form action="/Admin/Doctors/Edit/@Model.Id" method="POST" class="space-y-unit-md">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="p-unit-md bg-error-container/20 border-l-4 border-error text-error text-body-md rounded-r mb-unit-md">
+                @Html.ValidationSummary(true)
+            </div>
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+            <!-- Account fields -->
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="hoTen">Họ và tên bác sĩ <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="hoTen" name="hoTen" value="@Model.User.HoTen" required type="text" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="sdt">Số điện thoại di động <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="sdt" name="sdt" value="@Model.User.Sdt" required type="tel" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="email">Địa chỉ Email (Không được sửa)</label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md text-on-surface-variant cursor-not-allowed bg-surface-container" 
+                       id="email" value="@Model.User.Email" readonly type="email" />
+            </div>
+
+            <!-- Status -->
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="trangThai">Trạng thái hoạt động <span class="text-error">*</span></label>
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        id="trangThai" name="trangThai" required>
+                    <option value="Active" selected="@(Model.User.TrangThai == "Active")">Hoạt động (Active)</option>
+                    <option value="Blocked" selected="@(Model.User.TrangThai == "Blocked")">Khóa tài khoản (Blocked)</option>
+                </select>
+            </div>
+
+            <!-- Professional Fields -->
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="khoaId">Khoa lâm sàng <span class="text-error">*</span></label>
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        id="khoaId" name="khoaId" asp-items="ViewBag.KhoaId" required>
+                </select>
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="chuyenKhoa">Chuyên khoa chuyên sâu <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="chuyenKhoa" name="chuyenKhoa" value="@Model.ChuyenKhoa" required type="text" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="hocVi">Học hàm / Học vị <span class="text-error">*</span></label>
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        id="hocVi" name="hocVi" required>
+                    <option value="BS" selected="@(Model.HocVi == "BS")">BS</option>
+                    <option value="ThS.BS" selected="@(Model.HocVi == "ThS.BS")">ThS.BS (Thạc sĩ Bác sĩ)</option>
+                    <option value="TS.BS" selected="@(Model.HocVi == "TS.BS")">TS.BS (Tiến sĩ Bác sĩ)</option>
+                    <option value="PGS.TS.BS" selected="@(Model.HocVi == "PGS.TS.BS")">PGS.TS.BS</option>
+                    <option value="GS.TS.BS" selected="@(Model.HocVi == "GS.TS.BS")">GS.TS.BS</option>
+                </select>
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="soNamKinhNghiem">Số năm kinh nghiệm <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="soNamKinhNghiem" name="soNamKinhNghiem" value="@Model.SoNamKinhNghiem" min="0" required type="number" />
+            </div>
+
+            <div class="space-y-unit-xs md:col-span-2">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="lichLamViec">Lịch trực / Thời gian làm việc <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                       id="lichLamViec" name="lichLamViec" value="@Model.LichLamViec" required type="text" />
+            </div>
+        </div>
+
+        <div class="flex items-center gap-unit-md pt-unit-md border-t border-outline-variant mt-unit-lg">
+            <button class="bg-primary text-on-primary font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98]" type="submit">
+                Lưu thay đổi
+            </button>
+            <a href="/Admin/Doctors" class="text-on-surface-variant hover:underline font-label-md">Hủy bỏ</a>
+        </div>
+    </form>
+</div>

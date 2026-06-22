@@ -1,0 +1,141 @@
+@model IEnumerable<QuanLyBenhVien.Models.Appointment>
+
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Trang chủ Bác sĩ";
+    var doctor = ViewBag.DoctorProfile as QuanLyBenhVien.Models.Doctor;
+}
+
+<!-- Welcome banner -->
+<div class="bg-gradient-to-r from-secondary-fixed-dim to-secondary-container rounded-2xl p-unit-lg text-on-secondary-fixed mb-unit-lg shadow-sm">
+    <div class="flex items-center gap-unit-md">
+        <div class="w-14 h-14 bg-white/30 rounded-full flex items-center justify-center text-[32px]">
+            🩺
+        </div>
+        <div>
+            <h2 class="font-headline-lg font-bold">Xin chào, @doctor?.HocVi. @doctor?.User.HoTen!</h2>
+            <p class="text-body-md opacity-90">Hôm nay bạn có <strong>@ViewBag.TodayPending ca hẹn khám</strong> đang chờ phục vụ.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-unit-md mb-unit-lg">
+    <div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm flex items-center gap-unit-md">
+        <span class="material-symbols-outlined text-[32px] text-primary">patient_list</span>
+        <div>
+            <span class="text-caption text-on-surface-variant block">Tổng ca hôm nay</span>
+            <strong class="text-headline-md text-on-surface">@ViewBag.TodayTotal ca hẹn</strong>
+        </div>
+    </div>
+    
+    <div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm flex items-center gap-unit-md">
+        <span class="material-symbols-outlined text-[32px] text-secondary">check_circle</span>
+        <div>
+            <span class="text-caption text-on-surface-variant block">Đã khám xong</span>
+            <strong class="text-headline-md text-secondary">@ViewBag.TodayCompleted ca</strong>
+        </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm flex items-center gap-unit-md">
+        <span class="material-symbols-outlined text-[32px] text-tertiary">star</span>
+        <div>
+            <span class="text-caption text-on-surface-variant block">Đánh giá trung bình</span>
+            <strong class="text-headline-md text-tertiary">@ViewBag.AvgRating.ToString("F1") / 5.0</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Queue Section -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30 flex justify-between items-center">
+        <h3 class="font-title-lg text-title-lg font-bold text-secondary flex items-center gap-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-secondary animate-ping"></span>
+            Hàng đợi khám hôm nay
+        </h3>
+        <span class="text-caption text-on-surface-variant">Ngày: @DateTime.Today.ToString("dd/MM/yyyy")</span>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-body-md">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Thời gian</th>
+                    <th class="px-unit-md py-3">Bệnh nhân</th>
+                    <th class="px-unit-md py-3">Giới tính / Tuổi</th>
+                    <th class="px-unit-md py-3">Lý do / Triệu chứng khai báo</th>
+                    <th class="px-unit-md py-3">Trạng thái</th>
+                    <th class="px-unit-md py-3 text-right">Khám bệnh</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="px-unit-md py-8 text-center text-on-surface-variant">Không có lịch khám nào trong hàng đợi ngày hôm nay.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var app in Model)
+                    {
+                        var isCompleted = app.TrangThai == "HoanThanh";
+                        var isCanceled = app.TrangThai == "DaHuy";
+                        <tr class="hover:bg-surface-container-low transition-colors @(isCompleted ? "bg-secondary-container/5" : "")">
+                            <td class="px-unit-md py-4 font-bold text-secondary">@app.ThoiGian.ToString("HH:mm")</td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-semibold text-on-surface">@app.Patient.User.HoTen</div>
+                                <div class="text-caption text-on-surface-variant">SĐT: @app.Patient.User.Sdt</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <div>@app.Patient.GioiTinh</div>
+                                <div class="text-caption text-on-surface-variant">@(DateTime.Today.Year - app.Patient.NgaySinh.Year) tuổi</div>
+                            </td>
+                            <td class="px-unit-md py-4 max-w-[250px] truncate" title="@app.LyDoKham">@app.LyDoKham</td>
+                            <td class="px-unit-md py-4">
+                                @if (app.TrangThai == "ChoXacNhan")
+                                {
+                                    <span class="px-2 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed-dim text-[11px] font-bold">Chờ duyệt</span>
+                                }
+                                else if (app.TrangThai == "DaXacNhan")
+                                {
+                                    <span class="px-2 py-0.5 rounded-full bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[11px] font-bold">Đã check-in</span>
+                                }
+                                else if (app.TrangThai == "DangKham")
+                                {
+                                    <span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Đang khám</span>
+                                }
+                                else if (app.TrangThai == "HoanThanh")
+                                {
+                                    <span class="px-2 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">Đã hoàn thành</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2 py-0.5 rounded-full bg-error-container text-error text-[11px] font-bold">Đã hủy</span>
+                                }
+                            </td>
+                            <td class="px-unit-md py-4 text-right">
+                                @if (app.TrangThai == "DaXacNhan" || app.TrangThai == "DangKham")
+                                {
+                                    <a href="/Doctor/Exam/Session/@app.Id" class="inline-flex items-center gap-0.5 bg-secondary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-on-secondary-container transition-all active:scale-95 font-semibold shadow-sm">
+                                        <span class="material-symbols-outlined text-[16px]">clinical_notes</span> Bắt đầu khám
+                                    </a>
+                                }
+                                else if (app.TrangThai == "HoanThanh")
+                                {
+                                    <a href="/Doctor/History/RecordDetails/@app.Id" class="inline-flex items-center gap-0.5 text-secondary hover:underline font-semibold text-body-md">
+                                        Xem bệnh án
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-caption text-on-surface-variant">Không khả dụng</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

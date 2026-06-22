@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lịch khám của tôi - HealthPortal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#c2c6d4",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-tint": "#115cb9",
+                        "inverse-primary": "#acc7ff",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#ffddb8",
+                        "background": "#f8f9ff",
+                        "surface-container-low": "#eff4ff",
+                        "on-surface": "#0b1c30",
+                        "on-primary-fixed": "#001a40",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#005236",
+                        "inverse-surface": "#213145",
+                        "surface-bright": "#f8f9ff",
+                        "tertiary": "#5e3900",
+                        "surface-container-high": "#dce9ff",
+                        "primary-container": "#0056b3",
+                        "surface-variant": "#d3e4fe",
+                        "surface": "#f8f9ff",
+                        "tertiary-container": "#7d4e00",
+                        "on-tertiary-fixed": "#2a1700",
+                        "error": "#ba1a1a",
+                        "surface-dim": "#cbdbf5",
+                        "primary": "#003f87",
+                        "on-primary-container": "#bbd0ff",
+                        "on-error-container": "#93000a",
+                        "on-secondary-container": "#00714d",
+                        "on-background": "#0b1c30",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-secondary-fixed": "#002113",
+                        "surface-container": "#e5eeff",
+                        "on-primary-fixed-variant": "#004491",
+                        "secondary-fixed": "#6ffbbe",
+                        "secondary-container": "#6cf8bb",
+                        "primary-fixed": "#d7e2ff",
+                        "primary-fixed-dim": "#acc7ff",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#4edea3",
+                        "secondary": "#006c49",
+                        "on-tertiary-container": "#ffc57f",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#727784",
+                        "on-surface-variant": "#424752"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "unit-xl": "48px",
+                        "unit-xs": "4px",
+                        "container-max": "1440px",
+                        "gutter": "24px",
+                        "unit-sm": "8px",
+                        "unit-md": "16px",
+                        "unit-lg": "24px",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "caption": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9ff; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d3e4fe; border-radius: 10px; }
+    </style>
+</head>
+<body class="text-on-surface bg-background min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 flex justify-between items-center px-margin-desktop w-full h-16 bg-surface-container-lowest border-b border-outline-variant">
+<div class="flex items-center gap-unit-lg">
+<span class="font-title-lg text-title-lg text-primary font-extrabold tracking-tight">HealthPortal</span>
+<nav class="hidden md:flex items-center gap-6 h-full">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#">Home</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#">Book</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body-md text-body-md" href="#">Appointments</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#">Invoices</a>
+</nav>
+</div>
+<div class="flex items-center gap-unit-md">
+<button class="p-2 rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">help</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-2">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a friendly Vietnamese male patient in his late 30s, wearing a simple casual shirt. He is smiling warmly in a high-key medical office background with soft lighting. The image has a clean, clinical aesthetic with bright, airy tones and high clarity, suitable for a healthcare patient portal." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeN_1L-j1JIEJv-EcOxxq0DSMCJszdJJVvv3fkHJQh8qrpH-NnRL0w1aiBfdZ93pT-LIq3R3Ri2GbskTnGDqY0FryI5pCy5wPnJugp0uzjCoN2n4Bl7z2FDVyOZQsGcc6qhkhQl9B562TtNMtijcA1fLmoOqoruE1qco0Shg5gkaSCtcRamy49cupEKS7KbNkTz9zz0NIqYGU_RKLWOgRk-31tUHAJiumtMDCjQxyPWVgzCgrsylMRSiBw2uR7vimDGiuDCpwIW0w"/>
+</div>
+</div>
+</header>
+<main class="flex-grow max-w-container-max mx-auto w-full px-margin-mobile md:px-margin-desktop py-unit-lg">
+<!-- Header & Search -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-unit-md mb-unit-lg">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">Lịch khám của tôi</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Quản lý các cuộc hẹn và xem lại lịch sử thăm khám của bạn.</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-unit-sm w-full md:w-auto">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all w-full sm:w-64 font-body-md text-body-md" placeholder="Tìm bác sĩ, khoa..." type="text"/>
+</div>
+<button class="flex items-center justify-center gap-2 px-4 py-2 border border-outline-variant bg-surface-container-lowest rounded-xl hover:bg-surface-container-low transition-colors font-body-md text-body-md">
+<span class="material-symbols-outlined">calendar_today</span>
+<span>Lọc theo ngày</span>
+</button>
+</div>
+</div>
+<!-- Tabs Interface -->
+<div class="flex border-b border-outline-variant mb-unit-lg overflow-x-auto no-scrollbar">
+<button class="px-6 py-3 font-label-md text-label-md border-b-2 border-primary text-primary whitespace-nowrap">Sắp tới (2)</button>
+<button class="px-6 py-3 font-label-md text-label-md text-on-surface-variant hover:text-on-surface whitespace-nowrap">Chờ xác nhận</button>
+<button class="px-6 py-3 font-label-md text-label-md text-on-surface-variant hover:text-on-surface whitespace-nowrap">Đã hoàn thành</button>
+<button class="px-6 py-3 font-label-md text-label-md text-on-surface-variant hover:text-on-surface whitespace-nowrap">Đã hủy</button>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-unit-lg">
+<!-- Main Content: Appointment Cards -->
+<div class="lg:col-span-8 space-y-unit-md">
+<!-- Appointment Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+<div class="flex flex-col md:flex-row">
+<div class="bg-primary text-on-primary md:w-32 flex flex-col items-center justify-center py-4 px-2 text-center shrink-0">
+<span class="font-label-md text-label-md uppercase opacity-80">Tháng 10</span>
+<span class="font-headline-lg text-headline-lg font-bold">24</span>
+<span class="font-body-md text-body-md">Thứ Năm</span>
+<div class="mt-2 py-1 px-2 bg-white/20 rounded-full text-[10px] font-bold">09:30 AM</div>
+</div>
+<div class="p-unit-md flex-grow">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-unit-sm mb-unit-sm">
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface font-bold">Khoa Nội tổng quát</h3>
+<div class="flex items-center gap-2 mt-1">
+<div class="w-6 h-6 rounded-full bg-surface-container-high overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A portrait of a professional Vietnamese female doctor in a white lab coat with a stethoscope around her neck. She has a confident and caring expression, set against a blurred clean hospital corridor with soft blue and white lighting. The aesthetic is clean, trustworthy, and high-quality for a medical professional profile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfetNfSKcfNHtNT547GZhmlR0yXg1zmbkMh6dEQjrHxvzkGHIdCB24OuJzp1Mr51VxUIcXwTtFGKMbgyVleCM7i77_YdFTqDfdP-r2bAQeV2khWs7_CRYbUIic08rENmmqb7IHE8IdZrVyZbpEIazT4kM5RIro9lEtw8EeGMNZPiJqSU6x-M7dS14H6FqXNM8UCZqW-vcmZJYn5tAI_BtCEFhHt0xqQYcAmLVjzH_0uSkFB6bVdUusYgDFPmgG2YXUe7BpuMpNnyU"/>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">ThS. BS. Nguyễn Minh Anh</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[12px] font-bold self-start flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                    Đã xác nhận
+                                </span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-unit-lg gap-y-2 mt-4 text-on-surface-variant font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">location_on</span>
+<span>Phòng 402, Tầng 4 - Tòa nhà A</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">description</span>
+<span>Tái khám định kỳ - Đau dạ dày</span>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant flex flex-wrap gap-unit-sm">
+<button class="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-container transition-colors">Xem chi tiết</button>
+<button class="px-4 py-2 border border-primary text-primary rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors">Dời lịch</button>
+<button class="px-4 py-2 text-error hover:bg-error-container/20 rounded-lg font-label-md text-label-md transition-colors">Hủy lịch</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Appointment Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+<div class="flex flex-col md:flex-row">
+<div class="bg-surface-container-high text-on-surface-variant md:w-32 flex flex-col items-center justify-center py-4 px-2 text-center shrink-0">
+<span class="font-label-md text-label-md uppercase opacity-80">Tháng 11</span>
+<span class="font-headline-lg text-headline-lg font-bold">12</span>
+<span class="font-body-md text-body-md">Thứ Ba</span>
+<div class="mt-2 py-1 px-2 bg-black/5 rounded-full text-[10px] font-bold">14:00 PM</div>
+</div>
+<div class="p-unit-md flex-grow">
+<div class="flex justify-between items-start mb-unit-sm">
+<div>
+<h3 class="font-title-lg text-title-lg text-on-surface font-bold">Khoa Răng Hàm Mặt</h3>
+<div class="flex items-center gap-2 mt-1">
+<p class="font-body-md text-body-md text-on-surface-variant">BS. Trần Đức Mạnh</p>
+</div>
+</div>
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[12px] font-bold self-start">Đã xác nhận</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-unit-lg gap-y-2 mt-4 text-on-surface-variant font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">location_on</span>
+<span>Phòng 105, Tầng 1 - Tòa nhà B</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">description</span>
+<span>Nhổ răng khôn - Tư vấn niềng răng</span>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant flex flex-wrap gap-unit-sm">
+<button class="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-container transition-colors">Xem chi tiết</button>
+<button class="px-4 py-2 border border-primary text-primary rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-colors">Dời lịch</button>
+<button class="px-4 py-2 text-error hover:bg-error-container/20 rounded-lg font-label-md text-label-md transition-colors">Hủy lịch</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Empty State Hidden (Demo purposes) -->
+<div class="hidden flex flex-col items-center justify-center py-unit-xl text-center">
+<div class="w-48 h-48 mb-6 bg-surface-container flex items-center justify-center rounded-full">
+<span class="material-symbols-outlined text-[64px] text-outline-variant">event_busy</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Bạn chưa có lịch khám nào</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6 max-w-sm">Hãy đăng ký lịch khám trực tuyến để được hỗ trợ y tế nhanh chóng và chuyên nghiệp nhất.</p>
+<button class="px-8 py-3 bg-primary text-on-primary rounded-full font-label-md text-label-md shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">Đặt lịch khám mới</button>
+</div>
+</div>
+<!-- Side Section: Quick Check-in & Policy -->
+<div class="lg:col-span-4 space-y-unit-lg">
+<!-- Quick Check-in QR Card -->
+<div class="bg-surface-container-low border border-outline-variant rounded-xl p-unit-lg relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-[100px]">qr_code_2</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-4 font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">qr_code_scanner</span>
+                        Check-in Nhanh
+                    </h3>
+<div class="bg-white p-4 rounded-xl shadow-inner flex justify-center mb-4">
+<div class="w-40 h-40 bg-white relative">
+<!-- Mock QR Code with Pattern -->
+<div class="absolute inset-0 grid grid-cols-5 grid-rows-5 gap-1 p-2">
+<div class="bg-primary rounded-sm"></div><div class="bg-primary rounded-sm"></div><div class="bg-transparent"></div><div class="bg-primary rounded-sm"></div><div class="bg-primary rounded-sm"></div>
+<div class="bg-primary rounded-sm"></div><div class="bg-transparent"></div><div class="bg-primary rounded-sm"></div><div class="bg-transparent"></div><div class="bg-primary rounded-sm"></div>
+<div class="bg-transparent"></div><div class="bg-primary rounded-sm"></div><div class="bg-primary rounded-sm"></div><div class="bg-primary rounded-sm"></div><div class="bg-transparent"></div>
+<div class="bg-primary rounded-sm"></div><div class="bg-transparent"></div><div class="bg-primary rounded-sm"></div><div class="bg-transparent"></div><div class="bg-primary rounded-sm"></div>
+<div class="bg-primary rounded-sm"></div><div class="bg-primary rounded-sm"></div><div class="bg-transparent"></div><div class="bg-primary rounded-sm"></div><div class="bg-primary rounded-sm"></div>
+</div>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-center mb-4">Dùng mã này để check-in nhanh tại quầy lễ tân mà không cần xếp hàng.</p>
+<div class="bg-primary-container/10 border border-primary-container p-3 rounded-lg flex items-start gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">info</span>
+<span class="text-[12px] text-on-primary-fixed-variant leading-tight">Mã QR chỉ khả dụng 30 phút trước giờ khám.</span>
+</div>
+</div>
+<!-- Preparation & Policy -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg">
+<h3 class="font-label-md text-label-md text-primary uppercase tracking-widest mb-4">Chuẩn bị trước khi khám</h3>
+<ul class="space-y-4">
+<li class="flex gap-3">
+<span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[12px] font-bold shrink-0">1</span>
+<p class="font-body-md text-body-md text-on-surface-variant">Mang theo thẻ BHYT và CMND/CCCD bản gốc.</p>
+</li>
+<li class="flex gap-3">
+<span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[12px] font-bold shrink-0">2</span>
+<p class="font-body-md text-body-md text-on-surface-variant">Đến trước 15 phút để làm thủ tục check-in.</p>
+</li>
+<li class="flex gap-3">
+<span class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center text-[12px] font-bold shrink-0">3</span>
+<p class="font-body-md text-body-md text-on-surface-variant">Nhịn ăn ít nhất 6-8 tiếng nếu có lịch xét nghiệm máu.</p>
+</li>
+</ul>
+<div class="mt-8 pt-6 border-t border-outline-variant">
+<div class="flex items-center gap-2 text-error mb-2">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+<span class="font-label-md text-label-md">Chính sách hủy lịch</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant">Hủy lịch trước 24h để được hoàn 100% phí đặt chỗ. Hủy sau thời gian này có thể phát sinh phí phạt theo quy định của bệnh viện.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Details Timeline Expansion (Mocked Interaction) -->
+<div class="mt-unit-xl bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+<div class="flex justify-between items-center mb-8">
+<h2 class="font-headline-md text-headline-md text-on-surface">Tiến trình cuộc hẹn: 24/10/2024</h2>
+<button class="text-primary font-label-md text-label-md flex items-center gap-1">
+<span class="material-symbols-outlined">print</span> In lịch hẹn
+                </button>
+</div>
+<div class="relative">
+<!-- Progress Line -->
+<div class="absolute left-[11px] top-4 bottom-4 w-[2px] bg-outline-variant"></div>
+<div class="absolute left-[11px] top-4 h-[33%] w-[2px] bg-primary"></div>
+<div class="space-y-8 relative">
+<!-- Step 1: Done -->
+<div class="flex gap-6 items-start">
+<div class="z-10 w-6 h-6 rounded-full bg-primary flex items-center justify-center ring-4 ring-surface-container-lowest">
+<span class="material-symbols-outlined text-white text-[14px]">check</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Đặt lịch thành công</p>
+<p class="font-caption text-caption text-on-surface-variant">15/10/2024 - 08:30 AM</p>
+</div>
+</div>
+<!-- Step 2: Done -->
+<div class="flex gap-6 items-start">
+<div class="z-10 w-6 h-6 rounded-full bg-primary flex items-center justify-center ring-4 ring-surface-container-lowest">
+<span class="material-symbols-outlined text-white text-[14px]">check</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Đã xác nhận thanh toán</p>
+<p class="font-caption text-caption text-on-surface-variant">15/10/2024 - 08:35 AM</p>
+</div>
+</div>
+<!-- Step 3: Active -->
+<div class="flex gap-6 items-start">
+<div class="z-10 w-6 h-6 rounded-full bg-white border-2 border-primary flex items-center justify-center ring-4 ring-surface-container-lowest animate-pulse">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+</div>
+<div>
+<p class="font-label-md text-label-md text-primary">Đợi nhắc lịch</p>
+<p class="font-caption text-caption text-on-surface-variant">Hệ thống sẽ gửi thông báo trước 24h</p>
+</div>
+</div>
+<!-- Step 4: Pending -->
+<div class="flex gap-6 items-start">
+<div class="z-10 w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center ring-4 ring-surface-container-lowest"></div>
+<div class="opacity-50">
+<p class="font-label-md text-label-md text-on-surface-variant">Check-in tại quầy</p>
+<p class="font-caption text-caption text-on-surface-variant">Dự kiến: 24/10/2024</p>
+</div>
+</div>
+<!-- Step 5: Pending -->
+<div class="flex gap-6 items-start">
+<div class="z-10 w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center ring-4 ring-surface-container-lowest"></div>
+<div class="opacity-50">
+<p class="font-label-md text-label-md text-on-surface-variant">Đang khám &amp; Hoàn tất</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-unit-lg px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-unit-md bg-surface-container border-t border-outline-variant">
+<div class="flex flex-col items-center md:items-start">
+<span class="font-title-lg text-primary font-bold">HealthPortal</span>
+<p class="font-caption text-caption text-on-surface-variant mt-1">© 2024 Healthcare Management System. All rights reserved.</p>
+</div>
+<div class="flex flex-wrap justify-center gap-unit-md">
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary hover:underline" href="#">Contact Support</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary hover:underline" href="#">Privacy Policy</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary hover:underline" href="#">Terms of Service</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-primary hover:underline" href="#">FAQ</a>
+</div>
+</footer>
+<!-- FAB (Suppressed on details screens, but kept here for general home interaction if needed) -->
+<!-- <button class="fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-transform md:hidden">
+        <span class="material-symbols-outlined">add</span>
+    </button> -->
+<script>
+        // Micro-interactions and Tab handling
+        const tabs = document.querySelectorAll('button[role="tab"]');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => {
+                    t.classList.remove('border-primary', 'text-primary');
+                    t.classList.add('text-on-surface-variant');
+                });
+                tab.classList.add('border-primary', 'text-primary');
+                tab.classList.remove('text-on-surface-variant');
+            });
+        });
+
+        // Simple smooth scroll for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body></html>

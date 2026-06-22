@@ -1,0 +1,133 @@
+@model IEnumerable<QuanLyBenhVien.Models.Appointment>
+
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Trang chủ Bệnh nhân";
+    var patient = ViewBag.Patient as QuanLyBenhVien.Models.Patient;
+    var recentPres = ViewBag.RecentPres as List<QuanLyBenhVien.Models.Prescription> ?? new List<QuanLyBenhVien.Models.Prescription>();
+}
+
+<!-- Welcome Banner -->
+<div class="bg-gradient-to-r from-primary to-primary-container rounded-2xl p-unit-lg text-white mb-unit-lg shadow-md">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-unit-md">
+        <div>
+            <h2 class="font-headline-lg font-bold">Xin chào, @patient?.User.HoTen!</h2>
+            <p class="text-body-md opacity-90 mt-1">Mã bệnh nhân: <strong>BN-@patient?.Id.ToString("D4")</strong></p>
+        </div>
+        <div class="flex gap-unit-sm">
+            @if (ViewBag.UnpaidCount > 0)
+            {
+                <a href="/Patient/Payment" class="bg-error text-white font-label-md px-4 py-2 rounded-lg hover:bg-red-700 transition-all flex items-center gap-1 shadow animate-pulse">
+                    <span class="material-symbols-outlined">payments</span>
+                    Bạn có @ViewBag.UnpaidCount hóa đơn cần thanh toán
+                </a>
+            }
+            <a href="/Patient/Book" class="bg-secondary text-white font-label-md px-unit-md py-2 rounded-lg hover:bg-on-secondary-container transition-all flex items-center gap-1 shadow">
+                <span class="material-symbols-outlined">add</span>
+                Đặt lịch khám mới
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Shortcuts Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-unit-md mb-unit-lg">
+    <a href="/Patient/Book" class="bg-white border border-outline-variant p-unit-md rounded-xl hover:border-primary transition-all text-center group shadow-sm">
+        <span class="material-symbols-outlined text-[36px] text-primary group-hover:scale-110 transition-transform">event_upcoming</span>
+        <strong class="block font-title-lg text-body-md text-on-surface mt-unit-sm">Đặt lịch hẹn</strong>
+        <span class="text-caption text-on-surface-variant">Chọn bác sĩ &amp; giờ khám</span>
+    </a>
+    
+    <a href="/Patient/Record" class="bg-white border border-outline-variant p-unit-md rounded-xl hover:border-primary transition-all text-center group shadow-sm">
+        <span class="material-symbols-outlined text-[36px] text-primary group-hover:scale-110 transition-transform">clinical_notes</span>
+        <strong class="block font-title-lg text-body-md text-on-surface mt-unit-sm">Đơn thuốc &amp; Bệnh án</strong>
+        <span class="text-caption text-on-surface-variant">Tra cứu lịch sử điều trị</span>
+    </a>
+
+    <a href="/Patient/Payment" class="bg-white border border-outline-variant p-unit-md rounded-xl hover:border-primary transition-all text-center group shadow-sm">
+        <span class="material-symbols-outlined text-[36px] text-primary group-hover:scale-110 transition-transform">payments</span>
+        <strong class="block font-title-lg text-body-md text-on-surface mt-unit-sm">Thanh toán hóa đơn</strong>
+        <span class="text-caption text-on-surface-variant">Thanh toán trực tuyến 24/7</span>
+    </a>
+
+    <a href="/Patient/Record/Health" class="bg-white border border-outline-variant p-unit-md rounded-xl hover:border-primary transition-all text-center group shadow-sm">
+        <span class="material-symbols-outlined text-[36px] text-primary group-hover:scale-110 transition-transform">monitoring</span>
+        <strong class="block font-title-lg text-body-md text-on-surface mt-unit-sm">Sổ sức khỏe</strong>
+        <span class="text-caption text-on-surface-variant">Theo dõi chỉ số sinh tồn</span>
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    <!-- Upcoming Appointments List (2 cols) -->
+    <div class="lg:col-span-2 bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm flex flex-col">
+        <h3 class="font-title-lg text-title-lg font-bold text-primary mb-unit-md border-b border-outline-variant/30 pb-unit-sm">
+            Lịch hẹn khám sắp tới
+        </h3>
+        
+        <div class="space-y-unit-md flex-grow">
+            @if (!Model.Any())
+            {
+                <div class="h-full flex flex-col items-center justify-center text-center text-on-surface-variant py-8">
+                    <span class="material-symbols-outlined text-[48px] text-outline">event_busy</span>
+                    <p class="mt-2 font-label-md">Bạn chưa đăng ký lịch khám nào sắp diễn ra.</p>
+                    <a href="/Patient/Book" class="text-primary hover:underline text-body-md mt-1 block font-semibold">Đăng ký lịch khám ngay</a>
+                </div>
+            }
+            else
+            {
+                @foreach (var app in Model)
+                {
+                    <div class="border border-outline-variant/60 rounded-lg p-unit-md hover:border-primary transition-colors flex flex-col md:flex-row justify-between items-start md:items-center gap-unit-md">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-primary-container/20 text-primary-fixed-dim text-[11px] font-bold uppercase rounded">#LK-@app.Id.ToString("D4")</span>
+                                <strong class="text-body-md text-on-surface">Thời gian: @app.ThoiGian.ToString("dd/MM/yyyy HH:mm")</strong>
+                            </div>
+                            <div class="mt-2 text-body-md text-on-surface-variant space-y-0.5">
+                                <div>Bác sĩ: <strong class="text-on-surface">@(app.Doctor != null ? app.Doctor.User.HoTen : "Hệ thống tự động phân công")</strong></div>
+                                <div>Chuyên khoa: @(app.Doctor != null ? app.Doctor.Department.TenKhoa : "Phòng tiếp đón chung")</div>
+                                <div>Địa điểm: @(app.Doctor != null ? app.Doctor.Department.ViTri : "Sảnh chờ tầng 1")</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="px-3 py-1 rounded-full @(app.TrangThai == "ChoXacNhan" ? "bg-primary-container/20 text-primary-fixed-dim" : "bg-tertiary-fixed/30 text-on-tertiary-fixed-variant") text-[11px] font-bold block mb-2 text-center">
+                                @(app.TrangThai == "ChoXacNhan" ? "Chờ xác nhận" : "Đã xác nhận")
+                            </span>
+                            @if (app.TrangThai == "ChoXacNhan")
+                            {
+                                <span class="text-caption text-on-surface-variant italic">Nhân viên sẽ gọi điện duyệt lịch</span>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Recent Prescriptions Log (1 col) -->
+    <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm flex flex-col">
+        <h3 class="font-title-lg text-title-lg font-bold text-primary mb-unit-md border-b border-outline-variant/30 pb-unit-sm">
+            Đơn thuốc gần đây
+        </h3>
+        <div class="space-y-unit-sm flex-grow">
+            @if (!recentPres.Any())
+            {
+                <p class="text-on-surface-variant text-caption italic py-4 text-center">Chưa có đơn thuốc nào được kê trong lịch sử.</p>
+            }
+            else
+            {
+                @foreach (var pres in recentPres)
+                {
+                    <div class="p-unit-sm border border-outline-variant rounded-lg bg-surface hover:border-primary transition-all cursor-pointer" onclick="location.href='/Patient/Record/PrescriptionDetails/@pres.Id'">
+                        <div class="flex justify-between text-caption font-bold text-primary mb-1">
+                            <span>Đơn thuốc ngày @pres.NgayKe.ToString("dd/MM/yyyy")</span>
+                            <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                        </div>
+                        <p class="text-caption text-on-surface-variant font-semibold">Chẩn đoán: @pres.ExaminationRecord.ChanDoan</p>
+                        <p class="text-[11px] text-outline mt-1">Bác sĩ kê: @pres.ExaminationRecord.Appointment.Doctor?.User.HoTen</p>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

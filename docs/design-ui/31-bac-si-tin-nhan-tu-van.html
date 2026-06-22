@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tin nhắn tư vấn - MediPro CMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-tertiary-fixed": "#2a1700",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#213145",
+                        "on-tertiary-container": "#ffc57f",
+                        "background": "#f8f9ff",
+                        "secondary-container": "#6cf8bb",
+                        "on-secondary-container": "#00714d",
+                        "on-surface": "#0b1c30",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#0b1c30",
+                        "tertiary": "#5e3900",
+                        "outline-variant": "#c2c6d4",
+                        "on-secondary-fixed": "#002113",
+                        "outline": "#727784",
+                        "secondary": "#006c49",
+                        "on-primary-fixed": "#001a40",
+                        "inverse-on-surface": "#eaf1ff",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "inverse-primary": "#acc7ff",
+                        "surface-tint": "#115cb9",
+                        "surface-variant": "#d3e4fe",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#d7e2ff",
+                        "surface-bright": "#f8f9ff",
+                        "surface": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#004491",
+                        "surface-dim": "#cbdbf5",
+                        "surface-container-highest": "#d3e4fe",
+                        "secondary-fixed-dim": "#4edea3",
+                        "primary": "#003f87",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "on-surface-variant": "#424752",
+                        "surface-container": "#e5eeff",
+                        "surface-container-low": "#eff4ff",
+                        "surface-container-high": "#dce9ff",
+                        "on-secondary-fixed-variant": "#005236",
+                        "primary-fixed-dim": "#acc7ff",
+                        "on-primary-container": "#bbd0ff",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#6ffbbe",
+                        "tertiary-container": "#7d4e00",
+                        "primary-container": "#0056b3",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit-xs": "4px",
+                        "gutter": "24px",
+                        "unit-xl": "48px",
+                        "unit-md": "16px",
+                        "margin-mobile": "16px",
+                        "unit-sm": "8px",
+                        "unit-lg": "24px",
+                        "margin-desktop": "40px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "sans": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .chat-scroll::-webkit-scrollbar { width: 4px; }
+        .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: #d3e4fe; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar (Shared Component) -->
+<aside class="w-[280px] h-screen fixed left-0 top-0 flex flex-col h-full py-unit-lg bg-surface dark:bg-inverse-surface border-r border-outline-variant dark:border-outline z-50">
+<div class="px-gutter mb-unit-xl">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">MediPro CMS</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Clinical Management</p>
+</div>
+<nav class="flex-1 overflow-y-auto">
+<ul class="space-y-1">
+<li><a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined mr-3">dashboard</span>Dashboard</a></li>
+<li><a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined mr-3">calendar_today</span>Appointments</a></li>
+<li><a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined mr-3">folder_shared</span>Patient Records</a></li>
+<li><a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined mr-3">stethoscope</span>Clinical Exam</a></li>
+<li><a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined mr-3">prescriptions</span>Prescriptions</a></li>
+<li><a class="flex items-center px-gutter py-3 text-primary dark:text-inverse-primary font-bold border-r-4 border-primary bg-primary-container/10 transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined mr-3" style="font-variation-settings: 'FILL' 1;">mail</span>Messages</a></li>
+<li><a class="flex items-center px-gutter py-3 text-on-surface-variant hover:bg-surface-container transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined mr-3">bar_chart</span>Statistics</a></li>
+</ul>
+</nav>
+<div class="px-gutter mt-unit-lg">
+<button class="w-full py-unit-md bg-primary text-on-primary rounded-lg font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+<span class="material-symbols-outlined">add</span> New Appointment
+            </button>
+</div>
+<div class="mt-auto px-gutter border-t border-outline-variant pt-unit-md">
+<ul class="space-y-1">
+<li><a class="flex items-center py-2 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined mr-3">settings</span>Settings</a></li>
+<li><a class="flex items-center py-2 text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined mr-3">help</span>Support</a></li>
+</ul>
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="ml-[280px] min-h-screen flex flex-col">
+<!-- TopAppBar (Shared Component) -->
+<header class="sticky top-0 z-40 bg-surface border-b border-outline-variant flex justify-between items-center h-16 px-gutter">
+<div class="flex items-center gap-unit-md">
+<div class="relative">
+<span class="absolute inset-y-0 left-3 flex items-center text-outline">
+<span class="material-symbols-outlined text-md">search</span>
+</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md w-64 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Tìm kiếm bệnh nhân..." type="text"/>
+</div>
+<div class="h-6 w-[1px] bg-outline-variant mx-unit-sm"></div>
+<nav class="flex gap-unit-md text-caption">
+<span class="text-outline">Bác sĩ</span>
+<span class="text-outline">/</span>
+<span class="text-primary font-bold">Tin nhắn</span>
+</nav>
+</div>
+<div class="flex items-center gap-unit-lg">
+<div class="flex gap-unit-md">
+<button class="text-on-surface-variant hover:text-primary transition-all p-2 rounded-full hover:bg-surface-container"><span class="material-symbols-outlined">notifications</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-all p-2 rounded-full hover:bg-surface-container"><span class="material-symbols-outlined">help</span></button>
+<button class="text-on-surface-variant hover:text-primary transition-all p-2 rounded-full hover:bg-surface-container"><span class="material-symbols-outlined">settings</span></button>
+</div>
+<div class="flex items-center gap-3 border-l border-outline-variant pl-unit-lg">
+<div class="text-right">
+<p class="font-bold text-body-md">Dr. Nguyễn Minh Đức</p>
+<p class="text-caption text-outline">Khoa Nội Tổng Quát</p>
+</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary-container object-cover" data-alt="A professional headshot of a middle-aged male doctor with a kind expression, wearing a white clinical coat and a stethoscope around his neck. The background is a blurred, high-end hospital corridor with soft blue and white tones, matching the medical corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrWUAaYymc7vxbe1sXbhXWnM-VT94gdGjS0ebJyH5xysU1WqtXMGAEOG0hniCtjGVdvrmu3qJBkmuesWY79YprkY9eSx7Bxa8wWFMcK6ae25ZKxV8boHuSrac0G1jqwAYkRxVBH1VSBsKKjXTuwcWklClZJRrJ90Z2_cmwm0uJtl1KKsICUn4e2Oco9XJnYrrppGQ_6qvQ-OvH-RRbgjyb3qTJRTho0ZNKM-j76ja-PCCa65qNprLGs5RARI19PSKwUJeoWf17cBA"/>
+</div>
+</div>
+</header>
+<!-- 3-Column Message Layout -->
+<main class="flex-1 flex overflow-hidden h-[calc(100vh-64px)]">
+<!-- Left Column: Conversation List -->
+<section class="w-80 flex flex-col bg-surface border-r border-outline-variant">
+<div class="p-4 border-b border-outline-variant space-y-3">
+<div class="flex items-center justify-between">
+<h2 class="font-title-lg text-title-lg font-bold">Tin nhắn tư vấn</h2>
+<span class="bg-primary-container text-on-primary-container px-2 py-0.5 rounded text-caption font-bold">12 Mới</span>
+</div>
+<div class="flex gap-1 overflow-x-auto pb-1">
+<button class="whitespace-nowrap px-3 py-1.5 rounded-full bg-primary text-on-primary text-caption font-semibold">Chưa đọc</button>
+<button class="whitespace-nowrap px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-caption font-semibold hover:bg-surface-container-high transition-colors">Đang theo dõi</button>
+<button class="whitespace-nowrap px-3 py-1.5 rounded-full bg-surface-container text-on-surface-variant text-caption font-semibold hover:bg-surface-container-high transition-colors">Đã đóng</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto chat-scroll">
+<!-- Active Contact -->
+<div class="p-4 bg-primary-container/10 border-r-4 border-primary cursor-pointer">
+<div class="flex gap-3">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="Close-up portrait of a young adult woman with glasses, smiling gently, appearing as a patient in a medical application. Neutral soft lighting, clinical and clean atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2afGoomOT9JjnUYtmizOG-RrBvR861RUZ13WxZ5ZPohWXy-rzPoH9hLf9i8nrbqZlJnq7f-68BFJSa3R3DlQLhxgg2M3iWcKcM1byqDPrvNrcIz1tR7d21vlNCLO71CFXGT5lJx-z95YLej8YyJqNbzvw4gaZPJ7jEobRyYcxi8i52MZfJI_QFapKgrHlSv4KIogHi0EmOM--JcUU0kLAYUAH20Ged8UqiC9wH-u8S6aSCOWiF8FjJlRR-E4SxFMwhTSGA0eTJmw"/>
+<span class="absolute bottom-0 right-0 w-3 h-3 bg-secondary rounded-full border-2 border-white"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-body-md truncate">Lê Thị Thu Thảo</h3>
+<span class="text-caption text-outline">10:45</span>
+</div>
+<p class="text-body-md font-bold text-on-surface truncate">Bác sĩ ơi, vết mổ của em hơi đỏ...</p>
+<div class="flex justify-between items-center mt-2">
+<span class="bg-primary text-on-primary text-[10px] px-1.5 py-0.5 rounded-full font-bold">2</span>
+<span class="text-[10px] text-primary font-bold uppercase tracking-wider">Khẩn cấp</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Other Contacts -->
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors">
+<div class="flex gap-3">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="Portrait of an elderly man with silver hair and a warm expression, patient profile avatar. The lighting is soft and natural, background is clean and clinical." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPqYEZhPqhq3k7ep7mghV6LpKPHIVxCG4UmPN7bl80QwX-PZeE7KnPZegG-xpQq_4yQm_sGGZp4K4bcyyRAhPbW3l-HfdbgA43YrH2ZEdf90AUrMQO2m-ngNl2KW3DxS4xpIxv_dZibR6PB5ldk_nXZIaRfo9DYRdCA81Yl5aELdQZfWhlUhfpWsaaXUOYnAjgOdBUdVtIXFDEMWnZQbUfG7-b1bjp6QjNR1cAwFUHDG3S8z1ha6GvLJZeIryO-pVxNFsvMxdyf88"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-body-md truncate">Nguyễn Văn An</h3>
+<span class="text-caption text-outline">09:12</span>
+</div>
+<p class="text-body-md text-on-surface-variant truncate">Cảm ơn bác sĩ, tôi đã uống thuốc.</p>
+</div>
+</div>
+</div>
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors">
+<div class="flex gap-3">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="Modern professional portrait of a businessman in his 30s, clear focus, medical patient style avatar. The lighting is balanced and neutral." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFPWDog0Sof2quqgyjCzPjw8Q2H1ZqA2ldb_A2WJYN6i7xzlqxRSbLFLYDl-WJfytmBgcHVGtNv72zQZVrmqNvN7d4h0m1yOwPgP8gNtVjq9Py38ZrmzvGDuLG40H-vsfYlFHq3E8bpUKr7thS_CxCUkk92AeV9GFm9_RZKhMEfqJLFqrfSNIchKQw60ggVFs7CqMAFPlBVmo90pA0qQOEdMMLtdcfvAkK26rXXyOA_twCFe3p5K3koAo21rYBAXwCfLBI-E2Mv3g"/>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-body-md truncate">Trần Hoàng Long</h3>
+<span class="text-caption text-outline">Hôm qua</span>
+</div>
+<p class="text-body-md text-on-surface-variant truncate">Bác sĩ xem giúp em kết quả xét nghiệm...</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Center Column: Chat Window -->
+<section class="flex-1 flex flex-col bg-white">
+<!-- Chat Header -->
+<div class="h-16 px-6 border-b border-outline-variant flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-3">
+<div class="relative">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Close-up portrait of a young adult woman with glasses, smiling gently, appearing as a patient in a medical application. Neutral soft lighting, clinical and clean atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVTag6hU1BHZxuPtcr-LUoPN1imAdLXUCzpviak_go1OCGnuRdC-FVPrpw47UV1ipn7yyF6oI6epcuMP3ktRNdzkbWMIh0kWlCHClRmJ7jCSAzJEBlspobhFwz9-dDAO5gWeB2kiDwfPEWQ16WkVuPC54fH6TK7oDOFU2Jw_rmKn6aCuPtrZC_joiS1PlAaGt8SneiB0dUAH-pJZTkZB8OoDVAM4e3E8-RgJgAG1XzfGb1ALY5KW9fwss71gOsla60E_VjKN0y9Uo"/>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-secondary rounded-full border-2 border-white"></span>
+</div>
+<div>
+<h3 class="font-bold text-body-lg">Lê Thị Thu Thảo</h3>
+<p class="text-caption text-secondary flex items-center gap-1"><span class="w-1.5 h-1.5 bg-secondary rounded-full"></span> Đang trực tuyến</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-primary hover:bg-primary-container/10 rounded-full transition-colors"><span class="material-symbols-outlined">videocam</span></button>
+<button class="p-2 text-primary hover:bg-primary-container/10 rounded-full transition-colors"><span class="material-symbols-outlined">call</span></button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors"><span class="material-symbols-outlined">more_vert</span></button>
+</div>
+</div>
+<!-- Warning Banner -->
+<div class="bg-error-container/30 px-6 py-2 flex items-center justify-center gap-2 border-b border-error-container/20">
+<span class="material-symbols-outlined text-error text-md">warning</span>
+<p class="text-caption font-bold text-on-error-container">LƯU Ý: Tin nhắn tư vấn không thay thế cấp cứu. Trong trường hợp khẩn cấp, vui lòng gọi 115.</p>
+</div>
+<!-- Message Area -->
+<div class="flex-1 p-6 overflow-y-auto chat-scroll flex flex-col gap-4 bg-[#fcfdff]">
+<!-- Patient Message -->
+<div class="flex gap-3 max-w-[80%]">
+<img class="w-8 h-8 rounded-full self-end mb-1" data-alt="Close-up portrait of a young adult woman with glasses, smiling gently, appearing as a patient in a medical application. Neutral soft lighting, clinical and clean atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATt71yxAHgIb-Ill6OSFDn56GVqY4kVewjqgJwlCu9heS9cE4yCiGSHqpwoYfGHlWzslTSf2yeIiGvi1ZMJCltPujBM2RQq4zuPg__a8lX2gbm0eXjTqT4gW5FQYW95CzH3vT98FX3wwJIojZkM798iy72dNdsGNsgHW9uHOt44NMO712ybQ-w3lkcCr-edndUQaOs141kEJMq6H5x9NMM5cvSvsWWhRDu_wPp7Ql-9QFNxNSl0Cw-NV2mIeHlBwSQKMph0N--4uE"/>
+<div class="bg-surface-container-low border border-outline-variant p-3 rounded-2xl rounded-bl-none">
+<p class="text-body-md text-on-surface">Chào bác sĩ Đức, em là Thảo. Em mổ ruột thừa cách đây 3 ngày. Hiện tại vết mổ của em hơi sưng đỏ và đau nhẹ. Như vậy có sao không ạ?</p>
+<span class="text-[10px] text-outline mt-1 block">10:42</span>
+</div>
+</div>
+<!-- Patient Attachment -->
+<div class="flex gap-3 max-w-[80%] ml-11">
+<div class="bg-surface-container-low border border-outline-variant p-1 rounded-xl">
+<img class="w-48 h-32 object-cover rounded-lg" data-alt="A close-up medical photograph showing a post-operative surgical incision on human skin. The area is slightly red but looks clean. The image is professional, clinical, and framed carefully for diagnostic purposes in a medical app context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvUbC5TGqLQSXrhZsowjk6hQqd2ed3Hz9naltTJF1iSiDk67owlth-Iv4YY3bZuzHLpiGSlgV3qpmdW_czo_fHRzwer3hLzY5Be8aLJ-AhIdzpE_JI3GUGVZ7G-SknH___v82p4amHm71a0ICmGMCXz7tFcWUoC8cPr_Lw_xbGPuK8y4yohV7xD5QmCtcSyag7A8nHFyrU5VAKeTQMQ-xfnA9183-Ni8RWxgGiS1enPy0MUNwB_8vjlcCLa_vvCU1F7cgMtv9fe24"/>
+<p class="p-2 text-caption text-on-surface-variant italic">Ảnh vết mổ hiện tại</p>
+</div>
+</div>
+<!-- Doctor Response -->
+<div class="flex flex-col items-end gap-1">
+<div class="bg-primary text-on-primary p-3 rounded-2xl rounded-br-none max-w-[80%] shadow-md">
+<p class="text-body-md">Chào Thảo, bác sĩ đã nhận được ảnh. Theo quan sát thì vùng đỏ không lan rộng, nhưng em cần theo dõi nhiệt độ cơ thể. Em có bị sốt không?</p>
+<span class="text-[10px] text-on-primary/70 mt-1 block text-right">10:45</span>
+</div>
+<div class="flex items-center gap-1 text-[10px] text-outline px-1">
+<span>Đã xem</span>
+<span class="material-symbols-outlined text-[12px]">done_all</span>
+</div>
+</div>
+</div>
+<!-- Footer / Input -->
+<div class="p-4 border-t border-outline-variant bg-surface">
+<!-- Quick Reply Chips -->
+<div class="flex gap-2 overflow-x-auto pb-3 no-scrollbar">
+<button class="flex-none px-3 py-1.5 bg-surface-container-high border border-outline-variant rounded-lg text-caption font-bold text-primary hover:bg-primary-container/20 transition-colors">Vui lòng đặt lịch tái khám</button>
+<button class="flex-none px-3 py-1.5 bg-surface-container-high border border-outline-variant rounded-lg text-caption font-bold text-primary hover:bg-primary-container/20 transition-colors">Uống thuốc theo đơn</button>
+<button class="flex-none px-3 py-1.5 bg-error-container/20 border border-error/20 rounded-lg text-caption font-bold text-error hover:bg-error-container/30 transition-colors">Liên hệ cấp cứu nếu có dấu hiệu nặng</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex gap-1">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">add_circle</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">image</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">attach_file</span></button>
+</div>
+<div class="flex-1 relative">
+<textarea class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2 text-body-md focus:ring-2 focus:ring-primary focus:outline-none resize-none" placeholder="Nhập tin nhắn tư vấn..." rows="1"></textarea>
+</div>
+<button class="bg-primary text-on-primary w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Right Column: Patient Panel -->
+<section class="w-80 bg-surface border-l border-outline-variant overflow-y-auto chat-scroll flex flex-col">
+<div class="p-6 flex flex-col items-center text-center border-b border-outline-variant">
+<img class="w-24 h-24 rounded-full border-4 border-white shadow-md mb-3" data-alt="Close-up portrait of a young adult woman with glasses, smiling gently, appearing as a patient in a medical application. Neutral soft lighting, clinical and clean atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQJ9cvz42mC5EIFk00JJC1xrKKZhNi2qBvM4lmdtubYkBoloOJSIfvibH5q_EL19vFroaXjB-DgfFEUeHeeYo5_5Ra_YpHP5Xh0MQWAZ4tpSan9Yk1ImaidsCV10YkcTZKFe2obRhZ3TreQ8fROEUCdrNWBP_OSNs26LYbRgXb66V_putHjtG_XjjIz1z9WVU9jsc3CasHbdQK1NciDzmab3lgAuaDh6vk8QOp9qwCp2C7kSmUc51n00iGtKjrnNZIgdrmqrhpzC4"/>
+<h3 class="font-bold text-title-lg">Lê Thị Thu Thảo</h3>
+<p class="text-body-md text-on-surface-variant">24 tuổi • Nữ • Hà Nội</p>
+<div class="mt-4 w-full grid grid-cols-2 gap-2">
+<div class="bg-surface-container-low p-2 rounded-lg border border-outline-variant">
+<p class="text-[10px] uppercase text-outline font-bold">Nhóm máu</p>
+<p class="font-bold text-body-md">O+</p>
+</div>
+<div class="bg-surface-container-low p-2 rounded-lg border border-outline-variant">
+<p class="text-[10px] uppercase text-outline font-bold">BMI</p>
+<p class="font-bold text-body-md">21.4 (BT)</p>
+</div>
+</div>
+</div>
+<div class="p-6 space-y-6">
+<!-- Allergy Warning -->
+<div class="bg-error-container text-on-error-container p-4 rounded-xl border-l-4 border-error flex gap-3 shadow-sm">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+<div>
+<p class="text-caption font-extrabold uppercase">Cảnh báo dị ứng</p>
+<p class="font-bold text-body-md">Penicillin, Hải sản</p>
+</div>
+</div>
+<!-- Recent Appointment -->
+<div>
+<div class="flex justify-between items-center mb-3">
+<h4 class="font-bold text-body-md">Cuộc hẹn gần đây</h4>
+<span class="text-primary font-bold text-caption cursor-pointer">Xem tất cả</span>
+</div>
+<div class="bg-white border border-outline-variant rounded-xl p-3 shadow-sm">
+<div class="flex justify-between mb-2">
+<span class="bg-secondary-container/20 text-on-secondary-container text-[10px] px-2 py-0.5 rounded-full font-bold">Đã khám</span>
+<span class="text-caption text-outline">15/10/2023</span>
+</div>
+<p class="font-bold text-body-md">Phẫu thuật nội soi ruột thừa</p>
+<p class="text-caption text-on-surface-variant mt-1">Hậu phẫu ngày 3, sức khỏe ổn định.</p>
+</div>
+</div>
+<!-- Latest Prescription -->
+<div>
+<div class="flex justify-between items-center mb-3">
+<h4 class="font-bold text-body-md">Đơn thuốc mới nhất</h4>
+<span class="material-symbols-outlined text-primary text-md cursor-pointer">open_in_new</span>
+</div>
+<div class="bg-surface-container-low border border-dashed border-outline rounded-xl p-3">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-sm">pill</span>
+<span class="font-bold text-caption">RX #DR4920</span>
+</div>
+<ul class="text-caption space-y-1 text-on-surface-variant">
+<li class="flex justify-between"><span>Augmentin 625mg</span> <span>x14</span></li>
+<li class="flex justify-between"><span>Paracetamol 500mg</span> <span>x10</span></li>
+</ul>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="space-y-2 pt-2">
+<button class="w-full py-2.5 border border-primary text-primary font-bold rounded-lg hover:bg-primary-container/10 transition-all text-body-md flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-md">folder_open</span> Hồ sơ bệnh án
+                        </button>
+<button class="w-full py-2.5 bg-primary text-on-primary font-bold rounded-lg hover:opacity-90 shadow-md transition-all text-body-md flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-md">event</span> Đặt lịch tái khám
+                        </button>
+</div>
+</div>
+</section>
+</main>
+</div>
+<script>
+        // Simple micro-interaction for input auto-resize (mock)
+        const textarea = document.querySelector('textarea');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if (this.scrollHeight > 120) {
+                this.style.overflowY = 'scroll';
+                this.style.height = '120px';
+            } else {
+                this.style.overflowY = 'hidden';
+            }
+        });
+
+        // Hover effect for chat list
+        const chatItems = document.querySelectorAll('.chat-scroll > div');
+        chatItems.forEach(item => {
+            item.addEventListener('click', () => {
+                chatItems.forEach(i => {
+                    i.classList.remove('bg-primary-container/10', 'border-r-4', 'border-primary');
+                    i.classList.add('border-b', 'border-outline-variant');
+                });
+                item.classList.add('bg-primary-container/10', 'border-r-4', 'border-primary');
+                item.classList.remove('border-b', 'border-outline-variant');
+            });
+        });
+    </script>
+</body></html>

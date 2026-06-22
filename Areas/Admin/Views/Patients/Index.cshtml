@@ -1,0 +1,83 @@
+@model IEnumerable<QuanLyBenhVien.Models.Patient>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Bệnh nhân";
+}
+
+<div class="mb-unit-lg">
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Danh sách Bệnh nhân</h2>
+    <p class="text-body-md text-on-surface-variant">Tra cứu thông tin liên hệ, mã thẻ bảo hiểm y tế và lịch sử khám chữa bệnh của bệnh nhân.</p>
+</div>
+
+<!-- Filters Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl mb-unit-lg shadow-sm">
+    <form method="GET" action="/Admin/Patients" class="flex flex-col md:flex-row gap-unit-md">
+        <div class="flex-grow relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
+                <span class="material-symbols-outlined text-[20px]">search</span>
+            </span>
+            <input class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                   name="searchString" value="@ViewBag.SearchString" placeholder="Tìm kiếm tên bệnh nhân, số điện thoại, số thẻ BHYT..." type="text" />
+        </div>
+        
+        <button type="submit" class="bg-primary hover:bg-primary-container text-white px-unit-lg py-2 rounded-lg font-label-md transition-colors font-semibold shadow-sm">
+            Tìm kiếm
+        </button>
+    </form>
+</div>
+
+<!-- Patients Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Mã BN</th>
+                    <th class="px-unit-md py-3">Họ và tên</th>
+                    <th class="px-unit-md py-3">Ngày sinh / Giới tính</th>
+                    <th class="px-unit-md py-3">Mã số BHYT</th>
+                    <th class="px-unit-md py-3">Thông tin liên hệ</th>
+                    <th class="px-unit-md py-3 text-right">Hồ sơ y tế</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="px-unit-md py-8 text-center text-on-surface-variant">Không tìm thấy bệnh nhân nào phù hợp.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var pat in Model)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors group">
+                            <td class="px-unit-md py-4 font-bold text-primary">BN-@pat.Id.ToString("D4")</td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md font-semibold text-on-surface">@pat.User.HoTen</div>
+                                <div class="text-caption text-secondary font-medium">Nhóm máu: @pat.NhomMau</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md">@pat.NgaySinh.ToString("dd/MM/yyyy")</div>
+                                <div class="text-caption text-on-surface-variant">@pat.GioiTinh</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <span class="font-body-md text-on-surface font-mono">@(string.IsNullOrEmpty(pat.SoBHYT) ? "Không có" : pat.SoBHYT)</span>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md">@pat.User.Sdt</div>
+                                <div class="text-caption text-on-surface-variant">@pat.User.Email</div>
+                            </td>
+                            <td class="px-unit-md py-4 text-right">
+                                <a href="/Admin/Patients/Details/@pat.Id" class="inline-flex items-center gap-1 bg-surface-container hover:bg-surface-container-high px-3 py-1.5 rounded-lg text-label-md transition-colors text-primary font-semibold border border-outline-variant/30">
+                                    <span class="material-symbols-outlined text-[16px]">clinical_notes</span> EMR bệnh án
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,359 @@
+@model QuanLyBenhVien.Models.Appointment
+
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Phiên khám bệnh";
+    var historyExams = ViewBag.HistoryExams as List<QuanLyBenhVien.Models.ExaminationRecord> ?? new List<QuanLyBenhVien.Models.ExaminationRecord>();
+    var medicines = ViewBag.Medicines as List<QuanLyBenhVien.Models.Medicine> ?? new List<QuanLyBenhVien.Models.Medicine>();
+}
+
+<div class="mb-unit-lg">
+    <a href="/Doctor/Dashboard" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Thoát khỏi phiên khám (Hủy ca)
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Phiên khám: @Model.Patient.User.HoTen</h2>
+    <p class="text-body-md text-on-surface-variant">Ghi nhận chẩn đoán y khoa, đo chỉ số sinh tồn và kê đơn thuốc điều trị.</p>
+</div>
+
+<!-- Warning box for patient allergy -->
+@if (!string.IsNullOrEmpty(Model.Patient.DiUng) && Model.Patient.DiUng != "Không")
+{
+    <div class="p-unit-md bg-error-container/20 border-l-4 border-error text-error text-body-md rounded-r mb-unit-lg flex gap-2 shadow-sm">
+        <span class="material-symbols-outlined text-[24px]">gpp_maybe</span>
+        <div>
+            <strong class="font-bold">TIỀN SỬ DỊ ỨNG ĐẶC BIỆT CỦA BỆNH NHÂN:</strong> @Model.Patient.DiUng.
+            <p class="text-caption opacity-95">Hệ thống sẽ tự động quét cảnh báo khi bạn kê các thuốc chống chỉ định.</p>
+        </div>
+    </div>
+}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    <!-- Left panel: Form input EMR (2 cols) -->
+    <div class="lg:col-span-2 space-y-unit-lg">
+        <form id="sessionForm" action="/Doctor/Exam/CompleteSession" method="POST" class="space-y-unit-lg">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="appointmentId" value="@Model.Id" />
+            <input type="hidden" id="presJson" name="presJson" value="[]" />
+
+            <!-- Section 1: Vital Signs (BMI auto calculated) -->
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg text-secondary font-bold mb-unit-md flex items-center gap-1">
+                    <span class="material-symbols-outlined">monitoring</span> Chỉ số sinh tồn
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-unit-md">
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Huyết áp (mmHg)</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               name="huyetAp" placeholder="Ví dụ: 120/80" type="text" />
+                    </div>
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Nhịp tim (l/ph)</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               name="nhipTim" placeholder="Ví dụ: 75" type="number" />
+                    </div>
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Nhiệt độ (°C)</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               name="nhietDo" placeholder="36.5" type="number" step="0.1" />
+                    </div>
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Cân nặng (kg)</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               id="weight" name="canNang" placeholder="60.5" type="number" step="0.1" oninput="calculateBMI()" />
+                    </div>
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Chiều cao (cm)</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               id="height" name="chieuCao" placeholder="170" type="number" step="0.5" oninput="calculateBMI()" />
+                    </div>
+                </div>
+                <div class="mt-unit-sm text-caption text-secondary font-semibold" id="bmi-display">
+                    Chỉ số BMI: Chưa tính (Vui lòng điền Chiều cao &amp; Cân nặng)
+                </div>
+            </div>
+
+            <!-- Section 2: Clinical Symptoms & Diagnosis -->
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md">
+                <h3 class="font-title-lg text-title-lg text-secondary font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined">clinical_notes</span> Chẩn đoán y khoa
+                </h3>
+                
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Triệu chứng lâm sàng phát hiện <span class="text-error">*</span></label>
+                    <textarea class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                              name="trieuChung" rows="2" placeholder="Ghi nhận triệu chứng lâm sàng cụ thể..." required></textarea>
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Chẩn đoán bệnh cuối cùng <span class="text-error">*</span></label>
+                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus font-semibold" 
+                           name="chanDoan" placeholder="Nhập tên bệnh hoặc chẩn đoán lâm sàng..." required type="text" />
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Chỉ định cận lâm sàng (CLS) nếu có</label>
+                        <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               name="chiDinhCls" placeholder="Ví dụ: Siêu âm ổ bụng, xét nghiệm máu" type="text" />
+                    </div>
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Kết quả cận lâm sàng (CLS) nếu có</label>
+                        <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               name="ketQuaCls" placeholder="Kết quả cận lâm sàng đã thực hiện..." type="text" />
+                    </div>
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Lời dặn &amp; Hẹn tái khám</label>
+                    <textarea class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                              name="loiDan" rows="2" placeholder="Chế độ nghỉ ngơi, hẹn ngày tái khám..."></textarea>
+                </div>
+            </div>
+
+            <!-- Section 3: Safe Prescription Block -->
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md">
+                <h3 class="font-title-lg text-title-lg text-secondary font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined">medication</span> Kê đơn thuốc điện tử
+                </h3>
+
+                <!-- Drug Selector row -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-unit-sm items-end bg-surface-container-low/20 p-unit-sm rounded-lg border border-outline-variant/40">
+                    <div class="md:col-span-5 space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Chọn thuốc trong danh mục</label>
+                        <select class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="medSelector">
+                            <option value="">-- Chọn thuốc --</option>
+                            @foreach (var med in medicines)
+                            {
+                                <option value="@med.Id" data-name="@med.TenThuoc" data-unit="@med.DonViTinh" data-price="@med.Gia">@med.TenThuoc (Còn: @med.TonKho @med.DonViTinh)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="md:col-span-2 space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Số lượng</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="medQty" type="number" min="1" value="10" />
+                    </div>
+                    <div class="md:col-span-4 space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Cách dùng (Liều dùng)</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="medInstructions" placeholder="Uống 2 lần/ngày, sau ăn" type="text" />
+                    </div>
+                    <div class="md:col-span-1">
+                        <button type="button" class="w-full bg-secondary text-white py-2 rounded-lg font-label-md hover:bg-on-secondary-container transition-all" onclick="addMedicineRow()">
+                            Thêm
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Prescription Table -->
+                <table class="w-full text-left text-body-md" id="presTable">
+                    <thead>
+                        <tr class="border-b border-outline-variant font-semibold text-on-surface-variant">
+                            <th class="py-2">Tên thuốc</th>
+                            <th class="py-2">Số lượng</th>
+                            <th class="py-2">Liều dùng</th>
+                            <th class="py-2 text-right">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/40">
+                        <tr id="emptyPresRow">
+                            <td colspan="4" class="py-4 text-center text-on-surface-variant italic">Đơn thuốc trống. Vui lòng thêm thuốc ở trên.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex items-center gap-unit-md pt-unit-md border-t border-outline-variant mt-unit-lg">
+                <button class="bg-secondary text-white font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-on-secondary-container transition-all active:scale-[0.98] shadow-md flex items-center gap-1" type="submit">
+                    <span class="material-symbols-outlined">save</span> Hoàn tất phiên khám &amp; Xuất hóa đơn
+                </button>
+                <a href="/Doctor/Dashboard" class="text-on-surface-variant hover:underline font-label-md">Hủy bỏ</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Right panel: Patient medical history (1 col) -->
+    <div class="space-y-unit-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h3 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-secondary">Hồ sơ cá nhân bệnh nhân</h3>
+            <div class="space-y-unit-sm text-body-md">
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Họ và tên</span>
+                    <span class="font-semibold text-on-surface">@Model.Patient.User.HoTen</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Ngày sinh / Giới tính</span>
+                    <span>@Model.Patient.NgaySinh.ToString("dd/MM/yyyy") (@(DateTime.Today.Year - Model.Patient.NgaySinh.Year) tuổi) • @Model.Patient.GioiTinh</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Nhóm máu / Mã thẻ BHYT</span>
+                    <span class="font-semibold text-secondary">@Model.Patient.NhomMau</span> • <span class="font-mono text-caption">@(string.IsNullOrEmpty(Model.Patient.SoBHYT) ? "Không có" : Model.Patient.SoBHYT)</span>
+                </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Tiền sử bệnh án điện tử</span>
+                    <span>@Model.Patient.TienSuBenh</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h3 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-secondary">Lịch sử khám tại viện</h3>
+            
+            <div class="space-y-unit-md max-h-[350px] overflow-y-auto custom-scrollbar">
+                @if (!historyExams.Any())
+                {
+                    <p class="text-on-surface-variant text-caption italic">Không có lịch sử khám trước đó.</p>
+                }
+                else
+                {
+                    @foreach (var record in historyExams)
+                    {
+                        <div class="p-unit-sm border border-outline-variant/55 rounded-lg bg-surface-container-low/20 space-y-1">
+                            <div class="flex justify-between text-caption font-bold text-primary">
+                                <span>@record.NgayKham.ToString("dd/MM/yyyy")</span>
+                                <span>BS: @record.Appointment.Doctor?.User.HoTen</span>
+                            </div>
+                            <div class="text-[12px] font-semibold">Chẩn đoán: @record.ChanDoan</div>
+                            <div class="text-caption text-on-surface-variant">Triệu chứng: @record.TrieuChung</div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // BMI Calculation
+        function calculateBMI() {
+            const weight = parseFloat(document.getElementById('weight').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const bmiDisplay = document.getElementById('bmi-display');
+
+            if (weight > 0 && height > 0) {
+                const heightInMeters = height / 100;
+                const bmi = weight / (heightInMeters * heightInMeters);
+                let classification = '';
+
+                if (bmi < 18.5) classification = 'Thiếu cân (Gầy)';
+                else if (bmi < 24.9) classification = 'Bình thường (Lý tưởng)';
+                else if (bmi < 29.9) classification = 'Tiền béo phì';
+                else classification = 'Béo phì';
+
+                bmiDisplay.innerHTML = `Chỉ số BMI: <strong class="text-primary">${bmi.toFixed(2)}</strong> - Phân loại: <strong>${classification}</strong>`;
+            } else {
+                bmiDisplay.innerText = 'Chỉ số BMI: Chưa tính (Vui lòng điền Chiều cao & Cân nặng)';
+            }
+        }
+
+        // Prescription State Management
+        let prescriptionItems = [];
+
+        function renderPrescriptionTable() {
+            const tbody = document.querySelector('#presTable tbody');
+            const emptyRow = document.getElementById('emptyPresRow');
+
+            // Remove existing rows except header
+            const rows = tbody.querySelectorAll('tr:not(#emptyPresRow)');
+            rows.forEach(r => r.remove());
+
+            if (prescriptionItems.length === 0) {
+                emptyRow.classList.remove('hidden');
+                document.getElementById('presJson').value = "[]";
+                return;
+            }
+
+            emptyRow.classList.add('hidden');
+
+            prescriptionItems.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-surface-container-low transition-colors";
+                tr.innerHTML = `
+                    <td class="py-3 font-semibold text-on-surface">${item.name}</td>
+                    <td class="py-3 font-bold">${item.qty} ${item.unit}</td>
+                    <td class="py-3 text-on-surface-variant text-caption">${item.instructions}</td>
+                    <td class="py-3 text-right">
+                        <button type="button" class="text-error font-semibold hover:underline" onclick="removeMedicineRow(${index})">Xóa</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update hidden json input field
+            document.getElementById('presJson').value = JSON.stringify(prescriptionItems.map(i => ({
+                MedicineId: i.medicineId,
+                Qty: i.qty,
+                Instructions: i.instructions
+            })));
+        }
+
+        async function addMedicineRow() {
+            const selector = document.getElementById('medSelector');
+            const selectedOption = selector.options[selector.selectedIndex];
+            const qtyInput = document.getElementById('medQty');
+            const instInput = document.getElementById('medInstructions');
+
+            if (!selector.value) {
+                showGlobalToast('Lỗi nhập liệu', 'Vui lòng chọn thuốc trong danh mục.', 'error');
+                return;
+            }
+
+            const medicineId = parseInt(selector.value);
+            const qty = parseInt(qtyInput.value);
+            const instructions = instInput.value.trim();
+
+            if (qty <= 0) {
+                showGlobalToast('Lỗi nhập liệu', 'Số lượng thuốc phải lớn hơn 0.', 'error');
+                return;
+            }
+
+            if (!instructions) {
+                showGlobalToast('Lỗi nhập liệu', 'Vui lòng điền hướng dẫn cách sử dụng.', 'error');
+                return;
+            }
+
+            // Check if drug already in list
+            if (prescriptionItems.some(item => item.medicineId === medicineId)) {
+                showGlobalToast('Thuốc đã tồn tại', 'Thuốc này đã được kê trong đơn. Bạn có thể xóa đi và thêm lại số lượng mới.', 'warning');
+                return;
+            }
+
+            // Background safety checks: Allergy & Inventory Check
+            const response = await fetch(`/Doctor/Exam/CheckAllergiesAndStock?patientId=@Model.Patient.Id&medicineId=${medicineId}&qty=${qty}`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+
+            if (data.success && data.hasWarning) {
+                // Warning modal prompt override
+                const confirmOverride = confirm(`${data.message}\n\nBạn có chắc chắn muốn ghi đè (Override) cảnh báo này và tiếp tục kê thuốc?`);
+                if (!confirmOverride) {
+                    return; // Abort add
+                }
+            }
+
+            // Add item
+            prescriptionItems.push({
+                medicineId: medicineId,
+                name: selectedOption.getAttribute('data-name'),
+                unit: selectedOption.getAttribute('data-unit'),
+                qty: qty,
+                instructions: instructions
+            });
+
+            renderPrescriptionTable();
+
+            // Clear input rows
+            selector.value = "";
+            qtyInput.value = "10";
+            instInput.value = "";
+
+            showGlobalToast('Thành công', 'Đã thêm thuốc vào đơn.', 'success');
+        }
+
+        function removeMedicineRow(index) {
+            prescriptionItems.splice(index, 1);
+            renderPrescriptionTable();
+        }
+    </script>
+}

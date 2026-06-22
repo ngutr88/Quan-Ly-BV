@@ -1,0 +1,425 @@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Khoa & Dịch vụ";
+    var depts = ViewBag.Departments as List<QuanLyBenhVien.Models.Department> ?? new List<QuanLyBenhVien.Models.Department>();
+    var selectedDept = ViewBag.SelectedDept as QuanLyBenhVien.Models.Department;
+    var services = ViewBag.Services as List<QuanLyBenhVien.Models.Service> ?? new List<QuanLyBenhVien.Models.Service>();
+    var doctorCounts = ViewBag.DoctorCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+    string truongKhoa = ViewBag.TruongKhoa as string ?? "Chưa bổ nhiệm";
+    int activeDocsCount = ViewBag.ActiveDocsCount is int count ? count : 0;
+    int totalStaff = ViewBag.TotalStaff is int ts ? ts : 0;
+}
+
+<!-- Alert Messages -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-xl flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-body-md font-semibold">@TempData["SuccessMessage"]</span>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-error-container text-on-error-container border border-error/20 rounded-xl flex items-center gap-2">
+        <span class="material-symbols-outlined text-error">error</span>
+        <span class="font-body-md font-semibold">@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<!-- Breadcrumb and Header Actions -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-unit-md mb-unit-lg">
+    <div>
+        <nav class="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant mb-2">
+            <a href="/Admin/Dashboard" class="hover:text-primary">Dashboard</a>
+            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span class="text-primary font-bold">Khoa &amp; Dịch vụ</span>
+        </nav>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Khoa và dịch vụ</h2>
+    </div>
+    <div class="flex items-center gap-3">
+        <button onclick="openModal('addDeptModal')" class="px-6 py-2.5 border-2 border-primary-container text-primary-container hover:bg-primary-container hover:text-white transition-all rounded-xl font-semibold flex items-center gap-2 active:scale-95 cursor-pointer">
+            <span class="material-symbols-outlined">add_circle</span> Thêm khoa
+        </button>
+        @if (selectedDept != null)
+        {
+            <button onclick="openModal('addServiceModal')" class="px-6 py-2.5 bg-primary text-white hover:bg-primary-container transition-all rounded-xl font-semibold flex items-center gap-2 shadow-sm active:scale-95 cursor-pointer">
+                <span class="material-symbols-outlined">medical_services</span> Thêm dịch vụ
+            </button>
+        }
+    </div>
+</div>
+
+<!-- Two-Pane Layout -->
+<div class="flex flex-col lg:flex-row gap-gutter">
+    <!-- Left Pane: Department List (30%) -->
+    <div class="lg:w-[350px] flex flex-col gap-unit-md shrink-0">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md shadow-sm h-fit">
+            <div class="flex items-center justify-between mb-unit-md">
+                <h3 class="font-title-lg text-title-lg text-on-surface font-bold">Danh sách khoa</h3>
+                <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-caption font-bold">@depts.Count Khoa</span>
+            </div>
+            
+            <div class="space-y-unit-sm">
+                @foreach (var dept in depts)
+                {
+                    var isSelected = selectedDept != null && dept.Id == selectedDept.Id;
+                    int docCount = doctorCounts.ContainsKey(dept.Id) ? doctorCounts[dept.Id] : 0;
+                    
+                    <a href="/Admin/Departments?id=@dept.Id" 
+                       class="block p-unit-md border rounded-lg transition-all group cursor-pointer @(isSelected ? "border-primary bg-primary-container/5 border-2" : "border-outline-variant hover:border-primary/50 bg-surface-container-lowest")">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="font-bold text-body-lg text-on-surface group-hover:text-primary">@dept.TenKhoa</span>
+                            <span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold uppercase rounded">Active</span>
+                        </div>
+                        <div class="flex items-center justify-between text-caption font-caption text-on-surface-variant mt-2">
+                            <span>Code: <span class="font-semibold">K-@dept.Id.ToString("D2")</span></span>
+                            <span class="flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">medical_services</span> @docCount Bác sĩ</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+        
+        <!-- Statistics Snapshot -->
+        <div class="bg-primary p-unit-md rounded-xl text-white shadow-sm flex flex-col justify-between">
+            <div>
+                <p class="text-label-md font-label-md opacity-85 uppercase tracking-wider mb-2">Tổng nhân lực y tế</p>
+                <div class="flex items-end justify-between">
+                    <h4 class="text-[32px] font-bold leading-none">@totalStaff</h4>
+                    <span class="text-secondary-container font-bold flex items-center text-body-md"><span class="material-symbols-outlined text-[18px]">trending_up</span> +12%</span>
+                </div>
+            </div>
+            <p class="text-caption font-caption opacity-70 mt-4">Cập nhật theo dữ liệu nhân sự mới nhất</p>
+        </div>
+    </div>
+
+    <!-- Right Pane: Details (70%) -->
+    <div class="flex-1 flex flex-col gap-unit-lg">
+        @if (selectedDept != null)
+        {
+            <!-- Department Summary Card -->
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                <div class="p-unit-md border-b border-outline-variant flex justify-between items-center bg-surface-bright">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[28px]">stethoscope</span>
+                        </div>
+                        <div>
+                            <h3 class="text-headline-md font-headline-md font-bold text-on-surface">@selectedDept.TenKhoa</h3>
+                            <p class="text-body-md text-on-surface-variant">Khoa chuyên môn của bệnh viện</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openEditDeptModal(@selectedDept.Id, '@selectedDept.TenKhoa', '@selectedDept.MoTa', '@selectedDept.ViTri')" class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors text-on-surface-variant hover:text-primary cursor-pointer" title="Chỉnh sửa khoa">
+                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                        </button>
+                        <form method="POST" action="/Admin/Departments/DeleteDepartment/@selectedDept.Id" class="inline" onsubmit="return confirm('Bạn có chắc muốn xóa khoa này? Hãy đảm bảo không còn bác sĩ nào trực thuộc khoa.')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="w-10 h-10 flex items-center justify-center border border-outline-variant rounded-lg hover:bg-error-container/20 text-on-surface-variant hover:text-error transition-colors cursor-pointer" title="Xóa khoa">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="p-unit-md">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-unit-md mb-unit-lg">
+                        <div class="p-3 bg-surface-container-low rounded-lg">
+                            <p class="text-label-md font-label-md text-on-surface-variant uppercase mb-1">Vị trí phòng khám</p>
+                            <p class="font-bold text-on-surface">@selectedDept.ViTri</p>
+                        </div>
+                        <div class="p-3 bg-surface-container-low rounded-lg">
+                            <p class="text-label-md font-label-md text-on-surface-variant uppercase mb-1">Trưởng khoa</p>
+                            <p class="font-bold text-on-surface">@truongKhoa</p>
+                        </div>
+                        <div class="p-3 bg-surface-container-low rounded-lg">
+                            <p class="text-label-md font-label-md text-on-surface-variant uppercase mb-1">Bác sĩ thuộc khoa</p>
+                            <p class="font-bold text-on-surface">@activeDocsCount Chuyên gia</p>
+                        </div>
+                        <div class="p-3 bg-surface-container-low rounded-lg">
+                            <p class="text-label-md font-label-md text-on-surface-variant uppercase mb-1">Dịch vụ cung cấp</p>
+                            <p class="font-bold text-on-surface">@services.Count Dịch vụ</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-label-md font-label-md text-on-surface-variant uppercase mb-2">Chuyên môn &amp; Đặc thù khoa</h4>
+                        <p class="text-body-md text-on-surface leading-relaxed max-w-3xl">
+                            @if (string.IsNullOrEmpty(selectedDept.MoTa))
+                            {
+                                <span class="text-on-surface-variant italic">Chưa có mô tả cho khoa này.</span>
+                            }
+                            else
+                            {
+                                @selectedDept.MoTa
+                            }
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Services Management Section -->
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex-1">
+                <div class="p-unit-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low/20">
+                    <h3 class="text-title-lg font-title-lg font-bold text-on-surface">Danh mục dịch vụ y tế</h3>
+                    <button onclick="openModal('addServiceModal')" class="px-4 py-1.5 bg-primary text-white text-label-md font-bold rounded-lg hover:bg-primary-container transition-all cursor-pointer">
+                        Thêm dịch vụ
+                    </button>
+                </div>
+                
+                @if (!services.Any())
+                {
+                    <div class="flex flex-col items-center justify-center py-unit-xl px-unit-md text-center">
+                        <span class="material-symbols-outlined text-[80px] text-outline opacity-30 mb-2">clinical_notes</span>
+                        <h4 class="text-title-lg font-title-lg text-on-surface mb-2 font-bold">Chưa có dịch vụ nào</h4>
+                        <p class="text-body-md text-on-surface-variant max-w-md mb-unit-lg">
+                            Khoa này hiện chưa được thiết lập bất kỳ dịch vụ khám chữa bệnh nào. Hãy bắt đầu bằng cách thêm dịch vụ đầu tiên.
+                        </p>
+                        <button onclick="openModal('addServiceModal')" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-container shadow-md flex items-center gap-2 transition-transform active:scale-95 cursor-pointer">
+                            <span class="material-symbols-outlined">add</span> Thêm dịch vụ đầu tiên
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-surface-bright">
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Mã dịch vụ</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Tên dịch vụ</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Giá niêm yết</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-center">Thời gian khám</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-center">Trạng thái</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant">
+                                @foreach (var svc in services)
+                                {
+                                    <tr class="hover:bg-surface-container-low transition-colors group">
+                                        <td class="px-unit-md py-4 font-mono font-bold text-on-surface">SVC-@svc.Id.ToString("D3")</td>
+                                        <td class="px-unit-md py-4">
+                                            <span class="font-bold text-on-surface text-body-md">@svc.TenDichVu</span>
+                                        </td>
+                                        <td class="px-unit-md py-4 font-bold text-primary">@svc.Gia.ToString("N0") VND</td>
+                                        <td class="px-unit-md py-4 text-center text-body-md text-on-surface-variant">~30 phút</td>
+                                        <td class="px-unit-md py-4 text-center">
+                                            <span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold uppercase rounded">Hoạt động</span>
+                                        </td>
+                                        <td class="px-unit-md py-4 text-right">
+                                            <div class="flex items-center justify-end gap-1">
+                                                <button onclick="openEditServiceModal(@svc.Id, '@svc.TenDichVu', @svc.Gia)" class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-lg transition-all cursor-pointer" title="Sửa dịch vụ">
+                                                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                                                </button>
+                                                <form method="POST" action="/Admin/Departments/DeleteService/@svc.Id" class="inline" onsubmit="return confirm('Bạn có chắc muốn xóa dịch vụ này?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="p-2 text-on-surface-variant hover:text-error hover:bg-error/5 rounded-lg transition-all cursor-pointer" title="Xóa dịch vụ">
+                                                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+        }
+        else
+        {
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-xl text-center shadow-sm">
+                <span class="material-symbols-outlined text-[80px] text-outline opacity-30 mb-2">account_tree</span>
+                <h4 class="text-headline-md font-headline-md text-on-surface mb-2 font-bold">Chưa có khoa nào trong hệ thống</h4>
+                <p class="text-body-lg text-on-surface-variant max-w-md mx-auto mb-unit-lg">Hãy tạo khoa đầu tiên để bắt đầu gán các bác sĩ và dịch vụ khám chữa bệnh.</p>
+                <button onclick="openModal('addDeptModal')" class="px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-container shadow-lg flex items-center gap-2 mx-auto cursor-pointer">
+                    <span class="material-symbols-outlined">add</span> Tạo khoa đầu tiên
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Add Department Modal -->
+<div id="addDeptModal" class="fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Thêm Khoa Mới</h3>
+            <button onclick="closeModal('addDeptModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Departments/CreateDepartment">
+            @Html.AntiForgeryToken()
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tên Khoa <span class="text-error">*</span></label>
+                    <input type="text" name="tenKhoa" required class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Ví dụ: Khoa Răng Hàm Mặt" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Vị trí phòng khám <span class="text-error">*</span></label>
+                    <input type="text" name="viTri" required class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Ví dụ: Tầng 4 - Tòa nhà B" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Mô tả nhiệm vụ khoa</label>
+                    <textarea name="moTa" rows="3" class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface resize-none" placeholder="Mô tả chức năng chuyên môn của khoa..."></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('addDeptModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Department Modal -->
+<div id="editDeptModal" class="fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Chỉnh Sửa Khoa</h3>
+            <button onclick="closeModal('editDeptModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Departments/EditDepartment">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="editDeptId" />
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tên Khoa <span class="text-error">*</span></label>
+                    <input type="text" name="tenKhoa" id="editDeptName" required class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Vị trí phòng khám <span class="text-error">*</span></label>
+                    <input type="text" name="viTri" id="editDeptLocation" required class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Mô tả nhiệm vụ khoa</label>
+                    <textarea name="moTa" id="editDeptDesc" rows="3" class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface resize-none"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('editDeptModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Cập nhật</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Service Modal -->
+<div id="addServiceModal" class="fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Thêm Dịch Vụ Mới</h3>
+            <button onclick="closeModal('addServiceModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Departments/CreateService">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="khoaId" value="@(selectedDept?.Id ?? 0)" />
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Khoa trực thuộc</label>
+                    <input type="text" disabled value="@(selectedDept?.TenKhoa ?? "")" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface-container-low text-on-surface-variant" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tên Dịch Vụ <span class="text-error">*</span></label>
+                    <input type="text" name="tenDichVu" required class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Ví dụ: Siêu âm ổ bụng màu" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Giá niêm yết (VND) <span class="text-error">*</span></label>
+                    <input type="number" name="gia" required min="0" step="5000" class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Ví dụ: 150000" />
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('addServiceModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Service Modal -->
+<div id="editServiceModal" class="fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Chỉnh Sửa Dịch Vụ</h3>
+            <button onclick="closeModal('editServiceModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Departments/EditService">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="editServiceId" />
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tên Dịch Vụ <span class="text-error">*</span></label>
+                    <input type="text" name="tenDichVu" id="editServiceName" required class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Giá niêm yết (VND) <span class="text-error">*</span></label>
+                    <input type="number" name="gia" id="editServicePrice" required min="0" step="5000" class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" />
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('editServiceModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Cập nhật</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.firstElementChild.classList.remove('scale-100');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 150);
+        }
+
+        function openEditDeptModal(id, name, desc, location) {
+            document.getElementById('editDeptId').value = id;
+            document.getElementById('editDeptName').value = name;
+            document.getElementById('editDeptLocation').value = location;
+            document.getElementById('editDeptDesc').value = desc;
+            openModal('editDeptModal');
+        }
+
+        function openEditServiceModal(id, name, price) {
+            document.getElementById('editServiceId').value = id;
+            document.getElementById('editServiceName').value = name;
+            document.getElementById('editServicePrice').value = price;
+            openModal('editServiceModal');
+        }
+
+        // Close on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal('addDeptModal');
+                closeModal('editDeptModal');
+                closeModal('addServiceModal');
+                closeModal('editServiceModal');
+            }
+        });
+    </script>
+}

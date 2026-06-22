@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quản lý bác sĩ | MediFlow HMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error-container": "#93000a",
+                    "surface": "#f8f9ff",
+                    "on-surface": "#0b1c30",
+                    "on-secondary-fixed-variant": "#005236",
+                    "secondary-fixed": "#6ffbbe",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#dce9ff",
+                    "primary-fixed": "#d7e2ff",
+                    "on-tertiary-fixed-variant": "#653e00",
+                    "inverse-primary": "#acc7ff",
+                    "outline-variant": "#c2c6d4",
+                    "on-primary": "#ffffff",
+                    "surface-dim": "#cbdbf5",
+                    "on-secondary-container": "#00714d",
+                    "secondary-fixed-dim": "#4edea3",
+                    "on-surface-variant": "#424752",
+                    "tertiary-fixed": "#ffddb8",
+                    "surface-container": "#e5eeff",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#6cf8bb",
+                    "tertiary-fixed-dim": "#ffb95f",
+                    "on-background": "#0b1c30",
+                    "surface-container-low": "#eff4ff",
+                    "surface-variant": "#d3e4fe",
+                    "on-primary-fixed-variant": "#004491",
+                    "primary-fixed-dim": "#acc7ff",
+                    "surface-container-highest": "#d3e4fe",
+                    "background": "#f8f9ff",
+                    "surface-tint": "#115cb9",
+                    "primary": "#003f87",
+                    "on-tertiary": "#ffffff",
+                    "tertiary": "#5e3900",
+                    "on-secondary-fixed": "#002113",
+                    "inverse-on-surface": "#eaf1ff",
+                    "surface-bright": "#f8f9ff",
+                    "primary-container": "#0056b3",
+                    "inverse-surface": "#213145",
+                    "outline": "#727784",
+                    "on-tertiary-fixed": "#2a1700",
+                    "tertiary-container": "#7d4e00",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed": "#001a40",
+                    "on-primary-container": "#bbd0ff",
+                    "secondary": "#006c49",
+                    "on-tertiary-container": "#ffc57f",
+                    "error": "#ba1a1a",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit-sm": "8px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px",
+                    "unit-xl": "48px",
+                    "unit-xs": "4px",
+                    "container-max": "1440px",
+                    "unit-md": "16px",
+                    "unit-lg": "24px",
+                    "margin-desktop": "40px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "caption": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .modal-overlay { background-color: rgba(11, 28, 48, 0.4); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Sidebar -->
+<aside class="w-[280px] h-screen fixed left-0 top-0 overflow-y-auto bg-surface-container-lowest border-r border-outline-variant z-50 flex flex-col py-unit-lg">
+<div class="px-unit-lg mb-unit-xl">
+<div class="flex items-center gap-unit-sm">
+<span class="material-symbols-outlined text-primary text-headline-md" style="font-variation-settings: 'FILL' 1;">local_hospital</span>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">MediFlow HMS</h1>
+<p class="text-caption text-on-surface-variant">Clinical Admin System</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-unit-sm space-y-1">
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-colors text-on-surface-variant hover:bg-surface-container-low rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-colors text-on-surface-variant hover:bg-surface-container-low rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span>Lịch khám</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-all duration-200 text-primary font-bold bg-primary-container/10 rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+<span>Bác sĩ</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-colors text-on-surface-variant hover:bg-surface-container-low rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">group</span>
+<span>Bệnh nhân</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-colors text-on-surface-variant hover:bg-surface-container-low rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span>Khoa &amp; Dịch vụ</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-colors text-on-surface-variant hover:bg-surface-container-low rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Thuốc &amp; Kho</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-colors text-on-surface-variant hover:bg-surface-container-low rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span>Hóa đơn</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-colors text-on-surface-variant hover:bg-surface-container-low rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span>Nhân sự &amp; Phân quyền</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-colors text-on-surface-variant hover:bg-surface-container-low rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>Báo cáo</span>
+</a>
+<div class="pt-unit-lg mt-unit-lg border-t border-outline-variant">
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-colors text-on-surface-variant hover:bg-surface-container-low rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Cấu hình</span>
+</a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 transition-colors text-on-surface-variant hover:bg-surface-container-low rounded-lg font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">history</span>
+<span>Nhật ký</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- Top Navigation -->
+<header class="h-16 w-[calc(100%-280px)] fixed top-0 right-0 z-40 bg-surface border-b border-outline-variant flex items-center justify-between px-unit-lg gap-unit-md">
+<div class="flex items-center gap-unit-md flex-1">
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" placeholder="Tìm kiếm nhanh bác sĩ, khoa, hoặc mã NV..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-unit-lg">
+<div class="flex items-center gap-unit-md">
+<button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">help_outline</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-unit-sm cursor-pointer group">
+<div class="text-right hidden sm:block">
+<p class="font-label-md text-label-md text-on-surface leading-tight">Admin Profile</p>
+<p class="text-caption text-on-surface-variant leading-tight">System Administrator</p>
+</div>
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant" data-alt="A professional headshot of a hospital administrator, male in his 40s wearing a crisp white dress shirt and dark blue vest, smiling confidently. The lighting is soft and professional, set against a clean, modern medical office background with subtle glass partitions and neutral tones, conveying authority and precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1RKE9jR5-Esvx2P20BDiKkrKEqACWDN4eliWPYBz3HEZNqcUOuoma1E82H999lBwVqCZzU9pHYvH4V8OcLeHQw37bdPFVAU6jsKeA3t0UECUtOzYRofAKyZ6o2xaaTLhPCB1rT5IPAgazJnZmGb-Zy6TnEYdDA2WzWEpte-VoBWlllZ0vRJzgspOBlUH0ajBkRa1VBBLvAF1KhYoiScBKAI-8j6YZFIbMmamneiY7IJjFNZP8Ko_Wz3clrlWtHpB5eNSxMCQ30Zw"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-[280px] pt-16 min-h-screen">
+<div class="p-unit-lg max-w-[1440px] mx-auto">
+<!-- Breadcrumb & Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-unit-lg gap-unit-md">
+<div>
+<nav class="flex items-center gap-2 text-caption text-on-surface-variant mb-2">
+<a class="hover:text-primary transition-colors" href="#">Dashboard</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-medium">Bác sĩ</span>
+</nav>
+<h2 class="font-headline-md text-headline-md text-on-surface">Quản lý bác sĩ</h2>
+</div>
+<div class="flex items-center gap-unit-sm">
+<button class="flex items-center gap-2 px-unit-md py-2 border border-primary text-primary hover:bg-primary/5 rounded font-body-md font-medium transition-all">
+<span class="material-symbols-outlined text-[20px]">ios_share</span>
+                        Xuất Excel/PDF
+                    </button>
+<button class="flex items-center gap-2 px-unit-lg py-2.5 bg-primary text-on-primary hover:bg-primary-container rounded shadow-sm font-body-md font-bold transition-all active:scale-95" onclick="toggleModal('doctorModal')">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Thêm bác sĩ
+                    </button>
+</div>
+</div>
+<!-- Summary Metrics -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-unit-lg mb-unit-lg">
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded flex items-center gap-unit-md">
+<div class="w-12 h-12 bg-primary-container/10 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">groups</span>
+</div>
+<div>
+<p class="text-caption text-on-surface-variant">Tổng bác sĩ</p>
+<p class="font-headline-md text-headline-md text-on-surface">124</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded flex items-center gap-unit-md">
+<div class="w-12 h-12 bg-secondary-container/20 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">person_check</span>
+</div>
+<div>
+<p class="text-caption text-on-surface-variant">Đang hoạt động</p>
+<p class="font-headline-md text-headline-md text-secondary">112</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded flex items-center gap-unit-md">
+<div class="w-12 h-12 bg-error-container/20 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-error">person_off</span>
+</div>
+<div>
+<p class="text-caption text-on-surface-variant">Đang nghỉ</p>
+<p class="font-headline-md text-headline-md text-error">12</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded flex items-center gap-unit-md">
+<div class="w-12 h-12 bg-tertiary-container/10 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary">event_note</span>
+</div>
+<div>
+<p class="text-caption text-on-surface-variant">Lịch trực hôm nay</p>
+<p class="font-headline-md text-headline-md text-on-surface">45</p>
+</div>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="bg-surface-container-low p-unit-md rounded-lg border border-outline-variant mb-unit-lg flex flex-wrap gap-unit-md items-center">
+<div class="flex-1 min-w-[240px]">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md" placeholder="Tìm theo tên bác sĩ..." type="text"/>
+</div>
+</div>
+<select class="border border-outline-variant rounded px-4 py-2 text-body-md focus:border-primary bg-surface-container-lowest min-w-[140px]">
+<option>Tất cả Khoa</option>
+<option>Nội tổng quát</option>
+<option>Ngoại thần kinh</option>
+<option>Sản phụ khoa</option>
+<option>Nhi khoa</option>
+</select>
+<select class="border border-outline-variant rounded px-4 py-2 text-body-md focus:border-primary bg-surface-container-lowest min-w-[140px]">
+<option>Chuyên môn</option>
+<option>Tim mạch</option>
+<option>Xương khớp</option>
+</select>
+<select class="border border-outline-variant rounded px-4 py-2 text-body-md focus:border-primary bg-surface-container-lowest min-w-[140px]">
+<option>Học vị</option>
+<option>Thạc sĩ</option>
+<option>Tiến sĩ</option>
+<option>PGS.TS</option>
+</select>
+<select class="border border-outline-variant rounded px-4 py-2 text-body-md focus:border-primary bg-surface-container-lowest min-w-[140px]">
+<option>Trạng thái</option>
+<option>Active</option>
+<option>Inactive</option>
+</select>
+<button class="bg-surface-container-high hover:bg-surface-container-highest px-4 py-2 rounded font-medium text-body-md flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_alt_off</span>
+                    Xóa lọc
+                </button>
+</div>
+<!-- Data Table -->
+<div class="bg-surface-container-lowest rounded border border-outline-variant overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant">AVATAR &amp; MÃ NV</th>
+<th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant">HỌ TÊN</th>
+<th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant">KHOA</th>
+<th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant">CHUYÊN MÔN</th>
+<th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant">HỌC VỊ</th>
+<th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant text-center">KINH NGHIỆM</th>
+<th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant text-center">RATING</th>
+<th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant text-center">TRẠNG THÁI</th>
+<th class="px-6 py-4 font-label-md text-label-md text-on-surface-variant text-right">HÀNH ĐỘNG</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Close-up portrait of a female doctor in her early 30s with gentle features, wearing a white medical coat and a stethoscope around her neck. Soft natural lighting from a nearby window illuminates her face, highlighting professional poise and kindness against a softly blurred hospital corridor backdrop in clean, high-key whites and blues." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCibOofzoFRfisRRy3b4mytTbNDsZWCswCFriGhpXxFALYjDRi2op0nKNIx2iJQnNiIIDUWS-0e7GFO6NrZ7ORQNBBw5SkGbtUtCEiJEIGhP_cPAjOXN7EWnaOCAEtJOEqYRFi6gARxVTqJBxuP-TnCx0gSYD6qYdOjX2usp2E1YWuiA0MCcrA8z9EqrmPZ9gqh1pr3odqUqyX0dTBk0tcC1pQJVpFE0h8kCIAdQMtQLEmta9PhCoI94ljr27MYnxKLhEJsKSi8TbM"/>
+<span class="font-body-md font-medium text-primary">DR-1029</span>
+</div>
+</td>
+<td class="px-6 py-4 font-body-md font-semibold text-on-surface">BS. Nguyễn Thu Thủy</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant">Nội tổng quát</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant">Tim mạch</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant">Thạc sĩ</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant text-center">8 năm</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant text-center">
+<div class="flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-tertiary text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.9</span>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="px-2 py-1 bg-secondary-container/20 text-on-secondary-container text-label-md rounded-full">Active</span>
+</td>
+<td class="px-6 py-4 text-right relative">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Professional studio portrait of a senior male doctor in his late 50s, wearing glasses and a formal white doctor's coat over a blue shirt. He has a dignified and experienced expression. The background is a clean, minimalist medical office with warm wood accents and soft focus on medical equipment, maintaining a high-contrast corporate aesthetic with deep blues and crisp whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAz2ypehhFqsdSU2zpoFDbzJ1wmBP3nbxGxvEE0EZuxRxr8s0jYQIardp27J-1HpDHQuLihd4DDfU2svjCC_ddyzJgllpwclEKjzozFhr4cz5E2fFZ42X1DEGt5lMNiLl9VjISl-fnknn3bCorxH8b7ZW80XDI2V6byKJXttsnAvnrIBUgV5h5h4a5EIfgWY9rCwqDtGLoeKQjykg5Dtc-i6HPU2fjSmu_0Jszx40GL4_BnNRZLc1Y2PYsp5ulOS9WbQs7r0ymYSfI"/>
+<span class="font-body-md font-medium text-primary">DR-0842</span>
+</div>
+</td>
+<td class="px-6 py-4 font-body-md font-semibold text-on-surface">PGS.TS Trần Văn Hùng</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant">Ngoại thần kinh</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant">Phẫu thuật não</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant">Tiến sĩ</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant text-center">25 năm</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant text-center">
+<div class="flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-tertiary text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>5.0</span>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="px-2 py-1 bg-secondary-container/20 text-on-secondary-container text-label-md rounded-full">Active</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Headshot of a modern male doctor in his 30s, looking professional and approachable. He is wearing a white medical lab coat and has a slight smile. The lighting is crisp and clear, typical of a professional corporate medical setting, with a background featuring soft-focus clinical elements in tones of slate blue and bright white to ensure a clean medical aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuARJ1z1jmSLvgoLM42i289i7RTrVPHlOIw2A8VPyfdIc3zYWWu33F6oV8yRF10oM6Rl8zXRW5YE_TpGDIx3iYG4KxTItzNY75AjwnxzB0WNq0FDX_D5BwljAbH6VYFkktGxsXpE8tRDoumKPs5gdotqXjEr7hBrZODWSKpnR6lLEcoCh1N0llLZ2X7-DEo02rY-vgpWMlPECybz6C2eenHb0rC41D4Ww81mWbNUJOBB-kd53ZAzX4b40UvShrKp-PRo6r-tms7Ehbg"/>
+<span class="font-body-md font-medium text-primary">DR-1105</span>
+</div>
+</td>
+<td class="px-6 py-4 font-body-md font-semibold text-on-surface">BS. Lê Minh Quang</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant">Nhi khoa</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant">Hồi sức nhi</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant">Thạc sĩ</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant text-center">6 năm</td>
+<td class="px-6 py-4 text-body-md text-on-surface-variant text-center">
+<div class="flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-tertiary text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>4.7</span>
+</div>
+</td>
+<td class="px-6 py-4 text-center">
+<span class="px-2 py-1 bg-error-container/20 text-on-error-container text-label-md rounded-full">Inactive</span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 border-t border-outline-variant flex items-center justify-between bg-surface-container-lowest">
+<p class="text-caption text-on-surface-variant">Đang hiển thị 1-10 trên 124 bác sĩ</p>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">first_page</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 bg-primary text-on-primary rounded font-label-md flex items-center justify-center">1</button>
+<button class="w-8 h-8 hover:bg-surface-container-high rounded font-label-md flex items-center justify-center">2</button>
+<button class="w-8 h-8 hover:bg-surface-container-high rounded font-label-md flex items-center justify-center">3</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded hover:bg-surface-container-high transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">last_page</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Modal: Thêm bác sĩ -->
+<div class="fixed inset-0 z-50 hidden" id="doctorModal">
+<div class="absolute inset-0 modal-overlay backdrop-blur-sm transition-opacity" onclick="toggleModal('doctorModal')"></div>
+<div class="absolute right-0 top-0 h-screen w-full max-w-[600px] bg-surface-container-lowest shadow-2xl flex flex-col transform translate-x-0 transition-transform duration-300">
+<div class="px-unit-lg py-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">add_circle</span>
+<h3 class="font-title-lg text-title-lg text-on-surface">Thêm bác sĩ mới</h3>
+</div>
+<button class="w-10 h-10 flex items-center justify-center hover:bg-error/10 hover:text-error rounded-full transition-colors" onclick="toggleModal('doctorModal')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-unit-lg space-y-unit-xl">
+<!-- Section: Personal Info -->
+<section>
+<div class="flex items-center gap-2 mb-unit-md">
+<div class="w-1 h-5 bg-primary rounded-full"></div>
+<h4 class="font-label-md text-label-md text-primary uppercase">Thông tin cá nhân</h4>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+<div class="md:col-span-2 flex flex-col items-center justify-center mb-4">
+<div class="w-24 h-24 rounded-full border-2 border-dashed border-outline-variant bg-surface-container-low flex flex-col items-center justify-center cursor-pointer hover:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-on-surface-variant">upload</span>
+<span class="text-[10px] text-on-surface-variant mt-1 font-medium">Tải Avatar</span>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Họ và tên *</label>
+<input class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md" placeholder="Nhập đầy đủ họ tên" type="text"/>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Ngày sinh *</label>
+<input class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md" type="date"/>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Giới tính</label>
+<select class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md">
+<option>Nam</option>
+<option>Nữ</option>
+<option>Khác</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Số điện thoại *</label>
+<input class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md" placeholder="09xx xxx xxx" type="tel"/>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Email *</label>
+<input class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md" placeholder="example@hms.com" type="email"/>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Số CCCD *</label>
+<input class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md" placeholder="12 số" type="text"/>
+</div>
+</div>
+</section>
+<!-- Section: Professional Info -->
+<section>
+<div class="flex items-center gap-2 mb-unit-md">
+<div class="w-1 h-5 bg-primary rounded-full"></div>
+<h4 class="font-label-md text-label-md text-primary uppercase">Chuyên môn &amp; Công tác</h4>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Khoa chính *</label>
+<select class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md">
+<option>Chọn khoa</option>
+<option>Nội tổng quát</option>
+<option>Ngoại thần kinh</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Học hàm/Học vị *</label>
+<select class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md">
+<option>Chọn học vị</option>
+<option>Thạc sĩ</option>
+<option>Tiến sĩ</option>
+<option>PGS.TS</option>
+</select>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Năm kinh nghiệm *</label>
+<input class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md" placeholder="Ví dụ: 10" type="number"/>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Số chứng chỉ hành nghề *</label>
+<input class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md" placeholder="CCHN-xxxxxx" type="text"/>
+</div>
+</div>
+</section>
+<!-- Section: Account -->
+<section>
+<div class="flex items-center gap-2 mb-unit-md">
+<div class="w-1 h-5 bg-primary rounded-full"></div>
+<h4 class="font-label-md text-label-md text-primary uppercase">Tài khoản hệ thống</h4>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Tên đăng nhập (Username) *</label>
+<input class="w-full px-3 py-2 border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md" placeholder="dr.nickname" type="text"/>
+</div>
+<div class="flex items-center gap-4 mt-8">
+<label class="flex items-center cursor-pointer">
+<div class="relative">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+</div>
+<span class="ml-3 text-body-md font-medium text-on-surface">Kích hoạt ngay</span>
+</label>
+</div>
+</div>
+</section>
+</div>
+<div class="px-unit-lg py-4 border-t border-outline-variant bg-surface-container-low flex items-center justify-end gap-unit-md">
+<button class="px-unit-lg py-2 text-on-surface-variant font-medium hover:bg-surface-container-high rounded transition-colors" onclick="toggleModal('doctorModal')">Hủy bỏ</button>
+<button class="px-unit-xl py-2 bg-primary text-on-primary font-bold rounded shadow-sm hover:bg-primary-container transition-all active:scale-95">Lưu thông tin</button>
+</div>
+</div>
+</div>
+<script>
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            const content = modal.querySelector('.transform');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    content.classList.remove('translate-x-full');
+                    content.classList.add('translate-x-0');
+                }, 10);
+            } else {
+                content.classList.remove('translate-x-0');
+                content.classList.add('translate-x-full');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        // Action menu interactions (demo)
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('button') && e.target.closest('td')?.classList.contains('text-right')) {
+                // In a real app, this would show a context menu
+                console.log('Action menu clicked');
+            }
+        });
+    </script>
+</body></html>

@@ -1,0 +1,270 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Tin nhắn tư vấn";
+    var doctor = ViewBag.DoctorProfile as QuanLyBenhVien.Models.Doctor;
+    var contacts = ViewBag.Contacts as List<QuanLyBenhVien.Models.Patient> ?? new List<QuanLyBenhVien.Models.Patient>();
+}
+
+<!-- 3-Column Message Layout -->
+<div class="flex overflow-hidden h-[calc(100vh-160px)] bg-white border border-outline-variant rounded-2xl shadow-sm -m-unit-sm">
+    <!-- Left Column: Conversation List -->
+    <section class="w-80 flex flex-col bg-surface border-r border-outline-variant shrink-0">
+        <div class="p-4 border-b border-outline-variant space-y-3 bg-surface-container-low/35">
+            <div class="flex items-center justify-between">
+                <h2 class="font-title-lg text-title-lg font-bold text-on-surface">Tin nhắn tư vấn</h2>
+                <span class="bg-primary-container text-on-primary-container px-2 py-0.5 rounded text-caption font-bold">@contacts.Count Hội thoại</span>
+            </div>
+            <div class="flex gap-1 overflow-x-auto pb-1 custom-scrollbar">
+                <button class="whitespace-nowrap px-3 py-1 bg-primary text-white text-[11px] font-semibold rounded-full">Tất cả</button>
+                <button class="whitespace-nowrap px-3 py-1 bg-surface-container text-on-surface-variant text-[11px] font-semibold rounded-full hover:bg-surface-container-high transition-colors">Chưa đọc</button>
+            </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto chat-scroll divide-y divide-outline-variant/60 custom-scrollbar">
+            @if (!contacts.Any())
+            {
+                <div class="p-4 text-center text-on-surface-variant text-body-md italic">
+                    Chưa có liên hệ tư vấn nào.
+                </div>
+            }
+            else
+            {
+                @for (int i = 0; i < contacts.Count; i++)
+                {
+                    var contact = contacts[i];
+                    var isFirst = i == 0;
+                    
+                    <div onclick="selectContact('@contact.Id', '@contact.User.HoTen', '@contact.GioiTinh', '@(DateTime.Today.Year - contact.NgaySinh.Year) tuổi', '@(string.IsNullOrEmpty(contact.DiUng) ? "Không" : contact.DiUng)', '@(string.IsNullOrEmpty(contact.TienSuBenh) ? "Không" : contact.TienSuBenh)', '@contact.NhomMau')" 
+                         class="p-4 hover:bg-surface-container-low cursor-pointer transition-colors group @(isFirst ? "bg-primary-container/10 border-r-4 border-primary" : "") contact-item"
+                         data-id="@contact.Id">
+                        <div class="flex gap-3">
+                            <div class="relative shrink-0">
+                                <div class="w-11 h-11 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-container font-bold uppercase">
+                                    @contact.User.HoTen.Substring(0, Math.Min(2, contact.User.HoTen.Length))
+                                </div>
+                                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-secondary rounded-full border-2 border-white"></span>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start mb-0.5">
+                                    <h3 class="font-bold text-body-md text-on-surface truncate group-hover:text-primary transition-colors">@contact.User.HoTen</h3>
+                                    <span class="text-[10px] text-on-surface-variant">10:45</span>
+                                </div>
+                                <p class="text-caption text-on-surface-variant truncate font-medium">Bác sĩ ơi, tôi cần tư vấn thêm về đơn thuốc...</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </section>
+
+    <!-- Center Column: Chat Window -->
+    <section class="flex-1 flex flex-col bg-white min-w-0">
+        @if (contacts.Any())
+        {
+            var activeContact = contacts.First();
+            <!-- Chat Header -->
+            <div class="h-16 px-6 border-b border-outline-variant flex items-center justify-between shadow-sm shrink-0 bg-surface-bright">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-container font-bold uppercase" id="chatHeaderInitials">
+                            @activeContact.User.HoTen.Substring(0, Math.Min(2, activeContact.User.HoTen.Length))
+                        </div>
+                        <span class="absolute bottom-0 right-0 w-2 h-2 bg-secondary rounded-full border-2 border-white"></span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-body-lg text-on-surface" id="chatHeaderName">@activeContact.User.HoTen</h3>
+                        <p class="text-[10px] text-secondary flex items-center gap-1"><span class="w-1.5 h-1.5 bg-secondary rounded-full"></span> Đang trực tuyến</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 text-primary">
+                    <button class="p-2 hover:bg-surface-container rounded-full transition-colors cursor-pointer"><span class="material-symbols-outlined text-[20px]">videocam</span></button>
+                    <button class="p-2 hover:bg-surface-container rounded-full transition-colors cursor-pointer"><span class="material-symbols-outlined text-[20px]">call</span></button>
+                </div>
+            </div>
+            
+            <!-- Warning Banner -->
+            <div class="bg-error-container/30 px-6 py-2 flex items-center gap-2 border-b border-error/10 shrink-0">
+                <span class="material-symbols-outlined text-error text-[18px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+                <p class="text-[11px] font-bold text-on-error-container">LƯU Ý: Khung chat dùng để tư vấn chăm sóc sức khỏe từ xa, không thay thế cấp cứu khẩn cấp.</p>
+            </div>
+            
+            <!-- Message Area -->
+            <div class="flex-1 p-6 overflow-y-auto chat-scroll flex flex-col gap-4 bg-[#fcfdff] custom-scrollbar" id="messageArea">
+                <!-- Patient Message -->
+                <div class="flex gap-3 max-w-[85%]">
+                    <div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-container font-bold text-xs uppercase shrink-0 self-end">
+                        Th
+                    </div>
+                    <div class="bg-surface-container-low border border-outline-variant p-3 rounded-2xl rounded-bl-none text-body-md text-on-surface shadow-sm">
+                        <p>Chào bác sĩ, tôi có một số thắc mắc về liều lượng dùng thuốc sau khi xuất viện hôm trước ạ.</p>
+                        <span class="text-[9px] text-on-surface-variant mt-1.5 block">10:42</span>
+                    </div>
+                </div>
+                
+                <!-- Doctor Response -->
+                <div class="flex flex-col items-end gap-1">
+                    <div class="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-[85%] shadow-md text-body-md">
+                        <p>Chào anh/chị, bác sĩ đã nhận được câu hỏi. Anh/chị vui lòng cho biết tình trạng sức khỏe hiện tại và loại thuốc đang thắc mắc nhé.</p>
+                        <span class="text-[9px] text-white/80 mt-1.5 block text-right">10:45</span>
+                    </div>
+                    <div class="flex items-center gap-1 text-[9px] text-on-surface-variant px-1">
+                        <span>Đã xem</span>
+                        <span class="material-symbols-outlined text-[12px] text-secondary">done_all</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer Input -->
+            <div class="p-4 border-t border-outline-variant bg-surface shrink-0">
+                <div class="flex gap-2 overflow-x-auto pb-3 custom-scrollbar">
+                    <button class="flex-none px-3 py-1 bg-surface-container-high border border-outline-variant rounded-lg text-caption font-bold text-primary hover:bg-primary-container/10 transition-colors cursor-pointer">Xin vui lòng tái khám đúng lịch</button>
+                    <button class="flex-none px-3 py-1 bg-surface-container-high border border-outline-variant rounded-lg text-caption font-bold text-primary hover:bg-primary-container/10 transition-colors cursor-pointer">Hãy uống thuốc đủ liều lượng</button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="flex gap-1 text-on-surface-variant">
+                        <button class="p-2 hover:text-primary transition-colors cursor-pointer"><span class="material-symbols-outlined text-[20px]">add_circle</span></button>
+                        <button class="p-2 hover:text-primary transition-colors cursor-pointer"><span class="material-symbols-outlined text-[20px]">image</span></button>
+                    </div>
+                    <div class="flex-1">
+                        <input type="text" id="chatInput" onkeydown="handleChatKey(event)" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2 text-body-md focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none" placeholder="Nhập tin nhắn tư vấn và nhấn Enter..." />
+                    </div>
+                    <button onclick="sendChatMessage()" class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">send</span>
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="flex-grow flex flex-col items-center justify-center p-unit-xl text-center">
+                <span class="material-symbols-outlined text-[80px] text-outline opacity-30 mb-2">mail</span>
+                <h4 class="text-headline-md font-headline-md text-on-surface mb-2 font-bold">Chưa chọn hội thoại</h4>
+                <p class="text-body-lg text-on-surface-variant max-w-md mx-auto">Các tin nhắn hỗ trợ tư vấn sức khỏe bệnh nhân sẽ hiển thị tại đây.</p>
+            </div>
+        }
+    </section>
+
+    <!-- Right Column: Patient Panel -->
+    <section class="w-80 bg-surface border-l border-outline-variant overflow-y-auto custom-scrollbar shrink-0 flex flex-col">
+        @if (contacts.Any())
+        {
+            var activeContact = contacts.First();
+            <div class="p-6 flex flex-col items-center text-center border-b border-outline-variant">
+                <div class="w-24 h-24 rounded-full bg-secondary-container flex items-center justify-center text-secondary font-bold text-4xl uppercase shadow-md mb-3 border-4 border-white" id="panelInitials">
+                    @activeContact.User.HoTen.Substring(0, Math.Min(2, activeContact.User.HoTen.Length))
+                </div>
+                <h3 class="font-bold text-title-lg text-on-surface" id="panelName">@activeContact.User.HoTen</h3>
+                <p class="text-body-md text-on-surface-variant" id="panelAgeGender">@(DateTime.Today.Year - activeContact.NgaySinh.Year) tuổi • @activeContact.GioiTinh</p>
+                <div class="mt-4 w-full grid grid-cols-2 gap-2">
+                    <div class="bg-surface-container-low p-2 rounded-lg border border-outline-variant">
+                        <p class="text-[9px] uppercase text-on-surface-variant font-bold">Nhóm máu</p>
+                        <p class="font-bold text-body-md text-on-surface" id="panelBloodType">@activeContact.NhomMau</p>
+                    </div>
+                    <div class="bg-surface-container-low p-2 rounded-lg border border-outline-variant">
+                        <p class="text-[9px] uppercase text-on-surface-variant font-bold">BHYT</p>
+                        <p class="font-bold text-body-md text-on-surface truncate" id="panelBHYT">@(string.IsNullOrEmpty(activeContact.SoBHYT) ? "Không" : activeContact.SoBHYT)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 space-y-6 flex-1">
+                <!-- Allergy Warning -->
+                <div class="bg-error-container text-on-error-container p-4 rounded-xl border-l-4 border-error flex gap-3 shadow-sm">
+                    <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+                    <div>
+                        <p class="text-[10px] font-extrabold uppercase">Cảnh báo dị ứng</p>
+                        <p class="font-bold text-body-md text-error" id="panelAllergies">@(string.IsNullOrEmpty(activeContact.DiUng) ? "Không có" : activeContact.DiUng)</p>
+                    </div>
+                </div>
+                
+                <!-- History Summary -->
+                <div class="bg-surface-container-low border border-outline-variant rounded-xl p-4 space-y-3">
+                    <h4 class="font-bold text-body-md text-on-surface flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[18px] text-primary">history</span> Tiền sử bệnh lý
+                    </h4>
+                    <p class="text-body-md text-on-surface-variant" id="panelHistory">
+                        @(string.IsNullOrEmpty(activeContact.TienSuBenh) ? "Không có tiền sử bệnh lý phức tạp." : activeContact.TienSuBenh)
+                    </p>
+                </div>
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        function selectContact(id, name, gender, age, allergies, history, blood) {
+            // Update Active Contact highlight
+            document.querySelectorAll('.contact-item').forEach(item => {
+                item.classList.remove('bg-primary-container/10', 'border-r-4', 'border-primary');
+                item.classList.add('border-b', 'border-outline-variant/60');
+            });
+            const selectedItem = document.querySelector(`.contact-item[data-id="${id}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('bg-primary-container/10', 'border-r-4', 'border-primary');
+                selectedItem.classList.remove('border-b', 'border-outline-variant/60');
+            }
+
+            // Update Header
+            document.getElementById('chatHeaderName').innerText = name;
+            const initials = name.substring(0, Math.Min(2, name.Length)).toUpperCase();
+            document.getElementById('chatHeaderInitials').innerText = initials;
+
+            // Update Panel Details
+            document.getElementById('panelName').innerText = name;
+            document.getElementById('panelInitials').innerText = initials;
+            document.getElementById('panelAgeGender').innerText = `${age} • ${gender}`;
+            document.getElementById('panelAllergies').innerText = allergies;
+            document.getElementById('panelHistory').innerText = history;
+            document.getElementById('panelBloodType').innerText = blood;
+
+            // Clear input
+            document.getElementById('chatInput').value = '';
+
+            // Reset Message area
+            const area = document.getElementById('messageArea');
+            area.innerHTML = `
+                <div class="flex gap-3 max-w-[85%]">
+                    <div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-container font-bold text-xs uppercase shrink-0 self-end">
+                        ${initials}
+                    </div>
+                    <div class="bg-surface-container-low border border-outline-variant p-3 rounded-2xl rounded-bl-none text-body-md text-on-surface shadow-sm">
+                        <p>Chào bác sĩ, tôi có một số thắc mắc về liều lượng dùng thuốc sau khi xuất viện hôm trước ạ.</p>
+                        <span class="text-[9px] text-on-surface-variant mt-1.5 block">10:42</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleChatKey(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const area = document.getElementById('messageArea');
+            const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+            const msgHtml = `
+                <div class="flex flex-col items-end gap-1">
+                    <div class="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-[85%] shadow-md text-body-md">
+                        <p>${message}</p>
+                        <span class="text-[9px] text-white/80 mt-1.5 block text-right">${time}</span>
+                    </div>
+                    <div class="flex items-center gap-1 text-[9px] text-on-surface-variant px-1">
+                        <span>Đã gửi</span>
+                    </div>
+                </div>
+            `;
+            area.insertAdjacentHTML('beforeend', msgHtml);
+            input.value = '';
+            area.scrollTop = area.scrollHeight;
+        }
+    </script>
+}

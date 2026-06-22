@@ -1,0 +1,113 @@
+@model IEnumerable<QuanLyBenhVien.Models.Doctor>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Bác sĩ";
+}
+
+<div class="flex items-center justify-between mb-unit-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Đội ngũ Bác sĩ</h2>
+        <p class="text-body-md text-on-surface-variant">Quản lý hồ sơ, chuyên môn khoa và lịch trực bác sĩ toàn bệnh viện.</p>
+    </div>
+    <a href="/Admin/Doctors/Create" class="flex items-center gap-unit-sm bg-primary text-white px-unit-md py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-semibold">
+        <span class="material-symbols-outlined text-[20px]">add</span>
+        Thêm Bác sĩ mới
+    </a>
+</div>
+
+<!-- Filters Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl mb-unit-lg shadow-sm">
+    <form method="GET" action="/Admin/Doctors" class="flex flex-col md:flex-row gap-unit-md">
+        <div class="flex-grow relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
+                <span class="material-symbols-outlined text-[20px]">search</span>
+            </span>
+            <input class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                   name="searchString" value="@ViewBag.SearchString" placeholder="Tìm kiếm tên bác sĩ, chuyên khoa..." type="text" />
+        </div>
+        
+        <div class="w-full md:w-64">
+            <select class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                    name="departmentId" asp-items="ViewBag.Departments">
+                <option value="">Tất cả chuyên khoa</option>
+            </select>
+        </div>
+
+        <button type="submit" class="bg-surface-container-high hover:bg-surface-container-highest px-unit-lg py-2 rounded-lg font-label-md transition-colors text-on-surface-variant font-semibold">
+            Áp dụng lọc
+        </button>
+    </form>
+</div>
+
+<!-- Doctors Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Mã BS</th>
+                    <th class="px-unit-md py-3">Bác sĩ</th>
+                    <th class="px-unit-md py-3">Khoa công tác</th>
+                    <th class="px-unit-md py-3">Chuyên môn</th>
+                    <th class="px-unit-md py-3">Trạng thái</th>
+                    <th class="px-unit-md py-3 text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="px-unit-md py-8 text-center text-on-surface-variant">Không tìm thấy bác sĩ nào phù hợp.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var doc in Model)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors group">
+                            <td class="px-unit-md py-4 font-bold text-primary">BS-@doc.Id.ToString("D3")</td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md font-semibold text-on-surface">@doc.User.HoTen</div>
+                                <div class="text-caption text-on-surface-variant">@doc.User.Email • @doc.User.Sdt</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md">@doc.Department.TenKhoa</div>
+                                <div class="text-caption text-on-surface-variant">@doc.Department.ViTri</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md font-medium">@doc.HocVi</div>
+                                <div class="text-caption text-on-surface-variant">@doc.ChuyenKhoa (@doc.SoNamKinhNghiem năm KN)</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                @if (doc.User.TrangThai == "Active")
+                                {
+                                    <span class="px-2.5 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2.5 py-1 rounded-full bg-error-container text-error text-[11px] font-bold">Đã khóa</span>
+                                }
+                            </td>
+                            <td class="px-unit-md py-4 text-right">
+                                <div class="flex items-center justify-end gap-unit-sm">
+                                    <a href="/Admin/Doctors/Details/@doc.Id" class="p-1 text-on-surface-variant hover:text-primary transition-colors" title="Chi tiết">
+                                        <span class="material-symbols-outlined">visibility</span>
+                                    </a>
+                                    <a href="/Admin/Doctors/Edit/@doc.Id" class="p-1 text-on-surface-variant hover:text-tertiary transition-colors" title="Chỉnh sửa">
+                                        <span class="material-symbols-outlined">edit</span>
+                                    </a>
+                                    <form method="POST" action="/Admin/Doctors/ToggleStatus/@doc.Id" class="inline" onsubmit="return confirm('Bạn có chắc muốn thay đổi trạng thái của bác sĩ này?')">
+                                        <button type="submit" class="p-1 @(doc.User.TrangThai == "Active" ? "text-error hover:text-red-700" : "text-secondary hover:text-green-700") transition-colors" title="@(doc.User.TrangThai == "Active" ? "Khóa tài khoản" : "Mở khóa tài khoản")">
+                                            <span class="material-symbols-outlined">@(doc.User.TrangThai == "Active" ? "lock" : "lock_open")</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,88 @@
+@model QuanLyBenhVien.Models.Prescription
+
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Đơn thuốc chi tiết";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Patient/Record" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách điều trị
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Đơn thuốc điện tử</h2>
+    <p class="text-body-md text-on-surface-variant">Chi tiết đơn thuốc được bác sĩ chỉ định điều trị.</p>
+</div>
+
+<div class="glass-card rounded-xl p-unit-lg shadow-sm max-w-3xl mx-auto space-y-unit-lg bg-white">
+    <!-- Header banner -->
+    <div class="flex justify-between items-start border-b border-outline-variant/60 pb-unit-md">
+        <div>
+            <h3 class="font-title-lg font-bold text-primary">ĐƠN THUỐC ĐIỆN TỬ</h3>
+            <span class="text-caption text-on-surface-variant font-mono">Mã đơn: #DT-@Model.Id.ToString("D5")</span>
+        </div>
+        <div class="text-right text-caption text-on-surface-variant">
+            <div>Ngày kê đơn: <strong>@Model.NgayKe.ToString("dd/MM/yyyy HH:mm")</strong></div>
+            <div>Bác sĩ kê: <strong>@Model.ExaminationRecord.Appointment.Doctor?.User.HoTen</strong></div>
+            <div>Khoa: @Model.ExaminationRecord.Appointment.Doctor?.Department.TenKhoa</div>
+        </div>
+    </div>
+
+    <!-- Clinical Details -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md text-body-md">
+        <div>
+            <strong class="text-caption text-on-surface-variant block">Chẩn đoán bệnh lý:</strong>
+            <span class="font-semibold text-primary">@Model.ExaminationRecord.ChanDoan</span>
+        </div>
+        <div>
+            <strong class="text-caption text-on-surface-variant block">Lời dặn bác sĩ:</strong>
+            <span class="italic text-on-surface-variant">@Model.ExaminationRecord.LoiDan</span>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(Model.ExaminationRecord.HuyetAp) || Model.ExaminationRecord.NhipTim.HasValue)
+        {
+            <div class="md:col-span-2 bg-surface p-unit-sm rounded border border-outline-variant/30 text-caption flex justify-around">
+                <div>Huyết áp: <strong>@Model.ExaminationRecord.HuyetAp mmHg</strong></div>
+                <div>Nhịp tim: <strong>@Model.ExaminationRecord.NhipTim l/ph</strong></div>
+                <div>Nhiệt độ: <strong>@Model.ExaminationRecord.NhietDo °C</strong></div>
+                <div>BMI: <strong>@Model.ExaminationRecord.BMI?.ToString("F2")</strong></div>
+            </div>
+        }
+    </div>
+
+    <!-- Medicines List Table -->
+    <div class="border border-outline-variant/60 rounded-lg overflow-hidden">
+        <table class="w-full text-left text-body-md">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface font-semibold border-b border-outline-variant">
+                    <th class="px-unit-md py-3">Tên thuốc / Hoạt chất</th>
+                    <th class="px-unit-md py-3">Số lượng</th>
+                    <th class="px-unit-md py-3">Hướng dẫn cách dùng</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/40">
+                @foreach (var item in Model.PrescriptionDetails)
+                {
+                    <tr>
+                        <td class="px-unit-md py-4">
+                            <div class="font-semibold text-on-surface">@item.Medicine.TenThuoc</div>
+                            <div class="text-caption text-on-surface-variant">Hoạt chất: @item.Medicine.HoatChat</div>
+                        </td>
+                        <td class="px-unit-md py-4 font-bold text-secondary">
+                            @item.SoLuong @item.Medicine.DonViTinh
+                        </td>
+                        <td class="px-unit-md py-4 text-caption text-on-surface-variant">
+                            @item.LieuDung
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Print Option -->
+    <div class="flex justify-end pt-unit-md border-t border-outline-variant/60">
+        <button type="button" class="bg-primary text-white font-label-md px-unit-md py-2 rounded-lg hover:bg-primary-container transition-all flex items-center gap-1 shadow-sm font-semibold" onclick="window.print()">
+            <span class="material-symbols-outlined">print</span> In đơn thuốc
+        </button>
+    </div>
+</div>

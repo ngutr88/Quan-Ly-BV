@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Đánh giá dịch vụ - MedPortal HMS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#0056b3",
+                        "inverse-surface": "#213145",
+                        "surface": "#f8f9ff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-high": "#dce9ff",
+                        "on-secondary": "#ffffff",
+                        "secondary-container": "#6cf8bb",
+                        "tertiary-container": "#7d4e00",
+                        "on-tertiary-fixed": "#2a1700",
+                        "surface-variant": "#d3e4fe",
+                        "secondary": "#006c49",
+                        "background": "#f8f9ff",
+                        "surface-bright": "#f8f9ff",
+                        "on-primary": "#ffffff",
+                        "outline": "#727784",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-surface": "#0b1c30",
+                        "on-error": "#ffffff",
+                        "surface-container": "#e5eeff",
+                        "on-secondary-fixed": "#002113",
+                        "primary-fixed-dim": "#acc7ff",
+                        "on-primary-fixed": "#001a40",
+                        "tertiary-fixed": "#ffddb8",
+                        "surface-tint": "#115cb9",
+                        "secondary-fixed-dim": "#4edea3",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#d7e2ff",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-secondary-fixed-variant": "#005236",
+                        "on-background": "#0b1c30",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#bbd0ff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#00714d",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#004491",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#eff4ff",
+                        "primary": "#003f87",
+                        "inverse-primary": "#acc7ff",
+                        "surface-dim": "#cbdbf5",
+                        "outline-variant": "#c2c6d4",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "tertiary": "#5e3900",
+                        "on-tertiary-container": "#ffc57f",
+                        "on-surface-variant": "#424752",
+                        "tertiary-fixed-dim": "#ffb95f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "unit-lg": "24px",
+                        "unit-sm": "8px",
+                        "unit-xs": "4px",
+                        "unit-md": "16px",
+                        "margin-desktop": "40px",
+                        "unit-xl": "48px",
+                        "container-max": "1440px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "caption": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .star-rating input:checked ~ label .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1;
+            color: #0056b3;
+        }
+        .star-rating label:hover .material-symbols-outlined,
+        .star-rating label:hover ~ label .material-symbols-outlined {
+            color: #0056b3;
+        }
+        .chip-active {
+            background-color: #0056b3 !important;
+            color: white !important;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Shell Container -->
+<div class="flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<aside class="hidden lg:flex flex-col h-full w-[280px] bg-surface-container-low border-r border-outline-variant p-unit-md gap-unit-xs">
+<div class="flex items-center gap-unit-md mb-unit-xl px-unit-xs">
+<div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+</div>
+<div>
+<h1 class="text-headline-md font-headline-md text-on-surface">Central Hospital</h1>
+<p class="text-label-md font-label-md text-on-surface-variant">Clinical Division</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span> Overview
+                </a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="personal_injury">personal_injury</span> Patient Records
+                </a>
+<!-- Active Item -->
+<a class="flex items-center gap-unit-md px-unit-md py-3 bg-primary-container text-white rounded-xl font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="event" style="font-variation-settings: 'FILL' 1;">event</span> Appointments
+                </a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="biotech">biotech</span> Lab Results
+                </a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span> Pharmacy
+                </a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="videocam">videocam</span> Telehealth
+                </a>
+</nav>
+<div class="mt-auto pt-unit-md border-t border-outline-variant space-y-1">
+<button class="w-full bg-primary text-white py-3 px-unit-md rounded-xl font-label-md flex items-center justify-center gap-unit-sm mb-4">
+<span class="material-symbols-outlined text-[20px]">add</span> New Appointment
+                </button>
+<a class="flex items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded-xl font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span> Help Center
+                </a>
+<a class="flex items-center gap-unit-md px-unit-md py-3 text-error hover:bg-error-container/20 transition-all rounded-xl font-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span> Logout
+                </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col overflow-y-auto">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-margin-desktop py-unit-sm h-16 bg-surface-container-lowest border-b border-outline-variant sticky top-0 z-10">
+<div class="flex items-center gap-unit-md">
+<span class="text-title-lg font-title-lg font-bold text-primary-container">MedPortal HMS</span>
+<div class="hidden md:flex gap-unit-lg ml-unit-xl">
+<a class="text-on-surface-variant pb-1 font-label-md hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-on-surface-variant pb-1 font-label-md hover:text-primary transition-colors" href="#">Patients</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-label-md" href="#">Schedules</a>
+<a class="text-on-surface-variant pb-1 font-label-md hover:text-primary transition-colors" href="#">Reports</a>
+<a class="text-on-surface-variant pb-1 font-label-md hover:text-primary transition-colors" href="#">Billing</a>
+</div>
+</div>
+<div class="flex items-center gap-unit-md">
+<button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="flex items-center gap-unit-sm pl-unit-sm border-l border-outline-variant">
+<img class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A professional studio portrait of a friendly male doctor in a white clinical coat, featuring soft three-point lighting that highlights a calm and trustworthy expression. The background is a blurred high-end medical facility with clean white and blue tones, maintaining a modern clinical clarity aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrjSTS7oQNWCsXyDhpKsoEkwLdT9s_zl8KCDUsEOhKI1fZTDozniegdVMwwxteKLz-aZBLzarOLuVCkHBXm8ZzHfm9Hloh5sAVE3Obvw62H6O-Y_puGOY99ElfXOnQCOZ_p4scMNH8mtMIwKA1W2bOBbxZLVjEldKm9ZGR-VRa3ZqKONJLc8GKZSrz0tVQ6ou35UAVJljeCchNBB4giBLNlxu2kG7Q4LlJ9IXJKcpKOk6wltk1d4dVrLdEpwMrA4TjTa9tMMiNQR4"/>
+<span class="text-body-md font-label-md">Dr. Smith</span>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-unit-lg lg:p-unit-xl max-w-5xl mx-auto w-full">
+<!-- Breadcrumb -->
+<nav class="flex items-center gap-2 text-label-md text-on-surface-variant mb-unit-lg">
+<a class="hover:text-primary" href="#">Trang chủ</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-primary" href="#">Lịch khám</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-semibold">Đánh giá dịch vụ</span>
+</nav>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Context -->
+<div class="lg:col-span-4 space-y-6">
+<h2 class="text-headline-lg font-headline-lg text-primary">Đánh giá buổi khám</h2>
+<p class="text-body-md text-on-surface-variant leading-relaxed">
+                            Đánh giá của bạn giúp chúng tôi cải thiện chất lượng phục vụ và mang lại trải nghiệm tốt nhất cho mọi bệnh nhân.
+                        </p>
+<!-- Info Card -->
+<div class="bg-white border border-outline-variant rounded-xl p-unit-md shadow-sm">
+<h3 class="text-label-md font-bold text-primary-container mb-4 uppercase tracking-wider">Thông tin buổi khám</h3>
+<div class="space-y-4">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary-container">account_circle</span>
+<div>
+<p class="text-caption text-on-surface-variant">Bác sĩ</p>
+<p class="text-body-md font-semibold">BS. Nguyễn Văn A</p>
+</div>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary-container">apartment</span>
+<div>
+<p class="text-caption text-on-surface-variant">Chuyên khoa</p>
+<p class="text-body-md font-semibold">Khoa Tim mạch</p>
+</div>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary-container">calendar_today</span>
+<div>
+<p class="text-caption text-on-surface-variant">Ngày khám</p>
+<p class="text-body-md font-semibold">24/05/2024</p>
+</div>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary-container">medical_services</span>
+<div>
+<p class="text-caption text-on-surface-variant">Dịch vụ</p>
+<p class="text-body-md font-semibold">Khám tổng quát</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Aesthetic Decoration -->
+<div class="relative overflow-hidden rounded-xl h-48 border border-outline-variant bg-surface-container-low hidden lg:block">
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,#0056b3_0%,transparent_70%)]"></div>
+</div>
+<div class="relative z-1 p-unit-md flex flex-col justify-end h-full">
+<span class="material-symbols-outlined text-primary-container text-[48px] mb-2">volunteer_activism</span>
+<p class="text-label-md italic text-primary">"Sức khỏe của bạn là ưu tiên hàng đầu của chúng tôi."</p>
+</div>
+</div>
+</div>
+<!-- Right Column: Form -->
+<div class="lg:col-span-8">
+<div class="bg-white border border-outline-variant rounded-xl p-unit-md lg:p-unit-lg shadow-sm">
+<form class="space-y-unit-lg" id="ratingForm">
+<!-- Star Rating: Doctor -->
+<div class="space-y-3">
+<label class="text-title-lg font-title-lg block">Chất lượng chuyên môn bác sĩ</label>
+<div class="flex items-center gap-1 star-rating flex-row-reverse justify-end">
+<input class="hidden" id="dr5" name="dr_rate" type="radio" value="5"/><label class="cursor-pointer p-1" for="dr5"><span class="material-symbols-outlined text-3xl">star</span></label>
+<input class="hidden" id="dr4" name="dr_rate" type="radio" value="4"/><label class="cursor-pointer p-1" for="dr4"><span class="material-symbols-outlined text-3xl">star</span></label>
+<input class="hidden" id="dr3" name="dr_rate" type="radio" value="3"/><label class="cursor-pointer p-1" for="dr3"><span class="material-symbols-outlined text-3xl">star</span></label>
+<input class="hidden" id="dr2" name="dr_rate" type="radio" value="2"/><label class="cursor-pointer p-1" for="dr2"><span class="material-symbols-outlined text-3xl">star</span></label>
+<input class="hidden" id="dr1" name="dr_rate" type="radio" value="1"/><label class="cursor-pointer p-1" for="dr1"><span class="material-symbols-outlined text-3xl">star</span></label>
+</div>
+</div>
+<!-- Star Rating: Facility -->
+<div class="space-y-3">
+<label class="text-title-lg font-title-lg block">Cơ sở vật chất &amp; Dịch vụ</label>
+<div class="flex items-center gap-1 star-rating flex-row-reverse justify-end">
+<input class="hidden" id="fac5" name="fac_rate" type="radio" value="5"/><label class="cursor-pointer p-1" for="fac5"><span class="material-symbols-outlined text-3xl">star</span></label>
+<input class="hidden" id="fac4" name="fac_rate" type="radio" value="4"/><label class="cursor-pointer p-1" for="fac4"><span class="material-symbols-outlined text-3xl">star</span></label>
+<input class="hidden" id="fac3" name="fac_rate" type="radio" value="3"/><label class="cursor-pointer p-1" for="fac3"><span class="material-symbols-outlined text-3xl">star</span></label>
+<input class="hidden" id="fac2" name="fac_rate" type="radio" value="2"/><label class="cursor-pointer p-1" for="fac2"><span class="material-symbols-outlined text-3xl">star</span></label>
+<input class="hidden" id="fac1" name="fac_rate" type="radio" value="1"/><label class="cursor-pointer p-1" for="fac1"><span class="material-symbols-outlined text-3xl">star</span></label>
+</div>
+</div>
+<!-- Quick Tags -->
+<div class="space-y-3">
+<label class="text-body-md font-semibold text-on-surface-variant block">Chọn nhanh nhận xét</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-2 rounded-full border border-outline-variant text-label-md bg-surface transition-all hover:bg-surface-container-high" onclick="toggleChip(this)" type="button">Đúng giờ</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant text-label-md bg-surface transition-all hover:bg-surface-container-high" onclick="toggleChip(this)" type="button">Tận tâm</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant text-label-md bg-surface transition-all hover:bg-surface-container-high" onclick="toggleChip(this)" type="button">Dễ hiểu</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant text-label-md bg-surface transition-all hover:bg-surface-container-high" onclick="toggleChip(this)" type="button">Cơ sở sạch</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant text-label-md bg-surface transition-all hover:bg-surface-container-high" onclick="toggleChip(this)" type="button">Chờ lâu</button>
+<button class="px-4 py-2 rounded-full border border-outline-variant text-label-md bg-surface transition-all hover:bg-surface-container-high" onclick="toggleChip(this)" type="button">Cần cải thiện</button>
+</div>
+</div>
+<!-- Comment Box -->
+<div class="space-y-3">
+<label class="text-body-md font-semibold text-on-surface-variant block" for="comment">Nhận xét chi tiết</label>
+<textarea class="w-full rounded-xl border border-outline-variant focus:ring-2 focus:ring-primary focus:border-primary p-unit-md text-body-md transition-all" id="comment" placeholder="Chia sẻ thêm về trải nghiệm của bạn tại đây..." rows="4"></textarea>
+</div>
+<!-- Consent -->
+<div class="flex items-start gap-3 p-3 bg-surface-container-low rounded-xl">
+<div class="flex items-center h-5">
+<input class="h-4 w-4 text-primary border-outline-variant rounded focus:ring-primary cursor-pointer" id="consent" type="checkbox"/>
+</div>
+<div class="text-body-md text-on-surface-variant">
+<label class="cursor-pointer select-none" for="consent">Cho phép bệnh viện liên hệ lại để trao đổi thêm về phản hồi này</label>
+</div>
+</div>
+<!-- Submit Section -->
+<div class="pt-unit-md border-t border-outline-variant flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="text-error font-label-md flex items-center gap-1 opacity-0 transition-opacity" id="validation-msg">
+<span class="material-symbols-outlined text-[18px]">error</span>
+                                        Vui lòng chọn số sao để tiếp tục
+                                    </div>
+<button class="w-full sm:w-auto bg-primary text-white px-unit-xl py-3 rounded-xl font-bold hover:bg-primary-container transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" id="submitBtn" type="submit">
+                                        Gửi đánh giá
+                                    </button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        function toggleChip(btn) {
+            btn.classList.toggle('chip-active');
+            btn.classList.toggle('border-primary-container');
+        }
+
+        const form = document.getElementById('ratingForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const validationMsg = document.getElementById('validation-msg');
+
+        // Simple validation logic
+        form.addEventListener('change', () => {
+            const drRate = document.querySelector('input[name="dr_rate"]:checked');
+            const facRate = document.querySelector('input[name="fac_rate"]:checked');
+            
+            if(drRate && facRate) {
+                validationMsg.style.opacity = '0';
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        });
+
+        // Initialize disabled
+        submitBtn.disabled = true;
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const drRate = document.querySelector('input[name="dr_rate"]:checked');
+            const facRate = document.querySelector('input[name="fac_rate"]:checked');
+
+            if(!drRate || !facRate) {
+                validationMsg.style.opacity = '1';
+                return;
+            }
+
+            // Success State UI
+            const mainFormContainer = form.parentElement;
+            mainFormContainer.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-unit-xl text-center space-y-unit-md">
+                    <div class="w-20 h-20 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center mb-4">
+                        <span class="material-symbols-outlined text-[40px]" style="font-variation-settings: 'wght' 700;">check</span>
+                    </div>
+                    <h2 class="text-headline-md font-headline-md text-primary">Cảm ơn bạn!</h2>
+                    <p class="text-body-md text-on-surface-variant max-w-sm mx-auto">
+                        Đánh giá của bạn đã được gửi thành công. Chúng tôi trân trọng mọi phản hồi để cải thiện dịch vụ.
+                    </p>
+                    <button onclick="window.location.reload()" class="mt-8 text-primary font-bold hover:underline flex items-center gap-2">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                        Quay lại lịch khám
+                    </button>
+                </div>
+            `;
+        });
+    </script>
+</body></html>

@@ -1,0 +1,81 @@
+@model IEnumerable<QuanLyBenhVien.Models.ExaminationRecord>
+
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Lịch sử điều trị";
+    var searchString = ViewBag.SearchString as string;
+}
+
+<div class="flex items-center justify-between mb-unit-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Lịch sử điều trị đã khám</h2>
+        <p class="text-body-md text-on-surface-variant">Tra cứu và xem lại các hồ sơ bệnh án, đơn thuốc và hóa đơn bạn đã hoàn thành.</p>
+    </div>
+</div>
+
+<!-- Filters Panel -->
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl mb-unit-lg shadow-sm">
+    <form method="GET" action="/Doctor/History" class="flex flex-col md:flex-row gap-unit-md">
+        <div class="flex-grow relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
+                <span class="material-symbols-outlined text-[20px]">search</span>
+            </span>
+            <input name="searchString" value="@searchString" class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md focus:border-primary focus:ring-0" placeholder="Tìm kiếm theo tên bệnh nhân, số điện thoại..." type="text" />
+        </div>
+        <button type="submit" class="bg-primary hover:bg-primary-container text-white px-unit-lg py-2 rounded-lg font-semibold transition-colors shadow-sm cursor-pointer">
+            Tìm kiếm
+        </button>
+    </form>
+</div>
+
+<!-- Records Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Ngày khám</th>
+                    <th class="px-unit-md py-3">Mã ca khám</th>
+                    <th class="px-unit-md py-3">Bệnh nhân</th>
+                    <th class="px-unit-md py-3">Chẩn đoán</th>
+                    <th class="px-unit-md py-3 text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="px-unit-md py-8 text-center text-on-surface-variant">Không tìm thấy ca khám nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var rec in Model)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors group">
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md font-semibold text-on-surface">@rec.NgayKham.ToString("dd/MM/yyyy")</div>
+                                <div class="text-caption text-on-surface-variant">@rec.NgayKham.ToString("HH:mm")</div>
+                            </td>
+                            <td class="px-unit-md py-4 font-mono font-bold text-secondary">
+                                EXM-@rec.Id.ToString("D4")
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md font-semibold text-on-surface">@rec.Appointment.Patient.User.HoTen</div>
+                                <div class="text-caption text-on-surface-variant">SĐT: @rec.Appointment.Patient.User.Sdt</div>
+                            </td>
+                            <td class="px-unit-md py-4 font-body-md max-w-[300px] truncate" title="@rec.ChanDoan">
+                                @rec.ChanDoan
+                            </td>
+                            <td class="px-unit-md py-4 text-right">
+                                <a href="/Doctor/History/RecordDetails/@rec.LichKhamId" class="inline-flex items-center gap-0.5 bg-secondary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-on-secondary-container transition-all active:scale-95 font-semibold cursor-pointer shadow-sm">
+                                    <span class="material-symbols-outlined text-[16px]">visibility</span> Xem chi tiết
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

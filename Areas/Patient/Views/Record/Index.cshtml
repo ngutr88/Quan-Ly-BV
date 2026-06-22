@@ -1,0 +1,57 @@
+@model IEnumerable<QuanLyBenhVien.Models.ExaminationRecord>
+
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Đơn thuốc & Bệnh án";
+}
+
+<div class="mb-unit-lg">
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Lịch sử Điều trị &amp; Đơn thuốc</h2>
+    <p class="text-body-md text-on-surface-variant">Tra cứu lại kết quả chẩn đoán, lời dặn của bác sĩ và tải về các đơn thuốc điện tử của bạn.</p>
+</div>
+
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-body-md">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase border-b border-outline-variant">
+                    <th class="px-unit-md py-3">Ngày khám</th>
+                    <th class="px-unit-md py-3">Bác sĩ khám</th>
+                    <th class="px-unit-md py-3">Chuyên khoa</th>
+                    <th class="px-unit-md py-3">Chẩn đoán y khoa</th>
+                    <th class="px-unit-md py-3 text-right">Đơn thuốc</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="px-unit-md py-8 text-center text-on-surface-variant italic">Bạn chưa thực hiện ca khám nào tại bệnh viện.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var record in Model)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="px-unit-md py-4 font-bold text-primary">@record.NgayKham.ToString("dd/MM/yyyy")</td>
+                            <td class="px-unit-md py-4 font-medium">@record.Appointment.Doctor?.User.HoTen</td>
+                            <td class="px-unit-md py-4 text-on-surface-variant">@record.Appointment.Doctor?.Department.TenKhoa</td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-semibold text-on-surface">@record.ChanDoan</div>
+                                <div class="text-caption text-on-surface-variant mt-0.5">Triệu chứng: @record.TrieuChung</div>
+                            </td>
+                            <td class="px-unit-md py-4 text-right">
+                                <!-- Check if there is an associated prescription -->
+                                <!-- We query DB or pass check. If there is a prescription, we link to details. Since EF core navigates it, let's see. In seeder, we did set it. -->
+                                <a href="/Patient/Record/PrescriptionDetails/@record.Id" class="inline-flex items-center gap-0.5 bg-secondary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-on-secondary-container transition-all active:scale-95 font-semibold">
+                                    <span class="material-symbols-outlined text-[16px]">receipt</span> Đơn thuốc
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

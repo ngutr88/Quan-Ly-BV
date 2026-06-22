@@ -1,0 +1,111 @@
+@model IEnumerable<QuanLyBenhVien.Models.Medicine>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Thuốc";
+}
+
+<div class="flex items-center justify-between mb-unit-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Kho Dược phẩm</h2>
+        <p class="text-body-md text-on-surface-variant">Quản lý danh mục thuốc, định giá và kiểm tra ngưỡng tồn kho tối thiểu.</p>
+    </div>
+    <div class="flex gap-unit-sm">
+        <a href="/Admin/Medicines/Batches" class="flex items-center gap-1 bg-white border border-outline text-on-surface hover:bg-surface-container px-unit-md py-2.5 rounded-lg font-label-md transition-colors font-semibold">
+            <span class="material-symbols-outlined text-[20px]">layers</span>
+            Danh sách Lô thuốc
+        </a>
+        <a href="/Admin/Medicines/ReceiveBatch" class="flex items-center gap-1 bg-primary text-white px-unit-md py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-semibold">
+            <span class="material-symbols-outlined text-[20px]">input</span>
+            Nhập kho lô mới
+        </a>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl mb-unit-lg shadow-sm">
+    <form method="GET" action="/Admin/Medicines" class="flex flex-col md:flex-row gap-unit-md items-end">
+        <div class="flex-grow relative w-full">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
+                <span class="material-symbols-outlined text-[20px]">search</span>
+            </span>
+            <input class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                   name="searchString" value="@ViewBag.SearchString" placeholder="Tìm kiếm tên thuốc, hoạt chất..." type="text" />
+        </div>
+        
+        <div class="flex items-center gap-unit-sm py-2 shrink-0">
+            <input type="checkbox" id="lowStock" name="lowStock" value="true" class="rounded text-primary focus:ring-primary h-4 w-4" checked="@ViewBag.LowStockOnly" />
+            <label for="lowStock" class="font-label-md text-on-surface cursor-pointer select-none">Chỉ hiện thuốc sắp hết kho</label>
+        </div>
+
+        <button type="submit" class="bg-surface-container-high hover:bg-surface-container-highest px-unit-lg py-2 rounded-lg font-label-md transition-colors text-on-surface-variant font-semibold w-full md:w-auto">
+            Áp dụng lọc
+        </button>
+    </form>
+</div>
+
+<!-- Medicines Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Mã Thuốc</th>
+                    <th class="px-unit-md py-3">Tên thuốc</th>
+                    <th class="px-unit-md py-3">Hoạt chất</th>
+                    <th class="px-unit-md py-3">Đơn giá bán</th>
+                    <th class="px-unit-md py-3">Số lượng tồn</th>
+                    <th class="px-unit-md py-3">Cảnh báo</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="px-unit-md py-8 text-center text-on-surface-variant">Không tìm thấy thuốc nào trong kho.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var med in Model)
+                    {
+                        var isLowStock = med.TonKho <= med.NguongToiThieu;
+                        <tr class="hover:bg-surface-container-low transition-colors @(isLowStock ? "bg-error-container/5" : "")">
+                            <td class="px-unit-md py-4 font-bold text-primary">MED-@med.Id.ToString("D4")</td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md font-semibold text-on-surface">@med.TenThuoc</div>
+                                <div class="text-caption text-on-surface-variant">Đơn vị: @med.DonViTinh</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <span class="font-body-md text-on-surface-variant">@med.HoatChat</span>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <span class="font-body-md font-semibold">@med.Gia.ToString("N0") đ</span>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md font-bold @(isLowStock ? "text-error" : "text-on-surface")">
+                                    @med.TonKho @med.DonViTinh
+                                </div>
+                                <div class="text-caption text-on-surface-variant">Ngưỡng tối thiểu: @med.NguongToiThieu</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                @if (isLowStock)
+                                {
+                                    <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-error-container text-error text-[10px] font-bold uppercase tracking-tight">
+                                        <span class="material-symbols-outlined text-[12px]">warning</span> Hết thuốc
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold uppercase tracking-tight">
+                                        An toàn
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
