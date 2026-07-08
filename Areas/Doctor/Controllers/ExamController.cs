@@ -251,6 +251,26 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                 ChiTiet = $"Bác sĩ hoàn tất khám và kê đơn cho BN {appointment.Patient.User.HoTen} (LK #{appointmentId}), chẩn đoán: {chanDoan}. Viện phí: {invoice.TongTien:N0}đ."
             });
 
+            // 6. Create Notifications for Patient
+            if (drugCost > 0)
+            {
+                _context.Notifications.Add(new Notification
+                {
+                    NguoiDungId = appointment.Patient.NguoiDungId,
+                    NoiDung = "[DonThuoc] Đơn thuốc mới|Bác sĩ vừa cập nhật đơn thuốc mới cho hồ sơ bệnh án của bạn.",
+                    NgayGui = DateTime.Now,
+                    DaDoc = false
+                });
+            }
+
+            _context.Notifications.Add(new Notification
+            {
+                NguoiDungId = appointment.Patient.NguoiDungId,
+                NoiDung = $"[ThanhToan] Yêu cầu thanh toán|Hóa đơn viện phí mới #INV-{invoice.Id:D4} trị giá {invoice.TongTien:N0}đ đã được khởi tạo. Vui lòng tiến hành thanh toán.",
+                NgayGui = DateTime.Now,
+                DaDoc = false
+            });
+
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Đã hoàn tất ca khám cho bệnh nhân {appointment.Patient.User.HoTen}. Đơn thuốc và hóa đơn đã được khởi tạo thành công.";

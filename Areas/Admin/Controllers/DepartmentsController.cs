@@ -43,8 +43,12 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 .Select(g => new { KhoaId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.KhoaId, x => x.Count);
 
-            // Get chief of department (mock first doctor with highest degree or first doctor)
+            // Get chief of department (actual doctor with ChucVu == "Trưởng khoa")
             var chiefDoctor = await _context.Doctors
+                .Include(d => d.User)
+                .Where(d => d.KhoaId == selectedDept.Id && d.ChucVu == "Trưởng khoa")
+                .FirstOrDefaultAsync()
+                ?? await _context.Doctors
                 .Include(d => d.User)
                 .Where(d => d.KhoaId == selectedDept.Id)
                 .FirstOrDefaultAsync();

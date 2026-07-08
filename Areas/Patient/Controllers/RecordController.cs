@@ -35,6 +35,13 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
                 .OrderByDescending(e => e.NgayKham)
                 .ToListAsync();
 
+            var examRecordIds = examRecords.Select(e => e.Id).ToList();
+            var recordsWithPrescriptions = await _context.Prescriptions
+                .Where(p => examRecordIds.Contains(p.PhieuKhamId))
+                .Select(p => p.PhieuKhamId)
+                .ToListAsync();
+
+            ViewBag.RecordsWithPrescriptions = recordsWithPrescriptions;
             return View(examRecords);
         }
 
@@ -50,7 +57,7 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
                 .ThenInclude(pd => pd.Medicine)
                 .Include(p => p.ExaminationRecord.Appointment.Doctor.User)
                 .Include(p => p.ExaminationRecord.Appointment.Doctor.Department)
-                .FirstOrDefaultAsync(p => p.Id == id && p.ExaminationRecord.Appointment.BenhNhanId == patient.Id);
+                .FirstOrDefaultAsync(p => p.PhieuKhamId == id && p.ExaminationRecord.Appointment.BenhNhanId == patient.Id);
 
             if (prescription == null) return NotFound("Không tìm thấy đơn thuốc hoặc bạn không có quyền truy cập.");
 
@@ -71,7 +78,8 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
             var healthLogs = await _context.ExaminationRecords
                 .Where(e => e.Appointment.BenhNhanId == patient.Id)
                 .OrderBy(e => e.NgayKham)
-                .Select(e => new {
+                .Select(e => new
+                {
                     date = e.NgayKham.ToString("dd/MM/yyyy"),
                     weight = e.CanNang,
                     height = e.ChieuCao,
@@ -97,8 +105,97 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
                 .FirstOrDefaultAsync(p => p.NguoiDungId == patientUserId);
             if (patient == null) return NotFound();
 
+            var dependents = await _context.Dependents
+                .Where(d => d.BenhNhanId == patient.Id)
+                .ToListAsync();
+
             ViewBag.Patient = patient;
-            return View();
+            return View(dependents);
+        }
+
+        // POST: /Patient/Record/AddDependent
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddDependent(string name, string relation, string gender, int birthYear, string blood, string bhyt, string history)
+        {
+            var patientUserId = GetCurrentUserId();
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.NguoiDungId == patientUserId);
+            if (patient == null) return Json(new { success = false, message = "Không tìm thấy bệnh nhân." });
+
+            var dep = new Dependent
+            {
+                BenhNhanId = patient.Id,
+                HoTen = name,
+                QuanHe = relation,
+                GioiTinh = gender,
+                NamSinh = birthYear,
+                NhomMau = string.IsNullOrWhiteSpace(blood) ? "O+" : blood,
+                SoBHYT = bhyt ?? string.Empty,
+                TienSuBenhLy = history ?? string.Empty
+            };
+
+            _context.Dependents.Add(dep);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, name = dep.HoTen });
+        }
+
+        // GET: /Patient/Record/GetReview
+        [HttpGet]
+        public async Task<IActionResult> GetReview(int doctorId)
+        {
+            var patientUserId = GetCurrentUserId();
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.NguoiDungId == patientUserId);
+            if (patient == null) return NotFound();
+
+            var review = await _context.Reviews
+                .FirstOrDefaultAsync(r => r.BenhNhanId == patient.Id && r.BacSiId == doctorId);
+
+            if (review == null)
+            {
+                return Json(new { exists = false });
+            }
+
+            return Json(new { exists = true, rating = review.SoSao, comment = review.NhanXet });
+        }
+
+        // POST: /Patient/Record/SubmitReview
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitReview(int doctorId, int rating, string comment)
+        {
+            var patientUserId = GetCurrentUserId();
+            var patient = await _context.Patients.FirstOrDefaultAsync(p => p.NguoiDungId == patientUserId);
+            if (patient == null) return Json(new { success = false, message = "Bệnh nhân không tồn tại." });
+
+            var doctorExists = await _context.Doctors.AnyAsync(d => d.Id == doctorId);
+            if (!doctorExists) return Json(new { success = false, message = "Bác sĩ không tồn tại." });
+
+            var existingReview = await _context.Reviews
+                .FirstOrDefaultAsync(r => r.BenhNhanId == patient.Id && r.BacSiId == doctorId);
+
+            if (existingReview != null)
+            {
+                existingReview.SoSao = rating;
+                existingReview.NhanXet = comment ?? string.Empty;
+                existingReview.NgayTao = DateTime.Now;
+                _context.Entry(existingReview).State = EntityState.Modified;
+            }
+            else
+            {
+                var review = new Review
+                {
+                    BenhNhanId = patient.Id,
+                    BacSiId = doctorId,
+                    SoSao = rating,
+                    NhanXet = comment ?? string.Empty,
+                    NgayTao = DateTime.Now
+                };
+                _context.Reviews.Add(review);
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true });
         }
 
         private int GetCurrentUserId()

@@ -87,6 +87,16 @@
                        id="soNamKinhNghiem" name="soNamKinhNghiem" value="@Model.SoNamKinhNghiem" min="0" required type="number" />
             </div>
 
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="chucVu">Chức vụ trong khoa <span class="text-error">*</span></label>
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        id="chucVu" name="chucVu" required>
+                    <option value="Bác sĩ" selected="@(Model.ChucVu == "Bác sĩ")">Bác sĩ</option>
+                    <option value="Trưởng khoa" selected="@(Model.ChucVu == "Trưởng khoa")">Trưởng khoa</option>
+                    <option value="Phó trưởng khoa" selected="@(Model.ChucVu == "Phó trưởng khoa")">Phó trưởng khoa</option>
+                </select>
+            </div>
+
             <div class="space-y-unit-xs md:col-span-2">
                 <label class="block text-caption font-semibold text-on-surface-variant" for="lichLamViec">Lịch trực / Thời gian làm việc <span class="text-error">*</span></label>
                 <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 

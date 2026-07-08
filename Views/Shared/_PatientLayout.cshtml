@@ -28,6 +28,24 @@
 
             <!-- User Actions -->
             <div class="flex items-center gap-unit-sm">
+                @inject QuanLyBenhVien.Data.ApplicationDbContext _dbContext
+                @{
+                    var currentPatientUserClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+                    var currentPatientUserId = currentPatientUserClaim != null ? int.Parse(currentPatientUserClaim.Value) : 3;
+                    var unreadNotificationCount = _dbContext.Notifications.Count(n => n.NguoiDungId == currentPatientUserId && !n.DaDoc);
+                }
+                
+                <!-- Notification Bell -->
+                <a href="/Patient/Notification" class="relative flex items-center justify-center p-2 rounded-full hover:bg-surface-container transition-colors text-primary" title="Thông báo">
+                    <span class="material-symbols-outlined text-[24px]">notifications</span>
+                    @if (unreadNotificationCount > 0)
+                    {
+                        <span id="header-unread-badge" class="absolute top-1.5 right-1.5 w-4 h-4 bg-error text-white font-semibold text-[10px] rounded-full flex items-center justify-center">
+                            @unreadNotificationCount
+                        </span>
+                    }
+                </a>
+
                 <div class="relative group">
                     <button class="flex items-center gap-unit-sm hover:bg-surface-container-high p-1 px-2 rounded-lg cursor-pointer transition-all">
                         <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-body-md">
@@ -65,6 +83,16 @@
         <a href="/Patient/Payment" class="flex flex-col items-center text-on-surface-variant hover:text-primary">
             <span class="material-symbols-outlined text-[22px]">receipt_long</span>
             <span class="text-[10px]">Hóa đơn</span>
+        </a>
+        <a href="/Patient/Notification" class="relative flex flex-col items-center text-on-surface-variant hover:text-primary @(ViewContext.RouteData.Values["controller"]?.ToString() == "Notification" ? "text-primary font-bold" : "")">
+            <span class="material-symbols-outlined text-[22px]">notifications</span>
+            @if (unreadNotificationCount > 0)
+            {
+                <span class="absolute top-0 right-2 w-3.5 h-3.5 bg-error text-white font-semibold text-[9px] rounded-full flex items-center justify-center">
+                    @unreadNotificationCount
+                </span>
+            }
+            <span class="text-[10px]">Thông báo</span>
         </a>
     </nav>
 

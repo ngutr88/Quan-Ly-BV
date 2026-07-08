@@ -22,7 +22,7 @@
         <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
             <div class="flex items-center gap-unit-md mb-unit-lg">
                 <div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-[24px]">
-                    @Model.User.HoTen.Substring(Model.User.HoTen.LastIndexOf(' ') + 1, 1)
+                    @(string.IsNullOrWhiteSpace(Model.User.HoTen) ? "BN" : Model.User.HoTen.Trim().Split(' ').Last().Substring(0, 1).ToUpper())
                 </div>
                 <div>
                     <h3 class="font-title-lg text-on-surface font-bold">@Model.User.HoTen</h3>

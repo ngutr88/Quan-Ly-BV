@@ -25,6 +25,7 @@ namespace QuanLyBenhVien.Data
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+        public DbSet<Dependent> Dependents { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -127,6 +128,13 @@ namespace QuanLyBenhVien.Data
                 .WithMany()
                 .HasForeignKey(r => r.BenhNhanId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Dependent - Patient (Many-to-One)
+            modelBuilder.Entity<Dependent>()
+                .HasOne(d => d.Patient)
+                .WithMany(p => p.Dependents)
+                .HasForeignKey(d => d.BenhNhanId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Review - Doctor (Many-to-One)
             modelBuilder.Entity<Review>()

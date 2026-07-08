@@ -1,0 +1,215 @@
+@model List<QuanLyBenhVien.Areas.Patient.Controllers.NotificationViewModel>
+@{
+    ViewData["Title"] = "Thông báo";
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    var activeFilter = ViewBag.ActiveFilter as string ?? "All";
+    var unreadCount = ViewBag.UnreadCount as int? ?? 0;
+}
+
+@section Styles {
+    <style>
+        .unread-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0056B3;
+            border-radius: 50%;
+            transition: opacity 0.3s ease;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+}
+
+@functions {
+    public string FormatRelativeTime(DateTime dateTime)
+    {
+        var span = DateTime.Now - dateTime;
+        if (span.TotalMinutes < 1) return "Vừa xong";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes} phút trước";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours} giờ trước";
+        if (span.TotalDays < 2) return "Hôm qua";
+        return dateTime.ToString("dd/MM/yyyy HH:mm");
+    }
+}
+
+<div class="max-w-4xl mx-auto w-full">
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-unit-lg border-b border-outline-variant pb-unit-md">
+        <div>
+            <h1 class="text-headline-lg font-headline-lg text-on-surface">Thông báo</h1>
+            <p class="text-body-md font-body-md text-on-surface-variant" id="unread-count-text">
+                @if (unreadCount > 0)
+                {
+                    <text>Bạn có @unreadCount thông báo chưa đọc</text>
+                }
+                else
+                {
+                    <text>Bạn không có thông báo chưa đọc nào</text>
+                }
+            </p>
+        </div>
+        <div class="flex items-center gap-unit-md">
+            @if (unreadCount > 0)
+            {
+                <button onclick="markAllAsRead()" class="flex items-center gap-2 px-4 py-2 text-primary hover:bg-surface-container transition-colors rounded-lg font-medium text-label-md">
+                    <span class="material-symbols-outlined text-[20px]">done_all</span>
+                    <span>Đánh dấu tất cả đã đọc</span>
+                </button>
+            }
+            <button onclick="showGlobalToast('Cài đặt', 'Tính năng cấu hình thông báo đang được phát triển.', 'warning')" class="flex items-center gap-2 px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-lg font-medium text-label-md">
+                <span class="material-symbols-outlined text-[20px]">settings</span>
+                <span>Cài đặt thông báo</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex items-center gap-2 mb-unit-lg overflow-x-auto pb-2 scroll-smooth no-scrollbar">
+        <a href="?type=All" class="px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "All" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Tất cả</a>
+        <a href="?type=LichKham" class="px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "LichKham" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Lịch khám</a>
+        <a href="?type=ThanhToan" class="px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "ThanhToan" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Thanh toán</a>
+        <a href="?type=DonThuoc" class="px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "DonThuoc" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Đơn thuốc</a>
+        <a href="?type=HeThong" class="px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "HeThong" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Hệ thống</a>
+    </div>
+
+    <!-- Notification List -->
+    <div class="space-y-unit-sm">
+        @if (!Model.Any())
+        {
+            <div class="bg-white border border-outline-variant p-unit-xl rounded-xl text-center shadow-sm">
+                <span class="material-symbols-outlined text-[48px] text-outline mb-2">notifications_off</span>
+                <p class="text-body-lg font-semibold text-on-surface-variant">Không có thông báo nào</p>
+                <p class="text-caption text-outline">Bạn sẽ nhận được thông báo khi có thông tin cập nhật về lịch hẹn, đơn thuốc hoặc hóa đơn.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                string iconName = "notifications_active";
+                string colorClass = "bg-tertiary-fixed text-tertiary-container";
+                string primaryBtnText = "Xem chi tiết";
+                string targetUrl = "/Patient/Dashboard";
+                bool isPaymentFailure = false;
+
+                if (item.Category.Equals("LichKham", StringComparison.OrdinalIgnoreCase))
+                {
+                    iconName = "calendar_today";
+                    colorClass = "bg-primary-fixed text-primary";
+                    primaryBtnText = "Xem lịch";
+                    targetUrl = "/Patient/Dashboard";
+                }
+                else if (item.Category.Equals("ThanhToan", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (item.Title.Contains("thất bại") || item.Body.Contains("thất bại") || item.Body.Contains("không thành công"))
+                    {
+                        isPaymentFailure = true;
+                        iconName = "error";
+                        colorClass = "bg-error-container text-error";
+                        primaryBtnText = "Thử lại";
+                        targetUrl = "/Patient/Payment";
+                    }
+                    else
+                    {
+                        iconName = "payments";
+                        colorClass = "bg-secondary-fixed text-secondary";
+                        primaryBtnText = "Xem hóa đơn";
+                        targetUrl = "/Patient/Payment";
+                    }
+                }
+                else if (item.Category.Equals("DonThuoc", StringComparison.OrdinalIgnoreCase))
+                {
+                    iconName = "medication";
+                    colorClass = "bg-surface-container-highest text-on-surface-variant";
+                    primaryBtnText = "Xem đơn thuốc";
+                    targetUrl = "/Patient/Record";
+                }
+
+                <div class="group relative bg-white border border-outline-variant p-unit-md flex gap-unit-md hover:bg-surface-container-low transition-all duration-200 rounded-xl shadow-sm" id="notification-@item.Id">
+                    <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-xl @colorClass">
+                        <span class="material-symbols-outlined">@iconName</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="text-body-lg font-semibold text-on-surface @(!item.DaDoc ? "font-bold text-primary" : "")">@item.Title</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-caption text-on-surface-variant">@FormatRelativeTime(item.NgayGui)</span>
+                                @if (!item.DaDoc)
+                                {
+                                    <div class="unread-dot" id="dot-@item.Id"></div>
+                                }
+                            </div>
+                        </div>
+                        <p class="text-body-md text-on-surface-variant mb-unit-md">@item.Body</p>
+                        <div class="flex gap-unit-sm">
+                            <button onclick="handleNotificationClick(@item.Id, '@targetUrl')" class="bg-primary text-on-primary px-4 py-2 text-label-md font-label-md rounded-lg hover:opacity-90 transition-opacity">
+                                @primaryBtnText
+                            </button>
+                            @if (isPaymentFailure)
+                            {
+                                <button onclick="handleNotificationClick(@item.Id, '/Patient/Dashboard')" class="border border-primary text-primary px-4 py-2 text-label-md font-label-md rounded-lg hover:bg-primary-fixed transition-colors">
+                                    Liên hệ hỗ trợ
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function handleNotificationClick(id, targetUrl) {
+            fetch('/Patient/Notification/MarkAsRead/' + id, {
+                method: 'POST'
+            }).then(response => {
+                window.location.href = targetUrl;
+            }).catch(error => {
+                window.location.href = targetUrl;
+            });
+        }
+
+        function markAllAsRead() {
+            fetch('/Patient/Notification/MarkAllAsRead', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const dots = document.querySelectorAll('.unread-dot');
+                    dots.forEach(dot => {
+                        dot.style.opacity = '0';
+                        setTimeout(() => dot.remove(), 300);
+                    });
+
+                    const unreadText = document.getElementById('unread-count-text');
+                    if (unreadText) {
+                        unreadText.innerText = 'Bạn không có thông báo chưa đọc nào';
+                    }
+
+                    const headerBadge = document.getElementById('header-unread-badge');
+                    if (headerBadge) {
+                        headerBadge.remove();
+                    }
+
+                    const markAllBtn = document.querySelector('button[onclick="markAllAsRead()"]');
+                    if (markAllBtn) {
+                        markAllBtn.remove();
+                    }
+
+                    showGlobalToast('Thành công', 'Đã đánh dấu tất cả thông báo là đã đọc.', 'success');
+                }
+            })
+            .catch(err => {
+                console.error("Error marking all read:", err);
+            });
+        }
+    </script>
+}

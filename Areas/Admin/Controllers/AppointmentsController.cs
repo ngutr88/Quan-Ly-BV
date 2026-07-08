@@ -80,6 +80,15 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 ChiTiet = $"Admin xác nhận lịch khám #{id} cho BN {app.Patient.User.HoTen} vào lúc {app.ThoiGian}."
             });
 
+            // Create Notification
+            _context.Notifications.Add(new Notification
+            {
+                NguoiDungId = app.Patient.NguoiDungId,
+                NoiDung = $"[LichKham] Lịch khám đã xác nhận|Lịch hẹn khám vào lúc {app.ThoiGian:HH:mm dd/MM/yyyy} đã được xác nhận thành công.",
+                NgayGui = DateTime.Now,
+                DaDoc = false
+            });
+
             await _context.SaveChangesAsync();
             TempData["SuccessMessage"] = $"Đã xác nhận lịch hẹn #{id} thành công.";
             return RedirectToAction(nameof(Details), new { id = id });
@@ -101,6 +110,15 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 NguoiDungId = GetCurrentUserId(),
                 HanhDong = "Hủy lịch khám",
                 ChiTiet = $"Admin hủy lịch khám #{id} cho BN {app.Patient.User.HoTen}. Lý do: {lyDoHuy}."
+            });
+
+            // Create Notification
+            _context.Notifications.Add(new Notification
+            {
+                NguoiDungId = app.Patient.NguoiDungId,
+                NoiDung = $"[LichKham] Lịch khám đã bị hủy|Lịch hẹn khám vào lúc {app.ThoiGian:HH:mm dd/MM/yyyy} đã bị hủy. Lý do: {lyDoHuy}.",
+                NgayGui = DateTime.Now,
+                DaDoc = false
             });
 
             await _context.SaveChangesAsync();

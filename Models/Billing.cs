@@ -29,6 +29,9 @@ namespace QuanLyBenhVien.Models
         [StringLength(50)]
         public string PhuongThuc { get; set; } = "TienMat"; // TienMat, ChuyenKhoan, Online
 
+        [StringLength(100)]
+        public string? MaGiaoDich { get; set; }
+
         public DateTime NgayTao { get; set; } = DateTime.Now;
 
         public DateTime? NgayThanhToan { get; set; }

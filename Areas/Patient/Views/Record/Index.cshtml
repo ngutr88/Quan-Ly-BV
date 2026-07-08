@@ -42,11 +42,20 @@
                                 <div class="text-caption text-on-surface-variant mt-0.5">Triệu chứng: @record.TrieuChung</div>
                             </td>
                             <td class="px-unit-md py-4 text-right">
-                                <!-- Check if there is an associated prescription -->
-                                <!-- We query DB or pass check. If there is a prescription, we link to details. Since EF core navigates it, let's see. In seeder, we did set it. -->
-                                <a href="/Patient/Record/PrescriptionDetails/@record.Id" class="inline-flex items-center gap-0.5 bg-secondary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-on-secondary-container transition-all active:scale-95 font-semibold">
-                                    <span class="material-symbols-outlined text-[16px]">receipt</span> Đơn thuốc
-                                </a>
+                                <div class="flex items-center justify-end gap-2">
+                                    @if (record.Appointment.Doctor != null)
+                                    {
+                                        <button type="button" onclick="openReviewModal(@record.Appointment.Doctor.Id, '@record.Appointment.Doctor.User.HoTen')" class="inline-flex items-center gap-0.5 bg-primary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-primary-container transition-all active:scale-95 font-semibold cursor-pointer">
+                                            <span class="material-symbols-outlined text-[16px]">star</span> Đánh giá BS
+                                        </button>
+                                    }
+                                    @if (ViewBag.RecordsWithPrescriptions != null && ((List<int>)ViewBag.RecordsWithPrescriptions).Contains(record.Id))
+                                    {
+                                        <a href="/Patient/Record/PrescriptionDetails/@record.Id" class="inline-flex items-center gap-0.5 bg-secondary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-on-secondary-container transition-all active:scale-95 font-semibold">
+                                            <span class="material-symbols-outlined text-[16px]">receipt</span> Đơn thuốc
+                                        </a>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -55,3 +64,171 @@
         </table>
     </div>
 </div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Đánh giá Bác sĩ</h3>
+            <button type="button" onclick="closeReviewModal()" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="reviewForm" onsubmit="submitReview(event)">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="reviewDoctorId" name="doctorId" />
+            <div class="p-6 space-y-4">
+                <div class="text-center">
+                    <p class="text-body-md text-on-surface-variant">Bạn đang đánh giá bác sĩ:</p>
+                    <strong class="text-title-lg text-primary block mt-1" id="reviewDoctorName">BS. Nguyễn Văn A</strong>
+                </div>
+                
+                <!-- Star Rating -->
+                <div class="flex flex-col items-center gap-2">
+                    <label class="block font-label-md text-label-md text-on-surface-variant">Chọn mức độ hài lòng (1-5 sao) <span class="text-error">*</span></label>
+                    <div class="flex gap-1 text-[32px] text-outline cursor-pointer" id="starContainer">
+                        <span class="material-symbols-outlined star-icon hover:scale-110 transition-transform" data-value="1">star</span>
+                        <span class="material-symbols-outlined star-icon hover:scale-110 transition-transform" data-value="2">star</span>
+                        <span class="material-symbols-outlined star-icon hover:scale-110 transition-transform" data-value="3">star</span>
+                        <span class="material-symbols-outlined star-icon hover:scale-110 transition-transform" data-value="4">star</span>
+                        <span class="material-symbols-outlined star-icon hover:scale-110 transition-transform" data-value="5">star</span>
+                    </div>
+                    <input type="hidden" id="selectedRating" name="rating" required />
+                </div>
+
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1" for="reviewComment">Nhận xét của bạn</label>
+                    <textarea id="reviewComment" name="comment" rows="4" 
+                              class="w-full border border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" 
+                              placeholder="Hãy chia sẻ cảm nhận của bạn về sự tận tâm, chuyên môn và thái độ của bác sĩ..."></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeReviewModal()" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Gửi đánh giá</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentSelectedRating = 0;
+
+        document.querySelectorAll('.star-icon').forEach(star => {
+            star.addEventListener('mouseenter', () => {
+                const val = parseInt(star.getAttribute('data-value'));
+                highlightStars(val);
+            });
+
+            star.addEventListener('mouseleave', () => {
+                highlightStars(currentSelectedRating);
+            });
+
+            star.addEventListener('click', () => {
+                currentSelectedRating = parseInt(star.getAttribute('data-value'));
+                document.getElementById('selectedRating').value = currentSelectedRating;
+                highlightStars(currentSelectedRating);
+            });
+        });
+
+        function highlightStars(count) {
+            document.querySelectorAll('.star-icon').forEach(star => {
+                const val = parseInt(star.getAttribute('data-value'));
+                if (val <= count) {
+                    star.classList.remove('text-outline');
+                    star.classList.add('text-primary');
+                    star.style.fontVariationSettings = "'FILL' 1";
+                } else {
+                    star.classList.remove('text-primary');
+                    star.classList.add('text-outline');
+                    star.style.fontVariationSettings = "'FILL' 0";
+                }
+            });
+        }
+
+        async function openReviewModal(doctorId, doctorName) {
+            document.getElementById('reviewDoctorId').value = doctorId;
+            document.getElementById('reviewDoctorName').innerText = doctorName;
+            
+            // Reset modal inputs
+            currentSelectedRating = 0;
+            document.getElementById('selectedRating').value = "";
+            document.getElementById('reviewComment').value = "";
+            highlightStars(0);
+
+            try {
+                // Fetch previous review if exists
+                const response = await fetch(`/Patient/Record/GetReview?doctorId=${doctorId}`);
+                const result = await response.json();
+                
+                if (result.exists) {
+                    currentSelectedRating = result.rating;
+                    document.getElementById('selectedRating').value = result.rating;
+                    document.getElementById('reviewComment').value = result.comment;
+                    highlightStars(result.rating);
+                }
+            } catch (err) {
+                console.error("Error fetching review:", err);
+            }
+
+            const modal = document.getElementById('reviewModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeReviewModal() {
+            const modal = document.getElementById('reviewModal');
+            modal.firstElementChild.classList.remove('scale-100');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 150);
+        }
+
+        async function submitReview(e) {
+            e.preventDefault();
+            const doctorId = document.getElementById('reviewDoctorId').value;
+            const rating = document.getElementById('selectedRating').value;
+            const comment = document.getElementById('reviewComment').value;
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            if (!rating) {
+                alert("Vui lòng chọn số sao đánh giá.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("doctorId", doctorId);
+            formData.append("rating", rating);
+            formData.append("comment", comment);
+            formData.append("__RequestVerificationToken", token);
+
+            try {
+                const response = await fetch('/Patient/Record/SubmitReview', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    closeReviewModal();
+                    showGlobalToast("Thành công", "Đánh giá của bạn đã được gửi thành công.", "success");
+                } else {
+                    alert("Lỗi khi gửi đánh giá: " + result.message);
+                }
+            } catch (err) {
+                alert("Lỗi kết nối khi gửi đánh giá.");
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeReviewModal();
+        });
+    </script>
+}

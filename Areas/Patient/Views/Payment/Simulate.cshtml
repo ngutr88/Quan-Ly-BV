@@ -2,59 +2,178 @@
 
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Mô phỏng Cổng thanh toán trực tuyến";
+    ViewData["Title"] = "MediPay Gateway - Cổng thanh toán mô phỏng";
+
+    string method = ViewBag.PaymentMethod ?? "vnpay";
+
+    // Setup brand color scheme and styling based on payment method
+    string brandName = "MediPay";
+    string brandColorClasses = "from-blue-700 to-indigo-800";
+    string logoUrl = "";
+    string methodDisplayName = "";
+
+    switch (method)
+    {
+        case "momo":
+            brandName = "MoMo Gateway";
+            brandColorClasses = "from-pink-600 to-pink-800";
+            logoUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuBvKWGBnJMWWOFYp3nk2-UJpu5CJejqhDIOenoH6gKeoiT3kEy59xtSIeUN5djbUBzUkLpqhDoJnajayAy9SiQ3qFWJZpVMMXBwO2IgaJC8DsdyWZ89np7dRWPIydFrZYl4bc2Vru6GIqNJzzTLKpn7Qme6r03kpDyN3Hy7BlZ9BAvxbZJ84hB5FEKCCIpsU_JW7wo9XVLg77E6q4WDmNLZjgN-YOPirmabVGsc9tj8YrW8X592ZIU1Z2RBhZYf2GnijDkca13OnU4";
+            methodDisplayName = "Ví điện tử MoMo";
+            break;
+        case "zalopay":
+            brandName = "ZaloPay Gateway";
+            brandColorClasses = "from-blue-500 to-cyan-600";
+            logoUrl = ""; // Will use icon placeholder
+            methodDisplayName = "Ví điện tử ZaloPay";
+            break;
+        case "chuyenkhoan":
+            brandName = "Chuyển khoản Ngân hàng (Napas247)";
+            brandColorClasses = "from-slate-700 to-slate-900";
+            methodDisplayName = "Chuyển khoản ngân hàng";
+            break;
+        case "tai_quay":
+            brandName = "Xác nhận Thanh toán tại quầy";
+            brandColorClasses = "from-teal-600 to-teal-800";
+            methodDisplayName = "Thanh toán tại quầy";
+            break;
+        case "vnpay":
+        default:
+            brandName = "VNPay Gateway";
+            brandColorClasses = "from-blue-700 to-indigo-800";
+            logoUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuD0y0s8Y8k7DVQXcDdFl-uUOeBJnD3Vn9lYucgaViDlj7dgf22d9ODHoaxZ8-4L1hywHZuBLo84Vz5FASVtv8jKO1HveIPsRw_HXtAod6c6lAUKRGvRU58O-xXX2KZp8qPFWegYFnJF-g2Yrab4zsOXjImS59w8ioHalFuqS_JAEUO8QmNxwonTZKBWIa3C7H_sg33u8t7gmXqwRbmiBy6zpRANKLQZKTcl6W6mRqn9e3J5CTEV6lO7BTb3biak3qlLaY9-6n-Si8c";
+            methodDisplayName = "Cổng thanh toán VNPay";
+            break;
+    }
+
+    // Auto-generate transaction ID
+    string defaultTxnId = $"TXN_{method.ToUpper()}_{DateTime.Now.Ticks.ToString().Substring(11)}";
 }
 
-<body class="bg-[#f3f4f6] min-h-screen flex flex-col items-center justify-center p-margin-mobile">
-    <main class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
-        <!-- Gateway Header banner -->
-        <div class="bg-gradient-to-r from-blue-700 to-indigo-800 p-unit-md text-white text-center">
-            <h1 class="font-headline-md font-bold flex items-center justify-center gap-1">
+<body class="bg-surface min-h-screen flex flex-col items-center justify-center p-margin-mobile">
+    <main class="w-full max-w-lg bg-white rounded-3xl shadow-xl overflow-hidden border border-outline-variant/65">
+        <!-- Header -->
+        <div class="bg-gradient-to-r @brandColorClasses p-unit-md text-white text-center shadow">
+            <h1 class="font-headline-md font-bold flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-[28px]">shield_lock</span>
-                MediPay Gateway
+                @brandName
             </h1>
-            <p class="text-caption text-blue-200 mt-1">Cổng thanh toán điện tử mô phỏng an toàn</p>
+            <p class="text-caption text-white/80 mt-1">Trang mô phỏng giao dịch thanh toán viện phí MediFlow</p>
         </div>
 
-        <div class="p-unit-lg space-y-unit-lg">
-            <!-- Payment overview -->
-            <div class="text-center space-y-unit-xs">
-                <span class="text-caption text-on-surface-variant uppercase tracking-wider block">Số tiền cần thanh toán</span>
-                <strong class="text-[32px] font-black text-blue-800">@Model.TongTien.ToString("N0") VND</strong>
-                <span class="text-caption text-on-surface-variant block mt-1">Hóa đơn: <strong>#HD-@Model.Id.ToString("D5")</strong></span>
+        <div class="p-unit-lg flex flex-col gap-6">
+            <!-- Payment Overview Card -->
+            <div class="text-center bg-surface p-4.5 rounded-2xl border border-outline-variant/50 flex flex-col gap-1">
+                <span class="text-caption text-outline uppercase tracking-wider block font-bold">Số tiền cần thanh toán</span>
+                <strong class="text-[30px] font-black text-on-surface">@Model.TongTien.ToString("N0") <span class="text-[18px] font-bold">VND</span></strong>
+                <span class="text-caption text-on-surface-variant block mt-1">
+                    Phương thức: <strong>@methodDisplayName</strong> | Hóa đơn: <strong class="font-mono text-primary">#HD-@Model.Id.ToString("D5")</strong>
+                </span>
             </div>
 
-            <!-- Mock QR code scanner -->
-            <div class="flex flex-col items-center p-unit-md bg-slate-50 rounded-xl border border-slate-200/60">
-                <div class="w-44 h-44 bg-white border border-slate-300 p-2 rounded-lg flex items-center justify-center relative shadow-inner">
-                    <!-- QR Mockup graphics -->
-                    <span class="material-symbols-outlined text-[100px] text-slate-300 animate-pulse">qr_code_2</span>
-                    <!-- Border brackets -->
-                    <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-blue-600 rounded-tl"></div>
-                    <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-blue-600 rounded-tr"></div>
-                    <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-blue-600 rounded-bl"></div>
-                    <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-blue-600 rounded-br"></div>
-                </div>
-                <span class="text-[11px] text-on-surface-variant mt-unit-sm text-center">Quét mã QR bằng ứng dụng ngân hàng hoặc ví VNPay/Momo để thanh toán nhanh</span>
+            <!-- Gate visualizer -->
+            <div class="flex flex-col items-center p-unit-md bg-surface rounded-2xl border border-outline-variant/40 gap-unit-md">
+                @if (method == "chuyenkhoan")
+                {
+                    <!-- QR Bank Details -->
+                    <div class="flex flex-col items-center gap-unit-sm w-full">
+                        <div class="w-44 h-44 bg-white border border-outline-variant p-2 rounded-xl flex items-center justify-center relative shadow-inner">
+                            <span class="material-symbols-outlined text-[110px] text-outline-variant/60 animate-pulse">qr_code_2</span>
+                            <!-- Frame corners -->
+                            <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl"></div>
+                            <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr"></div>
+                            <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl"></div>
+                            <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary rounded-br"></div>
+                        </div>
+                        <div class="text-center text-caption text-on-surface-variant space-y-1">
+                            <p class="font-bold text-on-surface">NH: VietinBank (Chi nhánh TP.HCM)</p>
+                            <p>Số tài khoản: <strong class="font-mono">1098 7654 3210</strong></p>
+                            <p>Chủ TK: <strong class="uppercase">MEDIFLOW HOSPITAL</strong></p>
+                            <p class="text-[10px] text-outline">Nội dung chuyển khoản: <strong class="font-mono text-primary">MEDIFLOW HD-@Model.Id.ToString("D5")</strong></p>
+                        </div>
+                    </div>
+                }
+                else if (method == "tai_quay")
+                {
+                    <div class="flex flex-col items-center gap-unit-sm text-center py-4">
+                        <span class="material-symbols-outlined text-[64px] text-teal-600">storefront</span>
+                        <p class="text-body-md font-bold text-on-surface">Vui lòng cung cấp mã hóa đơn cho quầy thu ngân</p>
+                        <p class="text-caption text-outline max-w-xs">Nhân viên thu ngân sẽ tiến hành quét mã và nhận tiền mặt hoặc quẹt thẻ POS của bạn tại quầy hành chính.</p>
+                    </div>
+                }
+                else
+                {
+                    <!-- QR Wallet details -->
+                    <div class="flex flex-col items-center gap-unit-sm">
+                        <div class="w-40 h-40 bg-white border border-outline-variant p-2 rounded-xl flex items-center justify-center relative shadow-inner">
+                            @if (!string.IsNullOrEmpty(logoUrl))
+                            {
+                                <img src="@logoUrl" class="w-16 h-16 object-contain z-10"/>
+                                <div class="absolute inset-0 bg-white/80 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[100px] text-outline-variant/50 animate-pulse">qr_code_2</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined text-[100px] text-outline-variant/60 animate-pulse">qr_code_2</span>
+                            }
+                            <!-- Frame corners -->
+                            <div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary rounded-tl"></div>
+                            <div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary rounded-tr"></div>
+                            <div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary rounded-bl"></div>
+                            <div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary rounded-br"></div>
+                        </div>
+                        <span class="text-caption text-outline text-center max-w-xs">Quét mã QR bằng ứng dụng @brandName để thanh toán đơn hàng này</span>
+                    </div>
+                }
             </div>
 
-            <!-- Submit Callback Actions -->
-            <form action="/Patient/Payment/PaymentCallback/@Model.Id" method="POST" class="space-y-unit-sm">
+            <!-- Interactive simulation forms -->
+            <form action="/Patient/Payment/PaymentCallback/@Model.Id" method="POST" id="callbackForm" class="flex flex-col gap-4">
                 @Html.AntiForgeryToken()
                 
-                <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-body-lg font-semibold py-3 rounded-lg transition-all active:scale-[0.98] flex items-center justify-center gap-1 shadow">
-                    <span class="material-symbols-outlined">check_circle</span>
-                    Xác nhận chuyển khoản thành công
-                </button>
+                <!-- Hidden paymentMethod parameter -->
+                <input type="hidden" name="paymentMethod" value="@method" />
+                <input type="hidden" name="paymentStatus" id="paymentStatus" value="success" />
+
+                <!-- Transaction ID Configuration -->
+                <div class="flex flex-col gap-1">
+                    <label class="text-[11px] font-bold text-outline uppercase tracking-wider">Mã giao dịch (Có thể chỉnh sửa để test)</label>
+                    <input type="text" name="transactionId" id="transactionId" value="@defaultTxnId" class="w-full px-3 py-2 border border-outline-variant rounded-xl text-caption font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface transition-all"/>
+                </div>
+
+                <div class="border-t border-outline-variant/30 pt-4 flex flex-col gap-2.5">
+                    <!-- Outcomes configuration buttons -->
+                    <button type="button" onclick="submitOutcome('success')" class="w-full bg-secondary text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 shadow hover:opacity-90">
+                        <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                        Mô phỏng THANH TOÁN THÀNH CÔNG
+                    </button>
+                    
+                    <button type="button" onclick="submitOutcome('failed')" class="w-full bg-error text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 shadow hover:opacity-90">
+                        <span class="material-symbols-outlined text-[20px]">cancel</span>
+                        Mô phỏng THANH TOÁN THẤT BẠI
+                    </button>
+
+                    <button type="button" onclick="submitOutcome('processing')" class="w-full bg-primary text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 shadow hover:opacity-90">
+                        <span class="material-symbols-outlined text-[20px]">hourglass_empty</span>
+                        Mô phỏng ĐANG CHỜ XỬ LÝ (PENDING)
+                    </button>
+                </div>
                 
-                <a href="/Patient/Payment/Details/@Model.Id" class="w-full border border-slate-300 text-on-surface font-body-md font-semibold py-3.5 rounded-lg hover:bg-slate-50 transition-all text-center block">
-                    Hủy giao dịch
+                <a href="/Patient/Payment" class="w-full border border-outline-variant text-on-surface font-semibold py-3 rounded-xl hover:bg-surface transition-all text-center block text-caption">
+                    Hủy bỏ giao dịch và Quay lại
                 </a>
             </form>
         </div>
 
-        <div class="bg-slate-50 p-unit-sm border-t border-slate-100 text-center text-caption text-outline">
-            Dành riêng cho mục đích trải nghiệm và demo luồng hóa đơn.
+        <div class="bg-surface p-3.5 border-t border-outline-variant/40 text-center text-caption text-outline font-medium">
+            Trang mô phỏng giao dịch nội bộ phục vụ mục đích kiểm thử và phát triển UI/UX.
         </div>
     </main>
+
+    <script>
+        function submitOutcome(status) {
+            document.getElementById('paymentStatus').value = status;
+            document.getElementById('callbackForm').submit();
+        }
+    </script>
 </body>

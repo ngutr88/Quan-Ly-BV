@@ -92,7 +92,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
         // POST: Admin/Doctors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string hoTen, string email, string sdt, string matKhau, int khoaId, string chuyenKhoa, string hocVi, int soNamKinhNghiem, string lichLamViec)
+        public async Task<IActionResult> Create(string hoTen, string email, string sdt, string matKhau, int khoaId, string chuyenKhoa, string hocVi, int soNamKinhNghiem, string lichLamViec, string chucVu)
         {
             if (await _context.Users.AnyAsync(u => u.Email == email || u.Sdt == sdt))
             {
@@ -122,7 +122,8 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 ChuyenKhoa = chuyenKhoa,
                 HocVi = hocVi,
                 SoNamKinhNghiem = soNamKinhNghiem,
-                LichLamViec = lichLamViec
+                LichLamViec = lichLamViec,
+                ChucVu = chucVu ?? "Bác sĩ"
             };
             _context.Doctors.Add(doctor);
             
@@ -154,7 +155,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
         // POST: Admin/Doctors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, string hoTen, string sdt, int khoaId, string chuyenKhoa, string hocVi, int soNamKinhNghiem, string lichLamViec, string trangThai)
+        public async Task<IActionResult> Edit(int id, string hoTen, string sdt, int khoaId, string chuyenKhoa, string hocVi, int soNamKinhNghiem, string lichLamViec, string trangThai, string chucVu)
         {
             var doctor = await _context.Doctors.Include(d => d.User).FirstOrDefaultAsync(d => d.Id == id);
             if (doctor == null) return NotFound();
@@ -178,6 +179,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
             doctor.HocVi = hocVi;
             doctor.SoNamKinhNghiem = soNamKinhNghiem;
             doctor.LichLamViec = lichLamViec;
+            doctor.ChucVu = chucVu ?? "Bác sĩ";
 
             _context.Entry(doctor.User).State = EntityState.Modified;
             _context.Entry(doctor).State = EntityState.Modified;

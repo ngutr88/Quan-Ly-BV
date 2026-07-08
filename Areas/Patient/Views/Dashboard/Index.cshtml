@@ -118,7 +118,7 @@
             {
                 @foreach (var pres in recentPres)
                 {
-                    <div class="p-unit-sm border border-outline-variant rounded-lg bg-surface hover:border-primary transition-all cursor-pointer" onclick="location.href='/Patient/Record/PrescriptionDetails/@pres.Id'">
+                    <div class="p-unit-sm border border-outline-variant rounded-lg bg-surface hover:border-primary transition-all cursor-pointer" onclick="location.href='/Patient/Record/PrescriptionDetails/@pres.PhieuKhamId'">
                         <div class="flex justify-between text-caption font-bold text-primary mb-1">
                             <span>Đơn thuốc ngày @pres.NgayKe.ToString("dd/MM/yyyy")</span>
                             <span class="material-symbols-outlined text-[16px]">chevron_right</span>

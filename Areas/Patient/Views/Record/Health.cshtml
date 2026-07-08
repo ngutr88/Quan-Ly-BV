@@ -3,6 +3,8 @@
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
     ViewData["Title"] = "Sổ sức khỏe điện tử";
+    var rawLogsStr = ViewBag.HealthLogsJson as string ?? "[]";
+    var hasLogs = rawLogsStr != "[]" && rawLogsStr != "null";
 }
 
 <div class="mb-unit-lg">
@@ -18,7 +20,7 @@
     <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md h-fit">
         <div class="flex items-center gap-unit-md">
             <div class="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-white text-[20px] font-bold">
-                @Model.User.HoTen.Substring(Model.User.HoTen.LastIndexOf(' ') + 1, 1)
+                @(string.IsNullOrWhiteSpace(Model.User.HoTen) ? "BN" : Model.User.HoTen.Trim().Split(' ').Last().Substring(0, 1).ToUpper())
             </div>
             <div>
                 <h3 class="font-title-lg font-bold">@Model.User.HoTen</h3>
@@ -48,25 +50,36 @@
 
     <!-- Charts area (2 cols) -->
     <div class="lg:col-span-2 space-y-unit-lg">
-        <!-- Chart 1: Weight and BMI -->
-        <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-            <h3 class="font-title-lg text-title-lg font-bold text-primary mb-unit-md flex items-center gap-1">
-                <span class="material-symbols-outlined">monitoring</span> Biểu đồ Cân nặng &amp; Chỉ số BMI
-            </h3>
-            <div class="w-full h-64">
-                <canvas id="weightChart"></canvas>
+        @if (!hasLogs)
+        {
+            <div class="bg-white border border-outline-variant rounded-xl p-unit-xl text-center shadow-sm py-16 flex flex-col items-center">
+                <span class="material-symbols-outlined text-[64px] text-outline mb-4">monitoring</span>
+                <h3 class="font-headline-md text-headline-md text-on-surface mb-2">Chưa có chỉ số theo dõi</h3>
+                <p class="text-body-md text-on-surface-variant max-w-md">Bạn chưa có lịch sử đo chỉ số sinh tồn. Chỉ số sẽ được cập nhật tự động sau khi bác sĩ thực hiện phiên khám đầu tiên tại bệnh viện.</p>
             </div>
-        </div>
+        }
+        else
+        {
+            <!-- Chart 1: Weight and BMI -->
+            <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg font-bold text-primary mb-unit-md flex items-center gap-1">
+                    <span class="material-symbols-outlined">monitoring</span> Biểu đồ Cân nặng &amp; Chỉ số BMI
+                </h3>
+                <div class="w-full h-64">
+                    <canvas id="weightChart"></canvas>
+                </div>
+            </div>
 
-        <!-- Chart 2: Blood Pressure and Heart Rate -->
-        <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-            <h3 class="font-title-lg text-title-lg font-bold text-primary mb-unit-md flex items-center gap-1">
-                <span class="material-symbols-outlined">heart_check</span> Biểu đồ Huyết áp &amp; Nhịp tim
-            </h3>
-            <div class="w-full h-64">
-                <canvas id="bpChart"></canvas>
+            <!-- Chart 2: Blood Pressure and Heart Rate -->
+            <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg font-bold text-primary mb-unit-md flex items-center gap-1">
+                    <span class="material-symbols-outlined">heart_check</span> Biểu đồ Huyết áp &amp; Nhịp tim
+                </h3>
+                <div class="w-full h-64">
+                    <canvas id="bpChart"></canvas>
+                </div>
             </div>
-        </div>
+        }
     </div>
 </div>
 

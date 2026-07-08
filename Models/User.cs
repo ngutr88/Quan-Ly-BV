@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -71,6 +72,10 @@ namespace QuanLyBenhVien.Models
 
         [StringLength(200)]
         public string LichLamViec { get; set; } = "Ca sang (08:00 - 12:00) & Chiều (13:30 - 17:30)";
+
+        [Required]
+        [StringLength(50)]
+        public string ChucVu { get; set; } = "Bác sĩ"; // Trưởng khoa, Phó trưởng khoa, Bác sĩ
     }
 
     [Table("BenhNhan")]
@@ -103,5 +108,7 @@ namespace QuanLyBenhVien.Models
 
         [StringLength(500)]
         public string DiUng { get; set; } = string.Empty;
+
+        public virtual ICollection<Dependent> Dependents { get; set; } = new List<Dependent>();
     }
 }

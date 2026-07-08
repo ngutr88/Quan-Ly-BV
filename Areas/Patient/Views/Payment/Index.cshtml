@@ -1,67 +1,910 @@
 @model IEnumerable<QuanLyBenhVien.Models.Invoice>
+@using System.Text.Json
 
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
-    ViewData["Title"] = "Hóa đơn thanh toán";
+    ViewData["Title"] = "Hóa đơn & Thanh toán";
+
+    var allInvoices = Model.ToList();
+    
+    // Financial metrics
+    var unpaidStatuses = new[] { "ChuaThanhToan", "QuaHan", "ThanhToanThatBai" };
+    var unpaidInvoices = allInvoices.Where(i => unpaidStatuses.Contains(i.TrangThaiThanhToan)).ToList();
+    var totalDebt = unpaidInvoices.Sum(i => i.TongTien);
+    var totalPaid = allInvoices.Where(i => i.TrangThaiThanhToan == "DaThanhToan").Sum(i => i.TongTien);
+    var unpaidCount = unpaidInvoices.Count;
+    var overdueCount = allInvoices.Count(i => i.TrangThaiThanhToan == "QuaHan");
+    var hasOverdue = overdueCount > 0;
 }
 
-<div class="mb-unit-lg">
-    <h2 class="font-headline-lg text-headline-lg text-on-surface">Hóa đơn thanh toán</h2>
-    <p class="text-body-md text-on-surface-variant">Danh sách hóa đơn phí dịch vụ khám bệnh và đơn thuốc của bạn.</p>
+<!-- html2pdf dependency for client-side PDF download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<div class="flex flex-col gap-unit-lg w-full animate-fade-in">
+    @if (hasOverdue)
+    {
+        <!-- Warning Banner -->
+        <div class="bg-error-container text-on-error-container p-unit-md rounded-2xl flex items-center gap-3 border border-error/20 shadow-md">
+            <span class="material-symbols-outlined text-[24px] text-error animate-bounce">warning</span>
+            <div>
+                <p class="text-body-md font-bold">Cảnh báo hóa đơn quá hạn!</p>
+                <p class="text-caption text-on-error-container/85">Bạn đang có @overdueCount hóa đơn quá hạn thanh toán. Vui lòng thanh toán sớm để đảm bảo quyền lợi khám chữa bệnh liên tục.</p>
+            </div>
+        </div>
+    }
+
+    <!-- Page Header & Financial Dashboard -->
+    <div class="flex flex-col gap-unit-md">
+        <div>
+            <h2 class="font-headline-lg text-headline-lg text-on-background mb-1">Hóa đơn &amp; Thanh toán</h2>
+            <p class="text-body-md text-on-surface-variant">Quản lý viện phí, xem lịch sử giao dịch và thực hiện thanh toán trực tuyến bảo mật.</p>
+        </div>
+
+        <!-- Dashboard Bento Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-unit-md mt-unit-sm">
+            <!-- 1. Total Debt -->
+            <div class="bg-white border border-outline-variant rounded-2xl p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-[72px] text-primary">account_balance_wallet</span>
+                </div>
+                <div>
+                    <p class="text-caption font-bold text-outline uppercase tracking-wider">Tổng nợ hiện tại</p>
+                    <h3 class="text-headline-md font-black text-primary mt-2">@totalDebt.ToString("N0") <span class="text-body-md font-normal text-on-surface-variant">đ</span></h3>
+                </div>
+                <div class="mt-4 flex items-center gap-1.5 text-caption font-medium @(totalDebt > 0 ? "text-error" : "text-secondary")">
+                    <span class="material-symbols-outlined text-[16px]">@(totalDebt > 0 ? "error" : "check_circle")</span>
+                    <span>@(totalDebt > 0 ? "Yêu cầu thanh toán" : "Đã thanh toán đủ")</span>
+                </div>
+            </div>
+
+            <!-- 2. Total Paid -->
+            <div class="bg-white border border-outline-variant rounded-2xl p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-[72px] text-secondary">payments</span>
+                </div>
+                <div>
+                    <p class="text-caption font-bold text-outline uppercase tracking-wider">Tổng đã thanh toán</p>
+                    <h3 class="text-headline-md font-black text-secondary mt-2">@totalPaid.ToString("N0") <span class="text-body-md font-normal text-on-surface-variant">đ</span></h3>
+                </div>
+                <div class="mt-4 flex items-center gap-1.5 text-secondary text-caption font-medium">
+                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                    <span>Hoàn thành thanh toán</span>
+                </div>
+            </div>
+
+            <!-- 3. Unpaid Count -->
+            <div class="bg-white border border-outline-variant rounded-2xl p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-[72px] text-tertiary">receipt</span>
+                </div>
+                <div>
+                    <p class="text-caption font-bold text-outline uppercase tracking-wider">Hóa đơn cần thanh toán</p>
+                    <h3 class="text-headline-md font-black text-tertiary mt-2">@unpaidCount <span class="text-body-md font-normal text-on-surface-variant">hóa đơn</span></h3>
+                </div>
+                <div class="mt-4 flex items-center gap-1.5 text-caption font-medium @(unpaidCount > 0 ? "text-tertiary-container" : "text-secondary")">
+                    <span class="material-symbols-outlined text-[16px]">@(unpaidCount > 0 ? "hourglass_empty" : "done_all")</span>
+                    <span>@(unpaidCount > 0 ? "Chờ xử lý thanh toán" : "Không có hóa đơn nợ")</span>
+                </div>
+            </div>
+
+            <!-- 4. Overdue Count -->
+            <div class="bg-white border border-outline-variant rounded-2xl p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-[72px] text-error">gavel</span>
+                </div>
+                <div>
+                    <p class="text-caption font-bold text-outline uppercase tracking-wider">Hóa đơn quá hạn</p>
+                    <h3 class="text-headline-md font-black text-error mt-2">@overdueCount <span class="text-body-md font-normal text-on-surface-variant">hóa đơn</span></h3>
+                </div>
+                <div class="mt-4 flex items-center gap-1.5 text-caption font-medium @(overdueCount > 0 ? "text-error font-bold animate-pulse" : "text-secondary")">
+                    <span class="material-symbols-outlined text-[16px]">@(overdueCount > 0 ? "running_with_errors" : "verified")</span>
+                    <span>@(overdueCount > 0 ? "Cần giải quyết ngay" : "Không có hóa đơn trễ hạn")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Filters Bento -->
+    <div class="bg-white border border-outline-variant rounded-2xl p-4 shadow-sm flex flex-col gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <!-- Search by Invoice ID -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[11px] font-bold text-on-surface-variant uppercase">Tìm mã hóa đơn</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-2.5 text-outline text-[20px]">search</span>
+                    <input type="text" id="filter-search" placeholder="Ví dụ: HD-00001" class="w-full pl-9 pr-3 py-2 border border-outline-variant rounded-xl text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"/>
+                </div>
+            </div>
+
+            <!-- Date Start -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[11px] font-bold text-on-surface-variant uppercase">Từ ngày</label>
+                <input type="date" id="filter-date-start" class="w-full px-3 py-2 border border-outline-variant rounded-xl text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"/>
+            </div>
+
+            <!-- Date End -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[11px] font-bold text-on-surface-variant uppercase">Đến ngày</label>
+                <input type="date" id="filter-date-end" class="w-full px-3 py-2 border border-outline-variant rounded-xl text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"/>
+            </div>
+
+            <!-- Status Select -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[11px] font-bold text-on-surface-variant uppercase">Trạng thái thanh toán</label>
+                <select id="filter-status" class="w-full px-3 py-2 border border-outline-variant rounded-xl text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white transition-all">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="ChuaThanhToan">Chưa thanh toán</option>
+                    <option value="DaThanhToan">Đã thanh toán</option>
+                    <option value="QuaHan">Quá hạn</option>
+                    <option value="ThanhToanThatBai">Thanh toán thất bại</option>
+                    <option value="DangXuLy">Đang xử lý</option>
+                    <option value="DaHuy">Đã hủy</option>
+                </select>
+            </div>
+
+            <!-- Payment Method Select -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[11px] font-bold text-on-surface-variant uppercase">Phương thức thanh toán</label>
+                <select id="filter-method" class="w-full px-3 py-2 border border-outline-variant rounded-xl text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white transition-all">
+                    <option value="">Tất cả phương thức</option>
+                    <option value="Online (VNPay)">VNPay</option>
+                    <option value="Online (MoMo)">MoMo</option>
+                    <option value="Online (ZaloPay)">ZaloPay</option>
+                    <option value="ChuyenKhoan">Chuyển khoản</option>
+                    <option value="Thanh toán tại quầy">Thanh toán tại quầy</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center border-t border-outline-variant/30 pt-3">
+            <span class="text-caption text-outline font-medium" id="filter-summary">Hiển thị toàn bộ hóa đơn</span>
+            <button onclick="resetFilters()" class="text-primary hover:text-primary-container font-semibold text-caption flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">restart_alt</span>
+                Reset bộ lọc
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-unit-lg items-start">
+        
+        <!-- Left Column: Invoices & Transactions -->
+        <div class="lg:col-span-8 flex flex-col gap-unit-lg">
+            
+            <!-- Invoices Table Section -->
+            <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+                <div class="p-unit-md border-b border-outline-variant/60 bg-surface-container-lowest flex justify-between items-center">
+                    <h3 class="font-title-lg font-bold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">receipt_long</span>
+                        Danh sách hóa đơn viện phí
+                    </h3>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="invoices-table">
+                        <thead>
+                            <tr class="bg-surface-container-low border-b border-outline-variant">
+                                <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Mã hóa đơn</th>
+                                <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Ngày tạo</th>
+                                <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Bác sĩ khám</th>
+                                <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Tổng tiền</th>
+                                <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/50">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State (Table) -->
+                <div id="invoices-empty" class="hidden p-unit-xl text-center flex flex-col items-center gap-unit-md">
+                    <div class="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center border border-dashed border-outline-variant">
+                        <span class="material-symbols-outlined text-[42px] text-outline">receipt</span>
+                    </div>
+                    <div>
+                        <h4 class="font-title-lg text-on-surface font-bold" id="empty-title">Bạn chưa có hóa đơn nào</h4>
+                        <p class="text-caption text-on-surface-variant max-w-sm mt-1" id="empty-desc">Không có dữ liệu hóa đơn nào khớp với bộ lọc hiện tại của bạn.</p>
+                    </div>
+                    <a href="/Patient/Book" id="empty-cta" class="bg-primary text-white font-semibold text-caption px-6 py-2.5 rounded-xl hover:bg-primary-container shadow-sm transition-all active:scale-[0.98]">
+                        Đặt lịch khám ngay
+                    </a>
+                </div>
+            </div>
+
+            <!-- Transaction History Section -->
+            <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+                <div class="p-unit-md border-b border-outline-variant/60 bg-surface-container-lowest">
+                    <h3 class="font-title-lg font-bold text-on-surface flex items-center gap-2">
+                        <span class="material-symbols-outlined text-secondary">history</span>
+                        Lịch sử giao dịch trực tuyến
+                    </h3>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="transactions-table">
+                        <thead>
+                            <tr class="bg-surface-container-low border-b border-outline-variant">
+                                <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Ngày giao dịch</th>
+                                <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Mã giao dịch</th>
+                                <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Phương thức</th>
+                                <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Số tiền</th>
+                                <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/50">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State (Transactions) -->
+                <div id="transactions-empty" class="hidden p-unit-lg text-center flex flex-col items-center gap-2 py-8">
+                    <span class="material-symbols-outlined text-[36px] text-outline-variant">payments</span>
+                    <p class="text-caption text-on-surface-variant font-medium">Chưa có giao dịch thanh toán trực tuyến nào được thực hiện.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Details & Operations -->
+        <div class="lg:col-span-4 flex flex-col gap-unit-lg sticky top-20" id="detail-pane">
+            <!-- Details Section -->
+            <section class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm relative transition-all" id="detail-section">
+                <!-- Watermark for Status -->
+                <div id="status-watermark" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-black text-[50px] uppercase select-none opacity-5 rotate-12 z-0 pointer-events-none">
+                    DRAFT
+                </div>
+
+                <div class="p-unit-md border-b border-outline-variant/60 bg-surface-container-lowest flex justify-between items-center z-10 relative">
+                    <h3 class="font-title-lg font-bold text-primary flex items-center gap-1">
+                        <span class="material-symbols-outlined">receipt_long</span>
+                        Chi tiết hóa đơn
+                    </h3>
+                    <span class="text-caption font-mono bg-surface border border-outline-variant px-2 py-0.5 rounded font-bold" id="detail-code">#HD-00000</span>
+                </div>
+
+                <div class="p-unit-md flex flex-col gap-4 z-10 relative">
+                    <!-- General Details Grid -->
+                    <div class="grid grid-cols-2 gap-x-2 gap-y-3 text-caption border-b border-outline-variant/40 pb-4">
+                        <div>
+                            <span class="text-outline block">Khoa khám</span>
+                            <strong class="text-on-surface block font-semibold truncate" id="detail-dept">Khoa Tim mạch</strong>
+                        </div>
+                        <div>
+                            <span class="text-outline block">Bác sĩ khám</span>
+                            <strong class="text-on-surface block font-semibold truncate" id="detail-doctor">BS. Nguyễn Văn Trung</strong>
+                        </div>
+                        <div>
+                            <span class="text-outline block">Ngày khám</span>
+                            <strong class="text-on-surface block font-semibold" id="detail-date-exam">N/A</strong>
+                        </div>
+                        <div>
+                            <span class="text-outline block">Mã lịch khám</span>
+                            <strong class="text-on-surface block font-semibold" id="detail-app-code">N/A</strong>
+                        </div>
+                        <div>
+                            <span class="text-outline block">Phương thức</span>
+                            <strong class="text-on-surface block font-semibold truncate" id="detail-method">N/A</strong>
+                        </div>
+                        <div>
+                            <span class="text-outline block">Mã giao dịch</span>
+                            <strong class="text-on-surface block font-semibold font-mono truncate text-[11px]" id="detail-transaction">N/A</strong>
+                        </div>
+                    </div>
+
+                    <!-- Items List -->
+                    <div>
+                        <h4 class="text-caption font-bold text-outline uppercase tracking-wider mb-2">Chi tiết viện phí</h4>
+                        <div id="detail-list" class="flex flex-col gap-2 max-h-60 overflow-y-auto">
+                            <!-- Items Injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Total Block -->
+                    <div class="mt-2 p-4 bg-primary-fixed text-on-primary-fixed rounded-2xl flex justify-between items-center shadow-sm">
+                        <span class="font-bold text-caption uppercase tracking-wider">Tổng viện phí</span>
+                        <span class="font-headline-md font-black text-primary text-headline-sm" id="detail-total">0 đ</span>
+                    </div>
+
+                    <!-- Operations (Always Visible when invoice selected) -->
+                    <div class="grid grid-cols-3 gap-2 border-t border-outline-variant/30 pt-4 mt-2">
+                        <button onclick="printInvoice()" class="flex flex-col items-center justify-center gap-1.5 p-2 bg-surface hover:bg-surface-container-high border border-outline-variant/60 rounded-xl text-caption text-on-surface transition-all active:scale-95" title="In biên lai">
+                            <span class="material-symbols-outlined text-[20px] text-primary">print</span>
+                            <span class="font-semibold">In hóa đơn</span>
+                        </button>
+                        <button onclick="downloadPdf()" class="flex flex-col items-center justify-center gap-1.5 p-2 bg-surface hover:bg-surface-container-high border border-outline-variant/60 rounded-xl text-caption text-on-surface transition-all active:scale-95" title="Tải PDF">
+                            <span class="material-symbols-outlined text-[20px] text-secondary">picture_as_pdf</span>
+                            <span class="font-semibold">Tải PDF</span>
+                        </button>
+                        <button onclick="sendEmailReceipt()" class="flex flex-col items-center justify-center gap-1.5 p-2 bg-surface hover:bg-surface-container-high border border-outline-variant/60 rounded-xl text-caption text-on-surface transition-all active:scale-95" title="Gửi biên lai qua Email">
+                            <span class="material-symbols-outlined text-[20px] text-tertiary">email</span>
+                            <span class="font-semibold">Gửi Email</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Payment Options Section (For Unpaid/Failed/Overdue Invoices) -->
+            <section class="bg-white border border-outline-variant rounded-2xl p-5 shadow-sm transition-all" id="payment-section">
+                <h3 class="font-title-lg font-bold text-on-background mb-3 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-primary">credit_card</span>
+                    Thanh toán trực tuyến
+                </h3>
+                <p class="text-caption text-on-surface-variant mb-4">Vui lòng lựa chọn phương thức thanh toán bảo mật bên dưới:</p>
+                
+                <div class="flex flex-col gap-2.5 mb-6">
+                    <!-- VNPay -->
+                    <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                        <input checked="" class="accent-primary w-4 h-4" name="paymentMethod" type="radio" value="vnpay"/>
+                        <img class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0y0s8Y8k7DVQXcDdFl-uUOeBJnD3Vn9lYucgaViDlj7dgf22d9ODHoaxZ8-4L1hywHZuBLo84Vz5FASVtv8jKO1HveIPsRw_HXtAod6c6lAUKRGvRU58O-xXX2KZp8qPFWegYFnJF-g2Yrab4zsOXjImS59w8ioHalFuqS_JAEUO8QmNxwonTZKBWIa3C7H_sg33u8t7gmXqwRbmiBy6zpRANKLQZKTcl6W6mRqn9e3J5CTEV6lO7BTb3biak3qlLaY9-6n-Si8c"/>
+                        <div class="flex flex-col">
+                            <span class="text-caption font-bold">Cổng thanh toán VNPay</span>
+                            <span class="text-[10px] text-outline">Thanh toán qua ví VNPay hoặc Mobile Banking</span>
+                        </div>
+                    </label>
+
+                    <!-- MoMo -->
+                    <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                        <input class="accent-primary w-4 h-4" name="paymentMethod" type="radio" value="momo"/>
+                        <img class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvKWGBnJMWWOFYp3nk2-UJpu5CJejqhDIOenoH6gKeoiT3kEy59xtSIeUN5djbUBzUkLpqhDoJnajayAy9SiQ3qFWJZpVMMXBwO2IgaJC8DsdyWZ89np7dRWPIydFrZYl4bc2Vru6GIqNJzzTLKpn7Qme6r03kpDyN3Hy7BlZ9BAvxbZJ84hB5FEKCCIpsU_JW7wo9XVLg77E6q4WDmNLZjgN-YOPirmabVGsc9tj8YrW8X592ZIU1Z2RBhZYf2GnijDkca13OnU4"/>
+                        <div class="flex flex-col">
+                            <span class="text-caption font-bold">Ví điện tử MoMo</span>
+                            <span class="text-[10px] text-outline">Thanh toán tức thời qua ứng dụng ví MoMo</span>
+                        </div>
+                    </label>
+
+                    <!-- ZaloPay -->
+                    <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                        <input class="accent-primary w-4 h-4" name="paymentMethod" type="radio" value="zalopay"/>
+                        <span class="w-8 h-8 bg-[#002f87] text-white flex items-center justify-center font-black rounded-lg text-[9px] uppercase">Zalo</span>
+                        <div class="flex flex-col">
+                            <span class="text-caption font-bold">Ví điện tử ZaloPay</span>
+                            <span class="text-[10px] text-outline">Quét mã QR thanh toán nhanh qua ZaloPay</span>
+                        </div>
+                    </label>
+
+                    <!-- Bank Transfer (ChuyenKhoan) -->
+                    <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                        <input class="accent-primary w-4 h-4" name="paymentMethod" type="radio" value="chuyenkhoan"/>
+                        <span class="w-8 h-8 bg-surface-container flex items-center justify-center rounded-lg text-primary"><span class="material-symbols-outlined text-[20px]">account_balance</span></span>
+                        <div class="flex flex-col">
+                            <span class="text-caption font-bold">Chuyển khoản Ngân hàng</span>
+                            <span class="text-[10px] text-outline">Mô phỏng chuyển khoản Napas247</span>
+                        </div>
+                    </label>
+
+                    <!-- Over the Counter (Tại quầy) -->
+                    <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                        <input class="accent-primary w-4 h-4" name="paymentMethod" type="radio" value="tai_quay"/>
+                        <span class="w-8 h-8 bg-surface-container flex items-center justify-center rounded-lg text-secondary"><span class="material-symbols-outlined text-[20px]">store</span></span>
+                        <div class="flex flex-col">
+                            <span class="text-caption font-bold">Thanh toán tại quầy</span>
+                            <span class="text-[10px] text-outline">Yêu cầu thanh toán tiền mặt/quẹt thẻ tại bệnh viện</span>
+                        </div>
+                    </label>
+                </div>
+                
+                <form id="paymentForm" action="" method="GET">
+                    <button id="payButton" type="submit" class="w-full bg-primary text-white py-3.5 rounded-2xl font-bold text-caption flex items-center justify-center gap-2 hover:bg-primary-container shadow-md shadow-primary/10 transition-all active:scale-[0.98]">
+                        <span class="material-symbols-outlined text-[20px]">lock</span>
+                        <span id="pay-button-text">Tiến hành thanh toán</span>
+                    </button>
+                </form>
+            </section>
+        </div>
+    </div>
 </div>
 
-<div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-body-md">
+<!-- Hidden Clean Printable Layout for PDF/Print -->
+<div id="receipt-print-area" class="hidden">
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; line-height: 1.5; font-size: 13px;">
+        <!-- Header -->
+        <table style="width: 100%; border-bottom: 2px solid #003f87; padding-bottom: 15px; margin-bottom: 20px;">
+            <tr>
+                <td style="vertical-align: top;">
+                    <h2 style="color: #003f87; margin: 0 0 5px 0; font-size: 20px; font-weight: bold;">MEDIFLOW GENERAL HOSPITAL</h2>
+                    <p style="margin: 0; font-size: 11px; color: #64748b;">Địa chỉ: 123 Đường Ba Tháng Hai, Quận 10, TP. Hồ Chí Minh</p>
+                    <p style="margin: 0; font-size: 11px; color: #64748b;">SĐT: (028) 3838 3838 - Email: support@mediflow.com</p>
+                </td>
+                <td style="text-align: right; vertical-align: top;">
+                    <h3 style="color: #003f87; margin: 0 0 5px 0; font-size: 16px; font-weight: bold;">BIÊN LAI VIỆN PHÍ</h3>
+                    <p style="margin: 0; font-family: monospace; font-size: 12px; font-weight: bold;" id="print-receipt-code">#HD-00000</p>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Receipt Title and Watermark -->
+        <div style="text-align: center; margin-bottom: 25px;">
+            <h1 style="font-size: 18px; color: #1e293b; margin: 0; font-weight: bold; text-transform: uppercase;">BIÊN LAI ĐIỆN TỬ</h1>
+            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 11px;">Mã số biên lai: <span id="print-bill-no">INV-00000</span></p>
+        </div>
+
+        <!-- Info Grid -->
+        <table style="width: 100%; margin-bottom: 25px; font-size: 13px;">
+            <tr>
+                <td style="width: 50%; padding: 4px 0; vertical-align: top;"><strong>Bệnh nhân:</strong> <span id="print-patient-name">@User.Identity?.Name</span></td>
+                <td style="width: 50%; padding: 4px 0; vertical-align: top;"><strong>Ngày lập hóa đơn:</strong> <span id="print-date-created">N/A</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0; vertical-align: top;"><strong>Khoa khám:</strong> <span id="print-dept">N/A</span></td>
+                <td style="padding: 4px 0; vertical-align: top;"><strong>Bác sĩ khám:</strong> <span id="print-doctor">N/A</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0; vertical-align: top;"><strong>Mã lịch khám:</strong> <span id="print-app-code">N/A</span></td>
+                <td style="padding: 4px 0; vertical-align: top;"><strong>Thời gian thanh toán:</strong> <span id="print-date-paid">N/A</span></td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 0; vertical-align: top;"><strong>Phương thức:</strong> <span id="print-method">N/A</span></td>
+                <td style="padding: 4px 0; vertical-align: top;"><strong>Mã giao dịch:</strong> <span style="font-family: monospace;" id="print-transaction">N/A</span></td>
+            </tr>
+        </table>
+
+        <!-- Fees Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
             <thead>
-                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase border-b border-outline-variant">
-                    <th class="px-unit-md py-3">Số Hóa đơn</th>
-                    <th class="px-unit-md py-3">Ngày phát sinh</th>
-                    <th class="px-unit-md py-3">Bác sĩ khám</th>
-                    <th class="px-unit-md py-3">Tổng số tiền</th>
-                    <th class="px-unit-md py-3">Trạng thái</th>
-                    <th class="px-unit-md py-3 text-right">Hành động</th>
+                <tr style="background-color: #f1f5f9; border-top: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1;">
+                    <th style="padding: 8px; text-align: left; font-weight: bold; width: 70%;">Hạng mục thanh toán</th>
+                    <th style="padding: 8px; text-align: right; font-weight: bold; width: 30%;">Thành tiền</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-outline-variant">
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="6" class="px-unit-md py-8 text-center text-on-surface-variant italic">Bạn không có hóa đơn nào trên hệ thống.</td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var inv in Model)
-                    {
-                        <tr class="hover:bg-surface-container-low transition-colors">
-                            <td class="px-unit-md py-4 font-mono font-bold text-primary">#HD-@inv.Id.ToString("D5")</td>
-                            <td class="px-unit-md py-4">@inv.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="px-unit-md py-4 text-on-surface-variant">@inv.ExaminationRecord.Appointment.Doctor?.User.HoTen</td>
-                            <td class="px-unit-md py-4 font-bold">@inv.TongTien.ToString("N0") đ</td>
-                            <td class="px-unit-md py-4">
-                                @if (inv.TrangThaiThanhToan == "DaThanhToan")
-                                {
-                                    <span class="px-2.5 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">Đã thanh toán</span>
-                                }
-                                else if (inv.TrangThaiThanhToan == "ChuaThanhToan")
-                                {
-                                    <span class="px-2.5 py-0.5 rounded-full bg-error-container text-error text-[11px] font-bold animate-pulse">Chưa trả</span>
-                                }
-                                else
-                                {
-                                    <span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[11px] font-bold">Đã hủy</span>
-                                }
-                            </td>
-                            <td class="px-unit-md py-4 text-right">
-                                <a href="/Patient/Payment/Details/@inv.Id" class="inline-flex items-center gap-0.5 bg-surface-container hover:bg-surface-container-high px-3 py-1.5 rounded-lg text-label-md transition-colors text-primary font-semibold border border-outline-variant/30">
-                                    Chi tiết <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                }
+            <tbody id="print-items-body" style="border-bottom: 1px solid #cbd5e1;">
+                <!-- Items Injected here -->
             </tbody>
+            <tfoot>
+                <tr>
+                    <td style="padding: 10px 8px; text-align: left; font-weight: bold; font-size: 14px; color: #003f87;">TỔNG CỘNG THANH TOÁN</td>
+                    <td style="padding: 10px 8px; text-align: right; font-weight: bold; font-size: 16px; color: #003f87;" id="print-total-cost">0 đ</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Status watermark display in PDF -->
+        <div style="margin: 20px 0; text-align: center; border: 2px dashed #ba1a1a; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 16px;" id="print-watermark-status">
+            ĐÃ THANH TOÁN
+        </div>
+
+        <!-- Footer signatures -->
+        <table style="width: 100%; margin-top: 40px; text-align: center;">
+            <tr>
+                <td style="width: 50%; vertical-align: top;">
+                    <p style="margin: 0 0 50px 0;"><strong>Bệnh nhân</strong></p>
+                    <p style="margin: 0; color: #64748b; font-style: italic;">(Ký và ghi rõ họ tên)</p>
+                </td>
+                <td style="width: 50%; vertical-align: top;">
+                    <p style="margin: 0 0 50px 0;"><strong>Đại diện thu ngân bệnh viện</strong></p>
+                    <p style="margin: 0; color: #64748b; font-style: italic;">(Ký, đóng dấu và ghi rõ họ tên)</p>
+                </td>
+            </tr>
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Invoices data serialized from C# Backend Model
+        const invoicesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Select(i => new {
+            id = i.Id,
+            code = "HD-" + i.Id.ToString("D5"),
+            total = i.TongTien,
+            formattedTotal = i.TongTien.ToString("N0") + " đ",
+            status = i.TrangThaiThanhToan,
+            method = i.PhuongThuc == "ChuaThanhToan" ? "Chưa thanh toán" : i.PhuongThuc,
+            dateCreated = i.NgayTao.ToString("yyyy-MM-ddTHH:mm:ss"),
+            dateCreatedFormatted = i.NgayTao.ToString("dd/MM/yyyy HH:mm"),
+            datePaidFormatted = i.NgayThanhToan.HasValue ? i.NgayThanhToan.Value.ToString("dd/MM/yyyy HH:mm") : "N/A",
+            transactionId = i.MaGiaoDich ?? "N/A",
+            doctorName = i.ExaminationRecord?.Appointment?.Doctor?.User?.HoTen ?? "N/A",
+            departmentName = i.ExaminationRecord?.Appointment?.Doctor?.Department?.TenKhoa ?? "N/A",
+            examDateFormatted = i.ExaminationRecord?.NgayKham.ToString("dd/MM/yyyy") ?? "N/A",
+            appointmentCode = "LK-" + (i.ExaminationRecord?.LichKhamId.ToString("D5") ?? "00000"),
+            details = i.InvoiceDetails.Select(d => new {
+                name = d.LoaiPhi,
+                amount = d.SoTien.ToString("N0") + " đ"
+            }).ToList()
+        })));
+
+        let activeInvoiceId = null;
+
+        // Initialize and setup event listeners
+        document.addEventListener("DOMContentLoaded", () => {
+            // Register filter change events
+            document.getElementById("filter-search").addEventListener("input", filterData);
+            document.getElementById("filter-date-start").addEventListener("change", filterData);
+            document.getElementById("filter-date-end").addEventListener("change", filterData);
+            document.getElementById("filter-status").addEventListener("change", filterData);
+            document.getElementById("filter-method").addEventListener("change", filterData);
+
+            // Render first invoice or display empty states
+            filterData();
+        });
+
+        // Main filter execution logic (Client-side)
+        function filterData() {
+            const query = document.getElementById("filter-search").value.toLowerCase().trim();
+            const dateStart = document.getElementById("filter-date-start").value;
+            const dateEnd = document.getElementById("filter-date-end").value;
+            const statusFilter = document.getElementById("filter-status").value;
+            const methodFilter = document.getElementById("filter-method").value;
+
+            // Filter invoices
+            const filteredInvoices = invoicesData.filter(i => {
+                // Search query matching Invoice ID, Doctor Name, Department Name
+                const matchQuery = !query || 
+                                   i.code.toLowerCase().includes(query) || 
+                                   i.doctorName.toLowerCase().includes(query) || 
+                                   i.departmentName.toLowerCase().includes(query);
+
+                // Date filtering (using dateCreated)
+                const createdDateOnly = i.dateCreated.split("T")[0];
+                const matchDateStart = !dateStart || createdDateOnly >= dateStart;
+                const matchDateEnd = !dateEnd || createdDateOnly <= dateEnd;
+
+                // Status filtering
+                const matchStatus = !statusFilter || i.status === statusFilter;
+
+                // Method filtering
+                const matchMethod = !methodFilter || i.method.toLowerCase().includes(methodFilter.toLowerCase());
+
+                return matchQuery && matchDateStart && matchDateEnd && matchStatus && matchMethod;
+            });
+
+            // Populate Invoices table
+            const invoiceTableBody = document.querySelector("#invoices-table tbody");
+            invoiceTableBody.innerHTML = "";
+
+            if (filteredInvoices.length === 0) {
+                document.getElementById("invoices-table").classList.add("hidden");
+                document.getElementById("invoices-empty").classList.remove("hidden");
+                
+                // Adjust empty state details if filtered vs total
+                if (invoicesData.length === 0) {
+                    document.getElementById("empty-title").innerText = "Bạn chưa có hóa đơn nào";
+                    document.getElementById("empty-desc").innerText = "Hiện tại tài khoản của bạn chưa phát sinh hóa đơn viện phí nào.";
+                    document.getElementById("empty-cta").classList.remove("hidden");
+                } else {
+                    document.getElementById("empty-title").innerText = "Không tìm thấy hóa đơn";
+                    document.getElementById("empty-desc").innerText = "Không có hóa đơn nào khớp với các bộ lọc tìm kiếm đã chọn.";
+                    document.getElementById("empty-cta").classList.add("hidden");
+                }
+            } else {
+                document.getElementById("invoices-table").classList.remove("hidden");
+                document.getElementById("invoices-empty").classList.add("hidden");
+
+                filteredInvoices.forEach(inv => {
+                    const tr = document.createElement("tr");
+                    tr.className = `hover:bg-surface-container/60 transition-colors cursor-pointer invoice-row border-b border-outline-variant/30 ${inv.id === activeInvoiceId ? "bg-surface-container font-medium border-l-4 border-primary" : ""}`;
+                    tr.setAttribute("onclick", `selectInvoice(${inv.id}, this)`);
+
+                    // Map badge status classes
+                    let statusBadge = "";
+                    if (inv.status === "DaThanhToan") {
+                        statusBadge = `<span class="px-2.5 py-0.5 bg-secondary-container/20 text-secondary text-[11px] font-bold rounded-full border border-secondary/20 flex items-center w-fit gap-1">
+                                           <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Đã thanh toán
+                                       </span>`;
+                    } else if (inv.status === "ChuaThanhToan") {
+                        statusBadge = `<span class="px-2.5 py-0.5 bg-error-container/20 text-error text-[11px] font-bold rounded-full border border-error/20 flex items-center w-fit gap-1 animate-pulse">
+                                           <span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span> Chưa thanh toán
+                                       </span>`;
+                    } else if (inv.status === "QuaHan") {
+                        statusBadge = `<span class="px-2.5 py-0.5 bg-error text-white text-[11px] font-bold rounded-full border border-error flex items-center w-fit gap-1">
+                                           <span class="w-1.5 h-1.5 rounded-full bg-white"></span> Quá hạn
+                                       </span>`;
+                    } else if (inv.status === "ThanhToanThatBai") {
+                        statusBadge = `<span class="px-2.5 py-0.5 bg-error/10 text-error text-[11px] font-bold rounded-full border border-error/30 flex items-center w-fit gap-1">
+                                           <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Thất bại
+                                       </span>`;
+                    } else if (inv.status === "DangXuLy") {
+                        statusBadge = `<span class="px-2.5 py-0.5 bg-primary-fixed/30 text-on-primary-fixed-variant text-[11px] font-bold rounded-full border border-primary-fixed-dim flex items-center w-fit gap-1">
+                                           <span class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim"></span> Đang xử lý
+                                       </span>`;
+                    } else { // DaHuy
+                        statusBadge = `<span class="px-2.5 py-0.5 bg-outline-variant/20 text-outline text-[11px] font-bold rounded-full border border-outline-variant flex items-center w-fit gap-1">
+                                           <span class="w-1.5 h-1.5 rounded-full bg-outline"></span> Đã hủy
+                                       </span>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="px-6 py-4.5 font-mono text-body-md text-primary font-bold">${inv.code}</td>
+                        <td class="px-6 py-4.5 text-caption text-on-surface-variant">${inv.dateCreatedFormatted}</td>
+                        <td class="px-6 py-4.5 text-caption font-semibold text-on-surface">${inv.doctorName} <span class="text-[10px] font-normal text-outline block">${inv.departmentName}</span></td>
+                        <td class="px-6 py-4.5 text-body-md font-bold text-on-surface">${inv.formattedTotal}</td>
+                        <td class="px-6 py-4.5">${statusBadge}</td>
+                    `;
+                    invoiceTableBody.appendChild(tr);
+                });
+            }
+
+            // Populate Transactions History table (Completed, Processing, or Failed attempts)
+            const transactionTableBody = document.querySelector("#transactions-table tbody");
+            transactionTableBody.innerHTML = "";
+
+            const transactionInvoices = invoicesData.filter(i => i.status === "DaThanhToan" || i.status === "DangXuLy" || i.status === "ThanhToanThatBai");
+            
+            if (transactionInvoices.length === 0) {
+                document.getElementById("transactions-table").classList.add("hidden");
+                document.getElementById("transactions-empty").classList.remove("hidden");
+            } else {
+                document.getElementById("transactions-table").classList.remove("hidden");
+                document.getElementById("transactions-empty").classList.add("hidden");
+
+                transactionInvoices.forEach(inv => {
+                    const tr = document.createElement("tr");
+                    tr.className = "border-b border-outline-variant/30 text-caption hover:bg-surface-container-lowest transition-colors";
+                    
+                    let statusBadge = "";
+                    if (inv.status === "DaThanhToan") {
+                        statusBadge = `<span class="px-2 py-0.5 bg-secondary-container/20 text-secondary text-[10px] font-bold rounded-full border border-secondary/20">Thành công</span>`;
+                    } else if (inv.status === "DangXuLy") {
+                        statusBadge = `<span class="px-2 py-0.5 bg-primary-fixed/30 text-on-primary-fixed-variant text-[10px] font-bold rounded-full border border-primary-fixed-dim">Đang xử lý</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2 py-0.5 bg-error-container/20 text-error text-[10px] font-bold rounded-full border border-error/20">Thất bại</span>`;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 font-mono text-outline">${inv.datePaidFormatted !== "N/A" ? inv.datePaidFormatted : inv.dateCreatedFormatted}</td>
+                        <td class="px-6 py-4 font-mono text-on-surface font-semibold">${inv.transactionId}</td>
+                        <td class="px-6 py-4 text-on-surface-variant font-medium">${inv.method}</td>
+                        <td class="px-6 py-4 font-bold text-on-surface">${inv.formattedTotal}</td>
+                        <td class="px-6 py-4">${statusBadge}</td>
+                    `;
+                    transactionTableBody.appendChild(tr);
+                });
+            }
+
+            // Update filters summary label
+            document.getElementById("filter-summary").innerText = `Đang hiển thị ${filteredInvoices.length} trên tổng số ${invoicesData.length} hóa đơn.`;
+
+            // Keep selected invoice active or select first if not selected
+            if (filteredInvoices.length > 0) {
+                document.getElementById("detail-pane").style.display = "flex";
+                const stillExists = filteredInvoices.find(i => i.id === activeInvoiceId);
+                if (stillExists) {
+                    const activeRow = Array.from(document.querySelectorAll(".invoice-row")).find((tr, idx) => filteredInvoices[idx].id === activeInvoiceId);
+                    if (activeRow) selectInvoice(activeInvoiceId, activeRow);
+                } else {
+                    const firstRow = document.querySelector(".invoice-row");
+                    if (firstRow) selectInvoice(filteredInvoices[0].id, firstRow);
+                }
+            } else {
+                document.getElementById("detail-pane").style.display = "none";
+                activeInvoiceId = null;
+            }
+        }
+
+        // Action when an invoice is clicked / selected
+        function selectInvoice(id, rowElement) {
+            activeInvoiceId = id;
+
+            // Highlight row
+            document.querySelectorAll(".invoice-row").forEach(r => {
+                r.classList.remove("bg-surface-container", "font-medium", "border-l-4", "border-primary");
+            });
+            rowElement.classList.add("bg-surface-container", "font-medium", "border-l-4", "border-primary");
+
+            // Load data
+            const inv = invoicesData.find(i => i.id === id);
+            if (!inv) return;
+
+            // Update watermark
+            const watermark = document.getElementById("status-watermark");
+            watermark.innerText = inv.status === "DaThanhToan" ? "PAID" : 
+                                  inv.status === "ChuaThanhToan" ? "UNPAID" : 
+                                  inv.status === "QuaHan" ? "OVERDUE" : 
+                                  inv.status === "ThanhToanThatBai" ? "FAILED" : 
+                                  inv.status === "DangXuLy" ? "PENDING" : "CANCELLED";
+            watermark.className = `absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-black text-[52px] uppercase select-none opacity-[0.06] rotate-12 z-0 pointer-events-none ${
+                inv.status === "DaThanhToan" ? "text-secondary" : 
+                inv.status === "ChuaThanhToan" || inv.status === "QuaHan" || inv.status === "ThanhToanThatBai" ? "text-error" : 
+                inv.status === "DangXuLy" ? "text-primary" : "text-outline"
+            }`;
+
+            // Update details texts
+            document.getElementById("detail-code").innerText = "#" + inv.code;
+            document.getElementById("detail-dept").innerText = inv.departmentName;
+            document.getElementById("detail-doctor").innerText = inv.doctorName;
+            document.getElementById("detail-date-exam").innerText = inv.examDateFormatted;
+            document.getElementById("detail-app-code").innerText = inv.appointmentCode;
+            document.getElementById("detail-method").innerText = inv.method;
+            document.getElementById("detail-transaction").innerText = inv.transactionId;
+            document.getElementById("detail-total").innerText = inv.formattedTotal;
+
+            // Populate Breakdown List
+            const listContainer = document.getElementById("detail-list");
+            listContainer.innerHTML = "";
+
+            inv.details.forEach(d => {
+                const div = document.createElement("div");
+                div.className = "flex justify-between items-center py-2 border-b border-dashed border-outline-variant/40 last:border-0 text-caption";
+                div.innerHTML = `
+                    <span class="text-on-surface-variant font-medium">${d.name}</span>
+                    <span class="font-semibold text-on-surface">${d.amount}</span>
+                `;
+                listContainer.appendChild(div);
+            });
+
+            // Update Payments Forms Section
+            const paymentPanel = document.getElementById("payment-section");
+            const form = document.getElementById("paymentForm");
+            const canPay = inv.status === "ChuaThanhToan" || inv.status === "QuaHan" || inv.status === "ThanhToanThatBai";
+
+            if (canPay) {
+                paymentPanel.style.display = "block";
+                document.getElementById("pay-button-text").innerText = inv.status === "ThanhToanThatBai" ? "Thanh toán lại" : "Tiến hành thanh toán";
+                form.action = `/Patient/Payment/Simulate/${inv.id}`;
+            } else {
+                paymentPanel.style.display = "none";
+            }
+
+            // Populate clean print area for layout rendering
+            populatePrintArea(inv);
+        }
+
+        // Setup print layout variables
+        function populatePrintArea(inv) {
+            document.getElementById("print-receipt-code").innerText = "#" + inv.code;
+            document.getElementById("print-bill-no").innerText = "INV-" + String(inv.id).padStart(5, '0');
+            document.getElementById("print-date-created").innerText = inv.dateCreatedFormatted;
+            document.getElementById("print-dept").innerText = inv.departmentName;
+            document.getElementById("print-doctor").innerText = inv.doctorName;
+            document.getElementById("print-app-code").innerText = inv.appointmentCode;
+            document.getElementById("print-date-paid").innerText = inv.datePaidFormatted;
+            document.getElementById("print-method").innerText = inv.method;
+            document.getElementById("print-transaction").innerText = inv.transactionId;
+            document.getElementById("print-total-cost").innerText = inv.formattedTotal;
+
+            const printTableBody = document.getElementById("print-items-body");
+            printTableBody.innerHTML = "";
+            inv.details.forEach(d => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: left;">${d.name}</td>
+                    <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: bold;">${d.amount}</td>
+                `;
+                printTableBody.appendChild(tr);
+            });
+
+            // Watermark text in PDF
+            const pdfWatermark = document.getElementById("print-watermark-status");
+            if (inv.status === "DaThanhToan") {
+                pdfWatermark.innerText = "ĐÃ THANH TOÁN THÀNH CÔNG";
+                pdfWatermark.style.color = "#006c49";
+                pdfWatermark.style.borderColor = "#006c49";
+                pdfWatermark.style.backgroundColor = "#e6f7f0";
+            } else if (inv.status === "ChuaThanhToan") {
+                pdfWatermark.innerText = "HÓA ĐƠN CHƯA THANH TOÁN";
+                pdfWatermark.style.color = "#ba1a1a";
+                pdfWatermark.style.borderColor = "#ba1a1a";
+                pdfWatermark.style.backgroundColor = "#ffdad6";
+            } else if (inv.status === "QuaHan") {
+                pdfWatermark.innerText = "CẢNH BÁO: HÓA ĐƠN QUÁ HẠN";
+                pdfWatermark.style.color = "#ba1a1a";
+                pdfWatermark.style.borderColor = "#ba1a1a";
+                pdfWatermark.style.backgroundColor = "#ffdad6";
+            } else if (inv.status === "DangXuLy") {
+                pdfWatermark.innerText = "GIAO DỊCH ĐANG CHỜ XỬ LÝ";
+                pdfWatermark.style.color = "#003f87";
+                pdfWatermark.style.borderColor = "#003f87";
+                pdfWatermark.style.backgroundColor = "#d7e2ff";
+            } else if (inv.status === "ThanhToanThatBai") {
+                pdfWatermark.innerText = "GIAO DỊCH THANH TOÁN THẤT BẠI";
+                pdfWatermark.style.color = "#ba1a1a";
+                pdfWatermark.style.borderColor = "#ba1a1a";
+                pdfWatermark.style.backgroundColor = "#ffdad6";
+            } else {
+                pdfWatermark.innerText = "HÓA ĐƠN ĐÃ HỦY BỎ";
+                pdfWatermark.style.color = "#727784";
+                pdfWatermark.style.borderColor = "#727784";
+                pdfWatermark.style.backgroundColor = "#f1f5f9";
+            }
+        }
+
+        // Send Email Receipt
+        function sendEmailReceipt() {
+            if (!activeInvoiceId) return;
+
+            const button = event.currentTarget;
+            button.disabled = true;
+            const originalHtml = button.innerHTML;
+            button.innerHTML = `<span class="material-symbols-outlined text-[20px] text-tertiary animate-spin">sync</span> <span class="font-semibold">Đang gửi...</span>`;
+
+            fetch(`/Patient/Payment/SendEmailReceipt/${activeInvoiceId}`, {
+                method: "POST"
+            })
+            .then(res => res.json())
+            .then(data => {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+
+                if (data.success) {
+                    showGlobalToast("Thành công", data.message, "success");
+                } else {
+                    showGlobalToast("Thất bại", data.message, "error");
+                }
+            })
+            .catch(err => {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+                showGlobalToast("Thất bại", "Không thể gửi email biên lai lúc này. Vui lòng thử lại sau.", "error");
+            });
+        }
+
+        // Print Invoice receipt
+        function printInvoice() {
+            if (!activeInvoiceId) return;
+
+            const printContents = document.getElementById("receipt-print-area").innerHTML;
+            const printWindow = window.open("", "_blank");
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>In biên lai hóa đơn #${activeInvoiceId}</title>
+                    <style>
+                        body { font-family: sans-serif; padding: 20px; }
+                        table { border-collapse: collapse; }
+                        @@media print {
+                            body { padding: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${printContents}
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(function() { window.close(); }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        // Client-side PDF Generation with html2pdf
+        function downloadPdf() {
+            if (!activeInvoiceId) return;
+
+            const element = document.getElementById("receipt-print-area");
+            
+            // Temporary reveal element for capture, clean print style
+            element.classList.remove("hidden");
+            
+            const opt = {
+                margin:       10,
+                filename:     `Bien_lai_vien_phi_HD-${String(activeInvoiceId).padStart(5, '0')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2.5, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.classList.add("hidden");
+                showGlobalToast("Tải PDF thành công", "Biên lai hóa đơn đã được tải xuống dưới dạng PDF.", "success");
+            }).catch(err => {
+                element.classList.add("hidden");
+                showGlobalToast("Lỗi", "Không thể tạo PDF biên lai.", "error");
+            });
+        }
+
+        // Reset all filters in UI
+        function resetFilters() {
+            document.getElementById("filter-search").value = "";
+            document.getElementById("filter-date-start").value = "";
+            document.getElementById("filter-date-end").value = "";
+            document.getElementById("filter-status").value = "";
+            document.getElementById("filter-method").value = "";
+            filterData();
+        }
+
+        // Intercept form submit to append checked radio method
+        document.getElementById("paymentForm").addEventListener("submit", (e) => {
+            const checkedRadio = document.querySelector('input[name="paymentMethod"]:checked');
+            if (checkedRadio) {
+                const method = checkedRadio.value;
+                const form = document.getElementById("paymentForm");
+                form.action = `/Patient/Payment/Simulate/${activeInvoiceId}?paymentMethod=${method}`;
+            }
+        });
+    </script>
+}

@@ -28,10 +28,24 @@
     <div class="space-y-unit-lg">
         <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm text-center">
             <div class="w-24 h-24 rounded-full overflow-hidden bg-primary-fixed flex items-center justify-center text-primary font-bold text-[36px] mx-auto mb-unit-md border-4 border-surface-container">
-                @Model.User.HoTen.Substring(Model.User.HoTen.LastIndexOf(' ') + 1, 1)
+                @(string.IsNullOrWhiteSpace(Model.User.HoTen) ? "BS" : Model.User.HoTen.Trim().Split(' ').Last().Substring(0, 1).ToUpper())
             </div>
             <h3 class="font-title-lg text-on-surface">@Model.HocVi. @Model.User.HoTen</h3>
             <p class="text-caption text-on-surface-variant font-medium mt-unit-xs">@Model.ChuyenKhoa</p>
+            <div class="mt-2 flex items-center justify-center gap-1.5">
+                @if (Model.ChucVu == "Trưởng khoa")
+                {
+                    <span class="px-2.5 py-1 bg-primary text-white text-[12px] font-bold rounded-full">Trưởng khoa</span>
+                }
+                else if (Model.ChucVu == "Phó trưởng khoa")
+                {
+                    <span class="px-2.5 py-1 bg-secondary-container text-on-secondary-container text-[12px] font-bold rounded-full">Phó trưởng khoa</span>
+                }
+                else
+                {
+                    <span class="px-2.5 py-1 bg-surface-container-high text-on-surface-variant text-[12px] font-bold rounded-full">Bác sĩ điều trị</span>
+                }
+            </div>
             
             <div class="flex items-center justify-center gap-1 text-secondary mt-unit-sm">
                 <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
