@@ -23,18 +23,18 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var doctorUserEmail = User.Identity?.Name;
+            var currentUserId = GetCurrentUserId();
             var doctor = await _context.Doctors
                 .Include(d => d.User)
-                .FirstOrDefaultAsync(d => d.User.HoTen == doctorUserEmail || d.User.Email == doctorUserEmail);
+                .FirstOrDefaultAsync(d => d.NguoiDungId == currentUserId);
 
             if (doctor == null)
             {
-                // Fallback for demo if claims don't match directly
-                var currentUserId = GetCurrentUserId();
+                // Fallback for older cookies that may not contain a user ID.
+                var identityValue = User.Identity?.Name;
                 doctor = await _context.Doctors
                     .Include(d => d.User)
-                    .FirstOrDefaultAsync(d => d.NguoiDungId == currentUserId);
+                    .FirstOrDefaultAsync(d => d.User.HoTen == identityValue || d.User.Email == identityValue);
             }
 
             if (doctor == null) return NotFound("Bác sĩ không tồn tại trong hệ thống.");
@@ -71,7 +71,7 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            return claim != null ? int.Parse(claim.Value) : 2; // Default seeded doctor user id
+            return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
         }
     }
 }
