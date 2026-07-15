@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using QuanLyBenhVien.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,14 @@ builder.Logging.AddDebug();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Render terminates TLS at its proxy and forwards requests to the container over HTTP.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // Register Database Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -38,6 +47,8 @@ builder.Services.AddSession(options =>
 });
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 // Seed Database on startup
 using (var scope = app.Services.CreateScope())
