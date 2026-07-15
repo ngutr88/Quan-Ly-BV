@@ -8,38 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.1] - 2026-07-15
 
 ### Added
-- Tách biệt trang Landing Page thành hệ thống 5 trang giới thiệu con độc lập:
-  - **Giới thiệu** (`Views/Home/About.cshtml`): Chi tiết lịch sử, tầm nhìn và đội ngũ ban giám đốc.
-  - **Chuyên khoa** (`Views/Home/Specialities.cshtml`): Grid card 8 khoa lâm sàng kèm mức giá khám niêm yết và thời gian làm việc.
-  - **Tính năng** (`Views/Home/Features.cshtml`): Quy trình đặt lịch, bệnh án điện tử cá nhân và cổng thanh toán điện tử.
-  - **Đánh giá** (`Views/Home/Testimonials.cshtml`): Nhận xét bệnh nhân thực tế và biểu mẫu đóng góp phản hồi.
-  - **Liên hệ** (`Views/Home/Contact.cshtml`): Hotline khẩn cấp, bản đồ vệ tinh mô phỏng và form gửi thắc mắc.
-- Thiết kế tệp Layout dùng chung công cộng mới (`Views/Shared/_HomeLayout.cshtml`) tích hợp Header điều hướng động nhận diện trang hoạt động và Footer thông tin đồng bộ.
-- Bổ sung danh mục điều hướng "Trang chủ" (Home) trực quan trên cả Header và Footer của Layout dùng chung.
-- Tích hợp bộ biểu đồ tương tác (Chart.js) cho trang Admin Dashboard biểu diễn xu hướng lượt khám & doanh thu 7 ngày qua (Mixed chart) và phân bổ trạng thái lịch hẹn trong ngày (Doughnut chart).
-- Tích hợp lưới chọn vai trò đăng nhập (Bệnh nhân, Bác sĩ, Quản trị viên) dạng Thẻ hiển thị biểu tượng (Role Cards Grid) trên trang Đăng nhập và thực hiện kiểm tra chéo vai trò tài khoản để gia tăng tính bảo mật.
-- Cải tiến giao diện Trang chủ (`/Home`): Thay thế ảnh minh họa hoạt họa cũ bằng ảnh chụp thực tế chất lượng cao (nữ bác sĩ và tòa nhà bệnh viện kiến trúc kính hiện đại) kết hợp tích hợp 2 thẻ kính mờ lơ lửng (Floating Badges) giúp trang chủ sinh động, chuyên nghiệp và bớt cảm giác nhân tạo.
-- Thêm phân hệ quản lý **Nhân sự & Phân quyền** (`/Admin/Staff`): Hỗ trợ lọc tìm kiếm nhân viên, thêm mới tài khoản (tự động liên kết bác sĩ/lịch trực), chỉnh sửa thông tin, đặt lại mật khẩu và khóa/mở khóa tài khoản có ghi nhận Audit Logs.
-- Thêm phân hệ quản lý **Cấu hình Hệ thống** (`/Admin/Settings`): Hỗ trợ thay đổi trực quan các tham số hoạt động (giờ khám, hotline, VAT, cảnh báo tồn kho, thông báo tự động) lưu trữ động trong tệp tin `hospital_settings.json` kèm ghi nhận Audit Logs.
+- Thêm trang Landing Page giới thiệu tổng quan Bệnh viện (`Home/Index`) tích hợp đầy đủ thông tin giới thiệu, các chuyên khoa nổi bật, thống kê, quy trình y tế số hóa, ý kiến bệnh nhân, giờ làm việc và thông tin liên hệ.
+- Tích hợp cụm nút Đăng nhập / Đăng ký khám trực tuyến ở góc trên bên phải thanh điều hướng của Landing Page.
+- Bổ sung ảnh minh họa vector đại diện cho bệnh viện số tại `/images/hospital_hero_banner.png`.
 
 ### Changed
-- Tinh giản bố cục trang Admin Dashboard: Loại bỏ khu vực hiển thị nhật ký hoạt động hệ thống trùng lặp (do đã có trang quản lý Nhật ký hệ thống riêng biệt), cân đối lại khoảng trống hiển thị cho biểu đồ trực quan và danh sách lịch khám.
-- Tái cấu trúc lại bố cục trang **Admin Dashboard** (`/Admin/Dashboard`): Gom nhóm toàn bộ 5 biểu đồ thống kê vận hành và tài chính vào cùng một khu vực phân tích bento liên tục, chuyển bảng danh sách lịch khám gần đây và cảnh báo kho xuống cuối trang.
-- Cập nhật phương thức đăng xuất (`AuthController.Logout`) tự động chuyển hướng tất cả các tài khoản (Admin, Bác sĩ, Bệnh nhân) về lại Trang chủ công cộng thay vì trang đăng nhập.
-- Rút gọn trang chủ `Index.cshtml` sử dụng `_HomeLayout` mới, giữ lại các phần Hero Section, quick stats và lời gọi dịch vụ.
-- Cấu hình bổ sung middleware `app.UseStaticFiles()` và kích hoạt `UseStaticWebAssets()` kèm cơ chế tự động duyệt ngược cây thư mục cha trong `Program.cs` để tìm kiếm và phục vụ tệp tĩnh trong thư mục `wwwroot` gốc, sửa đổi đường dẫn ảnh sang dạng động Razor `~/` giúp hiển thị chính xác ảnh banner trong mọi môi trường chạy cục bộ (Visual Studio, IIS Express, chạy trực tiếp file `.exe` từ thư mục output `bin/`).
+- Cấu hình bổ sung middleware `app.UseStaticFiles()` trong `Program.cs` để hỗ trợ hiển thị hình ảnh và các tệp tĩnh từ thư mục `wwwroot`.
 - Cải tiến `HomeController.Index` tự động chuyển hướng người dùng đã đăng nhập về Dashboard của họ, và hiển thị trang Landing Page đối với khách vãng lai.
 - Đồng nhất hoàn toàn màu sắc chủ đạo của phân hệ Bác sĩ (Doctor views & layout) sang màu xanh dương (`primary`) giống Admin và Bệnh nhân.
 - Cập nhật active state của Sidebar nav, focus ring ô tìm kiếm, và avatar của bác sĩ trong `_DoctorLayout` sang màu xanh dương.
 - Đồng nhất màu sắc của các thẻ ca khám chiều trong hàng đợi khám (`Queue/Index`) sang màu xanh dương.
 - Chuyển đổi avatar người dùng/bệnh nhân trong phần nhắn tin tư vấn (`Chat/Index`) sang tông màu xanh dương.
 - Giữ nguyên màu xanh lá (`secondary`) cho các trạng thái trực tuyến, tick đã xem tin nhắn, và các badge trạng thái nghiệp vụ (đã khám xong, đã thanh toán).
-- Thay thế các biểu tượng đánh giá hình ngôi sao (`⭐`) phong cách thương mại điện tử bằng biểu tượng **trái tim y tế màu xanh dương** (`favorite` - Primary Blue) tại trang **Thống kê Bác sĩ** (`/Doctor/Stats`) để tạo cảm giác y học, nhân văn và đồng nhất nhận diện thương hiệu.
-- Sửa lỗi hiển thị thông báo toast khi đăng xuất bị đè/khuất dưới Navigation Bar bằng cách tăng chỉ số `z-index` của container lên `z-[9999]`.
-- Loại bỏ hoàn toàn mục liên kết Sidebar cũ dư thừa "Báo cáo & Thống kê" khỏi Layout Admin (`_AdminLayout.cshtml`).
-- Khắc phục lỗi lệch chữ/tràn dòng của trạng thái hoạt động trong bảng Danh sách Bác sĩ và Danh sách Nhân sự bằng lớp `whitespace-nowrap`.
-- Đồng nhất bố cục Cổng bệnh nhân (`_PatientLayout.cshtml`): Chuyển đổi thanh điều hướng ngang Header cũ sang thiết kế **Sidebar bên trái** kết hợp **Topbar phía trên** đối với máy tính (Desktop) tương tự Admin và Doctor, trong khi vẫn duy trì **Bottom Tab Bar** (5 icon) trên di động (Mobile) để đảm bảo độ tiện dụng và responsive tối ưu.
-- Loại bỏ thanh tìm kiếm bệnh nhân giả lập (`Tìm kiếm bệnh nhân...`) khỏi Topbar của trang Bác sĩ để tránh nhầm lẫn chức năng.
 
 ## [1.2.0] - 2026-07-14
 
@@ -80,6 +60,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Thêm các Models cốt lõi: `NguoiDung`, `BacSi`, `BenhNhan`, `Khoa`, `DichVu`, `LichKham`, `PhieuKham`, `DonThuoc`, `Thuoc`, `LoThuoc`, `HoaDon`, `ThongBao`, `NhatKyHeThong`.
 - Triển khai phân quyền người dùng (Cookie Authentication & RBAC) phân biệt rõ Admin, Bác sĩ, Bệnh nhân.
 - Tích hợp DbSeeder tự động tạo dữ liệu mẫu phong phú và hợp lệ (khoa, bác sĩ, thuốc theo lô, lịch khám mẫu).
+- Xây dựng giao diện dùng chung Layout với Tailwind CSS và Material Icons.
+- Thiết kế Dashboard trực quan cho từng đối tượng (Admin, Doctor, Patient).
+
+### Fixed
+- Đổi port mặc định sang `5233` (HTTP) và `7233` (HTTPS) để tránh xung đột cổng khi chạy cục bộ.
+- Sửa lỗi truy vấn LINQ `string.Split` không tương thích với EF Core SQLite trong `AuthController.Login` bằng hàm `StartsWith`.
+- Sửa lỗi điều hướng phân quyền Bác sĩ sang đúng `DashboardController` của Doctor Area thay vì `QueueController` lỗi.
+- Khắc phục lỗi lồng thẻ `<body>` không hợp lệ ở trang đăng nhập, căn giữa card đăng nhập và khung demo bằng Flexbox.
+
+### Verified
+- Kiểm thử thành công toàn bộ giao diện và chức năng đăng nhập, phân quyền, hiển thị Dashboard của cả 3 vai trò Admin, Bác sĩ và Bệnh nhân thông qua Browser Automation Agent.
 - Xây dựng giao diện dùng chung Layout với Tailwind CSS và Material Icons.
 - Thiết kế Dashboard trực quan cho từng đối tượng (Admin, Doctor, Patient).
 

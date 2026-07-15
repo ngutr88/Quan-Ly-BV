@@ -5,13 +5,12 @@
     var lowStockMeds = ViewBag.LowStockMedicines as List<QuanLyBenhVien.Models.Medicine> ?? new List<QuanLyBenhVien.Models.Medicine>();
     var nearExpiryBatches = ViewBag.NearExpiryBatches as List<QuanLyBenhVien.Models.MedicineBatch> ?? new List<QuanLyBenhVien.Models.MedicineBatch>();
     var recentLogs = ViewBag.RecentLogs as List<QuanLyBenhVien.Models.AuditLog> ?? new List<QuanLyBenhVien.Models.AuditLog>();
-    var doctorPerf = ViewBag.DoctorPerformance as List<QuanLyBenhVien.Areas.Admin.Controllers.DashboardDoctorPerformanceDto> ?? new List<QuanLyBenhVien.Areas.Admin.Controllers.DashboardDoctorPerformanceDto>();
 }
 
 <!-- Dashboard Header & Filters -->
 <div class="flex flex-col md:flex-row md:items-end justify-between gap-unit-md mb-unit-lg">
     <div>
-        <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Bảng điều khiển Admin</h2>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Bảng điều khiển Admin</h2>
         <p class="text-body-md text-on-surface-variant">Thời gian hệ thống: @DateTime.Now.ToString("dddd, dd MMMM, yyyy • hh:mm tt")</p>
     </div>
     <div class="flex items-center gap-unit-sm">
@@ -35,7 +34,7 @@
             <span class="text-[28px] font-bold text-on-surface">@ViewBag.DoctorCount</span>
             <span class="text-body-md text-on-surface-variant">/ @ViewBag.DepartmentCount khoa</span>
         </div>
-        <div class="mt-unit-sm text-caption text-secondary flex items-center gap-1 font-semibold">
+        <div class="mt-unit-sm text-caption text-secondary flex items-center gap-1">
             <span class="material-symbols-outlined text-[14px]">check_circle</span> Đang hoạt động ổn định
         </div>
     </div>
@@ -95,304 +94,161 @@
     </div>
 </div>
 
-<!-- ==================== ANALYTICS & CHARTS SECTION ==================== -->
-<div id="reports-section" class="scroll-mt-20 space-y-unit-lg">
-    <div class="border-b border-outline-variant pb-3 mb-unit-md">
-        <h2 class="font-headline-md text-headline-md text-primary font-bold flex items-center gap-2">
-            <span class="material-symbols-outlined text-[28px]">analytics</span>
-            Báo cáo &amp; Phân tích hoạt động toàn viện
-        </h2>
-        <p class="text-body-md text-on-surface-variant">Thống kê vĩ mô, cơ cấu tài chính khoa lâm sàng và xu hướng lịch khám.</p>
-    </div>
-
-    <!-- Macro Reports KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-unit-md">
-        <!-- Annual Revenue -->
-        <div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm flex items-center gap-unit-md">
-            <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-[28px]">payments</span>
-            </div>
-            <div>
-                <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Doanh thu năm nay</p>
-                <h3 class="text-title-lg font-bold text-on-surface mt-0.5">@string.Format("{0:N0} đ", ViewBag.AnnualRevenue)</h3>
-            </div>
-        </div>
-
-        <!-- Appointment Count -->
-        <div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm flex items-center gap-unit-md">
-            <div class="w-12 h-12 bg-secondary/15 rounded-xl flex items-center justify-center text-secondary">
-                <span class="material-symbols-outlined text-[28px]">calendar_today</span>
-            </div>
-            <div>
-                <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Lượt đặt lịch năm nay</p>
-                <h3 class="text-title-lg font-bold text-on-surface mt-0.5">@ViewBag.TotalAppointmentsThisYear ca</h3>
-            </div>
-        </div>
-
-        <!-- Success Rate -->
-        <div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm flex items-center gap-unit-md">
-            <div class="w-12 h-12 bg-tertiary/10 rounded-xl flex items-center justify-center text-tertiary">
-                <span class="material-symbols-outlined text-[28px]">check_circle</span>
-            </div>
-            <div>
-                <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Tỷ lệ khám thành công</p>
-                <h3 class="text-title-lg font-bold text-on-surface mt-0.5">@string.Format("{0:F1}%", ViewBag.CompletionRate)</h3>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Hub Row 1: Weekly Trends & Today's distribution -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
-        <!-- Chart 1: Daily appointments & revenue (2/3 cols) -->
-        <div class="lg:col-span-2 bg-white border border-outline-variant p-unit-md rounded-xl shadow-sm">
-            <h3 class="font-title-lg text-title-lg text-on-surface mb-unit-md flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">show_chart</span>
-                Xu hướng hoạt động &amp; Doanh thu 7 ngày qua
+<!-- Bento Grid Section: Charts and Tables -->
+<div class="grid grid-cols-12 gap-unit-lg">
+    <!-- Live Appointments Table (8 cols) -->
+    <div class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col">
+        <div class="p-unit-md border-b border-outline-variant flex items-center justify-between bg-surface-container-low/30">
+            <h3 class="font-title-lg text-title-lg flex items-center gap-2">
+                Danh sách lịch khám gần đây
             </h3>
-            <div class="relative w-full h-80">
-                <canvas id="trendsChart"></canvas>
-            </div>
+            <a class="text-label-md text-primary font-bold hover:underline" href="/Admin/Appointments">Quản lý lịch khám</a>
         </div>
-
-        <!-- Chart 2: Today's appointment status (1/3 cols) -->
-        <div class="bg-white border border-outline-variant p-unit-md rounded-xl shadow-sm flex flex-col">
-            <h3 class="font-title-lg text-title-lg text-on-surface mb-unit-md flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">pie_chart</span>
-                Phân bổ lịch khám hôm nay
-            </h3>
-            <div class="relative w-full flex-grow flex items-center justify-center h-64">
-                <canvas id="statusChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Hub Row 2: Annual Monthly Revenue & Dept Revenue Breakdown -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
-        <!-- Chart 3: Line monthly revenue -->
-        <div class="lg:col-span-2 bg-white border border-outline-variant p-unit-md rounded-xl shadow-sm">
-            <h3 class="font-title-lg text-title-lg text-on-surface mb-unit-md flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">analytics</span>
-                Biểu đồ Doanh thu 12 tháng năm nay (VNĐ)
-            </h3>
-            <div class="relative w-full h-80">
-                <canvas id="monthlyRevenueChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Chart 4: Dept Revenue doughnut -->
-        <div class="bg-white border border-outline-variant p-unit-md rounded-xl shadow-sm flex flex-col">
-            <h3 class="font-title-lg text-title-lg text-on-surface mb-unit-md flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">donut_large</span>
-                Cơ cấu Doanh thu theo Khoa
-            </h3>
-            <div class="relative w-full flex-grow flex items-center justify-center h-64">
-                <canvas id="deptRevenueChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Hub Row 3: Dept appointments & Top Doctors performance table -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-unit-lg">
-        <!-- Chart 5: Appointments by Dept -->
-        <div class="bg-white border border-outline-variant p-unit-md rounded-xl shadow-sm">
-            <h3 class="font-title-lg text-title-lg text-on-surface mb-unit-md flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">bar_chart</span>
-                Số ca khám bệnh theo Khoa
-            </h3>
-            <div class="relative w-full h-80">
-                <canvas id="deptAppChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Table 3: Top doctors -->
-        <div class="bg-white border border-outline-variant p-unit-md rounded-xl shadow-sm flex flex-col">
-            <h3 class="font-title-lg text-title-lg text-on-surface mb-unit-md flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">star</span>
-                Top 5 Bác sĩ năng suất cao nhất (Ca đã khám xong)
-            </h3>
-            <div class="overflow-x-auto flex-grow">
-                <table class="w-full text-left mt-2">
-                    <thead>
-                        <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[11px] uppercase border-b border-outline-variant">
-                            <th class="px-3 py-2.5">Bác sĩ</th>
-                            <th class="px-3 py-2.5">Khoa công tác</th>
-                            <th class="px-3 py-2.5 text-right">Số ca hoàn thành</th>
+        <div class="overflow-x-auto flex-grow">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                        <th class="px-unit-md py-3">Thời gian</th>
+                        <th class="px-unit-md py-3">Bệnh nhân</th>
+                        <th class="px-unit-md py-3">Bác sĩ</th>
+                        <th class="px-unit-md py-3">Khoa</th>
+                        <th class="px-unit-md py-3">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant">
+                    @if (!recentApps.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="px-unit-md py-8 text-center text-on-surface-variant">Không có lịch khám nào trong hệ thống.</td>
                         </tr>
-                    </thead>
-                    <tbody class="divide-y divide-outline-variant">
-                        @if (!doctorPerf.Any())
+                    }
+                    else
+                    {
+                        @foreach (var app in recentApps)
                         {
-                            <tr>
-                                <td colspan="3" class="px-3 py-6 text-center text-on-surface-variant text-body-md">Chưa ghi nhận ca khám hoàn thành nào.</td>
+                            <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="location.href='/Admin/Appointments/Details/@app.Id'">
+                                <td class="px-unit-md py-4 font-bold text-primary">@app.ThoiGian.ToString("dd/MM HH:mm")</td>
+                                <td class="px-unit-md py-4">
+                                    <div class="font-body-md font-medium text-on-surface">@app.Patient.User.HoTen</div>
+                                    <div class="text-caption text-on-surface-variant">BN-@app.Patient.Id.ToString("D4") • @app.Patient.User.Sdt</div>
+                                </td>
+                                <td class="px-unit-md py-4">@(app.Doctor != null ? app.Doctor.User.HoTen : "Chưa phân bổ")</td>
+                                <td class="px-unit-md py-4">@(app.Doctor != null ? app.Doctor.Department.TenKhoa : "N/A")</td>
+                                <td class="px-unit-md py-4">
+                                    @if (app.TrangThai == "ChoXacNhan")
+                                    {
+                                        <span class="px-2 py-1 rounded-full bg-primary-container/20 text-primary-fixed-dim text-[11px] font-bold">Chờ duyệt</span>
+                                    }
+                                    else if (app.TrangThai == "DaXacNhan")
+                                    {
+                                        <span class="px-2 py-1 rounded-full bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[11px] font-bold">Đã hẹn</span>
+                                    }
+                                    else if (app.TrangThai == "DangKham")
+                                    {
+                                        <span class="px-2 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Đang khám</span>
+                                    }
+                                    else if (app.TrangThai == "HoanThanh")
+                                    {
+                                        <span class="px-2 py-1 rounded-full bg-secondary/20 text-secondary text-[11px] font-bold">Hoàn thành</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="px-2 py-1 rounded-full bg-error-container text-error text-[11px] font-bold">Đã hủy</span>
+                                    }
+                                </td>
                             </tr>
                         }
-                        else
-                        {
-                            foreach (var doc in doctorPerf)
-                            {
-                                <tr class="hover:bg-surface-container-low transition-colors">
-                                    <td class="px-3 py-3 font-body-md font-semibold text-on-surface">@doc.DoctorName</td>
-                                    <td class="px-3 py-3 text-body-md text-on-surface-variant">@doc.Department</td>
-                                    <td class="px-3 py-3 text-body-md font-bold text-primary text-right">@doc.CompletedCount ca</td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
 
-<hr class="border-outline-variant my-unit-xl" />
+    <!-- Operational Alerts (4 cols) -->
+    <div class="col-span-12 lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm flex flex-col">
+        <div class="p-unit-md border-b border-outline-variant flex items-center gap-2">
+            <span class="material-symbols-outlined text-error">warning</span>
+            <h3 class="font-title-lg text-title-lg">Cảnh báo dược &amp; vận hành</h3>
+        </div>
+        <div class="p-unit-md flex-grow space-y-unit-sm">
+            <!-- Low stock medicines alert -->
+            @if (lowStockMeds.Any())
+            {
+                <div class="flex items-start gap-unit-md p-3 bg-error-container/5 rounded-lg border border-error/10">
+                    <span class="material-symbols-outlined text-error mt-0.5">inventory_2</span>
+                    <div class="flex-grow">
+                        <p class="font-label-md text-on-surface font-semibold">Thuốc sắp hết kho (@lowStockMeds.Count mục)</p>
+                        <div class="text-caption text-on-surface-variant mt-1 space-y-0.5">
+                            @foreach (var med in lowStockMeds)
+                            {
+                                <div>• @med.TenThuoc: Còn <strong>@med.TonKho</strong> @med.DonViTinh (Ngưỡng: @med.NguongToiThieu)</div>
+                            }
+                        </div>
+                        <a href="/Admin/Medicines" class="mt-2 inline-block text-[11px] font-bold text-error uppercase hover:underline">Nhập kho thuốc</a>
+                    </div>
+                </div>
+            }
 
-<!-- ==================== OPERATIONS & ACTION CENTER ==================== -->
-<div>
-    <div class="border-b border-outline-variant pb-3 mb-unit-md">
-        <h2 class="font-headline-md text-headline-md text-primary font-bold flex items-center gap-2">
-            <span class="material-symbols-outlined text-[28px]">monitoring</span>
-            Giám sát vận hành &amp; Danh sách trực tiếp
-        </h2>
-        <p class="text-body-md text-on-surface-variant">Xem nhanh các lượt đăng ký khám gần nhất và cảnh báo kho dược.</p>
+            <!-- Near expiry batches alert -->
+            @if (nearExpiryBatches.Any())
+            {
+                <div class="flex items-start gap-unit-md p-3 bg-tertiary-fixed/5 rounded-lg border border-tertiary/10">
+                    <span class="material-symbols-outlined text-tertiary mt-0.5">pending_actions</span>
+                    <div class="flex-grow">
+                        <p class="font-label-md text-on-surface font-semibold">Lô thuốc sắp hết hạn (@nearExpiryBatches.Count lô)</p>
+                        <div class="text-caption text-on-surface-variant mt-1 space-y-0.5">
+                            @foreach (var batch in nearExpiryBatches)
+                            {
+                                <div>• Lô: <strong>@batch.SoLo</strong> (@batch.Medicine.TenThuoc) - HSD: <strong>@batch.HanSuDung.ToString("dd/MM/yyyy")</strong> (Còn @((batch.HanSuDung - DateTime.Today).Days) ngày)</div>
+                            }
+                        </div>
+                        <a href="/Admin/Medicines/Batches" class="mt-2 inline-block text-[11px] font-bold text-tertiary uppercase hover:underline">Quản lý lô thuốc</a>
+                    </div>
+                </div>
+            }
+
+            @if (!lowStockMeds.Any() && !nearExpiryBatches.Any())
+            {
+                <div class="h-full flex flex-col items-center justify-center text-center text-on-surface-variant p-unit-md">
+                    <span class="material-symbols-outlined text-[48px] text-secondary">verified_user</span>
+                    <p class="mt-2 font-label-md">Không có cảnh báo kho dược.</p>
+                    <p class="text-caption">Tất cả thuốc ở mức an toàn và còn hạn dài.</p>
+                </div>
+            }
+        </div>
     </div>
 
-    <div class="grid grid-cols-12 gap-unit-lg">
-        <!-- Live Appointments Table (8 cols) -->
-        <div class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex flex-col">
-            <div class="p-unit-md border-b border-outline-variant flex items-center justify-between bg-surface-container-low/30">
-                <h3 class="font-title-md text-body-lg font-bold flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary">patient_list</span>
-                    Danh sách lịch khám gần đây
-                </h3>
-                <a class="text-label-md text-primary font-bold hover:underline" href="/Admin/Appointments">Quản lý lịch khám</a>
-            </div>
-            <div class="overflow-x-auto flex-grow">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
-                            <th class="px-unit-md py-3">Thời gian</th>
-                            <th class="px-unit-md py-3">Bệnh nhân</th>
-                            <th class="px-unit-md py-3">Bác sĩ</th>
-                            <th class="px-unit-md py-3">Khoa</th>
-                            <th class="px-unit-md py-3">Trạng thái</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-outline-variant">
-                        @if (!recentApps.Any())
-                        {
-                            <tr>
-                                <td colspan="5" class="px-unit-md py-8 text-center text-on-surface-variant">Không có lịch khám nào trong hệ thống.</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var app in recentApps)
-                            {
-                                <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="location.href='/Admin/Appointments/Details/@app.Id'">
-                                    <td class="px-unit-md py-4 font-bold text-primary">@app.ThoiGian.ToString("dd/MM HH:mm")</td>
-                                    <td class="px-unit-md py-4">
-                                        <div class="font-body-md font-medium text-on-surface">@app.Patient.User.HoTen</div>
-                                        <div class="text-caption text-on-surface-variant font-medium">BN-@app.Patient.Id.ToString("D4") • @app.Patient.User.Sdt</div>
-                                    </td>
-                                    <td class="px-unit-md py-4">@(app.Doctor != null ? app.Doctor.User.HoTen : "Chưa phân bổ")</td>
-                                    <td class="px-unit-md py-4">@(app.Doctor != null ? app.Doctor.Department.TenKhoa : "N/A")</td>
-                                    <td class="px-unit-md py-4 whitespace-nowrap">
-                                        @if (app.TrangThai == "ChoXacNhan")
-                                        {
-                                            <span class="px-2 py-1 rounded-full bg-primary-container/20 text-primary-fixed-dim text-[11px] font-bold">Chờ duyệt</span>
-                                        }
-                                        else if (app.TrangThai == "DaXacNhan")
-                                        {
-                                            <span class="px-2 py-1 rounded-full bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[11px] font-bold">Đã hẹn</span>
-                                        }
-                                        else if (app.TrangThai == "DangKham")
-                                        {
-                                            <span class="px-2 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Đang khám</span>
-                                        }
-                                        else if (app.TrangThai == "HoanThanh")
-                                        {
-                                            <span class="px-2 py-1 rounded-full bg-secondary/20 text-secondary text-[11px] font-bold">Hoàn thành</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="px-2 py-1 rounded-full bg-error-container text-error text-[11px] font-bold">Đã hủy</span>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
+    <!-- Activity Log (12 cols) -->
+    <div class="col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col">
+        <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30">
+            <h3 class="font-title-lg text-title-lg">Nhật ký hoạt động hệ thống gần đây</h3>
         </div>
-
-        <!-- Operational Alerts (4 cols) -->
-        <div class="col-span-12 lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm flex flex-col">
-            <div class="p-unit-md border-b border-outline-variant flex items-center gap-2">
-                <span class="material-symbols-outlined text-error">warning</span>
-                <h3 class="font-title-md text-body-lg font-bold">Cảnh báo dược &amp; vận hành</h3>
-            </div>
-            <div class="p-unit-md flex-grow space-y-unit-sm">
-                <!-- Low stock medicines alert -->
-                @if (lowStockMeds.Any())
+        <div class="p-unit-md divide-y divide-outline-variant">
+            @if (!recentLogs.Any())
+            {
+                <p class="text-center text-on-surface-variant py-4">Không có nhật ký hoạt động nào.</p>
+            }
+            else
+            {
+                @foreach (var log in recentLogs)
                 {
-                    <div class="flex items-start gap-unit-md p-3 bg-error-container/5 rounded-lg border border-error/10">
-                        <span class="material-symbols-outlined text-error mt-0.5">inventory_2</span>
+                    <div class="flex gap-unit-md items-start py-3">
+                        <div class="w-2.5 h-2.5 bg-primary rounded-full mt-1.5 shrink-0 ring-4 ring-primary/10"></div>
                         <div class="flex-grow">
-                            <p class="font-label-md text-on-surface font-semibold">Thuốc sắp hết kho (@lowStockMeds.Count mục)</p>
-                            <div class="text-caption text-on-surface-variant mt-1 space-y-0.5">
-                                @foreach (var med in lowStockMeds)
-                                {
-                                    <div>• @med.TenThuoc: Còn <strong>@med.TonKho</strong> @med.DonViTinh (Ngưỡng: @med.NguongToiThieu)</div>
-                                }
-                            </div>
-                            <a href="/Admin/Medicines" class="mt-2 inline-block text-[11px] font-bold text-error uppercase hover:underline">Nhập kho thuốc</a>
+                            <p class="text-body-md text-on-surface">
+                                <span class="font-bold">@(log.User != null ? log.User.HoTen : "Hệ thống")</span>: 
+                                @log.HanhDong - <span class="text-on-surface-variant">@log.ChiTiet</span>
+                            </p>
+                            <p class="text-caption text-on-surface-variant mt-0.5">
+                                @log.ThoiGian.ToString("dd/MM/yyyy HH:mm:ss") • IP: @log.IpAddress
+                            </p>
                         </div>
                     </div>
                 }
-
-                <!-- Near expiry batches alert -->
-                @if (nearExpiryBatches.Any())
-                {
-                    <div class="flex items-start gap-unit-md p-3 bg-tertiary-fixed/5 rounded-lg border border-tertiary/10">
-                        <span class="material-symbols-outlined text-tertiary mt-0.5">pending_actions</span>
-                        <div class="flex-grow">
-                            <p class="font-label-md text-on-surface font-semibold">Lô thuốc sắp hết hạn (@nearExpiryBatches.Count lô)</p>
-                            <div class="text-caption text-on-surface-variant mt-1 space-y-0.5">
-                                @foreach (var batch in nearExpiryBatches)
-                                {
-                                    <div>• Lô: <strong>@batch.SoLo</strong> (@batch.Medicine.TenThuoc) - HSD: <strong>@batch.HanSuDung.ToString("dd/MM/yyyy")</strong> (Còn @((batch.HanSuDung - DateTime.Today).Days) ngày)</div>
-                                }
-                            </div>
-                            <a href="/Admin/Medicines/Batches" class="mt-2 inline-block text-[11px] font-bold text-tertiary uppercase hover:underline">Quản lý lô thuốc</a>
-                        </div>
-                    </div>
-                }
-
-                @if (!lowStockMeds.Any() && !nearExpiryBatches.Any())
-                {
-                    <div class="h-full flex flex-col items-center justify-center text-center text-on-surface-variant p-unit-md py-12">
-                        <span class="material-symbols-outlined text-[48px] text-secondary">verified_user</span>
-                        <p class="mt-2 font-label-md">Không có cảnh báo kho dược.</p>
-                        <p class="text-caption">Tất cả thuốc ở mức an toàn và còn hạn dài.</p>
-                    </div>
-                }
-            </div>
+            }
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Retrieve data from ViewBag
-            const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels));
-            const appointmentData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartData));
-            const revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RevenueChartData));
-
-            const pending = @ViewBag.PendingAppCount;
-            const confirmed = @ViewBag.ConfirmedAppCount;
             const completed = @ViewBag.CompletedAppCount;
             const cancelled = @ViewBag.CancelledAppCount;
 

@@ -1,100 +1,196 @@
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
-    ViewData["Title"] = "Đặt lịch khám bệnh";
+    ViewData["Title"] = "Đăng ký lịch khám";
     var depts = ViewBag.Departments as List<QuanLyBenhVien.Models.Department> ?? new List<QuanLyBenhVien.Models.Department>();
 }
 
-<div class="mb-unit-lg">
-    <a href="/Patient/Dashboard" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
-        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại trang chủ
-    </a>
-    <h2 class="font-headline-lg text-headline-lg text-on-surface">Đăng ký Lịch hẹn khám</h2>
-    <p class="text-body-md text-on-surface-variant">Vui lòng điền thông tin để đăng ký ca khám trực tuyến tại bệnh viện.</p>
-</div>
+@section Styles {
+<style>
+    .booking-summary-card {
+        transition: all 0.25s ease;
+    }
+    .slot-pill-btn {
+        transition: all 0.18s ease;
+    }
+    .slot-pill-btn:hover {
+        transform: translateY(-1px);
+    }
+</style>
+}
 
-<div class="glass-card rounded-xl p-unit-lg shadow-sm max-w-2xl mx-auto">
-    <form action="/Patient/Book/ConfirmBooking" method="POST" class="space-y-unit-md">
-        @Html.AntiForgeryToken()
+<div class="w-full max-w-6xl mx-auto animate-fadein">
+    <!-- Back to Dashboard -->
+    <div class="mb-6">
+        <a href="/Patient/Dashboard" class="inline-flex items-center gap-1.5 text-primary hover:underline text-body-md font-semibold">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại Trang chủ
+        </a>
+    </div>
 
-        <!-- Choose Patient (Self or Dependent) -->
-        @{
-            var patientInfo = ViewBag.Patient as QuanLyBenhVien.Models.Patient;
-            var dependentsList = ViewBag.Dependents as List<QuanLyBenhVien.Models.Dependent> ?? new List<QuanLyBenhVien.Models.Dependent>();
-        }
-        <div class="space-y-unit-xs">
-            <label class="block text-caption font-semibold text-on-surface-variant" for="patientSelector">Người bệnh đăng ký khám <span class="text-error">*</span></label>
-            <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                    id="patientSelector" name="bookingFor" required>
-                <option value="Self">Bản thân (@patientInfo?.User.HoTen)</option>
-                @foreach (var dep in dependentsList)
-                {
-                    <option value="@dep.Id" data-name="@dep.HoTen">Người thân: @dep.HoTen (@dep.QuanHe)</option>
+    <!-- Header Section -->
+    <div class="border-b border-outline-variant/60 pb-4 mb-6">
+        <h2 class="font-headline-lg text-2xl md:text-3xl font-bold text-on-surface">Đăng ký Lịch hẹn khám</h2>
+        <p class="text-body-md text-on-surface-variant mt-1">Hệ thống đặt lịch thăm khám thông minh, an toàn và bảo mật thông tin y tế.</p>
+    </div>
+
+    <!-- Main Grid: Form on left, Summary/Tips on right -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left Side: Registration Form -->
+        <div class="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 md:p-8 shadow-sm">
+            <form action="/Patient/Book/ConfirmBooking" method="POST" class="space-y-6">
+                @Html.AntiForgeryToken()
+
+                <!-- Choose Patient (Self or Dependent) -->
+                @{
+                    var patientInfo = ViewBag.Patient as QuanLyBenhVien.Models.Patient;
+                    var dependentsList = ViewBag.Dependents as List<QuanLyBenhVien.Models.Dependent> ?? new List<QuanLyBenhVien.Models.Dependent>();
                 }
-            </select>
+                <div class="space-y-2">
+                    <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]" for="patientSelector">
+                        Người bệnh đăng ký khám <span class="text-error">*</span>
+                    </label>
+                    <select class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus" 
+                            id="patientSelector" name="bookingFor" required onchange="updateSummary()">
+                        <option value="Self" data-display="Bản thân (@patientInfo?.User.HoTen)">Bản thân (@patientInfo?.User.HoTen)</option>
+                        @foreach (var dep in dependentsList)
+                        {
+                            <option value="@dep.Id" data-name="@dep.HoTen" data-display="Người thân: @dep.HoTen">Người thân: @dep.HoTen (@dep.QuanHe)</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Choose Department -->
+                <div class="space-y-2">
+                    <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]" for="deptSelector">
+                        Chọn Khoa khám chuyên khoa <span class="text-error">*</span>
+                    </label>
+                    <select class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus" 
+                            id="deptSelector" name="deptId" required onchange="onDepartmentChanged()">
+                        <option value="" data-location="">-- Chọn chuyên khoa --</option>
+                        @foreach (var dept in depts)
+                        {
+                            <option value="@dept.Id" data-location="@dept.ViTri">@dept.TenKhoa</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Dynamic Location Display Box -->
+                <div id="deptLocationContainer" class="hidden p-4 bg-primary-container/20 border border-primary/20 rounded-xl flex items-start gap-3">
+                    <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">location_on</span>
+                    <div>
+                        <h4 class="font-bold text-sm text-primary">Địa điểm phòng khám</h4>
+                        <p id="deptLocationText" class="text-sm text-on-surface mt-0.5"></p>
+                    </div>
+                </div>
+
+                <!-- Choose Doctor -->
+                <div class="space-y-2">
+                    <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]" for="doctorSelector">
+                        Chọn Bác sĩ điều trị <span class="text-error">*</span>
+                    </label>
+                    <select class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus" 
+                            id="doctorSelector" name="doctorId" required disabled onchange="checkSlotsTrigger()">
+                        <option value="">-- Vui lòng chọn khoa trước --</option>
+                    </select>
+                </div>
+
+                <!-- Date and Slots Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Choose Date -->
+                    <div class="space-y-2">
+                        <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]" for="bookingDate">
+                            Chọn Ngày khám <span class="text-error">*</span>
+                        </label>
+                        <input class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus" 
+                               id="bookingDate" name="bookingDate" required type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" max="@DateTime.Today.AddDays(14).ToString("yyyy-MM-dd")" onchange="loadSlots()" disabled />
+                    </div>
+
+                    <!-- Slots Info -->
+                    <div class="space-y-2">
+                        <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]">
+                            Trạng thái khung giờ <span class="text-error">*</span>
+                        </label>
+                        <div class="text-[12px] text-on-surface-variant font-medium py-3" id="slots-info">
+                            Vui lòng chọn bác sĩ và ngày khám để xem khung giờ trống.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selected Slot (hidden, set by click) -->
+                <input type="hidden" id="selectedTime" name="bookingTime" required />
+
+                <!-- Slot Badges Grid -->
+                <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 pt-2 hidden" id="slots-container">
+                    <!-- Badges populated by JS -->
+                </div>
+
+                <!-- Reason -->
+                <div class="space-y-2">
+                    <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]" for="lyDo">
+                        Triệu chứng lâm sàng / Lý do khám <span class="text-error">*</span>
+                    </label>
+                    <textarea class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus" 
+                              id="lyDo" name="lyDo" rows="3" placeholder="Mô tả ngắn gọn lý do khám (ví dụ: đau họng, nhức đầu, ho sốt nhẹ...)" required></textarea>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex items-center gap-4 pt-4 border-t border-outline-variant/60">
+                    <button class="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl hover:bg-primary/95 transition-all active:scale-[0.98] shadow flex items-center gap-1.5" type="submit" id="submitBtn" disabled>
+                        <span class="material-symbols-outlined">check_circle</span> Xác nhận đặt lịch
+                    </button>
+                    <a href="/Patient/Dashboard" class="text-on-surface-variant hover:underline font-semibold text-sm">Hủy bỏ</a>
+                </div>
+            </form>
         </div>
 
-        <!-- Choose Department -->
-        <div class="space-y-unit-xs">
-            <label class="block text-caption font-semibold text-on-surface-variant" for="deptSelector">Chọn Khoa khám chuyên khoa <span class="text-error">*</span></label>
-            <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                    id="deptSelector" name="deptId" required onchange="loadDoctors()">
-                <option value="">-- Chọn chuyên khoa --</option>
-                @foreach (var dept in depts)
-                {
-                    <option value="@dept.Id">@dept.TenKhoa (@dept.ViTri)</option>
-                }
-            </select>
-        </div>
-
-        <!-- Choose Doctor -->
-        <div class="space-y-unit-xs">
-            <label class="block text-caption font-semibold text-on-surface-variant" for="doctorSelector">Chọn Bác sĩ điều trị <span class="text-error">*</span></label>
-            <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                    id="doctorSelector" name="doctorId" required disabled onchange="checkSlotsTrigger()">
-                <option value="">-- Vui lòng chọn khoa trước --</option>
-            </select>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
-            <!-- Choose Date -->
-            <div class="space-y-unit-xs">
-                <label class="block text-caption font-semibold text-on-surface-variant" for="bookingDate">Chọn Ngày khám <span class="text-error">*</span></label>
-                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                       id="bookingDate" name="bookingDate" required type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" max="@DateTime.Today.AddDays(14).ToString("yyyy-MM-dd")" onchange="loadSlots()" disabled />
-            </div>
-
-            <!-- Selected Slot (hidden, set by click) -->
-            <input type="hidden" id="selectedTime" name="bookingTime" required />
-            
-            <!-- Slots Info -->
-            <div class="space-y-unit-xs">
-                <label class="block text-caption font-semibold text-on-surface-variant">Chọn Giờ khám trống <span class="text-error">*</span></label>
-                <div class="text-[11px] text-on-surface-variant italic py-2" id="slots-info">
-                    Chọn bác sĩ và ngày khám để hiển thị khung giờ.
+        <!-- Right Side: Real-time Booking Summary & Instructions -->
+        <div class="lg:col-span-4 space-y-6">
+            <!-- Summary Box -->
+            <div class="booking-summary-card bg-primary-container/20 border border-primary/10 rounded-2xl p-6 shadow-sm">
+                <h3 class="font-bold text-title-lg text-primary flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined">assignment</span>
+                    Thông tin đăng ký
+                </h3>
+                <div class="space-y-3.5 text-sm text-on-surface">
+                    <div class="flex justify-between border-b border-outline-variant/30 pb-2">
+                        <span class="text-on-surface-variant">Bệnh nhân:</span>
+                        <strong id="summaryPatient" class="font-bold">@patientInfo?.User.HoTen</strong>
+                    </div>
+                    <div class="flex justify-between border-b border-outline-variant/30 pb-2">
+                        <span class="text-on-surface-variant">Chuyên khoa:</span>
+                        <strong id="summaryDept" class="font-semibold text-on-surface-variant">Chưa chọn</strong>
+                    </div>
+                    <div class="flex justify-between border-b border-outline-variant/30 pb-2">
+                        <span class="text-on-surface-variant">Địa điểm khám:</span>
+                        <strong id="summaryLocation" class="font-semibold text-on-surface-variant text-right">Chưa chọn</strong>
+                    </div>
+                    <div class="flex justify-between border-b border-outline-variant/30 pb-2">
+                        <span class="text-on-surface-variant">Bác sĩ:</span>
+                        <strong id="summaryDoctor" class="font-semibold text-on-surface-variant">Chưa chọn</strong>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-on-surface-variant">Thời gian khám:</span>
+                        <strong id="summaryTime" class="font-bold text-primary">Chưa chọn</strong>
+                    </div>
                 </div>
             </div>
+
+            <!-- Guidelines / Tips Box -->
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 shadow-sm">
+                <h3 class="font-bold text-title-md text-on-surface flex items-center gap-2 mb-3">
+                    <span class="material-symbols-outlined text-secondary">info</span>
+                    Hướng dẫn đặt lịch
+                </h3>
+                <ul class="text-[12px] text-on-surface-variant space-y-2 list-disc pl-4">
+                    <li>Vui lòng lựa chọn chính xác khoa khám theo nhu cầu bệnh lý.</li>
+                    <li>Lịch hẹn có thể được đăng ký tối đa 14 ngày kế tiếp.</li>
+                    <li>Mỗi ca khám trực tuyến sẽ được xếp thứ tự giờ khám chi tiết, vui lòng có mặt trước giờ hẹn ít nhất 10 phút.</li>
+                    <li>Sau khi xác nhận lịch khám, trạng thái sẽ là <strong>Chờ duyệt</strong> cho tới khi bệnh viện xác nhận lịch hẹn của bạn.</li>
+                </ul>
+            </div>
         </div>
 
-        <!-- Slot Badges Grid -->
-        <div class="grid grid-cols-4 gap-unit-sm pt-unit-xs hidden" id="slots-container">
-            <!-- Badges populated by JS -->
-        </div>
-
-        <!-- Reason -->
-        <div class="space-y-unit-xs">
-            <label class="block text-caption font-semibold text-on-surface-variant" for="lyDo">Triệu chứng lâm sàng / Lý do đăng ký khám <span class="text-error">*</span></label>
-            <textarea class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                      id="lyDo" name="lyDo" rows="3" placeholder="Ví dụ: Đau tức ngực trái kéo dài, khó thở khi leo cầu thang..." required></textarea>
-        </div>
-
-        <!-- Submit Buttons -->
-        <div class="flex items-center gap-unit-md pt-unit-md border-t border-outline-variant mt-unit-lg">
-            <button class="bg-primary text-on-primary font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] shadow-md flex items-center gap-1" type="submit" id="submitBtn" disabled>
-                <span class="material-symbols-outlined">check_circle</span> Xác nhận đặt lịch khám
-            </button>
-            <a href="/Patient/Dashboard" class="text-on-surface-variant hover:underline font-label-md">Hủy bỏ</a>
-        </div>
-    </form>
+    </div>
 </div>
 
 @section Scripts {
@@ -112,7 +208,78 @@
                     }
                 }
             }
+            updateSummary();
         });
+
+        function updateSummary() {
+            const patientSelector = document.getElementById('patientSelector');
+            const selectedPatientOption = patientSelector.options[patientSelector.selectedIndex];
+            document.getElementById('summaryPatient').innerText = selectedPatientOption.getAttribute('data-display') || selectedPatientOption.text;
+
+            const deptSelector = document.getElementById('deptSelector');
+            const selectedDeptOption = deptSelector.options[deptSelector.selectedIndex];
+            if (deptSelector.value) {
+                document.getElementById('summaryDept').innerText = selectedDeptOption.text;
+                document.getElementById('summaryDept').classList.remove('text-on-surface-variant');
+                document.getElementById('summaryDept').classList.add('text-on-surface');
+
+                const location = selectedDeptOption.getAttribute('data-location');
+                if (location) {
+                    document.getElementById('summaryLocation').innerText = location;
+                    document.getElementById('summaryLocation').classList.remove('text-on-surface-variant');
+                    document.getElementById('summaryLocation').classList.add('text-on-surface');
+                } else {
+                    document.getElementById('summaryLocation').innerText = 'N/A';
+                }
+            } else {
+                document.getElementById('summaryDept').innerText = 'Chưa chọn';
+                document.getElementById('summaryDept').classList.add('text-on-surface-variant');
+                document.getElementById('summaryLocation').innerText = 'Chưa chọn';
+                document.getElementById('summaryLocation').classList.add('text-on-surface-variant');
+            }
+
+            const docSelector = document.getElementById('doctorSelector');
+            if (docSelector.value) {
+                document.getElementById('summaryDoctor').innerText = docSelector.options[docSelector.selectedIndex].text;
+                document.getElementById('summaryDoctor').classList.remove('text-on-surface-variant');
+                document.getElementById('summaryDoctor').classList.add('text-on-surface');
+            } else {
+                document.getElementById('summaryDoctor').innerText = 'Chưa chọn';
+                document.getElementById('summaryDoctor').classList.add('text-on-surface-variant');
+            }
+
+            const date = document.getElementById('bookingDate').value;
+            const time = document.getElementById('selectedTime').value;
+            if (date && time) {
+                const formattedDate = date.split('-').reverse().join('/');
+                document.getElementById('summaryTime').innerText = `${time} ngày ${formattedDate}`;
+            } else if (date) {
+                const formattedDate = date.split('-').reverse().join('/');
+                document.getElementById('summaryTime').innerText = `Ngày ${formattedDate}`;
+            } else {
+                document.getElementById('summaryTime').innerText = 'Chưa chọn';
+            }
+        }
+
+        async function onDepartmentChanged() {
+            const deptSelector = document.getElementById('deptSelector');
+            const selectedOption = deptSelector.options[deptSelector.selectedIndex];
+            const location = selectedOption.getAttribute('data-location');
+
+            const locationContainer = document.getElementById('deptLocationContainer');
+            const locationText = document.getElementById('deptLocationText');
+
+            if (location) {
+                locationText.innerText = location;
+                locationContainer.classList.remove('hidden');
+            } else {
+                locationContainer.classList.add('hidden');
+                locationText.innerText = '';
+            }
+
+            await loadDoctors();
+            updateSummary();
+        }
 
         async function loadDoctors() {
             const deptId = document.getElementById('deptSelector').value;
@@ -157,6 +324,7 @@
                 dateInput.disabled = true;
                 dateInput.value = "";
             }
+            updateSummary();
         }
 
         function resetSlots() {
@@ -168,6 +336,7 @@
             info.innerText = "Chọn bác sĩ và ngày khám để hiển thị khung giờ.";
             document.getElementById('selectedTime').value = "";
             document.getElementById('submitBtn').disabled = true;
+            updateSummary();
         }
 
         async function loadSlots() {
@@ -208,26 +377,28 @@
             slots.forEach(slot => {
                 const btn = document.createElement('button');
                 btn.type = "button";
-                btn.className = "slot-pill py-2 bg-surface hover:bg-surface-container-high border border-outline-variant text-body-md rounded-lg font-bold transition-all text-center";
+                btn.className = "slot-pill-btn py-2 bg-surface-container border border-outline-variant text-body-md rounded-lg font-bold transition-all text-center text-on-surface hover:bg-surface-container-high";
                 btn.innerText = slot.time;
                 btn.onclick = () => selectSlot(btn, slot.time);
                 container.appendChild(btn);
             });
+            updateSummary();
         }
 
         function selectSlot(element, time) {
             // Remove active classes
-            document.querySelectorAll('.slot-pill').forEach(pill => {
+            document.querySelectorAll('.slot-pill-btn').forEach(pill => {
                 pill.classList.remove('bg-primary', 'text-white', 'border-primary');
-                pill.classList.add('bg-surface', 'text-on-surface', 'border-outline-variant');
+                pill.classList.add('bg-surface-container', 'text-on-surface', 'border-outline-variant');
             });
 
             // Add active to selected
-            element.classList.remove('bg-surface', 'text-on-surface', 'border-outline-variant');
+            element.classList.remove('bg-surface-container', 'text-on-surface', 'border-outline-variant');
             element.classList.add('bg-primary', 'text-white', 'border-primary');
 
             document.getElementById('selectedTime').value = time;
             document.getElementById('submitBtn').disabled = false;
+            updateSummary();
         }
     </script>
 }

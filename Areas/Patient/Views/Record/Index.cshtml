@@ -5,63 +5,124 @@
     ViewData["Title"] = "Đơn thuốc & Bệnh án";
 }
 
-<div class="mb-unit-lg">
-    <h2 class="font-headline-lg text-headline-lg text-on-surface">Lịch sử Điều trị &amp; Đơn thuốc</h2>
-    <p class="text-body-md text-on-surface-variant">Tra cứu lại kết quả chẩn đoán, lời dặn của bác sĩ và tải về các đơn thuốc điện tử của bạn.</p>
-</div>
+@section Styles {
+<style>
+    .record-card {
+        transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .record-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 63, 135, 0.08);
+    }
+    .doc-avatar {
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    }
+    .prescription-btn {
+        background-color: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #047857;
+    }
+    .prescription-btn:hover {
+        background-color: #10b981;
+        color: #ffffff;
+    }
+    .review-btn {
+        background-color: rgba(0, 63, 135, 0.04);
+        border: 1px solid rgba(0, 63, 135, 0.12);
+        color: #003f87;
+    }
+    .review-btn:hover {
+        background-color: #003f87;
+        color: #ffffff;
+    }
+</style>
+}
 
-<div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-body-md">
-            <thead>
-                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase border-b border-outline-variant">
-                    <th class="px-unit-md py-3">Ngày khám</th>
-                    <th class="px-unit-md py-3">Bác sĩ khám</th>
-                    <th class="px-unit-md py-3">Chuyên khoa</th>
-                    <th class="px-unit-md py-3">Chẩn đoán y khoa</th>
-                    <th class="px-unit-md py-3 text-right">Đơn thuốc</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-outline-variant">
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="5" class="px-unit-md py-8 text-center text-on-surface-variant italic">Bạn chưa thực hiện ca khám nào tại bệnh viện.</td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var record in Model)
-                    {
-                        <tr class="hover:bg-surface-container-low transition-colors">
-                            <td class="px-unit-md py-4 font-bold text-primary">@record.NgayKham.ToString("dd/MM/yyyy")</td>
-                            <td class="px-unit-md py-4 font-medium">@record.Appointment.Doctor?.User.HoTen</td>
-                            <td class="px-unit-md py-4 text-on-surface-variant">@record.Appointment.Doctor?.Department.TenKhoa</td>
-                            <td class="px-unit-md py-4">
-                                <div class="font-semibold text-on-surface">@record.ChanDoan</div>
-                                <div class="text-caption text-on-surface-variant mt-0.5">Triệu chứng: @record.TrieuChung</div>
-                            </td>
-                            <td class="px-unit-md py-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    @if (record.Appointment.Doctor != null)
-                                    {
-                                        <button type="button" onclick="openReviewModal(@record.Appointment.Doctor.Id, '@record.Appointment.Doctor.User.HoTen')" class="inline-flex items-center gap-0.5 bg-primary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-primary-container transition-all active:scale-95 font-semibold cursor-pointer">
-                                            <span class="material-symbols-outlined text-[16px]">star</span> Đánh giá BS
-                                        </button>
-                                    }
-                                    @if (ViewBag.RecordsWithPrescriptions != null && ((List<int>)ViewBag.RecordsWithPrescriptions).Contains(record.Id))
-                                    {
-                                        <a href="/Patient/Record/PrescriptionDetails/@record.Id" class="inline-flex items-center gap-0.5 bg-secondary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-on-secondary-container transition-all active:scale-95 font-semibold">
-                                            <span class="material-symbols-outlined text-[16px]">receipt</span> Đơn thuốc
-                                        </a>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
+<div class="w-full max-w-5xl mx-auto animate-fadein pb-12">
+    <!-- Header -->
+    <div class="border-b border-outline-variant/60 pb-4 mb-6">
+        <h2 class="font-headline-lg text-2xl md:text-3xl font-bold text-on-surface">Lịch sử điều trị &amp; Đơn thuốc</h2>
+        <p class="text-body-md text-on-surface-variant mt-1">Tra cứu chẩn đoán y khoa, lời dặn của bác sĩ điều trị và xem đơn thuốc điện tử.</p>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="space-y-4">
+        @if (!Model.Any())
+        {
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-12 text-center shadow-sm">
+                <span class="material-symbols-outlined text-[64px] text-on-surface-variant/40 mb-3">clinical_notes</span>
+                <p class="text-body-lg font-bold text-on-surface">Không tìm thấy bệnh án</p>
+                <p class="text-body-md text-on-surface-variant mt-1">Bạn chưa thực hiện bất kỳ ca khám bệnh nào tại bệnh viện HMS.</p>
+                <a href="/Patient/Book" class="mt-4 inline-flex items-center gap-1 bg-primary text-on-primary px-5 py-2.5 rounded-xl font-bold hover:bg-primary/95 transition-all shadow-md">
+                    Đặt lịch khám ngay
+                </a>
+            </div>
+        }
+        else
+        {
+            @foreach (var record in Model)
+            {
+                var hasPrescription = ViewBag.RecordsWithPrescriptions != null && ((List<int>)ViewBag.RecordsWithPrescriptions).Contains(record.Id);
+
+                <div class="record-card bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <!-- Left: Medical Info -->
+                    <div class="flex items-start gap-4 min-w-0 flex-grow">
+                        <!-- Date Badge & Initial -->
+                        <div class="w-12 h-12 rounded-2xl doc-avatar flex items-center justify-center shrink-0 text-primary font-bold text-lg border border-sky-100">
+                            @(record.Appointment.Doctor != null ? record.Appointment.Doctor.User.HoTen[0].ToString().ToUpper() : "BS")
+                        </div>
+                        <!-- Diagnosis & Details -->
+                        <div class="min-w-0 flex-grow space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-caption text-primary font-bold bg-primary-container/20 border border-primary/10 px-2.5 py-0.5 rounded-full text-[11px]">
+                                    @record.NgayKham.ToString("dd/MM/yyyy")
+                                </span>
+                                <span class="text-caption text-on-surface-variant font-semibold bg-surface-container border border-outline-variant px-2.5 py-0.5 rounded-full text-[11px]">
+                                    @(record.Appointment.Doctor != null ? record.Appointment.Doctor.Department.TenKhoa : "N/A")
+                                </span>
+                            </div>
+                            <h3 class="font-bold text-on-surface text-base md:text-lg mt-1 truncate">
+                                @record.ChanDoan
+                            </h3>
+                            <p class="text-caption text-on-surface-variant leading-relaxed">
+                                <strong class="font-semibold text-on-surface-variant">Bác sĩ:</strong> @(record.Appointment.Doctor != null ? record.Appointment.Doctor.User.HoTen : "N/A")
+                            </p>
+                            @if (!string.IsNullOrEmpty(record.TrieuChung))
+                            {
+                                <p class="text-caption text-on-surface-variant/90 leading-relaxed italic">
+                                    "Triệu chứng: @record.TrieuChung"
+                                </p>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Right: Actions & Prescription Link -->
+                    <div class="flex flex-col sm:flex-row md:flex-col lg:flex-row items-stretch sm:items-center md:items-stretch lg:items-center gap-2.5 shrink-0">
+                        <!-- Rating Button -->
+                        @if (record.Appointment.Doctor != null)
+                        {
+                            <button type="button" onclick="openReviewModal(@record.Appointment.Doctor.Id, '@record.Appointment.Doctor.User.HoTen')" class="review-btn inline-flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-[0.98] cursor-pointer">
+                                <span class="material-symbols-outlined text-[18px]">star</span> Đánh giá BS
+                            </button>
+                        }
+
+                        <!-- Prescription Button / No Prescription Indicator -->
+                        @if (hasPrescription)
+                        {
+                            <a href="/Patient/Record/PrescriptionDetails/@record.Id" class="prescription-btn inline-flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-[0.98]">
+                                <span class="material-symbols-outlined text-[18px]">receipt_long</span> Đơn thuốc
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center justify-center gap-1.5 px-4.5 py-2.5 border border-dashed border-outline-variant/60 text-on-surface-variant/60 rounded-xl text-sm font-semibold select-none bg-surface-container-low/20">
+                                <span class="material-symbols-outlined text-[18px]">healing</span> Không kê đơn
+                            </span>
+                        }
+                    </div>
+                </div>
+            }
+        }
     </div>
 </div>
 

@@ -67,6 +67,11 @@
                 <span class="font-body-md text-body-md">Nhân sự &amp; Phân quyền</span>
             </a>
 
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
+               href="/Admin/Reports">
+                <span class="material-symbols-outlined">analytics</span>
+                <span class="font-body-md text-body-md">Báo cáo &amp; Thống kê</span>
+            </a>
         </nav>
 
         <!-- Bottom actions -->
