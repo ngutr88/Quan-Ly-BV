@@ -1,5 +1,6 @@
 @{
     Layout = "_Layout";
+
     ViewData["Title"] = "Đăng nhập";
 }
 
@@ -7,8 +8,10 @@
     <main class="w-full max-w-lg flex flex-col items-center py-unit-xl">
         <!-- Header -->
         <header class="text-center mb-unit-lg">
-            <div class="inline-flex items-center justify-center bg-primary rounded-full w-16 h-16 mb-unit-md text-white">
-                <span class="material-symbols-outlined text-display-lg animate-pulse" style="font-size: 36px;">local_hospital</span>
+            <div
+                class="inline-flex items-center justify-center bg-primary rounded-full w-16 h-16 mb-unit-md text-white">
+                <span class="material-symbols-outlined text-display-lg animate-pulse"
+                    style="font-size: 36px;">local_hospital</span>
             </div>
             <h1 class="font-headline-md text-primary font-bold tracking-tight">MediFlow HMS</h1>
             <p class="font-body-md text-on-surface-variant mt-unit-sm max-w-xs mx-auto">
@@ -24,28 +27,61 @@
             </div>
 
             <form class="space-y-unit-md" action="/Auth/Login" method="POST">
+                <!-- Role Selection Cards Grid -->
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Lựa chọn vai trò đăng nhập *</label>
+                    <div class="grid grid-cols-3 gap-unit-sm">
+                        <!-- Patient Card -->
+                        <button type="button" id="role-patient" onclick="selectLoginRole('Patient')" 
+                            class="flex flex-col items-center justify-center p-unit-md rounded-xl border-2 transition-all cursor-pointer bg-primary/5 border-primary text-primary shadow-sm scale-[1.02] gap-unit-xs">
+                            <span class="material-symbols-outlined text-headline-md" style="font-variation-settings: 'FILL' 1;">person</span>
+                            <span class="font-bold text-label-lg">Bệnh nhân</span>
+                        </button>
+                        <!-- Doctor Card -->
+                        <button type="button" id="role-doctor" onclick="selectLoginRole('Doctor')" 
+                            class="flex flex-col items-center justify-center p-unit-md rounded-xl border-2 transition-all cursor-pointer border-outline-variant hover:border-primary/50 hover:bg-surface-container-low text-on-surface-variant hover:text-on-surface gap-unit-xs">
+                            <span class="material-symbols-outlined text-headline-md">stethoscope</span>
+                            <span class="font-bold text-label-lg">Bác sĩ</span>
+                        </button>
+                        <!-- Admin Card -->
+                        <button type="button" id="role-admin" onclick="selectLoginRole('Admin')" 
+                            class="flex flex-col items-center justify-center p-unit-md rounded-xl border-2 transition-all cursor-pointer border-outline-variant hover:border-primary/50 hover:bg-surface-container-low text-on-surface-variant hover:text-on-surface gap-unit-xs">
+                            <span class="material-symbols-outlined text-headline-md">admin_panel_settings</span>
+                            <span class="font-bold text-label-lg">Quản trị viên</span>
+                        </button>
+                    </div>
+                    <input type="hidden" name="role" id="selected-role-input" value="Patient" />
+                </div>
+
                 <!-- Username Input -->
                 <div class="space-y-unit-xs">
-                    <label class="block text-caption font-semibold text-on-surface-variant" for="identifier">Email / Số điện thoại</label>
+                    <label class="block text-caption font-semibold text-on-surface-variant" for="identifier">Email / Số
+                        điện thoại</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
                             <span class="material-symbols-outlined">person</span>
                         </span>
-                        <input class="w-full pl-10 pr-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                               id="identifier" name="identifier" placeholder="Nhập email hoặc số điện thoại" required type="text" />
+                        <input
+                            class="w-full pl-10 pr-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                            id="identifier" name="identifier" placeholder="Nhập email hoặc số điện thoại" required
+                            type="text" />
                     </div>
                 </div>
 
                 <!-- Password Input -->
                 <div class="space-y-unit-xs">
-                    <label class="block text-caption font-semibold text-on-surface-variant" for="password">Mật khẩu</label>
+                    <label class="block text-caption font-semibold text-on-surface-variant" for="password">Mật
+                        khẩu</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
                             <span class="material-symbols-outlined">lock</span>
                         </span>
-                        <input class="w-full pl-10 pr-12 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                               id="password" name="password" placeholder="Nhập mật khẩu" required type="password" />
-                        <button class="absolute inset-y-0 right-0 pr-3 flex items-center text-outline hover:text-primary" onclick="togglePasswordVisibility()" type="button">
+                        <input
+                            class="w-full pl-10 pr-12 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                            id="password" name="password" placeholder="Nhập mật khẩu" required type="password" />
+                        <button
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-outline hover:text-primary"
+                            onclick="togglePasswordVisibility()" type="button">
                             <span class="material-symbols-outlined" id="pw-toggle-icon">visibility</span>
                         </button>
                     </div>
@@ -54,14 +90,19 @@
                 <!-- Remember & Forgot -->
                 <div class="flex items-center justify-between">
                     <label class="flex items-center gap-unit-sm cursor-pointer group">
-                        <input class="w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary" name="rememberMe" value="true" type="checkbox" />
-                        <span class="text-caption text-on-surface-variant group-hover:text-on-surface">Ghi nhớ đăng nhập</span>
+                        <input class="w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary"
+                            name="rememberMe" value="true" type="checkbox" />
+                        <span class="text-caption text-on-surface-variant group-hover:text-on-surface">Ghi nhớ đăng
+                            nhập</span>
                     </label>
-                    <a class="text-caption font-semibold text-primary hover:underline transition-all" href="/Auth/ForgotPassword">Quên mật khẩu?</a>
+                    <a class="text-caption font-semibold text-primary hover:underline transition-all"
+                        href="/Auth/ForgotPassword">Quên mật khẩu?</a>
                 </div>
 
                 <!-- Action Button -->
-                <button class="w-full bg-primary text-on-primary font-body-lg font-semibold py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] flex items-center justify-center gap-unit-sm shadow-md" type="submit">
+                <button
+                    class="w-full bg-primary text-on-primary font-body-lg font-semibold py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] flex items-center justify-center gap-unit-sm shadow-md"
+                    type="submit">
                     <span>Đăng nhập</span>
                     <span class="material-symbols-outlined">login</span>
                 </button>
@@ -69,7 +110,7 @@
 
             <div class="mt-unit-lg pt-unit-md border-t border-outline-variant text-center">
                 <p class="text-body-md text-on-surface-variant">
-                    Bệnh nhân mới? 
+                    Bệnh nhân mới?
                     <a class="text-primary font-bold hover:underline" href="/Auth/Register">Đăng ký tài khoản</a>
                 </p>
             </div>
@@ -83,16 +124,25 @@
                     <h3 class="font-label-md text-on-surface uppercase tracking-wider">Tài khoản trải nghiệm nhanh</h3>
                 </div>
                 <div class="flex flex-wrap gap-unit-sm mb-unit-md">
-                    <button class="demo-pill px-4 py-1.5 rounded-full border border-outline text-on-surface-variant font-label-md hover:border-primary hover:text-primary transition-all bg-white" id="pill-admin" onclick="setDemoRole('admin')">Quản trị viên</button>
-                    <button class="demo-pill px-4 py-1.5 rounded-full border border-outline text-on-surface-variant font-label-md hover:border-primary hover:text-primary transition-all bg-white" id="pill-doctor" onclick="setDemoRole('doctor')">BS. Nguyễn Văn Trung</button>
-                    <button class="demo-pill px-4 py-1.5 rounded-full border border-outline text-on-surface-variant font-label-md hover:border-primary hover:text-primary transition-all bg-white" id="pill-patient" onclick="setDemoRole('patient')">BN. Trần Văn A</button>
+                    <button
+                        class="demo-pill px-4 py-1.5 rounded-full border border-outline text-on-surface-variant font-label-md hover:border-primary hover:text-primary transition-all bg-white"
+                        id="pill-admin" onclick="setDemoRole('admin')">Quản trị viên</button>
+                    <button
+                        class="demo-pill px-4 py-1.5 rounded-full border border-outline text-on-surface-variant font-label-md hover:border-primary hover:text-primary transition-all bg-white"
+                        id="pill-doctor" onclick="setDemoRole('doctor')">BS. Nguyễn Văn Trung</button>
+                    <button
+                        class="demo-pill px-4 py-1.5 rounded-full border border-outline text-on-surface-variant font-label-md hover:border-primary hover:text-primary transition-all bg-white"
+                        id="pill-patient" onclick="setDemoRole('patient')">BN. Trần Văn A</button>
                 </div>
                 <div class="bg-white/50 p-unit-sm rounded border border-outline-variant/30 mb-unit-sm">
                     <p class="text-caption text-on-surface-variant leading-relaxed" id="demo-description">
-                        Chọn một tài khoản ở trên để điền thông tin tự động và kiểm tra các chức năng nghiệp vụ của vai trò đó.
+                        Chọn một tài khoản ở trên để điền thông tin tự động và kiểm tra các chức năng nghiệp vụ của vai
+                        trò đó.
                     </p>
                 </div>
-                <button class="w-full bg-secondary text-white py-2 rounded-lg font-label-md hover:bg-on-secondary-container transition-all active:scale-[0.98] hidden" id="btn-quick-login" onclick="submitQuickLogin()">
+                <button
+                    class="w-full bg-secondary text-white py-2 rounded-lg font-label-md hover:bg-on-secondary-container transition-all active:scale-[0.98] hidden"
+                    id="btn-quick-login" onclick="submitQuickLogin()">
                     Đăng nhập nhanh vai trò đã chọn
                 </button>
             </div>
@@ -101,7 +151,8 @@
 
     <!-- Professional Footer -->
     <footer class="text-center pb-unit-lg px-margin-mobile">
-        <p class="text-caption text-outline">© 2026 Hệ thống Quản lý Bệnh viện HMS MediFlow. Bảo mật &amp; Chuyên nghiệp.</p>
+        <p class="text-caption text-outline">© 2026 Hệ thống Quản lý Bệnh viện HMS MediFlow. Bảo mật &amp; Chuyên
+            nghiệp.</p>
     </footer>
 
     <script>
@@ -115,6 +166,22 @@
                 pwInput.type = 'password';
                 icon.textContent = 'visibility';
             }
+        }
+
+        function selectLoginRole(role) {
+            document.getElementById('selected-role-input').value = role;
+            
+            const rolesList = ['Patient', 'Doctor', 'Admin'];
+            rolesList.forEach(r => {
+                const btn = document.getElementById('role-' + r.toLowerCase());
+                if (r === role) {
+                    btn.className = "flex flex-col items-center justify-center p-unit-md rounded-xl border-2 transition-all cursor-pointer bg-primary/5 border-primary text-primary shadow-sm scale-[1.02] gap-unit-xs";
+                    btn.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 1";
+                } else {
+                    btn.className = "flex flex-col items-center justify-center p-unit-md rounded-xl border-2 transition-all cursor-pointer border-outline-variant hover:border-primary/50 hover:bg-surface-container-low text-on-surface-variant hover:text-on-surface gap-unit-xs";
+                    btn.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 0";
+                }
+            });
         }
 
         const roles = {
@@ -143,17 +210,22 @@
         function setDemoRole(roleKey) {
             selectedRole = roles[roleKey];
             document.getElementById('demo-description').innerText = selectedRole.desc;
-            
+
             // Fill inputs
             document.getElementById('identifier').value = selectedRole.username;
             document.getElementById('password').value = selectedRole.password;
+
+            // Select role in segmented control
+            if (roleKey === 'admin') selectLoginRole('Admin');
+            if (roleKey === 'doctor') selectLoginRole('Doctor');
+            if (roleKey === 'patient') selectLoginRole('Patient');
 
             // Update pills UI
             document.querySelectorAll('.demo-pill').forEach(p => {
                 p.classList.remove('bg-primary', 'text-white', 'border-primary');
                 p.classList.add('bg-white', 'text-on-surface-variant', 'border-outline');
             });
-            
+
             const activePill = document.getElementById(selectedRole.pill);
             activePill.classList.remove('bg-white', 'text-on-surface-variant', 'border-outline');
             activePill.classList.add('bg-primary', 'text-white', 'border-primary');

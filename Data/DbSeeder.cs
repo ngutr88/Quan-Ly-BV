@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBenhVien.Models;
@@ -24,301 +24,6 @@ namespace QuanLyBenhVien.Data
                 context.Notifications.RemoveRange(context.Notifications);
                 context.SaveChanges();
             }
-
-            // Auto-seed missing departments for existing DBs (non-destructive patch)
-            var existingDeptNames = context.Departments.Select(d => d.TenKhoa).ToList();
-            var newDepts = new List<(string TenKhoa, string MoTa, string ViTri)>
-            {
-                ("Khoa Nội tổng quát",  "Chẩn đoán và điều trị bệnh nội khoa người lớn",                    "Tầng 1 - Tòa nhà A"),
-                ("Khoa Tim mạch",       "Chẩn đoán và điều trị các bệnh lý tim mạch chuyên sâu",            "Tầng 2 - Tòa nhà B"),
-                ("Khoa Nhi",            "Chăm sóc sức khỏe toàn diện cho trẻ sơ sinh và trẻ nhỏ",          "Tầng 1 - Tòa nhà C"),
-                ("Khoa Tai Mũi Họng",   "Khám và điều trị các bệnh lý liên quan đến Tai, Mũi và Họng",     "Tầng 3 - Tòa nhà A"),
-                ("Khoa Ngoại tổng hợp", "Phẫu thuật và điều trị ngoại khoa các bệnh lý cần can thiệp",     "Tầng 2 - Tòa nhà A"),
-                ("Khoa Sản phụ khoa",   "Chăm sóc sức khỏe sinh sản, thai sản và phụ khoa",                "Tầng 3 - Tòa nhà C"),
-                ("Khoa Da liễu",        "Chẩn đoán và điều trị các bệnh lý về da, tóc và móng",            "Tầng 4 - Tòa nhà A"),
-                ("Khoa Thần kinh",      "Khám và điều trị bệnh lý hệ thần kinh trung ương và ngoại vi",    "Tầng 4 - Tòa nhà B"),
-            };
-            bool deptAdded = false;
-            foreach (var (TenKhoa, MoTa, ViTri) in newDepts)
-            {
-                if (!existingDeptNames.Contains(TenKhoa))
-                {
-                    context.Departments.Add(new Department { TenKhoa = TenKhoa, MoTa = MoTa, ViTri = ViTri });
-                    deptAdded = true;
-                }
-            }
-            if (deptAdded) context.SaveChanges();
-
-            // Auto-seed missing medicines for existing DBs (non-destructive patch)
-            var existingMedNames = context.Medicines.Select(m => m.TenThuoc).ToList();
-            var newMeds = new List<(string TenThuoc, string HoatChat, string DonViTinh, decimal Gia, int TonKho, int NguongToiThieu, int HanSuDungNgay, string SoLo)>
-            {
-                ("Paracetamol 500mg",                  "Paracetamol",                    "Viên",    2000,  500, 100, 30,  "LOT-PARA-001"),
-                ("Amoxicillin 500mg (Kháng sinh)",     "Amoxicillin",                    "Viên",    5000,  300,  50, 180, "LOT-AMOX-001"),
-                ("Decolgen Forte",                     "Acetaminophen, Phenylephrine",   "Viên",    3000,  150,  80,   5, "LOT-DECO-001"),
-                ("Amlodipine 5mg",                     "Amlodipine Besylate",            "Viên",    4500,  400,  80, 540, "LOT-AMLO-001"),
-                ("Metformin 500mg",                    "Metformin Hydrochloride",        "Viên",    3500,  350,  70, 365, "LOT-METF-001"),
-                ("Omeprazole 20mg",                    "Omeprazole",                     "Viên",    6000,  280,  60, 400, "LOT-OMEP-002"),
-                ("Cetirizine 10mg (Chống dị ứng)",    "Cetirizine Hydrochloride",       "Viên",    3000,  200,  50, 450, "LOT-CETI-001"),
-                ("Azithromycin 500mg",                 "Azithromycin",                   "Viên",   18000,  180,  40, 300, "LOT-AZIT-001"),
-                ("Vitamin C 1000mg Effervescent",      "Ascorbic Acid",                  "Viên sủi", 8000, 220,  60, 270, "LOT-VITC-001"),
-                ("Ibuprofen 400mg",                    "Ibuprofen",                      "Viên",    4000,   90, 100, 200, "LOT-IBUP-001"),
-                ("Atorvastatin 20mg",                  "Atorvastatin Calcium",           "Viên",   12000,  160,  40, 600, "LOT-ATOR-001"),
-                ("Salbutamol 2.5mg/2.5ml (Khí dung)", "Salbutamol Sulfate",             "Ống",    25000,  120,  30, 365, "LOT-SALB-001"),
-            };
-            bool medAdded = false;
-            foreach (var m in newMeds)
-            {
-                if (!existingMedNames.Contains(m.TenThuoc))
-                {
-                    var newMed = new Medicine
-                    {
-                        TenThuoc = m.TenThuoc,
-                        HoatChat = m.HoatChat,
-                        DonViTinh = m.DonViTinh,
-                        Gia = m.Gia,
-                        TonKho = m.TonKho,
-                        NguongToiThieu = m.NguongToiThieu
-                    };
-                    context.Medicines.Add(newMed);
-                    context.SaveChanges();
-                    context.MedicineBatches.Add(new MedicineBatch
-                    {
-                        ThuocId = newMed.Id,
-                        SoLo = m.SoLo,
-                        HanSuDung = DateTime.Now.AddDays(m.HanSuDungNgay),
-                        SoLuongNhap = m.TonKho,
-                        SoLuongTon = m.TonKho
-                    });
-                    medAdded = true;
-                }
-            }
-            if (medAdded) context.SaveChanges();
-
-            // Auto-seed missing patients for existing DBs (non-destructive patch)
-            var existingPatientEmails = context.Users.Where(u => u.VaiTro == "Patient").Select(u => u.Email).ToList();
-            var newPatientData = new List<(string HoTen, string Email, string Sdt, DateTime NgaySinh, string GioiTinh, string NhomMau, string SoBHYT, string TienSuBenh, string DiUng)>
-            {
-                ("Nguyễn Thị Hồng",   "patient4@hms.com", "0922334455", new DateTime(1978, 7, 15),  "Nữ",  "AB+", "HN4810001122", "Đái tháo đường type 2, tăng huyết áp",          "Sulfa drugs"),
-                ("Đặng Văn Long",     "patient5@hms.com", "0966778899", new DateTime(2003, 1, 20),  "Nam", "O-",  "SG4820334455", "Hen phế quản",                                   "Aspirin"),
-                ("Trần Thị Minh Tú",  "patient6@hms.com", "0911223344", new DateTime(1968, 11, 5),  "Nữ",  "B-",  "DN4830556677", "Viêm khớp dạng thấp, loãng xương",              "Không"),
-                ("Bùi Minh Đức",      "patient7@hms.com", "0944556677", new DateTime(1992, 4, 30),  "Nam", "A-",  "CT4840778899", "Không có tiền sử bệnh đặc biệt",                "Ibuprofen"),
-            };
-            bool patAdded = false;
-            foreach (var p in newPatientData)
-            {
-                if (!existingPatientEmails.Contains(p.Email))
-                {
-                    var newUser = new User
-                    {
-                        HoTen = p.HoTen,
-                        Email = p.Email,
-                        Sdt = p.Sdt,
-                        MatKhauHash = HashHelper.HashPassword("Patient@123"),
-                        VaiTro = "Patient",
-                        TrangThai = "Active"
-                    };
-                    context.Users.Add(newUser);
-                    context.SaveChanges();
-                    context.Patients.Add(new Patient
-                    {
-                        NguoiDungId = newUser.Id,
-                        NgaySinh = p.NgaySinh,
-                        GioiTinh = p.GioiTinh,
-                        NhomMau = p.NhomMau,
-                        SoBHYT = p.SoBHYT,
-                        TienSuBenh = p.TienSuBenh,
-                        DiUng = p.DiUng
-                    });
-                    patAdded = true;
-                }
-            }
-            if (patAdded) context.SaveChanges();
-
-            // Auto-seed additional departments for existing DBs (non-destructive patch)
-            var existingDeptNames2 = context.Departments.Select(d => d.TenKhoa).ToList();
-            var extraDepts = new List<(string TenKhoa, string MoTa, string ViTri)>
-            {
-                ("Khoa Mắt",              "Khám và điều trị các bệnh lý về mắt, phẫu thuật nhãn khoa",                     "Tầng 5 - Tòa nhà A"),
-                ("Khoa Chấn thương Chỉnh hình", "Điều trị gãy xương, trật khớp, phẫu thuật chỉnh hình",                   "Tầng 1 - Tòa nhà D"),
-                ("Khoa Hồi sức cấp cứu",  "Cấp cứu và hồi sức tích cực cho bệnh nhân nặng",                               "Tầng trệt - Tòa nhà A"),
-                ("Khoa Ung bướu",          "Chẩn đoán, điều trị và quản lý các bệnh lý ung thư",                           "Tầng 3 - Tòa nhà D"),
-                ("Khoa Răng Hàm Mặt",      "Khám và điều trị các bệnh lý răng miệng, phẫu thuật hàm mặt",                 "Tầng 2 - Tòa nhà C"),
-                ("Khoa Tiết niệu",         "Chẩn đoán và điều trị bệnh lý hệ tiết niệu và sinh dục nam",                   "Tầng 5 - Tòa nhà B"),
-                ("Khoa Y học cổ truyền",   "Châm cứu, bấm huyệt, xoa bóp và điều trị bằng đông y kết hợp tây y",           "Tầng 2 - Tòa nhà D"),
-            };
-            bool extraDeptAdded = false;
-            foreach (var (TenKhoa, MoTa, ViTri) in extraDepts)
-            {
-                if (!existingDeptNames2.Contains(TenKhoa))
-                {
-                    context.Departments.Add(new Department { TenKhoa = TenKhoa, MoTa = MoTa, ViTri = ViTri });
-                    extraDeptAdded = true;
-                }
-            }
-            if (extraDeptAdded) context.SaveChanges();
-
-            // Auto-seed services for new departments (non-destructive patch)
-            var existingServiceNames = context.Services.Select(s => s.TenDichVu).ToList();
-            var servicesToAdd = new List<(string KhoaTen, string TenDichVu, decimal Gia)>
-            {
-                // Khoa Sản phụ khoa
-                ("Khoa Sản phụ khoa",       "Khám thai định kỳ",                         200000),
-                ("Khoa Sản phụ khoa",       "Siêu âm thai 4D",                           500000),
-                ("Khoa Sản phụ khoa",       "Khám phụ khoa tổng quát",                   180000),
-                // Khoa Da liễu
-                ("Khoa Da liễu",            "Khám Da liễu thường",                       120000),
-                ("Khoa Da liễu",            "Điều trị Laser da liễu",                    800000),
-                // Khoa Thần kinh
-                ("Khoa Thần kinh",          "Khám Thần kinh tổng quát",                  150000),
-                ("Khoa Thần kinh",          "Điện não đồ (EEG)",                         250000),
-                // Khoa Ngoại tổng hợp
-                ("Khoa Ngoại tổng hợp",     "Khám Ngoại khoa tổng quát",                 150000),
-                ("Khoa Ngoại tổng hợp",     "Siêu âm bụng tổng quát",                   200000),
-                // Khoa Mắt
-                ("Khoa Mắt",                "Khám Mắt tổng quát",                        120000),
-                ("Khoa Mắt",                "Đo thị lực và khúc xạ",                     150000),
-                ("Khoa Mắt",                "Phẫu thuật Phaco đục thủy tinh thể",       8000000),
-                // Khoa Chấn thương Chỉnh hình
-                ("Khoa Chấn thương Chỉnh hình", "Khám Chấn thương Chỉnh hình",           150000),
-                ("Khoa Chấn thương Chỉnh hình", "Chụp X-quang xương khớp",               180000),
-                ("Khoa Chấn thương Chỉnh hình", "Phẫu thuật nội soi khớp",              5000000),
-                // Khoa Hồi sức cấp cứu
-                ("Khoa Hồi sức cấp cứu",   "Khám cấp cứu",                               200000),
-                // Khoa Ung bướu
-                ("Khoa Ung bướu",           "Khám sàng lọc ung thư",                      300000),
-                ("Khoa Ung bướu",           "Xét nghiệm marker ung thư",                  500000),
-                // Khoa Răng Hàm Mặt
-                ("Khoa Răng Hàm Mặt",       "Khám răng tổng quát",                        100000),
-                ("Khoa Răng Hàm Mặt",       "Nhổ răng khôn",                               500000),
-                ("Khoa Răng Hàm Mặt",       "Tẩy trắng răng",                            1500000),
-                // Khoa Tiết niệu
-                ("Khoa Tiết niệu",          "Khám Tiết niệu tổng quát",                   150000),
-                ("Khoa Tiết niệu",          "Siêu âm hệ tiết niệu",                      250000),
-                // Khoa Y học cổ truyền
-                ("Khoa Y học cổ truyền",    "Khám Đông y",                                 100000),
-                ("Khoa Y học cổ truyền",    "Châm cứu trị liệu (1 buổi)",                 200000),
-                ("Khoa Y học cổ truyền",    "Xoa bóp bấm huyệt (1 buổi)",                 150000),
-            };
-            bool svcAdded = false;
-            foreach (var (KhoaTen, TenDichVu, Gia) in servicesToAdd)
-            {
-                if (!existingServiceNames.Contains(TenDichVu))
-                {
-                    var dept = context.Departments.FirstOrDefault(d => d.TenKhoa == KhoaTen);
-                    if (dept != null)
-                    {
-                        context.Services.Add(new Service { KhoaId = dept.Id, TenDichVu = TenDichVu, Gia = Gia });
-                        svcAdded = true;
-                    }
-                }
-            }
-            if (svcAdded) context.SaveChanges();
-
-            // Auto-seed additional doctors for existing DBs (non-destructive patch)
-            var existingDoctorEmails = context.Users.Where(u => u.VaiTro == "Doctor").Select(u => u.Email).ToList();
-            var extraDoctorData = new List<(string HoTen, string Email, string Sdt, string KhoaTen, string ChuyenKhoa, string HocVi, int SoNam, string LichLamViec)>
-            {
-                // Bác sĩ cho 2 khoa cũ chưa có bác sĩ
-                ("BS. Hoàng Thị Thu Hà",    "sanpk@hms.com",     "0955111222", "Khoa Sản phụ khoa",     "Sản phụ khoa & Thai sản nguy cơ cao",       "PGS.TS.BS", 18, "Ca sáng (08:00 - 12:00) Thứ 2 đến Thứ 6"),
-                ("BS. Đỗ Quang Minh",       "thankinh@hms.com",  "0966222333", "Khoa Thần kinh",        "Thần kinh học & Đột quỵ",                   "TS.BS",     14, "Ca sáng (08:00 - 12:00) & Ca chiều (13:30 - 17:00) Thứ 2, 4, 6"),
-                // Bác sĩ thêm cho các khoa cũ đông bệnh nhân
-                ("BS. Trần Quốc Anh",       "timbach2@hms.com",  "0977333444", "Khoa Tim mạch",         "Siêu âm tim & Nhịp tim học",                "ThS.BS",    8,  "Ca chiều (13:30 - 17:30) Thứ 2, 3, 5"),
-                ("BS. Phan Thị Ngọc Diệp",  "nhi2@hms.com",      "0988444555", "Khoa Nhi",              "Nhi khoa tổng quát & Dinh dưỡng nhi",       "BS",        5,  "Ca sáng (08:00 - 12:00) Thứ 2, 3, 4, 5, 6"),
-                ("BS. Võ Hoàng Nam",         "noitq2@hms.com",    "0911555666", "Khoa Nội tổng quát",    "Hô hấp & Bệnh phổi mãn tính",               "ThS.BS",    11, "Ca chiều (13:30 - 17:30) Thứ 2, 4, 6"),
-                // Bác sĩ cho các khoa mới
-                ("BS. Lý Thị Bích Ngọc",    "mat@hms.com",       "0922666777", "Khoa Mắt",              "Phẫu thuật khúc xạ & Đục thủy tinh thể",   "TS.BS",     16, "Ca sáng (08:00 - 12:00) Thứ 2 đến Thứ 7"),
-                ("BS. Nguyễn Đình Toàn",     "chinhhinh@hms.com", "0933777888", "Khoa Chấn thương Chỉnh hình", "Phẫu thuật xương khớp & Thay khớp",   "PGS.TS.BS", 22, "Ca sáng (07:30 - 11:30) Thứ 2 đến Thứ 6"),
-                ("BS. Huỳnh Văn Đạt",       "hoitroc@hms.com",   "0944888999", "Khoa Hồi sức cấp cứu", "Hồi sức tích cực & Cấp cứu đa chấn thương", "ThS.BS",    13, "Trực 24h theo lịch phân ca"),
-                ("BS. Trần Thị Thanh Nhàn",  "ungbuou@hms.com",   "0955999000", "Khoa Ung bướu",         "Ung thư nội khoa & Hóa trị liệu",           "TS.BS",     17, "Ca sáng (08:00 - 12:00) & Ca chiều (13:30 - 17:00) Thứ 2 đến Thứ 5"),
-                ("BS. Lê Đức Thịnh",         "rhm@hms.com",       "0966000111", "Khoa Răng Hàm Mặt",    "Phẫu thuật hàm mặt & Cấy ghép Implant",     "ThS.BS",    10, "Ca sáng (08:00 - 12:00) Thứ 2, 4, 6; Ca chiều (13:30 - 17:00) Thứ 3, 5"),
-                ("BS. Phạm Văn Khánh",       "tietnieu@hms.com",  "0977111222", "Khoa Tiết niệu",       "Nội soi tiết niệu & Tán sỏi",               "TS.BS",     15, "Ca sáng (08:00 - 12:00) Thứ 2 đến Thứ 6"),
-                ("BS. Nguyễn Thị Phương Lan", "yhct@hms.com",      "0988222333", "Khoa Y học cổ truyền", "Châm cứu & Vật lý trị liệu kết hợp",        "ThS.BS",    12, "Ca sáng (08:00 - 11:30) & Ca chiều (14:00 - 17:00) Thứ 2 đến Thứ 7"),
-            };
-            bool extraDocAdded = false;
-            foreach (var d in extraDoctorData)
-            {
-                if (!existingDoctorEmails.Contains(d.Email))
-                {
-                    var newUser = new User
-                    {
-                        HoTen = d.HoTen,
-                        Email = d.Email,
-                        Sdt = d.Sdt,
-                        MatKhauHash = HashHelper.HashPassword("Doctor@123"),
-                        VaiTro = "Doctor",
-                        TrangThai = "Active"
-                    };
-                    context.Users.Add(newUser);
-                    context.SaveChanges();
-
-                    var dept = context.Departments.FirstOrDefault(dp => dp.TenKhoa == d.KhoaTen);
-                    if (dept != null)
-                    {
-                        var currentDocCount = context.Doctors.Count(dc => dc.KhoaId == dept.Id);
-                        string chucVu = "Bác sĩ";
-                        if (currentDocCount == 0) chucVu = "Trưởng khoa";
-                        else if (currentDocCount == 1 || currentDocCount == 2) chucVu = "Phó trưởng khoa";
-
-                        context.Doctors.Add(new Doctor
-                        {
-                            NguoiDungId = newUser.Id,
-                            KhoaId = dept.Id,
-                            ChuyenKhoa = d.ChuyenKhoa,
-                            HocVi = d.HocVi,
-                            SoNamKinhNghiem = d.SoNam,
-                            LichLamViec = d.LichLamViec,
-                            ChucVu = chucVu
-                        });
-                        extraDocAdded = true;
-                    }
-                }
-            }
-            if (extraDocAdded) context.SaveChanges();
-
-            // Auto-seed additional patients for existing DBs (non-destructive patch)
-            var existingPatEmails2 = context.Users.Where(u => u.VaiTro == "Patient").Select(u => u.Email).ToList();
-            var extraPatientData = new List<(string HoTen, string Email, string Sdt, DateTime NgaySinh, string GioiTinh, string NhomMau, string SoBHYT, string TienSuBenh, string DiUng)>
-            {
-                ("Võ Thị Thanh Tâm",      "patient8@hms.com",  "0900112233", new DateTime(1982, 8, 18),  "Nữ",  "A+",  "HN4850112233", "Suy giáp, thiếu máu mãn tính",                    "Penicillin"),
-                ("Hồ Quang Hiếu",         "patient9@hms.com",  "0911334455", new DateTime(1999, 2, 14),  "Nam", "O+",  "SG4860334455", "Viêm xoang mãn tính",                              "Không"),
-                ("Lý Thị Mỹ Dung",        "patient10@hms.com", "0922556677", new DateTime(1975, 12, 3),  "Nữ",  "AB-", "DN4870556677", "Đái tháo đường type 2, thoái hóa cột sống",        "Metformin (buồn nôn)"),
-                ("Ngô Văn Thành",         "patient11@hms.com", "0933778899", new DateTime(2010, 6, 25),  "Nam", "B+",  "HP4880778899", "Viêm phế quản dị ứng tái phát",                    "Phấn hoa, lông thú"),
-                ("Đinh Thị Hạnh",         "patient12@hms.com", "0944990011", new DateTime(1988, 9, 7),   "Nữ",  "O-",  "CT4890990011", "Loạn nhịp tim (đã đặt máy tạo nhịp)",              "Không"),
-                ("Trương Minh Tuấn",      "patient13@hms.com", "0955001122", new DateTime(1965, 4, 11),  "Nam", "A-",  "BT4900001122", "Tăng huyết áp, gout mãn tính, sỏi thận",           "Allopurinol"),
-                ("Mai Thị Ngọc Ánh",      "patient14@hms.com", "0966112233", new DateTime(2000, 11, 30), "Nữ",  "B-",  "NA4910112233", "Không có tiền sử đặc biệt",                        "Không"),
-                ("Lâm Quốc Bảo",          "patient15@hms.com", "0977223344", new DateTime(1955, 1, 2),   "Nam", "AB+", "AG4920223344", "COPD giai đoạn II, suy tim độ II, đái tháo đường", "Aspirin, Codein"),
-            };
-            bool extraPatAdded = false;
-            foreach (var p in extraPatientData)
-            {
-                if (!existingPatEmails2.Contains(p.Email))
-                {
-                    var newUser = new User
-                    {
-                        HoTen = p.HoTen,
-                        Email = p.Email,
-                        Sdt = p.Sdt,
-                        MatKhauHash = HashHelper.HashPassword("Patient@123"),
-                        VaiTro = "Patient",
-                        TrangThai = "Active"
-                    };
-                    context.Users.Add(newUser);
-                    context.SaveChanges();
-                    context.Patients.Add(new Patient
-                    {
-                        NguoiDungId = newUser.Id,
-                        NgaySinh = p.NgaySinh,
-                        GioiTinh = p.GioiTinh,
-                        NhomMau = p.NhomMau,
-                        SoBHYT = p.SoBHYT,
-                        TienSuBenh = p.TienSuBenh,
-                        DiUng = p.DiUng
-                    });
-                    extraPatAdded = true;
-                }
-            }
-            if (extraPatAdded) context.SaveChanges();
 
             // 1. Seed Departments
             if (!context.Departments.Any())
@@ -1126,6 +831,301 @@ namespace QuanLyBenhVien.Data
 
                 context.SaveChanges();
             }
+            // Auto-seed missing departments for existing DBs (non-destructive patch)
+            var existingDeptNames = context.Departments.Select(d => d.TenKhoa).ToList();
+            var newDepts = new List<(string TenKhoa, string MoTa, string ViTri)>
+            {
+                ("Khoa Nội tổng quát",  "Chẩn đoán và điều trị bệnh nội khoa người lớn",                    "Tầng 1 - Tòa nhà A"),
+                ("Khoa Tim mạch",       "Chẩn đoán và điều trị các bệnh lý tim mạch chuyên sâu",            "Tầng 2 - Tòa nhà B"),
+                ("Khoa Nhi",            "Chăm sóc sức khỏe toàn diện cho trẻ sơ sinh và trẻ nhỏ",          "Tầng 1 - Tòa nhà C"),
+                ("Khoa Tai Mũi Họng",   "Khám và điều trị các bệnh lý liên quan đến Tai, Mũi và Họng",     "Tầng 3 - Tòa nhà A"),
+                ("Khoa Ngoại tổng hợp", "Phẫu thuật và điều trị ngoại khoa các bệnh lý cần can thiệp",     "Tầng 2 - Tòa nhà A"),
+                ("Khoa Sản phụ khoa",   "Chăm sóc sức khỏe sinh sản, thai sản và phụ khoa",                "Tầng 3 - Tòa nhà C"),
+                ("Khoa Da liễu",        "Chẩn đoán và điều trị các bệnh lý về da, tóc và móng",            "Tầng 4 - Tòa nhà A"),
+                ("Khoa Thần kinh",      "Khám và điều trị bệnh lý hệ thần kinh trung ương và ngoại vi",    "Tầng 4 - Tòa nhà B"),
+            };
+            bool deptAdded = false;
+            foreach (var (TenKhoa, MoTa, ViTri) in newDepts)
+            {
+                if (!existingDeptNames.Contains(TenKhoa))
+                {
+                    context.Departments.Add(new Department { TenKhoa = TenKhoa, MoTa = MoTa, ViTri = ViTri });
+                    deptAdded = true;
+                }
+            }
+            if (deptAdded) context.SaveChanges();
+
+            // Auto-seed missing medicines for existing DBs (non-destructive patch)
+            var existingMedNames = context.Medicines.Select(m => m.TenThuoc).ToList();
+            var newMeds = new List<(string TenThuoc, string HoatChat, string DonViTinh, decimal Gia, int TonKho, int NguongToiThieu, int HanSuDungNgay, string SoLo)>
+            {
+                ("Paracetamol 500mg",                  "Paracetamol",                    "Viên",    2000,  500, 100, 30,  "LOT-PARA-001"),
+                ("Amoxicillin 500mg (Kháng sinh)",     "Amoxicillin",                    "Viên",    5000,  300,  50, 180, "LOT-AMOX-001"),
+                ("Decolgen Forte",                     "Acetaminophen, Phenylephrine",   "Viên",    3000,  150,  80,   5, "LOT-DECO-001"),
+                ("Amlodipine 5mg",                     "Amlodipine Besylate",            "Viên",    4500,  400,  80, 540, "LOT-AMLO-001"),
+                ("Metformin 500mg",                    "Metformin Hydrochloride",        "Viên",    3500,  350,  70, 365, "LOT-METF-001"),
+                ("Omeprazole 20mg",                    "Omeprazole",                     "Viên",    6000,  280,  60, 400, "LOT-OMEP-002"),
+                ("Cetirizine 10mg (Chống dị ứng)",    "Cetirizine Hydrochloride",       "Viên",    3000,  200,  50, 450, "LOT-CETI-001"),
+                ("Azithromycin 500mg",                 "Azithromycin",                   "Viên",   18000,  180,  40, 300, "LOT-AZIT-001"),
+                ("Vitamin C 1000mg Effervescent",      "Ascorbic Acid",                  "Viên sủi", 8000, 220,  60, 270, "LOT-VITC-001"),
+                ("Ibuprofen 400mg",                    "Ibuprofen",                      "Viên",    4000,   90, 100, 200, "LOT-IBUP-001"),
+                ("Atorvastatin 20mg",                  "Atorvastatin Calcium",           "Viên",   12000,  160,  40, 600, "LOT-ATOR-001"),
+                ("Salbutamol 2.5mg/2.5ml (Khí dung)", "Salbutamol Sulfate",             "Ống",    25000,  120,  30, 365, "LOT-SALB-001"),
+            };
+            bool medAdded = false;
+            foreach (var m in newMeds)
+            {
+                if (!existingMedNames.Contains(m.TenThuoc))
+                {
+                    var newMed = new Medicine
+                    {
+                        TenThuoc = m.TenThuoc,
+                        HoatChat = m.HoatChat,
+                        DonViTinh = m.DonViTinh,
+                        Gia = m.Gia,
+                        TonKho = m.TonKho,
+                        NguongToiThieu = m.NguongToiThieu
+                    };
+                    context.Medicines.Add(newMed);
+                    context.SaveChanges();
+                    context.MedicineBatches.Add(new MedicineBatch
+                    {
+                        ThuocId = newMed.Id,
+                        SoLo = m.SoLo,
+                        HanSuDung = DateTime.Now.AddDays(m.HanSuDungNgay),
+                        SoLuongNhap = m.TonKho,
+                        SoLuongTon = m.TonKho
+                    });
+                    medAdded = true;
+                }
+            }
+            if (medAdded) context.SaveChanges();
+
+            // Auto-seed missing patients for existing DBs (non-destructive patch)
+            var existingPatientEmails = context.Users.Where(u => u.VaiTro == "Patient").Select(u => u.Email).ToList();
+            var newPatientData = new List<(string HoTen, string Email, string Sdt, DateTime NgaySinh, string GioiTinh, string NhomMau, string SoBHYT, string TienSuBenh, string DiUng)>
+            {
+                ("Nguyễn Thị Hồng",   "patient4@hms.com", "0922334455", new DateTime(1978, 7, 15),  "Nữ",  "AB+", "HN4810001122", "Đái tháo đường type 2, tăng huyết áp",          "Sulfa drugs"),
+                ("Đặng Văn Long",     "patient5@hms.com", "0966778899", new DateTime(2003, 1, 20),  "Nam", "O-",  "SG4820334455", "Hen phế quản",                                   "Aspirin"),
+                ("Trần Thị Minh Tú",  "patient6@hms.com", "0911223344", new DateTime(1968, 11, 5),  "Nữ",  "B-",  "DN4830556677", "Viêm khớp dạng thấp, loãng xương",              "Không"),
+                ("Bùi Minh Đức",      "patient7@hms.com", "0944556677", new DateTime(1992, 4, 30),  "Nam", "A-",  "CT4840778899", "Không có tiền sử bệnh đặc biệt",                "Ibuprofen"),
+            };
+            bool patAdded = false;
+            foreach (var p in newPatientData)
+            {
+                if (!existingPatientEmails.Contains(p.Email))
+                {
+                    var newUser = new User
+                    {
+                        HoTen = p.HoTen,
+                        Email = p.Email,
+                        Sdt = p.Sdt,
+                        MatKhauHash = HashHelper.HashPassword("Patient@123"),
+                        VaiTro = "Patient",
+                        TrangThai = "Active"
+                    };
+                    context.Users.Add(newUser);
+                    context.SaveChanges();
+                    context.Patients.Add(new Patient
+                    {
+                        NguoiDungId = newUser.Id,
+                        NgaySinh = p.NgaySinh,
+                        GioiTinh = p.GioiTinh,
+                        NhomMau = p.NhomMau,
+                        SoBHYT = p.SoBHYT,
+                        TienSuBenh = p.TienSuBenh,
+                        DiUng = p.DiUng
+                    });
+                    patAdded = true;
+                }
+            }
+            if (patAdded) context.SaveChanges();
+
+            // Auto-seed additional departments for existing DBs (non-destructive patch)
+            var existingDeptNames2 = context.Departments.Select(d => d.TenKhoa).ToList();
+            var extraDepts = new List<(string TenKhoa, string MoTa, string ViTri)>
+            {
+                ("Khoa Mắt",              "Khám và điều trị các bệnh lý về mắt, phẫu thuật nhãn khoa",                     "Tầng 5 - Tòa nhà A"),
+                ("Khoa Chấn thương Chỉnh hình", "Điều trị gãy xương, trật khớp, phẫu thuật chỉnh hình",                   "Tầng 1 - Tòa nhà D"),
+                ("Khoa Hồi sức cấp cứu",  "Cấp cứu và hồi sức tích cực cho bệnh nhân nặng",                               "Tầng trệt - Tòa nhà A"),
+                ("Khoa Ung bướu",          "Chẩn đoán, điều trị và quản lý các bệnh lý ung thư",                           "Tầng 3 - Tòa nhà D"),
+                ("Khoa Răng Hàm Mặt",      "Khám và điều trị các bệnh lý răng miệng, phẫu thuật hàm mặt",                 "Tầng 2 - Tòa nhà C"),
+                ("Khoa Tiết niệu",         "Chẩn đoán và điều trị bệnh lý hệ tiết niệu và sinh dục nam",                   "Tầng 5 - Tòa nhà B"),
+                ("Khoa Y học cổ truyền",   "Châm cứu, bấm huyệt, xoa bóp và điều trị bằng đông y kết hợp tây y",           "Tầng 2 - Tòa nhà D"),
+            };
+            bool extraDeptAdded = false;
+            foreach (var (TenKhoa, MoTa, ViTri) in extraDepts)
+            {
+                if (!existingDeptNames2.Contains(TenKhoa))
+                {
+                    context.Departments.Add(new Department { TenKhoa = TenKhoa, MoTa = MoTa, ViTri = ViTri });
+                    extraDeptAdded = true;
+                }
+            }
+            if (extraDeptAdded) context.SaveChanges();
+
+            // Auto-seed services for new departments (non-destructive patch)
+            var existingServiceNames = context.Services.Select(s => s.TenDichVu).ToList();
+            var servicesToAdd = new List<(string KhoaTen, string TenDichVu, decimal Gia)>
+            {
+                // Khoa Sản phụ khoa
+                ("Khoa Sản phụ khoa",       "Khám thai định kỳ",                         200000),
+                ("Khoa Sản phụ khoa",       "Siêu âm thai 4D",                           500000),
+                ("Khoa Sản phụ khoa",       "Khám phụ khoa tổng quát",                   180000),
+                // Khoa Da liễu
+                ("Khoa Da liễu",            "Khám Da liễu thường",                       120000),
+                ("Khoa Da liễu",            "Điều trị Laser da liễu",                    800000),
+                // Khoa Thần kinh
+                ("Khoa Thần kinh",          "Khám Thần kinh tổng quát",                  150000),
+                ("Khoa Thần kinh",          "Điện não đồ (EEG)",                         250000),
+                // Khoa Ngoại tổng hợp
+                ("Khoa Ngoại tổng hợp",     "Khám Ngoại khoa tổng quát",                 150000),
+                ("Khoa Ngoại tổng hợp",     "Siêu âm bụng tổng quát",                   200000),
+                // Khoa Mắt
+                ("Khoa Mắt",                "Khám Mắt tổng quát",                        120000),
+                ("Khoa Mắt",                "Đo thị lực và khúc xạ",                     150000),
+                ("Khoa Mắt",                "Phẫu thuật Phaco đục thủy tinh thể",       8000000),
+                // Khoa Chấn thương Chỉnh hình
+                ("Khoa Chấn thương Chỉnh hình", "Khám Chấn thương Chỉnh hình",           150000),
+                ("Khoa Chấn thương Chỉnh hình", "Chụp X-quang xương khớp",               180000),
+                ("Khoa Chấn thương Chỉnh hình", "Phẫu thuật nội soi khớp",              5000000),
+                // Khoa Hồi sức cấp cứu
+                ("Khoa Hồi sức cấp cứu",   "Khám cấp cứu",                               200000),
+                // Khoa Ung bướu
+                ("Khoa Ung bướu",           "Khám sàng lọc ung thư",                      300000),
+                ("Khoa Ung bướu",           "Xét nghiệm marker ung thư",                  500000),
+                // Khoa Răng Hàm Mặt
+                ("Khoa Răng Hàm Mặt",       "Khám răng tổng quát",                        100000),
+                ("Khoa Răng Hàm Mặt",       "Nhổ răng khôn",                               500000),
+                ("Khoa Răng Hàm Mặt",       "Tẩy trắng răng",                            1500000),
+                // Khoa Tiết niệu
+                ("Khoa Tiết niệu",          "Khám Tiết niệu tổng quát",                   150000),
+                ("Khoa Tiết niệu",          "Siêu âm hệ tiết niệu",                      250000),
+                // Khoa Y học cổ truyền
+                ("Khoa Y học cổ truyền",    "Khám Đông y",                                 100000),
+                ("Khoa Y học cổ truyền",    "Châm cứu trị liệu (1 buổi)",                 200000),
+                ("Khoa Y học cổ truyền",    "Xoa bóp bấm huyệt (1 buổi)",                 150000),
+            };
+            bool svcAdded = false;
+            foreach (var (KhoaTen, TenDichVu, Gia) in servicesToAdd)
+            {
+                if (!existingServiceNames.Contains(TenDichVu))
+                {
+                    var dept = context.Departments.FirstOrDefault(d => d.TenKhoa == KhoaTen);
+                    if (dept != null)
+                    {
+                        context.Services.Add(new Service { KhoaId = dept.Id, TenDichVu = TenDichVu, Gia = Gia });
+                        svcAdded = true;
+                    }
+                }
+            }
+            if (svcAdded) context.SaveChanges();
+
+            // Auto-seed additional doctors for existing DBs (non-destructive patch)
+            var existingDoctorEmails = context.Users.Where(u => u.VaiTro == "Doctor").Select(u => u.Email).ToList();
+            var extraDoctorData = new List<(string HoTen, string Email, string Sdt, string KhoaTen, string ChuyenKhoa, string HocVi, int SoNam, string LichLamViec)>
+            {
+                // Bác sĩ cho 2 khoa cũ chưa có bác sĩ
+                ("BS. Hoàng Thị Thu Hà",    "sanpk@hms.com",     "0955111222", "Khoa Sản phụ khoa",     "Sản phụ khoa & Thai sản nguy cơ cao",       "PGS.TS.BS", 18, "Ca sáng (08:00 - 12:00) Thứ 2 đến Thứ 6"),
+                ("BS. Đỗ Quang Minh",       "thankinh@hms.com",  "0966222333", "Khoa Thần kinh",        "Thần kinh học & Đột quỵ",                   "TS.BS",     14, "Ca sáng (08:00 - 12:00) & Ca chiều (13:30 - 17:00) Thứ 2, 4, 6"),
+                // Bác sĩ thêm cho các khoa cũ đông bệnh nhân
+                ("BS. Trần Quốc Anh",       "timbach2@hms.com",  "0977333444", "Khoa Tim mạch",         "Siêu âm tim & Nhịp tim học",                "ThS.BS",    8,  "Ca chiều (13:30 - 17:30) Thứ 2, 3, 5"),
+                ("BS. Phan Thị Ngọc Diệp",  "nhi2@hms.com",      "0988444555", "Khoa Nhi",              "Nhi khoa tổng quát & Dinh dưỡng nhi",       "BS",        5,  "Ca sáng (08:00 - 12:00) Thứ 2, 3, 4, 5, 6"),
+                ("BS. Võ Hoàng Nam",         "noitq2@hms.com",    "0911555666", "Khoa Nội tổng quát",    "Hô hấp & Bệnh phổi mãn tính",               "ThS.BS",    11, "Ca chiều (13:30 - 17:30) Thứ 2, 4, 6"),
+                // Bác sĩ cho các khoa mới
+                ("BS. Lý Thị Bích Ngọc",    "mat@hms.com",       "0922666777", "Khoa Mắt",              "Phẫu thuật khúc xạ & Đục thủy tinh thể",   "TS.BS",     16, "Ca sáng (08:00 - 12:00) Thứ 2 đến Thứ 7"),
+                ("BS. Nguyễn Đình Toàn",     "chinhhinh@hms.com", "0933777888", "Khoa Chấn thương Chỉnh hình", "Phẫu thuật xương khớp & Thay khớp",   "PGS.TS.BS", 22, "Ca sáng (07:30 - 11:30) Thứ 2 đến Thứ 6"),
+                ("BS. Huỳnh Văn Đạt",       "hoitroc@hms.com",   "0944888999", "Khoa Hồi sức cấp cứu", "Hồi sức tích cực & Cấp cứu đa chấn thương", "ThS.BS",    13, "Trực 24h theo lịch phân ca"),
+                ("BS. Trần Thị Thanh Nhàn",  "ungbuou@hms.com",   "0955999000", "Khoa Ung bướu",         "Ung thư nội khoa & Hóa trị liệu",           "TS.BS",     17, "Ca sáng (08:00 - 12:00) & Ca chiều (13:30 - 17:00) Thứ 2 đến Thứ 5"),
+                ("BS. Lê Đức Thịnh",         "rhm@hms.com",       "0966000111", "Khoa Răng Hàm Mặt",    "Phẫu thuật hàm mặt & Cấy ghép Implant",     "ThS.BS",    10, "Ca sáng (08:00 - 12:00) Thứ 2, 4, 6; Ca chiều (13:30 - 17:00) Thứ 3, 5"),
+                ("BS. Phạm Văn Khánh",       "tietnieu@hms.com",  "0977111222", "Khoa Tiết niệu",       "Nội soi tiết niệu & Tán sỏi",               "TS.BS",     15, "Ca sáng (08:00 - 12:00) Thứ 2 đến Thứ 6"),
+                ("BS. Nguyễn Thị Phương Lan", "yhct@hms.com",      "0988222333", "Khoa Y học cổ truyền", "Châm cứu & Vật lý trị liệu kết hợp",        "ThS.BS",    12, "Ca sáng (08:00 - 11:30) & Ca chiều (14:00 - 17:00) Thứ 2 đến Thứ 7"),
+            };
+            bool extraDocAdded = false;
+            foreach (var d in extraDoctorData)
+            {
+                if (!existingDoctorEmails.Contains(d.Email))
+                {
+                    var newUser = new User
+                    {
+                        HoTen = d.HoTen,
+                        Email = d.Email,
+                        Sdt = d.Sdt,
+                        MatKhauHash = HashHelper.HashPassword("Doctor@123"),
+                        VaiTro = "Doctor",
+                        TrangThai = "Active"
+                    };
+                    context.Users.Add(newUser);
+                    context.SaveChanges();
+
+                    var dept = context.Departments.FirstOrDefault(dp => dp.TenKhoa == d.KhoaTen);
+                    if (dept != null)
+                    {
+                        var currentDocCount = context.Doctors.Count(dc => dc.KhoaId == dept.Id);
+                        string chucVu = "Bác sĩ";
+                        if (currentDocCount == 0) chucVu = "Trưởng khoa";
+                        else if (currentDocCount == 1 || currentDocCount == 2) chucVu = "Phó trưởng khoa";
+
+                        context.Doctors.Add(new Doctor
+                        {
+                            NguoiDungId = newUser.Id,
+                            KhoaId = dept.Id,
+                            ChuyenKhoa = d.ChuyenKhoa,
+                            HocVi = d.HocVi,
+                            SoNamKinhNghiem = d.SoNam,
+                            LichLamViec = d.LichLamViec,
+                            ChucVu = chucVu
+                        });
+                        extraDocAdded = true;
+                    }
+                }
+            }
+            if (extraDocAdded) context.SaveChanges();
+
+            // Auto-seed additional patients for existing DBs (non-destructive patch)
+            var existingPatEmails2 = context.Users.Where(u => u.VaiTro == "Patient").Select(u => u.Email).ToList();
+            var extraPatientData = new List<(string HoTen, string Email, string Sdt, DateTime NgaySinh, string GioiTinh, string NhomMau, string SoBHYT, string TienSuBenh, string DiUng)>
+            {
+                ("Võ Thị Thanh Tâm",      "patient8@hms.com",  "0900112233", new DateTime(1982, 8, 18),  "Nữ",  "A+",  "HN4850112233", "Suy giáp, thiếu máu mãn tính",                    "Penicillin"),
+                ("Hồ Quang Hiếu",         "patient9@hms.com",  "0911334455", new DateTime(1999, 2, 14),  "Nam", "O+",  "SG4860334455", "Viêm xoang mãn tính",                              "Không"),
+                ("Lý Thị Mỹ Dung",        "patient10@hms.com", "0922556677", new DateTime(1975, 12, 3),  "Nữ",  "AB-", "DN4870556677", "Đái tháo đường type 2, thoái hóa cột sống",        "Metformin (buồn nôn)"),
+                ("Ngô Văn Thành",         "patient11@hms.com", "0933778899", new DateTime(2010, 6, 25),  "Nam", "B+",  "HP4880778899", "Viêm phế quản dị ứng tái phát",                    "Phấn hoa, lông thú"),
+                ("Đinh Thị Hạnh",         "patient12@hms.com", "0944990011", new DateTime(1988, 9, 7),   "Nữ",  "O-",  "CT4890990011", "Loạn nhịp tim (đã đặt máy tạo nhịp)",              "Không"),
+                ("Trương Minh Tuấn",      "patient13@hms.com", "0955001122", new DateTime(1965, 4, 11),  "Nam", "A-",  "BT4900001122", "Tăng huyết áp, gout mãn tính, sỏi thận",           "Allopurinol"),
+                ("Mai Thị Ngọc Ánh",      "patient14@hms.com", "0966112233", new DateTime(2000, 11, 30), "Nữ",  "B-",  "NA4910112233", "Không có tiền sử đặc biệt",                        "Không"),
+                ("Lâm Quốc Bảo",          "patient15@hms.com", "0977223344", new DateTime(1955, 1, 2),   "Nam", "AB+", "AG4920223344", "COPD giai đoạn II, suy tim độ II, đái tháo đường", "Aspirin, Codein"),
+            };
+            bool extraPatAdded = false;
+            foreach (var p in extraPatientData)
+            {
+                if (!existingPatEmails2.Contains(p.Email))
+                {
+                    var newUser = new User
+                    {
+                        HoTen = p.HoTen,
+                        Email = p.Email,
+                        Sdt = p.Sdt,
+                        MatKhauHash = HashHelper.HashPassword("Patient@123"),
+                        VaiTro = "Patient",
+                        TrangThai = "Active"
+                    };
+                    context.Users.Add(newUser);
+                    context.SaveChanges();
+                    context.Patients.Add(new Patient
+                    {
+                        NguoiDungId = newUser.Id,
+                        NgaySinh = p.NgaySinh,
+                        GioiTinh = p.GioiTinh,
+                        NhomMau = p.NhomMau,
+                        SoBHYT = p.SoBHYT,
+                        TienSuBenh = p.TienSuBenh,
+                        DiUng = p.DiUng
+                    });
+                    extraPatAdded = true;
+                }
+            }
+            if (extraPatAdded) context.SaveChanges();
+
 
             // Bulk-seed doctors: ensure each department has 15–20 doctors (non-destructive)
             {
@@ -1869,7 +1869,26 @@ namespace QuanLyBenhVien.Data
                 }
             }
 
+            SeedDefaultDoctorWorkSchedules(context);
             SeedAdditionalPatientFamilies(context);
+        }
+
+        private static void SeedDefaultDoctorWorkSchedules(ApplicationDbContext context)
+        {
+            var doctorsWithoutSchedules = context.Doctors
+                .Where(d => !context.DoctorWorkSchedules.Any(s => s.BacSiId == d.Id))
+                .ToList();
+
+            foreach (var doctor in doctorsWithoutSchedules)
+            {
+                var schedules = DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec);
+                context.DoctorWorkSchedules.AddRange(schedules);
+            }
+
+            if (doctorsWithoutSchedules.Any())
+            {
+                context.SaveChanges();
+            }
         }
 
         private static void SeedAdditionalPatientFamilies(ApplicationDbContext context)

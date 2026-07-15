@@ -1,8 +1,177 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "MediFlow HMS - Hệ thống Quản lý Bệnh viện";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@section Styles {
+    <style>
+        .hero-gradient {
+            background: radial-gradient(circle at 80% 20%, rgba(215, 226, 255, 0.4) 0%, rgba(248, 249, 255, 1) 70%);
+        }
+    </style>
+}
+
+<!-- Hero Section -->
+<section class="hero-gradient pt-12 pb-20 border-b border-outline-variant/30">
+    <div class="max-w-[1440px] mx-auto px-unit-lg grid grid-cols-1 lg:grid-cols-2 gap-unit-xl items-center">
+        <!-- Left Content Column -->
+        <div class="space-y-6 text-left">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-caption uppercase tracking-wider animate-pulse">
+                <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+                Cổng y tế số hiện đại
+            </div>
+            <h2 class="text-[40px] lg:text-[54px] font-bold text-on-surface leading-tight tracking-tight">
+                Chăm sóc sức khỏe <br />
+                <span class="text-primary bg-gradient-to-r from-primary to-surface-tint bg-clip-text text-transparent">Thông minh &amp; Toàn diện</span>
+            </h2>
+            <p class="text-body-lg text-on-surface-variant leading-relaxed max-w-xl">
+                MediFlow mang đến giải pháp quản trị bệnh viện hiện đại. Đặt lịch trực tuyến nhanh chóng, quản lý bệnh án điện tử an toàn và kết nối bác sĩ chuyên khoa tức thì để tối ưu hóa hành trình chữa bệnh của bạn.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-unit-md pt-2">
+                <a href="/Auth/Register" class="px-8 py-4 rounded-xl bg-primary hover:bg-primary-container text-white font-bold text-body-lg shadow-lg shadow-primary/15 transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2 group">
+                    Đặt lịch hẹn trực tuyến
+                    <span class="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </a>
+                <a href="/Home/About" class="px-8 py-4 rounded-xl border border-outline hover:bg-surface-container-low text-on-surface font-bold text-body-lg transition-all duration-300 flex items-center justify-center gap-1">
+                    Tìm hiểu thêm
+                </a>
+            </div>
+        </div>
+
+        <!-- Right Visual Column -->
+        <div class="relative flex justify-center lg:justify-end">
+            <!-- Decorate blur circles -->
+            <div class="absolute -top-10 -left-10 w-72 h-72 rounded-full bg-primary-fixed/30 filter blur-3xl opacity-60 z-0"></div>
+            <div class="absolute -bottom-10 -right-10 w-72 h-72 rounded-full bg-secondary-fixed/20 filter blur-3xl opacity-60 z-0"></div>
+            
+            <!-- Floating Badge 1 (Top-Left) -->
+            <div class="absolute -top-4 -left-4 z-20 bg-white/90 backdrop-blur-md border border-outline-variant rounded-xl p-3 shadow-lg flex items-center gap-3 hidden sm:flex transform hover:scale-105 transition-transform duration-300">
+                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined">verified</span>
+                </div>
+                <div>
+                    <p class="font-bold text-label-md text-on-surface">Đạt chuẩn JCI</p>
+                    <p class="text-[10px] text-on-surface-variant font-semibold">Chất lượng Quốc tế</p>
+                </div>
+            </div>
+
+            <!-- Floating Badge 2 (Bottom-Right) -->
+            <div class="absolute -bottom-4 -right-4 z-20 bg-white/90 backdrop-blur-md border border-outline-variant rounded-xl p-3 shadow-lg flex items-center gap-3 hidden sm:flex transform hover:scale-105 transition-transform duration-300">
+                <div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+                </div>
+                <div>
+                    <p class="font-bold text-label-md text-on-surface">150+ Bác sĩ</p>
+                    <p class="text-[10px] text-on-surface-variant font-semibold">Chuyên khoa Đầu ngành</p>
+                </div>
+            </div>
+            
+            <div class="relative z-10 w-full max-w-[540px] rounded-2xl overflow-hidden shadow-2xl border border-white/40 transform hover:scale-[1.01] transition-transform duration-500">
+                <img src="~/images/hospital_hero_banner.png" alt="MediFlow Health Banner" class="w-full h-auto object-cover" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Stats Banner -->
+<section class="py-12 bg-white border-b border-outline-variant/40">
+    <div class="max-w-[1440px] mx-auto px-unit-lg">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+            <div class="space-y-1">
+                <h4 class="text-[36px] lg:text-[48px] font-extrabold text-primary leading-tight">20+</h4>
+                <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Khoa chuyên môn</p>
+            </div>
+            <div class="space-y-1">
+                <h4 class="text-[36px] lg:text-[48px] font-extrabold text-primary leading-tight">150+</h4>
+                <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Bác sĩ &amp; Chuyên gia</p>
+            </div>
+            <div class="space-y-1">
+                <h4 class="text-[36px] lg:text-[48px] font-extrabold text-primary leading-tight">25,000+</h4>
+                <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Lượt khám thành công</p>
+            </div>
+            <div class="space-y-1">
+                <h4 class="text-[36px] lg:text-[48px] font-extrabold text-primary leading-tight">99.5%</h4>
+                <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Khách hàng hài lòng</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hospital Introduction Callout Section -->
+<section class="py-20 bg-surface">
+    <div class="max-w-[1440px] mx-auto px-unit-lg">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-unit-xl items-center">
+            <div class="space-y-6">
+                <span class="text-caption text-primary font-bold uppercase tracking-widest block">Về chúng tôi</span>
+                <h3 class="text-[32px] lg:text-[40px] font-bold text-on-surface leading-tight">Bệnh viện Đa khoa MediFlow chuyên nghiệp &amp; tận tâm</h3>
+                <p class="text-body-lg text-on-surface-variant leading-relaxed">
+                    MediFlow tự hào mang đến quy trình y tế tích hợp toàn diện. Chúng tôi quy tụ đội ngũ bác sĩ chuyên khoa giỏi và trang bị cơ sở y khoa tiên tiến giúp chẩn đoán chính xác và nâng cao hiệu quả chữa bệnh.
+                </p>
+                <div class="pt-2">
+                    <a href="/Home/About" class="inline-flex items-center gap-2 text-primary font-bold hover:underline text-body-lg group">
+                        Xem chi tiết lịch sử và đội ngũ của chúng tôi
+                        <span class="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="p-unit-lg bg-white border border-outline-variant/60 rounded-xl space-y-4 shadow-sm">
+                    <span class="material-symbols-outlined text-primary text-[32px] p-2 bg-primary/10 rounded-xl">verified_user</span>
+                    <h4 class="text-title-lg font-bold text-on-surface">Chất lượng quốc tế</h4>
+                    <p class="text-body-md text-on-surface-variant">Quy trình y tế an toàn, chẩn đoán chính xác, kiểm soát nhiễm khuẩn tối đa.</p>
+                </div>
+                <div class="p-unit-lg bg-white border border-outline-variant/60 rounded-xl space-y-4 shadow-sm">
+                    <span class="material-symbols-outlined text-primary text-[32px] p-2 bg-primary/10 rounded-xl">biotech</span>
+                    <h4 class="text-title-lg font-bold text-on-surface">Công nghệ hiện đại</h4>
+                    <p class="text-body-md text-on-surface-variant">Sở hữu hệ thống máy xét nghiệm, MRI, siêu âm ổ bụng tiên tiến hàng đầu.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Grid Section -->
+<section class="py-16 bg-white border-t border-outline-variant/20">
+    <div class="max-w-[1440px] mx-auto px-unit-lg">
+        <div class="text-center max-w-3xl mx-auto mb-12 space-y-3">
+            <span class="text-caption text-primary font-bold uppercase tracking-widest block">Khám phá dịch vụ</span>
+            <h3 class="text-[32px] lg:text-[40px] font-bold text-on-surface">Dịch vụ y tế số tối ưu</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <a href="/Home/Specialities" class="p-unit-lg bg-surface border border-outline-variant/60 rounded-xl block hover:border-primary hover:shadow-md transition-all group">
+                <span class="material-symbols-outlined text-primary text-[36px] mb-4 block">medical_services</span>
+                <h4 class="text-title-lg font-bold text-on-surface group-hover:text-primary mb-2">Chuyên khoa lâm sàng</h4>
+                <p class="text-body-md text-on-surface-variant">Khám phá danh sách các khoa điều trị chuyên sâu và lịch khám chữa bệnh của các giáo sư tại viện.</p>
+            </a>
+            <a href="/Home/Features" class="p-unit-lg bg-surface border border-outline-variant/60 rounded-xl block hover:border-primary hover:shadow-md transition-all group">
+                <span class="material-symbols-outlined text-primary text-[36px] mb-4 block">event_available</span>
+                <h4 class="text-title-lg font-bold text-on-surface group-hover:text-primary mb-2">Tính năng &amp; Quy trình số</h4>
+                <p class="text-body-md text-on-surface-variant">Xem chi tiết quy trình đặt lịch 24/7, khám bệnh và quản lý bệnh án điện tử trực quan của chúng tôi.</p>
+            </a>
+            <a href="/Home/Testimonials" class="p-unit-lg bg-surface border border-outline-variant/60 rounded-xl block hover:border-primary hover:shadow-md transition-all group">
+                <span class="material-symbols-outlined text-primary text-[36px] mb-4 block">rate_review</span>
+                <h4 class="text-title-lg font-bold text-on-surface group-hover:text-primary mb-2">Đánh giá từ bệnh nhân</h4>
+                <p class="text-body-md text-on-surface-variant">Đọc phản hồi khách quan từ các bệnh nhân thực tế về dịch vụ chăm sóc sức khỏe của chúng tôi.</p>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Callout Block -->
+<section class="py-20 bg-gradient-to-r from-primary-fixed to-primary-fixed-dim text-on-primary-fixed text-center relative overflow-hidden">
+    <div class="absolute inset-0 bg-primary/10 opacity-30 z-0"></div>
+    <div class="max-w-4xl mx-auto px-unit-lg relative z-10 space-y-6">
+        <h3 class="text-[32px] lg:text-[44px] font-bold leading-tight">Đặt lịch khám trực tuyến ngay hôm nay</h3>
+        <p class="text-body-lg opacity-90 max-w-2xl mx-auto">
+            Trải nghiệm dịch vụ chăm sóc y khoa chu đáo, hiện đại, giảm thiểu thời gian chờ đợi.
+        </p>
+        <div class="flex justify-center gap-unit-md pt-4">
+            <a href="/Auth/Register" class="px-8 py-4 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-primary-container hover:-translate-y-0.5 active:scale-95 transition-all duration-300">
+                Đăng ký tài khoản mới
+            </a>
+            <a href="/Auth/Login" class="px-8 py-4 bg-white/40 text-on-primary-fixed border border-white/50 font-bold rounded-xl hover:bg-white/60 active:scale-95 transition-all duration-300">
+                Đăng nhập hệ thống
+            </a>
+        </div>
+    </div>
+</section>

@@ -7,7 +7,7 @@
 }
 
 <!-- Welcome banner -->
-<div class="bg-gradient-to-r from-secondary-fixed-dim to-secondary-container rounded-2xl p-unit-lg text-on-secondary-fixed mb-unit-lg shadow-sm">
+<div class="bg-gradient-to-r from-primary-fixed to-primary-fixed-dim rounded-2xl p-unit-lg text-on-primary-fixed mb-unit-lg shadow-sm">
     <div class="flex items-center gap-unit-md">
         <div class="w-14 h-14 bg-white/30 rounded-full flex items-center justify-center text-[32px]">
             🩺
@@ -30,10 +30,10 @@
     </div>
     
     <div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm flex items-center gap-unit-md">
-        <span class="material-symbols-outlined text-[32px] text-secondary">check_circle</span>
+        <span class="material-symbols-outlined text-[32px] text-primary">check_circle</span>
         <div>
             <span class="text-caption text-on-surface-variant block">Đã khám xong</span>
-            <strong class="text-headline-md text-secondary">@ViewBag.TodayCompleted ca</strong>
+            <strong class="text-headline-md text-primary">@ViewBag.TodayCompleted ca</strong>
         </div>
     </div>
 
@@ -49,8 +49,8 @@
 <!-- Today's Queue Section -->
 <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
     <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30 flex justify-between items-center">
-        <h3 class="font-title-lg text-title-lg font-bold text-secondary flex items-center gap-1">
-            <span class="w-2.5 h-2.5 rounded-full bg-secondary animate-ping"></span>
+        <h3 class="font-title-lg text-title-lg font-bold text-primary flex items-center gap-1">
+            <span class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></span>
             Hàng đợi khám hôm nay
         </h3>
         <span class="text-caption text-on-surface-variant">Ngày: @DateTime.Today.ToString("dd/MM/yyyy")</span>
@@ -82,7 +82,7 @@
                         var isCompleted = app.TrangThai == "HoanThanh";
                         var isCanceled = app.TrangThai == "DaHuy";
                         <tr class="hover:bg-surface-container-low transition-colors @(isCompleted ? "bg-secondary-container/5" : "")">
-                            <td class="px-unit-md py-4 font-bold text-secondary">@app.ThoiGian.ToString("HH:mm")</td>
+                            <td class="px-unit-md py-4 font-bold text-primary">@app.ThoiGian.ToString("HH:mm")</td>
                             <td class="px-unit-md py-4">
                                 <div class="font-semibold text-on-surface">@app.Patient.User.HoTen</div>
                                 <div class="text-caption text-on-surface-variant">SĐT: @app.Patient.User.Sdt</div>
@@ -117,13 +117,13 @@
                             <td class="px-unit-md py-4 text-right">
                                 @if (app.TrangThai == "DaXacNhan" || app.TrangThai == "DangKham")
                                 {
-                                    <a href="/Doctor/Exam/Session/@app.Id" class="inline-flex items-center gap-0.5 bg-secondary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-on-secondary-container transition-all active:scale-95 font-semibold shadow-sm">
+                                    <a href="/Doctor/Exam/Session/@app.Id" class="inline-flex items-center gap-0.5 bg-primary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-primary-container transition-all active:scale-95 font-semibold shadow-sm">
                                         <span class="material-symbols-outlined text-[16px]">clinical_notes</span> Bắt đầu khám
                                     </a>
                                 }
                                 else if (app.TrangThai == "HoanThanh")
                                 {
-                                    <a href="/Doctor/History/RecordDetails/@app.Id" class="inline-flex items-center gap-0.5 text-secondary hover:underline font-semibold text-body-md">
+                                    <a href="/Doctor/History/RecordDetails/@app.Id" class="inline-flex items-center gap-0.5 text-primary hover:underline font-semibold text-body-md">
                                         Xem bệnh án
                                     </a>
                                 }

@@ -1,0 +1,173 @@
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "Chuyên khoa | MediFlow HMS";
+}
+
+<!-- Page Banner -->
+<section class="bg-gradient-to-r from-primary-fixed to-primary-fixed-dim text-on-primary-fixed py-16 text-center">
+    <div class="max-w-[1440px] mx-auto px-unit-lg">
+        <h2 class="text-[36px] lg:text-[48px] font-bold tracking-tight">Chuyên khoa điều trị</h2>
+        <p class="text-body-lg opacity-90 max-w-xl mx-auto mt-2">
+            Khám phá danh sách các khoa điều trị chuyên sâu được trang bị máy móc tiên tiến hàng đầu của bệnh viện.
+        </p>
+    </div>
+</section>
+
+<!-- Specialities Grid -->
+<section class="py-20 bg-surface">
+    <div class="max-w-[1440px] mx-auto px-unit-lg">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            
+            <!-- 1. Khoa Nội -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                <div class="space-y-4">
+                    <span class="material-symbols-outlined text-primary text-[36px] p-2 bg-primary/10 rounded-xl block w-fit group-hover:bg-primary group-hover:text-white transition-colors duration-300">medical_services</span>
+                    <h3 class="text-title-lg font-bold text-on-surface">Khoa Nội tổng quát</h3>
+                    <p class="text-body-md text-on-surface-variant leading-relaxed">
+                        Chẩn đoán lâm sàng và điều trị nội khoa các bệnh lý tim mạch, đái tháo đường, hô hấp, khớp học và tiêu hóa gan mật.
+                    </p>
+                </div>
+                <div class="pt-6 border-t border-outline-variant/40 mt-6 text-caption text-on-surface-variant font-medium">
+                    <div>Giờ khám: 07:30 - 20:00</div>
+                    <div class="text-primary font-bold mt-1">Giá khám: 150.000 VND</div>
+                </div>
+            </div>
+
+            <!-- 2. Khoa Nhi -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                <div class="space-y-4">
+                    <span class="material-symbols-outlined text-primary text-[36px] p-2 bg-primary/10 rounded-xl block w-fit group-hover:bg-primary group-hover:text-white transition-colors duration-300">child_care</span>
+                    <h3 class="text-title-lg font-bold text-on-surface">Khoa Nhi</h3>
+                    <p class="text-body-md text-on-surface-variant leading-relaxed">
+                        Chăm sóc sức khỏe, tiêm chủng định kỳ và điều trị nội trú chất lượng cao dành riêng cho trẻ em dưới 15 tuổi.
+                    </p>
+                </div>
+                <div class="pt-6 border-t border-outline-variant/40 mt-6 text-caption text-on-surface-variant font-medium">
+                    <div>Giờ khám: 07:30 - 18:00</div>
+                    <div class="text-primary font-bold mt-1">Giá khám: 150.000 VND</div>
+                </div>
+            </div>
+
+            <!-- 3. Khoa Tim mạch -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                <div class="space-y-4">
+                    <span class="material-symbols-outlined text-primary text-[36px] p-2 bg-primary/10 rounded-xl block w-fit group-hover:bg-primary group-hover:text-white transition-colors duration-300">cardiology</span>
+                    <h3 class="text-title-lg font-bold text-on-surface">Khoa Tim mạch</h3>
+                    <p class="text-body-md text-on-surface-variant leading-relaxed">
+                        Điều trị nội ngoại khoa chuyên sâu: suy tim, hẹp động mạch vành, nhồi máu cơ tim, rối loạn nhịp tim.
+                    </p>
+                </div>
+                <div class="pt-6 border-t border-outline-variant/40 mt-6 text-caption text-on-surface-variant font-medium">
+                    <div>Giờ khám: 08:00 - 17:30</div>
+                    <div class="text-primary font-bold mt-1">Giá khám: 200.000 VND</div>
+                </div>
+            </div>
+
+            <!-- 4. Khoa Sản phụ khoa -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                <div class="space-y-4">
+                    <span class="material-symbols-outlined text-primary text-[36px] p-2 bg-primary/10 rounded-xl block w-fit group-hover:bg-primary group-hover:text-white transition-colors duration-300">pregnant_woman</span>
+                    <h3 class="text-title-lg font-bold text-on-surface">Khoa Sản phụ khoa</h3>
+                    <p class="text-body-md text-on-surface-variant leading-relaxed">
+                        Chăm sóc thai sản trọn gói, tầm soát ung thư cổ tử cung, điều trị vô sinh hiếm muộn, đỡ đẻ và sinh mổ không đau.
+                    </p>
+                </div>
+                <div class="pt-6 border-t border-outline-variant/40 mt-6 text-caption text-on-surface-variant font-medium">
+                    <div>Giờ khám: 07:30 - 20:00</div>
+                    <div class="text-primary font-bold mt-1">Giá khám: 180.000 VND</div>
+                </div>
+            </div>
+
+            <!-- 5. Khoa Chấn thương chỉnh hình -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                <div class="space-y-4">
+                    <span class="material-symbols-outlined text-primary text-[36px] p-2 bg-primary/10 rounded-xl block w-fit group-hover:bg-primary group-hover:text-white transition-colors duration-300">physical_therapy</span>
+                    <h3 class="text-title-lg font-bold text-on-surface">Chấn thương chỉnh hình</h3>
+                    <p class="text-body-md text-on-surface-variant leading-relaxed">
+                        Phẫu thuật nội soi thay khớp khớp háng, khớp gối, điều trị đứt dây chằng chấn thương thể thao và nắn chỉnh xương.
+                    </p>
+                </div>
+                <div class="pt-6 border-t border-outline-variant/40 mt-6 text-caption text-on-surface-variant font-medium">
+                    <div>Giờ khám: 08:00 - 17:00</div>
+                    <div class="text-primary font-bold mt-1">Giá khám: 200.000 VND</div>
+                </div>
+            </div>
+
+            <!-- 6. Khoa Tai Mũi Họng -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                <div class="space-y-4">
+                    <span class="material-symbols-outlined text-primary text-[36px] p-2 bg-primary/10 rounded-xl block w-fit group-hover:bg-primary group-hover:text-white transition-colors duration-300">hearing</span>
+                    <h3 class="text-title-lg font-bold text-on-surface">Khoa Tai Mũi Họng</h3>
+                    <p class="text-body-md text-on-surface-variant">
+                        Nội soi phát hiện các bệnh lý viêm xoang mãn tính, viêm amidan, viêm tai giữa, khàn tiếng và ù tai.
+                    </p>
+                </div>
+                <div class="pt-6 border-t border-outline-variant/40 mt-6 text-caption text-on-surface-variant font-medium">
+                    <div>Giờ khám: 07:30 - 21:00</div>
+                    <div class="text-primary font-bold mt-1">Giá khám: 150.000 VND</div>
+                </div>
+            </div>
+
+            <!-- 7. Khoa Răng Hàm Mặt -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                <div class="space-y-4">
+                    <span class="material-symbols-outlined text-primary text-[36px] p-2 bg-primary/10 rounded-xl block w-fit group-hover:bg-primary group-hover:text-white transition-colors duration-300">dentistry</span>
+                    <h3 class="text-title-lg font-bold text-on-surface">Khoa Răng Hàm Mặt</h3>
+                    <p class="text-body-md text-on-surface-variant">
+                        Nhổ răng khôn không đau, điều trị tủy răng, bọc răng sứ, cấy ghép implant nha khoa thẩm mỹ công nghệ cao.
+                    </p>
+                </div>
+                <div class="pt-6 border-t border-outline-variant/40 mt-6 text-caption text-on-surface-variant font-medium">
+                    <div>Giờ khám: 08:00 - 20:00</div>
+                    <div class="text-primary font-bold mt-1">Giá khám: 120.000 VND</div>
+                </div>
+            </div>
+
+            <!-- 8. Khoa Chẩn đoán hình ảnh & Xét nghiệm -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 flex flex-col justify-between group hover:-translate-y-1">
+                <div class="space-y-4">
+                    <span class="material-symbols-outlined text-primary text-[36px] p-2 bg-primary/10 rounded-xl block w-fit group-hover:bg-primary group-hover:text-white transition-colors duration-300">biotech</span>
+                    <h3 class="text-title-lg font-bold text-on-surface">Xét nghiệm &amp; Cận lâm sàng</h3>
+                    <p class="text-body-md text-on-surface-variant">
+                        Chụp cộng hưởng từ MRI, chụp CT 128 lát cắt, siêu âm màu 4D và thực hiện các xét nghiệm sinh hóa máu chuẩn xác.
+                    </p>
+                </div>
+                <div class="pt-6 border-t border-outline-variant/40 mt-6 text-caption text-on-surface-variant font-medium">
+                    <div>Giờ khám: Cấp cứu 24/7</div>
+                    <div class="text-primary font-bold mt-1">Giá khám: Theo dịch vụ chỉ định</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Amenities Callout -->
+<section class="py-16 bg-white border-t border-outline-variant/20">
+    <div class="max-w-[1440px] mx-auto px-unit-lg">
+        <div class="bg-surface p-unit-lg rounded-2xl border border-outline-variant/60 grid grid-cols-1 lg:grid-cols-2 gap-unit-lg items-center">
+            <div class="space-y-4">
+                <h3 class="text-[28px] font-bold text-on-surface">Cơ sở vật chất hiện đại &amp; Tiện ích</h3>
+                <p class="text-body-md text-on-surface-variant leading-relaxed">
+                    Bên cạnh năng lực chuyên khoa điều trị chuyên sâu, bệnh viện MediFlow chú trọng đầu tư hạ tầng cao cấp để mang lại dịch vụ thân thiện nhất cho quý khách hàng:
+                </p>
+                <ul class="space-y-2 text-body-md font-medium">
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">done</span> Hệ thống phòng chờ cao cấp có phục vụ nước uống free</li>
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">done</span> Wifi băng thông rộng miễn phí phủ sóng toàn bộ viện</li>
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">done</span> Bãi giữ xe thông minh diện tích lớn (ô tô, xe máy)</li>
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">done</span> Căng tin phục vụ dinh dưỡng đầy đủ an toàn vệ sinh</li>
+                </ul>
+            </div>
+            <div class="flex items-center justify-center p-unit-md bg-white border border-outline-variant/60 rounded-xl shadow-sm space-y-4 flex-col text-center">
+                <span class="material-symbols-outlined text-[64px] text-primary" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+                <div>
+                    <h4 class="text-title-lg font-bold">Đặt lịch khám chuyên khoa trực tuyến</h4>
+                    <p class="text-body-md text-on-surface-variant max-w-sm mx-auto mt-1">Lựa chọn trước chuyên khoa mong muốn và thời gian phù hợp để rút ngắn thời gian làm thủ tục.</p>
+                </div>
+                <a href="/Auth/Register" class="px-6 py-3 bg-primary hover:bg-primary-container text-white font-bold rounded-lg transition-colors">
+                    Đăng ký tài khoản &amp; Đặt lịch ngay
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

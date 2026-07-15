@@ -20,7 +20,7 @@
                 <h2 class="text-headline-md font-headline-md text-on-surface font-bold">Lịch khám hôm nay</h2>
                 <p class="text-body-md text-on-surface-variant font-medium">Tổng cộng: @queue.Count bệnh nhân</p>
             </div>
-            <div class="bg-secondary/10 text-secondary px-2.5 py-1 rounded-lg text-caption font-bold">
+            <div class="bg-primary/10 text-primary px-2.5 py-1 rounded-lg text-caption font-bold">
                 @DateTime.Today.ToString("dd/MM/yyyy")
             </div>
         </div>
@@ -42,10 +42,10 @@
                         var isCanceled = app.TrangThai == "DaHuy";
                         
                         <a href="/Doctor/Queue?id=@app.Id" 
-                           class="block bg-white border rounded-xl p-unit-md hover:border-secondary transition-all cursor-pointer group relative @(isSelected ? "border-secondary border-2" : "border-outline-variant")">
+                           class="block bg-white border rounded-xl p-unit-md hover:border-primary transition-all cursor-pointer group relative @(isSelected ? "border-primary border-2" : "border-outline-variant")">
                             @if (isSelected)
                             {
-                                <div class="absolute top-0 left-0 w-1 h-full bg-secondary"></div>
+                                <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
                             }
                             <div class="flex justify-between items-start mb-unit-sm">
                                 <div class="flex gap-unit-sm items-center">
@@ -76,7 +76,7 @@
                             <h3 class="text-title-lg font-title-lg font-bold text-on-surface mb-unit-xs">@app.Patient.User.HoTen</h3>
                             <div class="flex justify-between items-end">
                                 <p class="text-body-md text-on-surface-variant">@(DateTime.Today.Year - app.Patient.NgaySinh.Year) tuổi • @app.Patient.GioiTinh</p>
-                                <span class="material-symbols-outlined text-outline group-hover:text-secondary transition-colors">chevron_right</span>
+                                <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
                             </div>
                         </a>
                     }
@@ -99,10 +99,10 @@
                         var isCanceled = app.TrangThai == "DaHuy";
                         
                         <a href="/Doctor/Queue?id=@app.Id" 
-                           class="block bg-white border rounded-xl p-unit-md hover:border-secondary transition-all cursor-pointer group relative @(isSelected ? "border-secondary border-2" : "border-outline-variant")">
+                           class="block bg-white border rounded-xl p-unit-md hover:border-primary transition-all cursor-pointer group relative @(isSelected ? "border-primary border-2" : "border-outline-variant")">
                             @if (isSelected)
                             {
-                                <div class="absolute top-0 left-0 w-1 h-full bg-secondary"></div>
+                                <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
                             }
                             <div class="flex justify-between items-start mb-unit-sm">
                                 <div class="flex gap-unit-sm items-center">
@@ -133,7 +133,7 @@
                             <h3 class="text-title-lg font-title-lg font-bold text-on-surface mb-unit-xs">@app.Patient.User.HoTen</h3>
                             <div class="flex justify-between items-end">
                                 <p class="text-body-md text-on-surface-variant">@(DateTime.Today.Year - app.Patient.NgaySinh.Year) tuổi • @app.Patient.GioiTinh</p>
-                                <span class="material-symbols-outlined text-outline group-hover:text-secondary transition-colors">chevron_right</span>
+                                <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
                             </div>
                         </a>
                     }
@@ -156,7 +156,7 @@
         {
             <div class="p-unit-lg bg-surface border-b border-outline-variant flex justify-between items-center">
                 <div class="flex items-center gap-unit-md">
-                    <div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center text-secondary font-bold text-2xl uppercase">
+                    <div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-2xl uppercase">
                         @selectedApp.Patient.User.HoTen.Substring(0, Math.Min(2, selectedApp.Patient.User.HoTen.Length))
                     </div>
                     <div>
@@ -167,7 +167,7 @@
                 <div class="flex gap-unit-md">
                     @if (selectedApp.TrangThai == "DaXacNhan" || selectedApp.TrangThai == "DangKham")
                     {
-                        <a href="/Doctor/Exam/Session/@selectedApp.Id" class="bg-secondary text-white hover:bg-on-secondary-container px-unit-lg py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-1 active:scale-95 transition-all">
+                        <a href="/Doctor/Exam/Session/@selectedApp.Id" class="bg-primary text-white hover:bg-primary-container px-unit-lg py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-1 active:scale-95 transition-all">
                             <span class="material-symbols-outlined text-[20px]">clinical_notes</span> Bắt đầu khám
                         </a>
                     }
@@ -243,7 +243,7 @@
                             <p class="text-title-lg font-bold text-on-surface">@(string.IsNullOrEmpty(lastRecord?.HuyetAp) ? "--" : lastRecord.HuyetAp) <span class="text-body-md font-normal">mmHg</span></p>
                         </div>
                         <div class="border border-outline-variant p-unit-md rounded-xl flex flex-col items-center">
-                            <span class="material-symbols-outlined text-secondary mb-unit-xs">thermostat</span>
+                            <span class="material-symbols-outlined text-primary mb-unit-xs">thermostat</span>
                             <p class="text-caption text-on-surface-variant">Nhiệt độ</p>
                             <p class="text-title-lg font-bold">@(lastRecord?.NhietDo?.ToString("F1") ?? "--") <span class="text-body-md font-normal">°C</span></p>
                         </div>

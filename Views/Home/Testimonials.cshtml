@@ -1,0 +1,172 @@
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "Đánh giá từ bệnh nhân | MediFlow HMS";
+}
+
+<!-- Page Banner -->
+<section class="bg-gradient-to-r from-primary-fixed to-primary-fixed-dim text-on-primary-fixed py-16 text-center">
+    <div class="max-w-[1440px] mx-auto px-unit-lg">
+        <h2 class="text-[36px] lg:text-[48px] font-bold tracking-tight">Ý kiến bệnh nhân</h2>
+        <p class="text-body-lg opacity-90 max-w-xl mx-auto mt-2">
+            Đọc và cảm nhận những đánh giá chân thực từ những bệnh nhân đã từng khám và điều trị tại bệnh viện.
+        </p>
+    </div>
+</section>
+
+<!-- Main content grid -->
+<section class="py-20 bg-surface">
+    <div class="max-w-[1440px] mx-auto px-unit-lg grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+        
+        <!-- Left: Testimonials List (2/3 cols) -->
+        <div class="lg:col-span-2 space-y-8">
+            <h3 class="text-[28px] font-bold text-on-surface">Đánh giá nổi bật gần đây</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Testimonial 1 -->
+                <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg space-y-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div class="flex gap-0.5 text-tertiary">
+                        @for (int i = 0; i < 5; i++) { <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span> }
+                    </div>
+                    <p class="text-body-md text-on-surface-variant italic leading-relaxed">
+                        "Lần đầu tiên tôi trải nghiệm việc đặt lịch và thanh toán online tại viện nhanh như vậy. Đến giờ hẹn chỉ cần check-in trực tiếp tại phòng khám mà không phải xếp hàng chờ cả tiếng."
+                    </p>
+                    <div class="flex items-center gap-unit-md pt-2 border-t border-outline-variant/40">
+                        <div class="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-caption">NT</div>
+                        <div>
+                            <h5 class="font-bold text-body-md text-on-surface">Nguyễn Thanh Tùng</h5>
+                            <p class="text-[10px] text-on-surface-variant font-medium">Bệnh nhân khoa Tim mạch</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg space-y-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div class="flex gap-0.5 text-tertiary">
+                        @for (int i = 0; i < 5; i++) { <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span> }
+                    </div>
+                    <p class="text-body-md text-on-surface-variant italic leading-relaxed">
+                        "Bác sĩ tư vấn rất chi tiết, ân cần. Sau khi khám xong tôi vẫn có thể nhắn tin hỏi bác sĩ về liều dùng thuốc qua hệ thống mà không cần tốn thời gian di chuyển tới viện."
+                    </p>
+                    <div class="flex items-center gap-unit-md pt-2 border-t border-outline-variant/40">
+                        <div class="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-caption">ML</div>
+                        <div>
+                            <h5 class="font-bold text-body-md text-on-surface">Mai Phương Linh</h5>
+                            <p class="text-[10px] text-on-surface-variant font-medium">Bệnh nhân khoa Nội</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg space-y-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div class="flex gap-0.5 text-tertiary">
+                        @for (int i = 0; i < 5; i++) { <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span> }
+                    </div>
+                    <p class="text-body-md text-on-surface-variant italic leading-relaxed">
+                        "Quy trình y tế rõ ràng. Tôi có thể đặt lịch khám hộ cho mẹ ở quê, thanh toán từ xa qua ZaloPay rất nhanh và có bệnh án lưu trữ trực tuyến để dễ dàng đối chiếu sau này."
+                    </p>
+                    <div class="flex items-center gap-unit-md pt-2 border-t border-outline-variant/40">
+                        <div class="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-caption">VH</div>
+                        <div>
+                            <h5 class="font-bold text-body-md text-on-surface">Vũ Minh Huy</h5>
+                            <p class="text-[10px] text-on-surface-variant font-medium">Đăng ký hộ người thân</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 4 -->
+                <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg space-y-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div class="flex gap-0.5 text-tertiary">
+                        @for (int i = 0; i < 5; i++) { <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span> }
+                    </div>
+                    <p class="text-body-md text-on-surface-variant italic leading-relaxed">
+                        "Khoa Nhi có khu vui chơi nhỏ rất sạch sẽ cho trẻ nhỏ. Các điều dưỡng tiêm và dỗ bé rất khéo khiến cháu không bị sợ hãi hay quấy khóc nhiều như đi các viện khác."
+                    </p>
+                    <div class="flex items-center gap-unit-md pt-2 border-t border-outline-variant/40">
+                        <div class="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-caption">TH</div>
+                        <div>
+                            <h5 class="font-bold text-body-md text-on-surface">Trần Thu Hương</h5>
+                            <p class="text-[10px] text-on-surface-variant font-medium">Bệnh nhân khoa Nhi</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 5 -->
+                <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg space-y-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div class="flex gap-0.5 text-tertiary">
+                        @for (int i = 0; i < 5; i++) { <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span> }
+                    </div>
+                    <p class="text-body-md text-on-surface-variant italic leading-relaxed">
+                        "Phục vụ nhổ răng khôn rất êm, bác sĩ giải thích kỹ phác đồ và đơn thuốc giảm đau hậu phẫu. Sau 3 ngày tôi đã ăn uống nhai bình thường. Rất hài lòng!"
+                    </p>
+                    <div class="flex items-center gap-unit-md pt-2 border-t border-outline-variant/40">
+                        <div class="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-caption">DK</div>
+                        <div>
+                            <h5 class="font-bold text-body-md text-on-surface">Dương Quốc Khánh</h5>
+                            <p class="text-[10px] text-on-surface-variant font-medium">Bệnh nhân Răng Hàm Mặt</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 6 -->
+                <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg space-y-3 shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div class="flex gap-0.5 text-tertiary">
+                        @for (int i = 0; i < 5; i++) { <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span> }
+                    </div>
+                    <p class="text-body-md text-on-surface-variant italic leading-relaxed">
+                        "Cơ sở vật chất của viện khang trang như khách sạn, bãi đậu xe ô tô rất rộng rãi thoải mái. Phí khám theo yêu cầu rất xứng đáng với chất lượng chăm sóc nhận được."
+                    </p>
+                    <div class="flex items-center gap-unit-md pt-2 border-t border-outline-variant/40">
+                        <div class="w-8 h-8 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-caption">HL</div>
+                        <div>
+                            <h5 class="font-bold text-body-md text-on-surface">Hoàng Mỹ Liên</h5>
+                            <p class="text-[10px] text-on-surface-variant font-medium">Khám theo yêu cầu</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Submit Form Mockup (1 col) -->
+        <div class="space-y-6">
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg shadow-lg space-y-6 sticky top-24">
+                <h4 class="text-title-lg font-bold text-on-surface pb-3 border-b border-outline-variant/45">Gửi ý kiến đóng góp</h4>
+                <p class="text-body-md text-on-surface-variant leading-relaxed">
+                    MediFlow luôn trân trọng những ý kiến phản hồi để tiếp tục cải thiện quy trình khám chữa bệnh lâm sàng tốt hơn.
+                </p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-caption font-semibold text-on-surface-variant mb-1">Đánh giá chung</label>
+                        <div class="flex gap-1 text-outline-variant">
+                            @for (int i = 1; i <= 5; i++) {
+                                <span class="material-symbols-outlined text-[24px] cursor-pointer hover:text-tertiary" style="font-variation-settings: 'FILL' 1;">star</span>
+                            }
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-caption font-semibold text-on-surface-variant mb-1">Họ và tên của bạn</label>
+                        <input type="text" class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md focus:outline-none focus:border-primary" placeholder="Ví dụ: Nguyễn Văn A" />
+                    </div>
+                    <div>
+                        <label class="block text-caption font-semibold text-on-surface-variant mb-1">Khoa điều trị</label>
+                        <select class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md focus:outline-none focus:border-primary">
+                            <option value="">-- Chọn chuyên khoa --</option>
+                            <option value="1">Khoa Nội</option>
+                            <option value="2">Khoa Nhi</option>
+                            <option value="3">Khoa Tim mạch</option>
+                            <option value="4">Khoa Sản phụ khoa</option>
+                            <option value="5">Răng Hàm Mặt</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-caption font-semibold text-on-surface-variant mb-1">Nội dung nhận xét</label>
+                        <textarea rows="4" class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md focus:outline-none focus:border-primary" placeholder="Nhập cảm nhận của bạn về y bác sĩ, dịch vụ tại viện..."></textarea>
+                    </div>
+                </div>
+                <button type="button" class="w-full bg-primary hover:bg-primary-container text-white py-2.5 rounded-lg font-bold transition-colors active:scale-95 duration-300 shadow-sm" onclick="alert('Cảm ơn bạn đã gửi ý kiến đóng góp! Hệ thống ghi nhận phản hồi đóng góp thành công.')">
+                    Gửi phản hồi y tế
+                </button>
+            </div>
+        </div>
+
+    </div>
+</section>

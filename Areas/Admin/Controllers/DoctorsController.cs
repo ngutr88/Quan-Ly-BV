@@ -58,6 +58,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
             var doctor = await _context.Doctors
                 .Include(d => d.User)
                 .Include(d => d.Department)
+                .Include(d => d.WorkSchedules)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (doctor == null) return NotFound();
@@ -126,6 +127,9 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 ChucVu = chucVu ?? "Bác sĩ"
             };
             _context.Doctors.Add(doctor);
+            await _context.SaveChangesAsync();
+            _context.DoctorWorkSchedules.AddRange(
+                DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec));
             
             // Log action
             _context.AuditLogs.Add(new AuditLog
@@ -183,6 +187,13 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
 
             _context.Entry(doctor.User).State = EntityState.Modified;
             _context.Entry(doctor).State = EntityState.Modified;
+
+            var oldSchedules = await _context.DoctorWorkSchedules
+                .Where(s => s.BacSiId == doctor.Id)
+                .ToListAsync();
+            _context.DoctorWorkSchedules.RemoveRange(oldSchedules);
+            _context.DoctorWorkSchedules.AddRange(
+                DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec));
 
             _context.AuditLogs.Add(new AuditLog
             {

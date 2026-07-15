@@ -36,7 +36,7 @@ namespace QuanLyBenhVien.Controllers
 
         // POST: /Auth/Login
         [HttpPost]
-        public async Task<IActionResult> Login(string identifier, string password, bool rememberMe)
+        public async Task<IActionResult> Login(string identifier, string password, bool rememberMe, string role)
         {
             var hashedPass = HashHelper.HashPassword(password);
             User? user = null;
@@ -53,6 +53,18 @@ namespace QuanLyBenhVien.Controllers
             if (user == null || !HashHelper.VerifyPassword(password, user.MatKhauHash))
             {
                 TempData["ErrorMessage"] = "Thông tin tài khoản hoặc mật khẩu không chính xác.";
+                return View();
+            }
+
+            if (!string.IsNullOrEmpty(role) && user.VaiTro != role)
+            {
+                var roleName = role switch
+                {
+                    "Admin" => "Quản trị viên",
+                    "Doctor" => "Bác sĩ",
+                    _ => "Bệnh nhân"
+                };
+                TempData["ErrorMessage"] = $"Tài khoản này không phải là {roleName}. Vui lòng kiểm tra lại vai trò đăng nhập.";
                 return View();
             }
 
@@ -82,7 +94,7 @@ namespace QuanLyBenhVien.Controllers
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
             TempData["SuccessMessage"] = $"Đăng nhập thành công! Chào mừng {user.HoTen}.";
-            
+
             // Redirect based on role
             if (user.VaiTro == "Admin") return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
             if (user.VaiTro == "Doctor") return RedirectToAction("Index", "Dashboard", new { area = "Doctor" });
@@ -98,7 +110,7 @@ namespace QuanLyBenhVien.Controllers
 
         // POST: /Auth/Register
         [HttpPost]
-        public async Task<IActionResult> Register(string fullName, string email, string phone, string password, DateTime dob, string gender, string bhyt)
+        public async Task<IActionResult> Register(string fullName, string email, string phone, string password, DateTime dob, string gender, string bhyt, string cccd)
         {
             // Check duplicates
             var existingUser = await _context.Users.AnyAsync(u => u.Email == email || u.Sdt == phone);
@@ -116,7 +128,8 @@ namespace QuanLyBenhVien.Controllers
             HttpContext.Session.SetString("Reg_Dob", dob.ToString("yyyy-MM-dd"));
             HttpContext.Session.SetString("Reg_Gender", gender);
             HttpContext.Session.SetString("Reg_BHYT", bhyt ?? string.Empty);
-            
+            HttpContext.Session.SetString("Reg_CCCD", cccd ?? string.Empty);
+
             // Seed a mock OTP (123456)
             HttpContext.Session.SetString("Reg_OTP", "123456");
 
@@ -169,6 +182,7 @@ namespace QuanLyBenhVien.Controllers
                 NgaySinh = DateTime.Parse(HttpContext.Session.GetString("Reg_Dob")!),
                 GioiTinh = HttpContext.Session.GetString("Reg_Gender")!,
                 SoBHYT = HttpContext.Session.GetString("Reg_BHYT") ?? string.Empty,
+                SoCCCD = HttpContext.Session.GetString("Reg_CCCD") ?? string.Empty,
                 NhomMau = "O+",
                 TienSuBenh = "Không"
             };
@@ -183,6 +197,7 @@ namespace QuanLyBenhVien.Controllers
             HttpContext.Session.Remove("Reg_Dob");
             HttpContext.Session.Remove("Reg_Gender");
             HttpContext.Session.Remove("Reg_BHYT");
+            HttpContext.Session.Remove("Reg_CCCD");
             HttpContext.Session.Remove("Reg_OTP");
 
             // Auto Sign In after successful registration
@@ -221,7 +236,7 @@ namespace QuanLyBenhVien.Controllers
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             TempData["SuccessMessage"] = "Bạn đã đăng xuất khỏi hệ thống.";
-            return RedirectToAction("Login");
+            return RedirectToAction("Index", "Home");
         }
 
         // GET: /Auth/AccessDenied

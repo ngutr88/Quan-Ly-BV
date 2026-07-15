@@ -39,7 +39,7 @@
                          data-id="@contact.Id">
                         <div class="flex gap-3">
                             <div class="relative shrink-0">
-                                <div class="w-11 h-11 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-container font-bold uppercase">
+                                <div class="w-11 h-11 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold uppercase">
                                     @contact.User.HoTen.Substring(0, Math.Min(2, contact.User.HoTen.Length))
                                 </div>
                                 <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-secondary rounded-full border-2 border-white"></span>
@@ -67,7 +67,7 @@
             <div class="h-16 px-6 border-b border-outline-variant flex items-center justify-between shadow-sm shrink-0 bg-surface-bright">
                 <div class="flex items-center gap-3">
                     <div class="relative">
-                        <div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-container font-bold uppercase" id="chatHeaderInitials">
+                        <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold uppercase" id="chatHeaderInitials">
                             @activeContact.User.HoTen.Substring(0, Math.Min(2, activeContact.User.HoTen.Length))
                         </div>
                         <span class="absolute bottom-0 right-0 w-2 h-2 bg-secondary rounded-full border-2 border-white"></span>
@@ -93,7 +93,7 @@
             <div class="flex-1 p-6 overflow-y-auto chat-scroll flex flex-col gap-4 bg-[#fcfdff] custom-scrollbar" id="messageArea">
                 <!-- Patient Message -->
                 <div class="flex gap-3 max-w-[85%]">
-                    <div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-container font-bold text-xs uppercase shrink-0 self-end">
+                    <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs uppercase shrink-0 self-end">
                         Th
                     </div>
                     <div class="bg-surface-container-low border border-outline-variant p-3 rounded-2xl rounded-bl-none text-body-md text-on-surface shadow-sm">
@@ -151,7 +151,7 @@
         {
             var activeContact = contacts.First();
             <div class="p-6 flex flex-col items-center text-center border-b border-outline-variant">
-                <div class="w-24 h-24 rounded-full bg-secondary-container flex items-center justify-center text-secondary font-bold text-4xl uppercase shadow-md mb-3 border-4 border-white" id="panelInitials">
+                <div class="w-24 h-24 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-4xl uppercase shadow-md mb-3 border-4 border-white" id="panelInitials">
                     @activeContact.User.HoTen.Substring(0, Math.Min(2, activeContact.User.HoTen.Length))
                 </div>
                 <h3 class="font-bold text-title-lg text-on-surface" id="panelName">@activeContact.User.HoTen</h3>
@@ -226,7 +226,7 @@
             const area = document.getElementById('messageArea');
             area.innerHTML = `
                 <div class="flex gap-3 max-w-[85%]">
-                    <div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-container font-bold text-xs uppercase shrink-0 self-end">
+                    <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs uppercase shrink-0 self-end">
                         ${initials}
                     </div>
                     <div class="bg-surface-container-low border border-outline-variant p-3 rounded-2xl rounded-bl-none text-body-md text-on-surface shadow-sm">

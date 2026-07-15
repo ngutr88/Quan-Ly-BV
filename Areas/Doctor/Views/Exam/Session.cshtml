@@ -37,7 +37,7 @@
 
             <!-- Section 1: Vital Signs (BMI auto calculated) -->
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-                <h3 class="font-title-lg text-title-lg text-secondary font-bold mb-unit-md flex items-center gap-1">
+                <h3 class="font-title-lg text-title-lg text-primary font-bold mb-unit-md flex items-center gap-1">
                     <span class="material-symbols-outlined">monitoring</span> Chỉ số sinh tồn
                 </h3>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-unit-md">
@@ -67,14 +67,14 @@
                                id="height" name="chieuCao" placeholder="170" type="number" step="0.5" oninput="calculateBMI()" />
                     </div>
                 </div>
-                <div class="mt-unit-sm text-caption text-secondary font-semibold" id="bmi-display">
+                <div class="mt-unit-sm text-caption text-primary font-semibold" id="bmi-display">
                     Chỉ số BMI: Chưa tính (Vui lòng điền Chiều cao &amp; Cân nặng)
                 </div>
             </div>
 
             <!-- Section 2: Clinical Symptoms & Diagnosis -->
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md">
-                <h3 class="font-title-lg text-title-lg text-secondary font-bold flex items-center gap-1">
+                <h3 class="font-title-lg text-title-lg text-primary font-bold flex items-center gap-1">
                     <span class="material-symbols-outlined">clinical_notes</span> Chẩn đoán y khoa
                 </h3>
                 
@@ -112,7 +112,7 @@
 
             <!-- Section 3: Safe Prescription Block -->
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md">
-                <h3 class="font-title-lg text-title-lg text-secondary font-bold flex items-center gap-1">
+                <h3 class="font-title-lg text-title-lg text-primary font-bold flex items-center gap-1">
                     <span class="material-symbols-outlined">medication</span> Kê đơn thuốc điện tử
                 </h3>
 
@@ -137,7 +137,7 @@
                         <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="medInstructions" placeholder="Uống 2 lần/ngày, sau ăn" type="text" />
                     </div>
                     <div class="md:col-span-1">
-                        <button type="button" class="w-full bg-secondary text-white py-2 rounded-lg font-label-md hover:bg-on-secondary-container transition-all" onclick="addMedicineRow()">
+                        <button type="button" class="w-full bg-primary text-white py-2 rounded-lg font-label-md hover:bg-primary-container transition-all" onclick="addMedicineRow()">
                             Thêm
                         </button>
                     </div>
@@ -163,7 +163,7 @@
 
             <!-- Submit Buttons -->
             <div class="flex items-center gap-unit-md pt-unit-md border-t border-outline-variant mt-unit-lg">
-                <button class="bg-secondary text-white font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-on-secondary-container transition-all active:scale-[0.98] shadow-md flex items-center gap-1" type="submit">
+                <button class="bg-primary text-white font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] shadow-md flex items-center gap-1" type="submit">
                     <span class="material-symbols-outlined">save</span> Hoàn tất phiên khám &amp; Xuất hóa đơn
                 </button>
                 <a href="/Doctor/Dashboard" class="text-on-surface-variant hover:underline font-label-md">Hủy bỏ</a>
@@ -174,7 +174,7 @@
     <!-- Right panel: Patient medical history (1 col) -->
     <div class="space-y-unit-lg">
         <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-            <h3 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-secondary">Hồ sơ cá nhân bệnh nhân</h3>
+            <h3 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-primary">Hồ sơ cá nhân bệnh nhân</h3>
             <div class="space-y-unit-sm text-body-md">
                 <div>
                     <span class="text-caption text-on-surface-variant block">Họ và tên</span>
@@ -186,7 +186,7 @@
                 </div>
                 <div>
                     <span class="text-caption text-on-surface-variant block">Nhóm máu / Mã thẻ BHYT</span>
-                    <span class="font-semibold text-secondary">@Model.Patient.NhomMau</span> • <span class="font-mono text-caption">@(string.IsNullOrEmpty(Model.Patient.SoBHYT) ? "Không có" : Model.Patient.SoBHYT)</span>
+                    <span class="font-semibold text-primary">@Model.Patient.NhomMau</span> • <span class="font-mono text-caption">@(string.IsNullOrEmpty(Model.Patient.SoBHYT) ? "Không có" : Model.Patient.SoBHYT)</span>
                 </div>
                 <div>
                     <span class="text-caption text-on-surface-variant block">Tiền sử bệnh án điện tử</span>
@@ -196,7 +196,7 @@
         </div>
 
         <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-            <h3 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-secondary">Lịch sử khám tại viện</h3>
+            <h3 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-primary">Lịch sử khám tại viện</h3>
             
             <div class="space-y-unit-md max-h-[350px] overflow-y-auto custom-scrollbar">
                 @if (!historyExams.Any())

@@ -4,6 +4,23 @@ using QuanLyBenhVien.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Enable static web assets and locate wwwroot folder in parent directories for robust local execution
+builder.WebHost.UseStaticWebAssets();
+if (string.IsNullOrEmpty(builder.Environment.WebRootPath) || !Directory.Exists(builder.Environment.WebRootPath))
+{
+    var currentDir = new DirectoryInfo(AppContext.BaseDirectory);
+    while (currentDir != null)
+    {
+        var candidate = Path.Combine(currentDir.FullName, "wwwroot");
+        if (Directory.Exists(candidate))
+        {
+            builder.Environment.WebRootPath = candidate;
+            break;
+        }
+        currentDir = currentDir.Parent;
+    }
+}
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
@@ -60,6 +77,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 
 app.UseSession();

@@ -208,6 +208,52 @@ namespace QuanLyBenhVien.Migrations
                     b.ToTable("BacSi");
                 });
 
+            modelBuilder.Entity("QuanLyBenhVien.Models.DoctorWorkSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BacSiId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("DangHoatDong")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeSpan>("GioBatDau")
+                        .HasColumnType("TEXT");
+
+                    b.Property<TimeSpan>("GioKetThuc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("HieuLucDen")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("HieuLucTu")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PhongKham")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SoBenhNhanToiDa")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ThoiLuongKhamPhut")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ThuTrongTuan")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BacSiId", "ThuTrongTuan", "GioBatDau", "GioKetThuc")
+                        .IsUnique();
+
+                    b.ToTable("LichLamViecBacSi");
+                });
+
             modelBuilder.Entity("QuanLyBenhVien.Models.ExaminationRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -459,6 +505,11 @@ namespace QuanLyBenhVien.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SoCCCD")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("TienSuBenh")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -677,6 +728,17 @@ namespace QuanLyBenhVien.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("QuanLyBenhVien.Models.DoctorWorkSchedule", b =>
+                {
+                    b.HasOne("QuanLyBenhVien.Models.Doctor", "Doctor")
+                        .WithMany("WorkSchedules")
+                        .HasForeignKey("BacSiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+                });
+
             modelBuilder.Entity("QuanLyBenhVien.Models.ExaminationRecord", b =>
                 {
                     b.HasOne("QuanLyBenhVien.Models.Appointment", "Appointment")
@@ -801,6 +863,11 @@ namespace QuanLyBenhVien.Migrations
                         .IsRequired();
 
                     b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("QuanLyBenhVien.Models.Doctor", b =>
+                {
+                    b.Navigation("WorkSchedules");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.Invoice", b =>

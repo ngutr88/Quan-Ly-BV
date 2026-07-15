@@ -17,7 +17,7 @@
     </nav>
     <div class="flex items-center justify-between">
         <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Bệnh án điện tử</h2>
-        <span class="bg-secondary/15 text-secondary px-3 py-1 rounded-xl text-body-md font-bold border border-secondary/20">Mã ca khám: EXM-@Model.Id.ToString("D4")</span>
+        <span class="bg-primary/10 text-primary px-3 py-1 rounded-xl text-body-md font-bold border border-primary/20">Mã ca khám: EXM-@Model.Id.ToString("D4")</span>
     </div>
 </div>
 
@@ -30,7 +30,7 @@
         <!-- Patient Information Card -->
         <section class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm">
             <h3 class="text-title-lg font-bold text-on-surface mb-unit-md flex items-center gap-2">
-                <span class="material-symbols-outlined text-secondary">person</span>
+                <span class="material-symbols-outlined text-primary">person</span>
                 Hồ sơ Bệnh nhân
             </h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-unit-md text-body-md">
@@ -124,7 +124,7 @@
         <!-- Prescription Details -->
         <section class="bg-white border border-outline-variant rounded-2xl p-unit-lg shadow-sm space-y-unit-md">
             <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2">
-                <span class="material-symbols-outlined text-secondary">pill</span>
+                <span class="material-symbols-outlined text-primary">pill</span>
                 Đơn thuốc điều trị
             </h3>
             
@@ -148,7 +148,7 @@
                             {
                                 <tr>
                                     <td class="px-4 py-3 font-semibold text-on-surface">@detail.Medicine.TenThuoc <br/><span class="text-caption text-on-surface-variant font-normal">Hoạt chất: @detail.Medicine.HoatChat</span></td>
-                                    <td class="px-4 py-3 text-center font-bold text-secondary">@detail.SoLuong @detail.Medicine.DonViTinh</td>
+                                    <td class="px-4 py-3 text-center font-bold text-primary">@detail.SoLuong @detail.Medicine.DonViTinh</td>
                                     <td class="px-4 py-3 text-on-surface-variant italic">@detail.LieuDung</td>
                                 </tr>
                             }

@@ -1,0 +1,162 @@
+@model IEnumerable<QuanLyBenhVien.Models.User>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Nhân sự & Phân quyền";
+}
+
+<div class="flex items-center justify-between mb-unit-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Nhân sự &amp; Phân quyền</h2>
+        <p class="text-body-md text-on-surface-variant">Quản lý tài khoản quản trị viên và đội ngũ bác sĩ trong hệ thống.</p>
+    </div>
+    <a href="/Admin/Staff/Create" class="flex items-center gap-unit-sm bg-primary text-white px-unit-md py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-semibold">
+        <span class="material-symbols-outlined text-[20px]">add</span>
+        Thêm nhân sự mới
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-label-md">@TempData["SuccessMessage"]</span>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-error-container/25 text-error border border-error/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-error">error</span>
+        <span class="font-label-md">@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<!-- Filters Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl mb-unit-lg shadow-sm">
+    <form method="GET" action="/Admin/Staff" class="flex flex-col md:flex-row gap-unit-md">
+        <div class="flex-grow relative">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
+                <span class="material-symbols-outlined text-[20px]">search</span>
+            </span>
+            <input class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                   name="searchString" value="@ViewBag.SearchString" placeholder="Tìm kiếm tên, email hoặc SĐT nhân viên..." type="text" />
+        </div>
+        
+        <div class="w-full md:w-64">
+            <select class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                    name="roleFilter">
+                <option value="">Tất cả vai trò</option>
+                <option value="Admin" selected="@(ViewBag.RoleFilter == "Admin")">Quản trị viên</option>
+                <option value="Doctor" selected="@(ViewBag.RoleFilter == "Doctor")">Bác sĩ</option>
+            </select>
+        </div>
+
+        <button type="submit" class="bg-surface-container-high hover:bg-surface-container-highest px-unit-lg py-2 rounded-lg font-label-md transition-colors text-on-surface-variant font-semibold">
+            Áp dụng lọc
+        </button>
+    </form>
+</div>
+
+<!-- Staff Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Mã NV</th>
+                    <th class="px-unit-md py-3">Họ và tên</th>
+                    <th class="px-unit-md py-3">Thông tin liên hệ</th>
+                    <th class="px-unit-md py-3">Vai trò</th>
+                    <th class="px-unit-md py-3">Trạng thái</th>
+                    <th class="px-unit-md py-3">Ngày tham gia</th>
+                    <th class="px-unit-md py-3 text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="px-unit-md py-8 text-center text-on-surface-variant">Không tìm thấy nhân sự nào phù hợp.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var staff in Model)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors group">
+                            <td class="px-unit-md py-4 font-bold text-primary">STAFF-@staff.Id.ToString("D3")</td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md font-semibold text-on-surface flex items-center gap-2">
+                                    @staff.HoTen
+                                    @if (staff.VaiTro == "Admin")
+                                    {
+                                        <span class="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded">Admin</span>
+                                    }
+                                    else if (staff.VaiTro == "Doctor" && staff.DoctorProfile != null)
+                                    {
+                                        <span class="px-1.5 py-0.5 bg-secondary/15 text-secondary text-[10px] font-bold rounded">@staff.DoctorProfile.ChucVu</span>
+                                    }
+                                </div>
+                                @if (staff.VaiTro == "Doctor" && staff.DoctorProfile != null)
+                                {
+                                    <div class="text-[11px] text-on-surface-variant">
+                                        Khoa: <strong>@staff.DoctorProfile.Department.TenKhoa</strong> | @staff.DoctorProfile.HocVi (@staff.DoctorProfile.ChuyenKhoa)
+                                    </div>
+                                }
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-body-md text-on-surface">@staff.Email</div>
+                                <div class="text-caption text-on-surface-variant">SĐT: @staff.Sdt</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                @if (staff.VaiTro == "Admin")
+                                {
+                                    <span class="flex items-center gap-1 text-primary font-semibold">
+                                        <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                                        Quản trị viên
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="flex items-center gap-1 text-secondary font-semibold">
+                                        <span class="material-symbols-outlined text-[16px]">stethoscope</span>
+                                        Bác sĩ
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-unit-md py-4 whitespace-nowrap">
+                                @if (staff.TrangThai == "Active")
+                                {
+                                    <span class="px-2.5 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold whitespace-nowrap">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2.5 py-1 rounded-full bg-error-container text-error text-[11px] font-bold whitespace-nowrap">Đã khóa</span>
+                                }
+                            </td>
+                            <td class="px-unit-md py-4 text-body-md text-on-surface-variant">
+                                @staff.NgayTao.ToString("dd/MM/yyyy")
+                            </td>
+                            <td class="px-unit-md py-4 text-right">
+                                <div class="flex items-center justify-end gap-unit-sm">
+                                    <a href="/Admin/Staff/Details/@staff.Id" class="p-1 text-on-surface-variant hover:text-primary transition-colors" title="Chi tiết & Đổi MK">
+                                        <span class="material-symbols-outlined">visibility</span>
+                                    </a>
+                                    <a href="/Admin/Staff/Edit/@staff.Id" class="p-1 text-on-surface-variant hover:text-tertiary transition-colors" title="Chỉnh sửa">
+                                        <span class="material-symbols-outlined">edit</span>
+                                    </a>
+                                    <form method="POST" action="/Admin/Staff/ToggleStatus/@staff.Id" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của nhân viên này?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="p-1 @(staff.TrangThai == "Active" ? "text-error hover:text-red-700" : "text-secondary hover:text-green-700") transition-colors" title="@(staff.TrangThai == "Active" ? "Khóa tài khoản" : "Mở khóa tài khoản")">
+                                            <span class="material-symbols-outlined">@(staff.TrangThai == "Active" ? "lock" : "lock_open")</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

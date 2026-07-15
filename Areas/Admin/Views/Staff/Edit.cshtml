@@ -1,0 +1,169 @@
+@model QuanLyBenhVien.Models.User
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chỉnh sửa Nhân sự";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/Staff" class="inline-flex items-center gap-1 text-primary hover:underline font-label-md mb-unit-sm">
+        <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+        Quay lại danh sách
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Chỉnh sửa Nhân sự</h2>
+    <p class="text-body-md text-on-surface-variant">Cập nhật thông tin tài khoản hoặc điều chỉnh hồ sơ chuyên môn công tác của nhân sự.</p>
+</div>
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg max-w-3xl">
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="mb-unit-md p-4 bg-error-container/20 text-error border border-error/20 rounded-lg">
+            <div asp-validation-summary="All" class="text-label-md font-semibold space-y-1"></div>
+        </div>
+    }
+
+    <form method="POST" action="/Admin/Staff/Edit/@Model.Id" class="space-y-6">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+
+        <!-- Account Info Section -->
+        <div>
+            <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-4 flex items-center gap-1">
+                <span class="material-symbols-outlined">account_circle</span>
+                Thông tin Tài khoản
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Họ và tên *</label>
+                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                           name="hoTen" value="@Model.HoTen" required type="text" />
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Vai trò hệ thống *</label>
+                    <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                            name="vaiTro" id="role-select" onchange="toggleDoctorFields()" required>
+                        <option value="Admin" selected="@(Model.VaiTro == "Admin")">Quản trị viên (Admin)</option>
+                        <option value="Doctor" selected="@(Model.VaiTro == "Doctor")">Bác sĩ (Doctor)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Địa chỉ Email (Không được đổi)</label>
+                    <input class="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-lg font-body-md text-on-surface-variant cursor-not-allowed" 
+                           value="@Model.Email" readonly type="email" />
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Số điện thoại *</label>
+                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                           name="sdt" value="@Model.Sdt" required type="text" />
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Trạng thái hoạt động *</label>
+                    <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                            name="trangThai" required>
+                        <option value="Active" selected="@(Model.TrangThai == "Active")">Hoạt động</option>
+                        <option value="Blocked" selected="@(Model.TrangThai == "Blocked")">Đã khóa</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor Profile Section -->
+        <div id="doctor-profile-section" class="hidden">
+            <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-4 flex items-center gap-1">
+                <span class="material-symbols-outlined">medical_information</span>
+                Thông tin Chuyên môn Bác sĩ
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Khoa công tác *</label>
+                    <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                            name="khoaId" asp-items="ViewBag.KhoaId">
+                        <option value="">Chọn khoa chuyên môn...</option>
+                    </select>
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Chuyên khoa cụ thể *</label>
+                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                           name="chuyenKhoa" value="@Model.DoctorProfile?.ChuyenKhoa" placeholder="Ví dụ: Tim mạch nhi, Nội tổng hợp" type="text" />
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Học vị *</label>
+                    <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                            name="hocVi">
+                        <option value="BS" selected="@(Model.DoctorProfile?.HocVi == "BS")">Bác sĩ (BS)</option>
+                        <option value="ThS" selected="@(Model.DoctorProfile?.HocVi == "ThS")">Thạc sĩ (ThS)</option>
+                        <option value="TS" selected="@(Model.DoctorProfile?.HocVi == "TS")">Tiến sĩ (TS)</option>
+                        <option value="PGS" selected="@(Model.DoctorProfile?.HocVi == "PGS")">Phó Giáo sư (PGS)</option>
+                        <option value="GS" selected="@(Model.DoctorProfile?.HocVi == "GS")">Giáo sư (GS)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Số năm kinh nghiệm *</label>
+                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                           name="soNamKinhNghiem" value="@(Model.DoctorProfile?.SoNamKinhNghiem ?? 1)" min="0" type="number" />
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Chức vụ tại khoa *</label>
+                    <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                            name="chucVu">
+                        <option value="Bác sĩ" selected="@(Model.DoctorProfile?.ChucVu == "Bác sĩ")">Bác sĩ điều trị</option>
+                        <option value="Trưởng khoa" selected="@(Model.DoctorProfile?.ChucVu == "Trưởng khoa")">Trưởng khoa</option>
+                        <option value="Phó trưởng khoa" selected="@(Model.DoctorProfile?.ChucVu == "Phó trưởng khoa")">Phó trưởng khoa</option>
+                    </select>
+                </div>
+
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Lịch làm việc mặc định</label>
+                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                           name="lichLamViec" value="@(Model.DoctorProfile?.LichLamViec ?? "Ca sang (08:00 - 12:00) & Chiều (13:30 - 17:30)")" placeholder="Nhập mô tả lịch làm việc" type="text" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center gap-unit-md pt-4 border-t border-outline-variant">
+            <button type="submit" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[20px]">save</span>
+                Cập nhật
+            </button>
+            <a href="/Admin/Staff" class="bg-surface-container-high hover:bg-surface-container-highest px-unit-lg py-2.5 rounded-lg font-label-md transition-colors text-on-surface-variant font-semibold">
+                Hủy bỏ
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleDoctorFields() {
+        const role = document.getElementById("role-select").value;
+        const doctorSection = document.getElementById("doctor-profile-section");
+        
+        const inputs = doctorSection.querySelectorAll("input, select");
+
+        if (role === "Doctor") {
+            doctorSection.classList.remove("hidden");
+            inputs.forEach(input => {
+                if (input.name === "khoaId" || input.name === "chuyenKhoa") {
+                    input.required = true;
+                }
+            });
+        } else {
+            doctorSection.classList.add("hidden");
+            inputs.forEach(input => {
+                input.required = false;
+            });
+        }
+    }
+    
+    document.addEventListener("DOMContentLoaded", toggleDoctorFields);
+</script>

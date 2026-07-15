@@ -3,7 +3,7 @@
     ViewData["Title"] = "Đăng ký bệnh nhân mới";
 }
 
-<body class="bg-surface min-h-screen flex flex-col items-center justify-center p-margin-mobile">
+<div class="min-h-screen flex flex-col items-center justify-center p-margin-mobile bg-surface">
     <main class="w-full max-w-2xl flex flex-col items-center py-unit-xl">
         <!-- Header -->
         <header class="text-center mb-unit-lg">
@@ -68,11 +68,18 @@
                         </select>
                     </div>
 
+                    <!-- CCCD -->
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="cccd">Số CCCD (Tùy chọn)</label>
+                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                               id="cccd" name="cccd" placeholder="Nhập 12 chữ số số CCCD" type="text" />
+                    </div>
+
                     <!-- Health Insurance Card (BHYT) -->
-                    <div class="space-y-unit-xs md:col-span-2">
+                    <div class="space-y-unit-xs">
                         <label class="block text-caption font-semibold text-on-surface-variant" for="bhyt">Mã số thẻ Bảo hiểm Y tế (BHYT)</label>
                         <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                               id="bhyt" name="bhyt" placeholder="Mã số gồm 15 ký tự (Không bắt buộc)" type="text" />
+                               id="bhyt" name="bhyt" placeholder="Không bắt buộc" type="text" />
                     </div>
                 </div>
 
@@ -98,4 +105,4 @@
             </div>
         </div>
     </main>
-</body>
+</div>

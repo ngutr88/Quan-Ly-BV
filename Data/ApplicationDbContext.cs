@@ -26,6 +26,7 @@ namespace QuanLyBenhVien.Data
         public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
         public DbSet<Dependent> Dependents { get; set; } = null!;
+        public DbSet<DoctorWorkSchedule> DoctorWorkSchedules { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,6 +52,17 @@ namespace QuanLyBenhVien.Data
                 .WithMany()
                 .HasForeignKey(d => d.KhoaId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Doctor - WorkSchedule (One-to-Many)
+            modelBuilder.Entity<DoctorWorkSchedule>()
+                .HasOne(s => s.Doctor)
+                .WithMany(d => d.WorkSchedules)
+                .HasForeignKey(s => s.BacSiId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DoctorWorkSchedule>()
+                .HasIndex(s => new { s.BacSiId, s.ThuTrongTuan, s.GioBatDau, s.GioKetThuc })
+                .IsUnique();
 
             // Service - Department (Many-to-One)
             modelBuilder.Entity<Service>()

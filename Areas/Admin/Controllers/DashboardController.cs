@@ -83,7 +83,126 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 .Take(5)
                 .ToListAsync();
 
+            // 8. 7-day appointment statistics for Chart.js
+            var sevenDaysAgo = DateTime.Today.AddDays(-6);
+            var appointmentsLast7Days = await _context.Appointments
+                .Where(a => a.ThoiGian.Date >= sevenDaysAgo)
+                .ToListAsync();
+
+            var appointmentData = Enumerable.Range(0, 7)
+                .Select(offset => sevenDaysAgo.AddDays(offset))
+                .Select(date => new {
+                    DateStr = date.ToString("dd/MM"),
+                    Count = appointmentsLast7Days.Count(a => a.ThoiGian.Date == date)
+                })
+                .ToList();
+
+            ViewBag.ChartLabels = appointmentData.Select(x => x.DateStr).ToArray();
+            ViewBag.ChartData = appointmentData.Select(x => x.Count).ToArray();
+
+            // 9. 7-day revenue statistics for Chart.js
+            var paidInvoicesLast7Days = await _context.Invoices
+                .Where(i => i.TrangThaiThanhToan == "DaThanhToan" && i.NgayThanhToan.HasValue && i.NgayThanhToan.Value.Date >= sevenDaysAgo)
+                .ToListAsync();
+
+            var revenueData = Enumerable.Range(0, 7)
+                .Select(offset => sevenDaysAgo.AddDays(offset))
+                .Select(date => new {
+                    Total = paidInvoicesLast7Days.Where(i => i.NgayThanhToan.HasValue && i.NgayThanhToan.Value.Date == date).Sum(i => i.TongTien)
+                })
+                .ToList();
+
+            ViewBag.RevenueChartData = revenueData.Select(x => x.Total).ToArray();
+
+            // ==========================================
+            // REPORT DATA INJECTION
+            // ==========================================
+            var currentYear = DateTime.Today.Year;
+            
+            // A. Annual revenue
+            ViewBag.AnnualRevenue = paidInvoices
+                .Where(i => i.NgayThanhToan.HasValue && i.NgayThanhToan.Value.Year == currentYear)
+                .Sum(i => i.TongTien);
+
+            // B. Appointment count & success rate this year
+            var appointmentsThisYear = await _context.Appointments
+                .Where(a => a.ThoiGian.Year == currentYear)
+                .ToListAsync();
+            ViewBag.TotalAppointmentsThisYear = appointmentsThisYear.Count;
+            ViewBag.CompletionRate = appointmentsThisYear.Any() 
+                ? (double)appointmentsThisYear.Count(a => a.TrangThai == "HoanThanh") / appointmentsThisYear.Count * 100 
+                : 0.0;
+
+            // C. Revenue by Department
+            var revenueByDept = await _context.Invoices
+                .Where(i => i.TrangThaiThanhToan == "DaThanhToan" && i.NgayThanhToan.HasValue)
+                .Include(i => i.ExaminationRecord.Appointment.Doctor.Department)
+                .GroupBy(i => i.ExaminationRecord.Appointment.Doctor.Department.TenKhoa)
+                .Select(g => new
+                {
+                    Department = g.Key,
+                    Revenue = g.Sum(i => i.TongTien)
+                })
+                .ToListAsync();
+
+            ViewBag.RevenueByDeptLabels = revenueByDept.Select(r => r.Department).ToArray();
+            ViewBag.RevenueByDeptData = revenueByDept.Select(r => r.Revenue).ToArray();
+
+            // D. Appointments by Department
+            var appointmentsByDept = await _context.Appointments
+                .Include(a => a.Doctor.Department)
+                .GroupBy(a => a.Doctor.Department.TenKhoa)
+                .Select(g => new
+                {
+                    Department = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            ViewBag.AppByDeptLabels = appointmentsByDept.Select(r => r.Department).ToArray();
+            ViewBag.AppByDeptData = appointmentsByDept.Select(r => r.Count).ToArray();
+
+            // E. Monthly Revenue labels & data (T1 to T12)
+            var paidInvoicesThisYear = paidInvoices
+                .Where(i => i.NgayThanhToan.HasValue && i.NgayThanhToan.Value.Year == currentYear)
+                .ToList();
+            var monthlyRevenue = Enumerable.Range(1, 12)
+                .Select(month => new
+                {
+                    Month = $"T{month}",
+                    Total = paidInvoicesThisYear.Where(i => i.NgayThanhToan.Value.Month == month).Sum(i => i.TongTien)
+                })
+                .ToList();
+
+            ViewBag.MonthlyRevenueLabels = monthlyRevenue.Select(m => m.Month).ToArray();
+            ViewBag.MonthlyRevenueData = monthlyRevenue.Select(m => m.Total).ToArray();
+
+            // F. Doctor performance (Top 5 leaderboard)
+            var doctorPerf = await _context.Appointments
+                .Where(a => a.TrangThai == "HoanThanh")
+                .Include(a => a.Doctor.User)
+                .Include(a => a.Doctor.Department)
+                .GroupBy(a => new { a.Doctor.Id, a.Doctor.User.HoTen, a.Doctor.Department.TenKhoa })
+                .Select(g => new DashboardDoctorPerformanceDto
+                {
+                    DoctorName = g.Key.HoTen,
+                    Department = g.Key.TenKhoa,
+                    CompletedCount = g.Count()
+                })
+                .OrderByDescending(x => x.CompletedCount)
+                .Take(5)
+                .ToListAsync();
+
+            ViewBag.DoctorPerformance = doctorPerf;
+
             return View();
         }
+    }
+
+    public class DashboardDoctorPerformanceDto
+    {
+        public string DoctorName { get; set; } = string.Empty;
+        public string Department { get; set; } = string.Empty;
+        public int CompletedCount { get; set; }
     }
 }

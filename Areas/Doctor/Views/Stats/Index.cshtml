@@ -1,0 +1,266 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Thống kê cá nhân";
+    var doctor = ViewBag.DoctorProfile as QuanLyBenhVien.Models.Doctor;
+    var monthlyLabels = ViewBag.MonthlyLabels as List<string> ?? new List<string>();
+    var monthlyCounts = ViewBag.MonthlyCounts as List<int> ?? new List<int>();
+    int maxCount = (int)(ViewBag.MaxMonthlyCount ?? 1);
+    var recentReviews = ViewBag.RecentReviews as List<QuanLyBenhVien.Models.Review> ?? new List<QuanLyBenhVien.Models.Review>();
+    double avgRating = (double)(ViewBag.AvgRating ?? 5.0);
+    int totalReviews = (int)(ViewBag.TotalReviews ?? 0);
+}
+
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-unit-lg">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Thống kê cá nhân</h2>
+        <p class="text-body-md text-on-surface-variant">Tổng quan hiệu suất khám bệnh của <strong>@doctor?.HocVi. @doctor?.User.HoTen</strong> — @doctor?.Department?.TenKhoa</p>
+    </div>
+    <div class="text-caption text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant">
+        Cập nhật: @DateTime.Now.ToString("HH:mm dd/MM/yyyy")
+    </div>
+</div>
+
+<!-- KPI Summary Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-unit-md mb-unit-lg">
+    <!-- Today -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md shadow-sm">
+        <div class="flex items-center justify-between mb-unit-sm">
+            <span class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Hôm nay</span>
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-[18px]">today</span>
+            </div>
+        </div>
+        <div class="flex items-baseline gap-1">
+            <span class="text-[28px] font-bold text-on-surface">@ViewBag.TodayCompleted</span>
+            <span class="text-body-md text-on-surface-variant">đã khám</span>
+        </div>
+        <p class="text-caption text-on-surface-variant mt-1">@ViewBag.TodayPending ca đang chờ</p>
+    </div>
+
+    <!-- This month -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md shadow-sm">
+        <div class="flex items-center justify-between mb-unit-sm">
+            <span class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Tháng này</span>
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-[18px]">calendar_month</span>
+            </div>
+        </div>
+        <div class="flex items-baseline gap-1">
+            <span class="text-[28px] font-bold text-on-surface">@ViewBag.ThisMonthCompleted</span>
+            <span class="text-body-md text-on-surface-variant">ca khám</span>
+        </div>
+        @{
+            var lastMonth = (int)(ViewBag.LastMonthCompleted ?? 0);
+            var thisMonth = (int)(ViewBag.ThisMonthCompleted ?? 0);
+            var diff = thisMonth - lastMonth;
+        }
+        <p class="text-caption mt-1 @(diff >= 0 ? "text-secondary" : "text-error") font-semibold">
+            @(diff >= 0 ? "▲" : "▼") @Math.Abs(diff) so với tháng trước
+        </p>
+    </div>
+
+    <!-- This year -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md shadow-sm">
+        <div class="flex items-center justify-between mb-unit-sm">
+            <span class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Năm @DateTime.Now.Year</span>
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-[18px]">event_note</span>
+            </div>
+        </div>
+        <div class="flex items-baseline gap-1">
+            <span class="text-[28px] font-bold text-on-surface">@ViewBag.ThisYearCompleted</span>
+            <span class="text-body-md text-on-surface-variant">ca khám</span>
+        </div>
+        <p class="text-caption text-on-surface-variant mt-1">Tổng toàn bộ: @ViewBag.TotalCompleted ca</p>
+    </div>
+
+    <!-- Heart-based satisfaction card -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md shadow-sm">
+        <div class="flex items-center justify-between mb-unit-sm">
+            <span class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Chỉ số hài lòng</span>
+            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-[18px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+            </div>
+        </div>
+        <div class="flex items-baseline gap-1">
+            <span class="text-[28px] font-bold text-on-surface">@((avgRating / 5.0 * 100).ToString("F0"))%</span>
+            <span class="text-body-md text-on-surface-variant">tin cậy</span>
+        </div>
+        <p class="text-caption text-on-surface-variant mt-1">@totalReviews ý kiến phản hồi</p>
+    </div>
+</div>
+
+<!-- Charts + Tables row -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg mb-unit-lg">
+
+    <!-- Bar chart: monthly visits (2 cols) -->
+    <div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="p-unit-md border-b border-outline-variant flex items-center justify-between">
+            <h3 class="font-title-lg text-title-lg font-bold text-on-surface">Lượt khám theo tháng</h3>
+            <span class="text-caption text-on-surface-variant">6 tháng gần nhất</span>
+        </div>
+        <div class="p-unit-lg">
+            <!-- Bar chart visual -->
+            <div class="flex items-end gap-unit-sm h-40">
+                @for (int i = 0; i < monthlyLabels.Count; i++)
+                {
+                    var count = monthlyCounts[i];
+                    var heightPct = maxCount > 0 ? (int)Math.Round((double)count / maxCount * 100) : 0;
+                    var isLast = i == monthlyLabels.Count - 1;
+                    <div class="flex-1 flex flex-col items-center gap-1 group relative">
+                        <!-- Tooltip -->
+                        <div class="absolute bottom-full mb-2 bg-inverse-surface text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            @count ca
+                        </div>
+                        <div class="w-full rounded-t transition-all @(isLast ? "bg-primary" : "bg-primary/30") hover:bg-primary/60"
+                             style="height: @(heightPct)%;">
+                        </div>
+                        <span class="text-[10px] text-on-surface-variant font-semibold">@monthlyLabels[i]</span>
+                    </div>
+                }
+            </div>
+            @if (!monthlyLabels.Any())
+            {
+                <p class="text-center text-on-surface-variant italic text-body-md py-8">Chưa có dữ liệu thống kê.</p>
+            }
+        </div>
+    </div>
+
+    <!-- Rating breakdown (1 col) with Hearts -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="p-unit-md border-b border-outline-variant">
+            <h3 class="font-title-lg text-title-lg font-bold text-on-surface">Chỉ số tin cậy y tế</h3>
+        </div>
+        <div class="p-unit-md space-y-unit-sm">
+            <!-- Big rating display -->
+            <div class="flex items-center gap-unit-md mb-unit-md">
+                <span class="text-[48px] font-bold text-primary">@avgRating.ToString("F1")</span>
+                <div>
+                    <div class="flex gap-0.5">
+                        @for (int s = 1; s <= 5; s++)
+                        {
+                            <span class="material-symbols-outlined text-[18px] @(s <= (int)Math.Round(avgRating) ? "text-primary" : "text-outline-variant")"
+                                  style="font-variation-settings: 'FILL' 1;">favorite</span>
+                        }
+                    </div>
+                    <p class="text-caption text-on-surface-variant mt-0.5">@totalReviews lượt ghi nhận</p>
+                </div>
+            </div>
+
+            @{
+                var ratingBars = new[] {
+                    (label: 5, count: (int)(ViewBag.Rating5 ?? 0)),
+                    (label: 4, count: (int)(ViewBag.Rating4 ?? 0)),
+                    (label: 3, count: (int)(ViewBag.Rating3 ?? 0)),
+                    (label: 2, count: (int)(ViewBag.Rating2 ?? 0)),
+                    (label: 1, count: (int)(ViewBag.Rating1 ?? 0)),
+                };
+            }
+            @foreach (var bar in ratingBars)
+            {
+                var pct = totalReviews > 0 ? (int)Math.Round((double)bar.count / totalReviews * 100) : 0;
+                <div class="flex items-center gap-unit-sm text-caption">
+                    <span class="w-10 text-on-surface-variant shrink-0 flex items-center gap-0.5">
+                        @bar.label
+                        <span class="material-symbols-outlined text-[12px] text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                    </span>
+                    <div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
+                        <div class="h-full bg-primary rounded-full" style="width: @pct%;"></div>
+                    </div>
+                    <span class="w-6 text-right text-on-surface font-semibold">@bar.count</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Bottom row: Top patients + Recent reviews -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-unit-lg">
+
+    <!-- Top returning patients -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="p-unit-md border-b border-outline-variant">
+            <h3 class="font-title-lg text-title-lg font-bold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[20px]">groups</span>
+                Top bệnh nhân tái khám
+            </h3>
+        </div>
+        <div class="divide-y divide-outline-variant">
+            @{
+                var topPatients = ViewBag.TopPatients as List<List<object>>;
+                int rank = 1;
+            }
+            @if (topPatients != null && topPatients.Any())
+            {
+                @foreach (var p in topPatients)
+                {
+                    var pName = p[0]?.ToString() ?? "";
+                    var pCount = (int)(p[1] ?? 0);
+                    var pLastVisit = (DateTime)(p[2] ?? DateTime.Now);
+                    <div class="px-unit-md py-3 flex items-center gap-unit-md hover:bg-surface-container-low transition-colors">
+                        <div class="w-7 h-7 rounded-full @(rank == 1 ? "bg-primary text-white" : "bg-surface-container text-on-surface-variant") flex items-center justify-center font-bold text-caption shrink-0">
+                            @rank
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-on-surface text-body-md truncate">@pName</p>
+                            <p class="text-caption text-on-surface-variant">Lần khám cuối: @pLastVisit.ToString("dd/MM/yyyy")</p>
+                        </div>
+                        <span class="text-primary font-bold text-body-md shrink-0">@pCount lần</span>
+                    </div>
+                    rank++;
+                }
+            }
+            else
+            {
+                <div class="px-unit-md py-8 text-center text-on-surface-variant italic text-body-md">
+                    Chưa có dữ liệu bệnh nhân tái khám.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Recent patient reviews with medical hearts -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="p-unit-md border-b border-outline-variant">
+            <h3 class="font-title-lg text-title-lg font-bold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+                Ý kiến phản hồi từ Bệnh nhân
+            </h3>
+        </div>
+        <div class="divide-y divide-outline-variant">
+            @if (recentReviews.Any())
+            {
+                @foreach (var review in recentReviews)
+                {
+                    <div class="px-unit-md py-3 hover:bg-surface-container-low transition-colors">
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="flex gap-0.5">
+                                @for (int s = 1; s <= 5; s++)
+                                {
+                                    <span class="material-symbols-outlined text-[14px] @(s <= review.SoSao ? "text-primary" : "text-outline-variant")"
+                                          style="font-variation-settings: 'FILL' 1;">favorite</span>
+                                }
+                            </div>
+                            <span class="text-caption text-on-surface-variant">@review.NgayTao.ToString("dd/MM/yyyy")</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(review.NhanXet))
+                        {
+                            <p class="text-body-md text-on-surface italic">"@review.NhanXet"</p>
+                        }
+                        else
+                        {
+                            <p class="text-caption text-on-surface-variant italic">Không có nhận xét.</p>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="px-unit-md py-8 text-center text-on-surface-variant italic text-body-md">
+                    Chưa có đánh giá nào.
+                </div>
+            }
+        </div>
+    </div>
+</div>

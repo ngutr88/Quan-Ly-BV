@@ -5,65 +5,83 @@
 <div class="text-on-surface overflow-hidden flex h-screen w-screen">
     <!-- Side Navigation Bar -->
     <aside class="w-[280px] h-screen bg-surface-container-lowest border-r border-outline-variant flex flex-col py-unit-lg shrink-0 z-50">
+        <!-- Logo -->
         <div class="px-unit-lg mb-unit-xl">
-            <div class="flex items-center gap-unit-md">
-                <div class="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center">
-                    <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">local_hospital</span>
+            <a href="/Doctor/Dashboard" class="flex items-center gap-unit-md group">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                    <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">medical_services</span>
                 </div>
                 <div>
-                    <h1 class="font-headline-md text-headline-md font-bold text-secondary">MediFlow</h1>
-                    <p class="text-caption text-on-surface-variant">Bác sĩ Chuyên khoa</p>
+                    <h1 class="font-headline-md text-headline-md font-bold text-primary leading-tight">MediFlow HMS</h1>
+                    <p class="text-caption text-on-surface-variant">Khu vực bác sĩ</p>
                 </div>
-            </div>
+            </a>
         </div>
-        
+
         <nav class="flex-1 px-unit-sm space-y-1 overflow-y-auto custom-scrollbar">
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "text-secondary font-bold bg-secondary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")" 
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
                href="/Doctor/Dashboard">
                 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
                 <span class="font-body-md text-body-md">Bảng điều khiển</span>
             </a>
-            
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Queue" || ViewContext.RouteData.Values["controller"]?.ToString() == "Exam" ? "text-secondary font-bold bg-secondary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")" 
+
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Queue" || ViewContext.RouteData.Values["controller"]?.ToString() == "Exam" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
                href="/Doctor/Queue">
                 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">patient_list</span>
                 <span class="font-body-md text-body-md">Lịch khám hôm nay</span>
             </a>
-            
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "History" ? "text-secondary font-bold bg-secondary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")" 
+
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "History" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
                href="/Doctor/History">
                 <span class="material-symbols-outlined">history_edu</span>
                 <span class="font-body-md text-body-md">Lịch sử điều trị</span>
             </a>
-            
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Chat" ? "text-secondary font-bold bg-secondary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")" 
+
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Stats" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
+               href="/Doctor/Stats">
+                <span class="material-symbols-outlined">analytics</span>
+                <span class="font-body-md text-body-md">Thống kê cá nhân</span>
+            </a>
+
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Chat" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
                href="/Doctor/Chat">
                 <span class="material-symbols-outlined">forum</span>
                 <span class="font-body-md text-body-md">Tin nhắn tư vấn</span>
             </a>
         </nav>
-        
-        <div class="px-unit-sm mt-auto space-y-1">
-            <a class="flex items-center gap-unit-md px-unit-md py-3 text-error hover:bg-error-container/20 rounded-lg transition-colors font-medium" 
+
+        <!-- Bottom actions -->
+        <div class="px-unit-sm mt-auto space-y-1 border-t border-outline-variant pt-unit-sm">
+            <a class="flex items-center gap-unit-md px-unit-md py-3 text-error hover:bg-error-container/20 rounded-lg transition-colors font-medium"
                href="/Auth/Logout">
                 <span class="material-symbols-outlined text-error">logout</span>
                 <span class="font-body-md text-body-md">Đăng xuất</span>
             </a>
         </div>
     </aside>
-    
+
     <!-- Main Content Area -->
     <main class="flex-1 h-screen overflow-y-auto flex flex-col">
-        <!-- Top Navigation Bar -->
+        <!-- Top App Bar -->
         <header class="h-16 w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-unit-lg gap-unit-md shrink-0 z-40">
             <div class="flex items-center gap-unit-lg flex-1">
-                <p class="font-title-lg text-on-surface font-semibold">Khu vực chuyên môn Bác sĩ</p>
             </div>
-            
+
             <div class="flex items-center gap-unit-md">
-                <div class="flex items-center gap-unit-sm hover:bg-surface-container-high p-1 pr-3 rounded-lg transition-all">
-                    <div class="w-8 h-8 rounded-full overflow-hidden bg-secondary-container flex items-center justify-center text-secondary font-bold">
-                        Dr
+                <!-- Current date -->
+                <div class="hidden lg:flex items-center gap-unit-sm text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[18px]">event</span>
+                    <span class="text-body-md" id="doctor-date">--</span>
+                </div>
+                <!-- Notification Bell -->
+                <button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all relative">
+                    <span class="material-symbols-outlined">notifications</span>
+                </button>
+                <div class="h-8 w-px bg-outline-variant"></div>
+                <!-- User Profile -->
+                <div class="flex items-center gap-unit-sm hover:bg-surface-container-high p-1 pr-3 rounded-lg transition-all cursor-pointer">
+                    <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-body-md">
+                        @(User.Identity?.Name?.Length > 0 ? User.Identity.Name[0].ToString().ToUpper() : "B")
                     </div>
                     <div class="hidden lg:block text-left">
                         <p class="font-label-md text-label-md text-on-surface leading-none">@User.Identity?.Name</p>
@@ -72,21 +90,32 @@
                 </div>
             </div>
         </header>
-        
+
         <!-- Page Canvas -->
         <div class="p-unit-lg max-w-[1600px] mx-auto w-full flex-1">
             @RenderBody()
         </div>
-        
+
         <!-- Footer -->
         <footer class="p-unit-lg text-center text-caption text-on-surface-variant border-t border-outline-variant shrink-0 mt-auto">
-            HMS MediFlow Bác Sĩ © 2026 • Trạng thái: <span class="text-secondary font-bold">Hoạt động tốt</span>
+            © 2026 HMS MediFlow • Trạng thái: <span class="text-secondary font-bold">Hoạt động tốt</span>
         </footer>
     </main>
 </div>
 
 @section Scripts {
     @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        // Live date display for doctor topbar
+        (function () {
+            const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            const months = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+                'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+            const now = new Date();
+            const el = document.getElementById('doctor-date');
+            if (el) el.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+        })();
+    </script>
 }
 @section Styles {
     @await RenderSectionAsync("Styles", required: false)

@@ -1,0 +1,185 @@
+@model QuanLyBenhVien.Models.User
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết Nhân sự";
+}
+
+<div class="mb-unit-lg flex flex-col sm:flex-row justify-between sm:items-end gap-unit-md">
+    <div>
+        <a href="/Admin/Staff" class="inline-flex items-center gap-1 text-primary hover:underline font-label-md mb-unit-sm">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            Quay lại danh sách
+        </a>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">@Model.HoTen</h2>
+        <p class="text-body-md text-on-surface-variant">Chi tiết tài khoản và lịch sử công tác của nhân viên.</p>
+    </div>
+    <div class="flex gap-unit-sm">
+        <a href="/Admin/Staff/Edit/@Model.Id" class="flex items-center gap-unit-sm bg-primary text-white px-unit-md py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-semibold">
+            <span class="material-symbols-outlined text-[20px]">edit</span>
+            Chỉnh sửa nhân viên
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-label-md">@TempData["SuccessMessage"]</span>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-error-container/25 text-error border border-error/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-error">error</span>
+        <span class="font-label-md">@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    <!-- Left Column: Basic Account Cards (2 cols width on large screens) -->
+    <div class="lg:col-span-2 space-y-unit-lg">
+        <!-- Profile Info Card -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg">
+            <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-4 flex items-center gap-1">
+                <span class="material-symbols-outlined">badge</span>
+                Thông tin Tài khoản
+            </h3>
+
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <div>
+                    <dt class="text-caption font-semibold text-on-surface-variant uppercase">Họ và tên</dt>
+                    <dd class="text-body-md font-semibold text-on-surface mt-1">@Model.HoTen</dd>
+                </div>
+                <div>
+                    <dt class="text-caption font-semibold text-on-surface-variant uppercase">Vai trò hệ thống</dt>
+                    <dd class="text-body-md font-semibold text-on-surface mt-1 flex items-center gap-1">
+                        @if (Model.VaiTro == "Admin")
+                        {
+                            <span class="material-symbols-outlined text-primary text-[18px]">admin_panel_settings</span>
+                            <span>Quản trị viên (Super Admin)</span>
+                        }
+                        else
+                        {
+                            <span class="material-symbols-outlined text-secondary text-[18px]">stethoscope</span>
+                            <span>Bác sĩ điều trị</span>
+                        }
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-caption font-semibold text-on-surface-variant uppercase">Địa chỉ Email</dt>
+                    <dd class="text-body-md text-on-surface mt-1">@Model.Email</dd>
+                </div>
+                <div>
+                    <dt class="text-caption font-semibold text-on-surface-variant uppercase">Số điện thoại</dt>
+                    <dd class="text-body-md text-on-surface mt-1">@Model.Sdt</dd>
+                </div>
+                <div>
+                    <dt class="text-caption font-semibold text-on-surface-variant uppercase">Trạng thái hoạt động</dt>
+                    <dd class="mt-1">
+                        @if (Model.TrangThai == "Active")
+                        {
+                            <span class="px-2.5 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Đang hoạt động</span>
+                        }
+                        else
+                        {
+                            <span class="px-2.5 py-1 rounded-full bg-error-container text-error text-[11px] font-bold">Đang bị khóa</span>
+                        }
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-caption font-semibold text-on-surface-variant uppercase">Ngày tham gia hệ thống</dt>
+                    <dd class="text-body-md text-on-surface mt-1">@Model.NgayTao.ToString("dd/MM/yyyy HH:mm:ss")</dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Doctor Profile Card (If doctor) -->
+        @if (Model.VaiTro == "Doctor" && Model.DoctorProfile != null)
+        {
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg">
+                <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-4 flex items-center gap-1">
+                    <span class="material-symbols-outlined">medical_information</span>
+                    Thông tin Chuyên môn Bác sĩ
+                </h3>
+
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                    <div>
+                        <dt class="text-caption font-semibold text-on-surface-variant uppercase">Khoa công tác</dt>
+                        <dd class="text-body-md font-semibold text-on-surface mt-1">@Model.DoctorProfile.Department.TenKhoa</dd>
+                    </div>
+                    <div>
+                        <dt class="text-caption font-semibold text-on-surface-variant uppercase">Chuyên khoa sâu</dt>
+                        <dd class="text-body-md text-on-surface mt-1">@Model.DoctorProfile.ChuyenKhoa</dd>
+                    </div>
+                    <div>
+                        <dt class="text-caption font-semibold text-on-surface-variant uppercase">Học vị &amp; Học hàm</dt>
+                        <dd class="text-body-md text-on-surface mt-1">@Model.DoctorProfile.HocVi</dd>
+                    </div>
+                    <div>
+                        <dt class="text-caption font-semibold text-on-surface-variant uppercase">Kinh nghiệm công tác</dt>
+                        <dd class="text-body-md text-on-surface mt-1">@Model.DoctorProfile.SoNamKinhNghiem năm kinh nghiệm</dd>
+                    </div>
+                    <div>
+                        <dt class="text-caption font-semibold text-on-surface-variant uppercase">Chức danh hành chính</dt>
+                        <dd class="text-body-md text-on-surface mt-1 font-semibold">@Model.DoctorProfile.ChucVu</dd>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <dt class="text-caption font-semibold text-on-surface-variant uppercase">Lịch làm việc khám bệnh</dt>
+                        <dd class="text-body-md text-on-surface mt-1 bg-surface border border-outline-variant/60 p-3 rounded-lg font-medium text-primary">
+                            @Model.DoctorProfile.LichLamViec
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        }
+    </div>
+
+    <!-- Right Column: Reset Password & Security Actions -->
+    <div class="space-y-unit-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg">
+            <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-4 flex items-center gap-1">
+                <span class="material-symbols-outlined">vpn_key</span>
+                Đặt lại mật khẩu
+            </h3>
+            
+            <p class="text-body-sm text-on-surface-variant mb-4 leading-relaxed">
+                Là quản trị viên, bạn có quyền đặt lại mật khẩu mới cho nhân sự này nếu họ quên hoặc cần đổi mật khẩu định kỳ.
+            </p>
+
+            <form method="POST" action="/Admin/Staff/ResetPassword/@Model.Id" class="space-y-4">
+                @Html.AntiForgeryToken()
+                <div class="space-y-unit-xs">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Mật khẩu mới</label>
+                    <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                           name="newPassword" placeholder="Nhập mật khẩu mới" required type="password" />
+                </div>
+
+                <button type="submit" class="w-full bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant font-bold text-on-surface text-label-md py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1 shadow-sm">
+                    <span class="material-symbols-outlined text-[18px]">lock_reset</span>
+                    Cập nhật mật khẩu mới
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg">
+            <h3 class="font-title-lg text-title-lg text-error border-b border-outline-variant pb-2 mb-4 flex items-center gap-1">
+                <span class="material-symbols-outlined text-error">gavel</span>
+                Quyền hạn hành động
+            </h3>
+            
+            <p class="text-body-sm text-on-surface-variant mb-4 leading-relaxed">
+                Tạm thời khóa tài khoản nhân viên để đình chỉ công tác hoặc mở khóa hoạt động trở lại.
+            </p>
+
+            <form method="POST" action="/Admin/Staff/ToggleStatus/@Model.Id">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="w-full px-unit-md py-2.5 rounded-lg font-bold text-label-md transition-colors shadow-sm flex items-center justify-center gap-1 @(Model.TrangThai == "Active" ? "bg-error text-white hover:bg-red-700" : "bg-secondary text-white hover:bg-green-700")">
+                    <span class="material-symbols-outlined text-[18px]">@(Model.TrangThai == "Active" ? "lock" : "lock_open")</span>
+                    @(Model.TrangThai == "Active" ? "Khóa tài khoản nhân viên" : "Mở khóa tài khoản nhân viên")
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

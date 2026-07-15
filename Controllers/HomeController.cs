@@ -8,10 +8,41 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
-        return RedirectToAction("Login", "Auth");
+        if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            if (User.IsInRole("Admin")) return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
+            if (User.IsInRole("Doctor")) return RedirectToAction("Index", "Dashboard", new { area = "Doctor" });
+            return RedirectToAction("Index", "Dashboard", new { area = "Patient" });
+        }
+        return View();
     }
 
     public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    public IActionResult About()
+    {
+        return View();
+    }
+
+    public IActionResult Specialities()
+    {
+        return View();
+    }
+
+    public IActionResult Features()
+    {
+        return View();
+    }
+
+    public IActionResult Testimonials()
+    {
+        return View();
+    }
+
+    public IActionResult Contact()
     {
         return View();
     }

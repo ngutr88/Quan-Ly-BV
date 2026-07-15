@@ -1,0 +1,175 @@
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "Tính năng nổi bật | MediFlow HMS";
+}
+
+<!-- Page Banner -->
+<section class="bg-gradient-to-r from-primary-fixed to-primary-fixed-dim text-on-primary-fixed py-16 text-center">
+    <div class="max-w-[1440px] mx-auto px-unit-lg">
+        <h2 class="text-[36px] lg:text-[48px] font-bold tracking-tight">Quy trình y tế số hóa</h2>
+        <p class="text-body-lg opacity-90 max-w-xl mx-auto mt-2">
+            Khám phá các tính năng đột phá của hệ thống MediFlow HMS giúp cách mạng hóa trải nghiệm khám chữa bệnh.
+        </p>
+    </div>
+</section>
+
+<!-- Core Features Breakdown -->
+<section class="py-20 bg-surface">
+    <div class="max-w-[1440px] mx-auto px-unit-lg space-y-20">
+        
+        <!-- Feature 1: Booking -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-unit-xl items-center">
+            <div class="space-y-6">
+                <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[24px]">calendar_today</span>
+                </div>
+                <h3 class="text-[28px] lg:text-[36px] font-bold text-on-surface">1. Đặt lịch khám trực tuyến 24/7</h3>
+                <p class="text-body-lg text-on-surface-variant leading-relaxed">
+                    Hệ thống cho phép bệnh nhân chủ động lựa chọn Chuyên khoa, Bác sĩ khám và khung giờ mong muốn ngay trên thiết bị cá nhân mà không cần đến quầy tiếp đón làm thủ tục xếp số.
+                </p>
+                <ul class="space-y-2 text-body-md font-semibold">
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Trực quan hóa danh sách slot giờ còn trống của từng bác sĩ.</li>
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Đặt lịch khám hộ cho người thân (vợ/chồng, con cái, bố mẹ).</li>
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Tự động nhắc lịch qua hệ thống trước thời gian hẹn.</li>
+                </ul>
+            </div>
+            
+            <!-- Mockup UI Booking Card -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg shadow-xl space-y-4">
+                <div class="flex justify-between items-center border-b border-outline-variant/40 pb-3">
+                    <strong class="text-primary font-bold">Mẫu đặt lịch khám trực tuyến</strong>
+                    <span class="text-caption text-on-surface-variant font-semibold">MediFlow Portal</span>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-caption font-semibold text-on-surface-variant mb-1">Chọn khoa điều trị</label>
+                        <div class="p-2 border rounded-lg bg-surface text-body-md font-semibold text-on-surface">Khoa Nội tổng quát - Tầng 2, Nhà A</div>
+                    </div>
+                    <div>
+                        <label class="block text-caption font-semibold text-on-surface-variant mb-1">Chọn bác sĩ phụ trách</label>
+                        <div class="p-2 border rounded-lg bg-surface text-body-md font-semibold text-on-surface">PGS. TS. Trần Anh Lan</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-caption font-semibold text-on-surface-variant mb-1">Ngày khám</label>
+                            <div class="p-2 border rounded-lg bg-surface text-body-md font-semibold text-on-surface">15/07/2026</div>
+                        </div>
+                        <div>
+                            <label class="block text-caption font-semibold text-on-surface-variant mb-1">Khung giờ</label>
+                            <div class="p-2 border rounded-lg bg-surface text-body-md font-semibold text-on-surface">09:00 - 09:30 (Trống)</div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="w-full bg-primary text-white py-2.5 rounded-lg font-bold hover:bg-primary-container shadow-sm active:scale-95 transition-all text-body-md">
+                    Xác nhận đặt lịch hẹn khám
+                </button>
+            </div>
+        </div>
+
+        <!-- Feature 2: EMR -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-unit-xl items-center lg:flex-row-reverse">
+            <!-- Mockup UI Record Details -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg shadow-xl space-y-4 lg:order-last">
+                <div class="flex justify-between items-center border-b border-outline-variant/40 pb-3">
+                    <strong class="text-primary font-bold">Bệnh án điện tử cá nhân</strong>
+                    <span class="px-2 py-0.5 bg-secondary/15 text-secondary rounded text-[10px] font-extrabold uppercase">Hoàn thành</span>
+                </div>
+                <div class="space-y-2 text-body-md">
+                    <div class="flex justify-between">
+                        <span class="text-on-surface-variant">Ngày khám:</span>
+                        <span class="font-bold">14/07/2026 10:30</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-on-surface-variant">Bác sĩ chẩn đoán:</span>
+                        <span class="font-bold">GS. TS. Nguyễn Hoàng Phong</span>
+                    </div>
+                    <div class="h-px bg-outline-variant/45"></div>
+                    <div>
+                        <span class="text-caption font-bold text-on-surface-variant uppercase tracking-wider block">Triệu chứng lâm sàng</span>
+                        <p class="font-medium bg-surface p-2 rounded border border-outline-variant/30 italic text-caption">"Đau thắt ngực nhẹ khi vận động mạnh, nhịp tim hơi nhanh."</p>
+                    </div>
+                    <div>
+                        <span class="text-caption font-bold text-on-surface-variant uppercase tracking-wider block">Chẩn đoán chuyên khoa</span>
+                        <p class="font-bold bg-primary/5 text-primary p-2 rounded border border-primary/20 text-body-md">Thiếu máu cơ tim cục bộ nhẹ / Rối loạn nhịp tim</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[24px]">history_edu</span>
+                </div>
+                <h3 class="text-[28px] lg:text-[36px] font-bold text-on-surface">2. Sổ sức khỏe &amp; Bệnh án điện tử liên tục</h3>
+                <p class="text-body-lg text-on-surface-variant leading-relaxed">
+                    Dữ liệu y tế của bệnh nhân được tổng hợp xuyên suốt quá trình khám chữa bệnh tại viện. Người bệnh dễ dàng tra cứu lại tiền sử bệnh, chỉ số sinh tồn và đơn thuốc đã kê trực tuyến mà không lo thất lạc sổ giấy.
+                </p>
+                <ul class="space-y-2 text-body-md font-semibold">
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Quản lý tiền sử bệnh lý dị ứng thuốc tuyệt đối an toàn.</li>
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Biểu đồ hóa các chỉ số đo đạc huyết áp, nhịp tim, BMI theo thời gian.</li>
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Truy cập xem kết quả xét nghiệm cận lâm sàng CLS số hóa ngay lập tức.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Feature 3: Payment & Chat -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-unit-xl items-center">
+            <div class="space-y-6">
+                <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-[24px]">payments</span>
+                </div>
+                <h3 class="text-[28px] lg:text-[36px] font-bold text-on-surface">3. Thanh toán online &amp; Hỗ trợ tư vấn từ xa</h3>
+                <p class="text-body-lg text-on-surface-variant leading-relaxed">
+                    Giảm thiểu tối đa việc sử dụng tiền mặt và xếp hàng thanh toán viện phí tại quầy. Bệnh nhân có thể thanh toán trực tiếp đơn thuốc hoặc cận lâm sàng bằng các cổng thanh toán điện tử chuẩn hóa.
+                </p>
+                <ul class="space-y-2 text-body-md font-semibold">
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Thanh toán an toàn qua quét mã VNPay, ví MoMo, ZaloPay.</li>
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Tự động ghi nhận biên lai điện tử và cho phép xuất bản PDF in ấn.</li>
+                    <li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">check_circle</span> Tư vấn trực tiếp qua khung chat tư vấn lâm sàng từ xa của bác sĩ.</li>
+                </ul>
+            </div>
+            
+            <!-- Mockup UI Payment Receipt -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg shadow-xl space-y-4">
+                <div class="flex justify-between items-center border-b border-outline-variant/40 pb-3">
+                    <strong class="text-primary font-bold">Hóa đơn thanh toán trực tuyến</strong>
+                    <span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container rounded text-[10px] font-bold uppercase">Đã thanh toán</span>
+                </div>
+                <div class="space-y-2 text-body-md">
+                    <div class="flex justify-between">
+                        <span class="text-on-surface-variant">Phí khám lâm sàng:</span>
+                        <span class="font-semibold">150.000 VND</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-on-surface-variant">Phí thuốc kê đơn (3 loại):</span>
+                        <span class="font-semibold">320.000 VND</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-on-surface-variant">Phí xét nghiệm máu CLS:</span>
+                        <span class="font-semibold">250.000 VND</span>
+                    </div>
+                    <div class="h-px bg-outline-variant/45 my-2"></div>
+                    <div class="flex justify-between text-body-lg font-extrabold">
+                        <span>Tổng cộng viện phí:</span>
+                        <span class="text-primary">720.000 VND</span>
+                    </div>
+                    <div class="text-[10px] text-on-surface-variant text-right italic pt-1">
+                        Cổng thanh toán: Thẻ ATM nội địa (VNPay)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- Call to action registration -->
+<section class="py-16 bg-white border-t border-outline-variant/20">
+    <div class="max-w-[1440px] mx-auto px-unit-lg text-center space-y-6">
+        <h3 class="text-[28px] font-bold text-on-surface">Bạn đã sẵn sàng để nâng tầm trải nghiệm y tế?</h3>
+        <p class="text-body-lg text-on-surface-variant max-w-xl mx-auto">Tạo tài khoản hồ sơ bệnh nhân MediFlow của riêng bạn chỉ với số điện thoại và BHYT.</p>
+        <a href="/Auth/Register" class="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-white hover:bg-primary-container font-bold rounded-xl shadow-lg shadow-primary/10 transition-all duration-300">
+            Đăng ký tài khoản bệnh nhân ngay
+            <span class="material-symbols-outlined">arrow_forward</span>
+        </a>
+    </div>
+</section>

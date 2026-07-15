@@ -1,0 +1,111 @@
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "Liên hệ | MediFlow HMS";
+}
+
+<!-- Page Banner -->
+<section class="bg-gradient-to-r from-primary-fixed to-primary-fixed-dim text-on-primary-fixed py-16 text-center">
+    <div class="max-w-[1440px] mx-auto px-unit-lg">
+        <h2 class="text-[36px] lg:text-[48px] font-bold tracking-tight">Liên hệ với chúng tôi</h2>
+        <p class="text-body-lg opacity-90 max-w-xl mx-auto mt-2">
+            Gửi thắc mắc y khoa hoặc câu hỏi góp ý trực tiếp đến đội ngũ quản trị của bệnh viện MediFlow.
+        </p>
+    </div>
+</section>
+
+<!-- Main content contact grid -->
+<section class="py-20 bg-surface">
+    <div class="max-w-[1440px] mx-auto px-unit-lg grid grid-cols-1 lg:grid-cols-2 gap-unit-xl">
+        
+        <!-- Left: Contact Details & Map -->
+        <div class="space-y-8">
+            <div class="space-y-6">
+                <h3 class="text-[28px] font-bold text-on-surface">Thông tin liên hệ chính thức</h3>
+                <p class="text-body-md text-on-surface-variant leading-relaxed">
+                    Mọi ý kiến đóng góp hoặc thắc mắc cần giải đáp khẩn cấp về lịch khám, quy trình thanh toán vui lòng liên hệ theo các kênh dưới đây:
+                </p>
+            </div>
+
+            <!-- Contacts Info Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div class="p-unit-md bg-white border border-outline-variant/60 rounded-xl space-y-2 shadow-sm">
+                    <span class="material-symbols-outlined text-primary text-[28px]">location_on</span>
+                    <h4 class="font-bold text-body-lg">Địa chỉ bệnh viện</h4>
+                    <p class="text-caption text-on-surface-variant">Số 120 Đường Ba Tháng Hai, Quận 10, TP. Hồ Chí Minh</p>
+                </div>
+                
+                <div class="p-unit-md bg-white border border-outline-variant/60 rounded-xl space-y-2 shadow-sm">
+                    <span class="material-symbols-outlined text-primary text-[28px]">call</span>
+                    <h4 class="font-bold text-body-lg">Hotline khẩn cấp</h4>
+                    <p class="text-caption text-on-surface-variant">Hotline: 1900 6868<br/>Cấp cứu 24/7: (028) 115</p>
+                </div>
+
+                <div class="p-unit-md bg-white border border-outline-variant/60 rounded-xl space-y-2 shadow-sm">
+                    <span class="material-symbols-outlined text-primary text-[28px]">mail</span>
+                    <h4 class="font-bold text-body-lg">Hộp thư điện tử</h4>
+                    <p class="text-caption text-on-surface-variant">support@mediflow.vn<br/>contact@mediflow.vn</p>
+                </div>
+
+                <div class="p-unit-md bg-white border border-outline-variant/60 rounded-xl space-y-2 shadow-sm">
+                    <span class="material-symbols-outlined text-primary text-[28px]">schedule</span>
+                    <h4 class="font-bold text-body-lg">Khung giờ hoạt động</h4>
+                    <p class="text-caption text-on-surface-variant">Thứ 2 - Chủ Nhật: 07:30 - 21:00<br/>Khám theo yêu cầu: 08:00 - 18:00</p>
+                </div>
+            </div>
+
+            <!-- Google Map Mockup -->
+            <div class="bg-white border border-outline-variant/60 rounded-2xl p-4 shadow-sm space-y-3">
+                <span class="text-caption font-bold text-on-surface-variant uppercase tracking-wider block">Bản đồ vị trí Bệnh viện</span>
+                <div class="h-64 bg-slate-100 rounded-xl flex items-center justify-center border border-outline-variant/40 flex-col space-y-2 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-cover bg-center opacity-30" style="background-image: url('https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=600&q=80');"></div>
+                    <div class="relative z-10 p-4 text-center space-y-2">
+                        <span class="material-symbols-outlined text-primary text-[48px] animate-bounce">location_on</span>
+                        <h5 class="font-bold text-on-surface text-body-md">MediFlow HMS - Chi nhánh Quận 10</h5>
+                        <p class="text-caption text-on-surface-variant max-w-sm mx-auto">Số 120 Đường Ba Tháng Hai, Phường 12, Quận 10, Thành phố Hồ Chí Minh</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Inquiry Form -->
+        <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg shadow-lg space-y-6">
+            <h3 class="text-[24px] font-bold text-on-surface pb-3 border-b border-outline-variant/45">Gửi thắc mắc y tế trực tuyến</h3>
+            <p class="text-body-md text-on-surface-variant leading-relaxed">
+                Đội ngũ chăm sóc khách hàng của chúng tôi sẽ phản hồi lại email hoặc gọi điện tư vấn cho bạn trong vòng 24 giờ làm việc.
+            </p>
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-caption font-semibold text-on-surface-variant mb-1">Họ và tên *</label>
+                        <input type="text" class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Nhập họ tên" required />
+                    </div>
+                    <div>
+                        <label class="block text-caption font-semibold text-on-surface-variant mb-1">Số điện thoại *</label>
+                        <input type="tel" class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Ví dụ: 0987654321" required />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-caption font-semibold text-on-surface-variant mb-1">Địa chỉ Email *</label>
+                    <input type="email" class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="TenCuaBan@gmail.com" required />
+                </div>
+                <div>
+                    <label class="block text-caption font-semibold text-on-surface-variant mb-1">Bộ phận nhận thông tin</label>
+                    <select class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+                        <option value="1">Ban Quản lý & Hỗ trợ kỹ thuật cổng thông tin</option>
+                        <option value="2">Bộ phận Chăm sóc khách hàng & Đặt lịch hẹn</option>
+                        <option value="3">Hỏi đáp Chuyên môn y tế lâm sàng</option>
+                        <option value="4">Đối soát kế toán / Thanh toán viện phí</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-caption font-semibold text-on-surface-variant mb-1">Nội dung thắc mắc hoặc câu hỏi *</label>
+                    <textarea rows="5" class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Vui lòng nhập chi tiết thắc mắc cần hỗ trợ..." required></textarea>
+                </div>
+            </div>
+            <button type="button" class="w-full bg-primary hover:bg-primary-container text-white py-3 rounded-lg font-bold transition-all duration-300 active:scale-95 shadow-sm" onclick="alert('Ý kiến thắc mắc của bạn đã được gửi đi thành công! Chúng tôi sẽ liên hệ lại với bạn sớm nhất.')">
+                Gửi câu hỏi hỗ trợ
+            </button>
+        </div>
+
+    </div>
+</section>

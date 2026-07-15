@@ -76,6 +76,8 @@ namespace QuanLyBenhVien.Models
         [Required]
         [StringLength(50)]
         public string ChucVu { get; set; } = "Bác sĩ"; // Trưởng khoa, Phó trưởng khoa, Bác sĩ
+
+        public virtual ICollection<DoctorWorkSchedule> WorkSchedules { get; set; } = new List<DoctorWorkSchedule>();
     }
 
     [Table("BenhNhan")]
@@ -102,6 +104,9 @@ namespace QuanLyBenhVien.Models
 
         [StringLength(50)]
         public string SoBHYT { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string SoCCCD { get; set; } = string.Empty;
 
         [StringLength(500)]
         public string TienSuBenh { get; set; } = string.Empty;
