@@ -61,12 +61,19 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         // GET: Doctor/History/RecordDetails/5
         public async Task<IActionResult> RecordDetails(int id)
         {
+            var currentUserId = GetCurrentUserId();
+            var doctorId = await _context.Doctors
+                .Where(d => d.NguoiDungId == currentUserId)
+                .Select(d => (int?)d.Id)
+                .FirstOrDefaultAsync();
+            if (!doctorId.HasValue) return Forbid();
+
             // id is AppointmentId (LichKhamId)
             var record = await _context.ExaminationRecords
                 .Include(e => e.Appointment.Patient.User)
                 .Include(e => e.Appointment.Doctor.User)
                 .Include(e => e.Appointment.Doctor.Department)
-                .FirstOrDefaultAsync(e => e.LichKhamId == id);
+                .FirstOrDefaultAsync(e => e.LichKhamId == id && e.Appointment.BacSiId == doctorId.Value);
 
             if (record == null)
             {
@@ -93,7 +100,7 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            return claim != null ? int.Parse(claim.Value) : 2;
+            return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
         }
     }
 }

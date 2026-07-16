@@ -12,6 +12,7 @@ namespace QuanLyBenhVien.Data
         {
             context.Database.Migrate();
             SynchronizeDemoAccountCredentials(context);
+            SeedRoleOverviewDemoData(context);
 
             // Production and long-lived local databases already contain the complete
             // demo dataset. Avoid replaying all legacy patch blocks on every startup;
@@ -2210,6 +2211,220 @@ namespace QuanLyBenhVien.Data
             {
                 context.SaveChanges();
             }
+        }
+
+        private static void SeedRoleOverviewDemoData(ApplicationDbContext context)
+        {
+            const string seedMarker = "SEED_ROLE_OVERVIEW_20260716_V1";
+            if (context.AuditLogs.Any(l => l.HanhDong == seedMarker))
+            {
+                return;
+            }
+
+            var doctor = context.Doctors
+                .Include(d => d.User)
+                .FirstOrDefault(d => d.User.Email == "doctor@hms.com");
+            var demoPatient = context.Patients
+                .Include(p => p.User)
+                .FirstOrDefault(p => p.User.Email == "patient@hms.com");
+            var patients = context.Patients
+                .Include(p => p.User)
+                .OrderBy(p => p.Id)
+                .Take(8)
+                .ToList();
+
+            if (doctor == null || demoPatient == null || patients.Count < 3)
+            {
+                return;
+            }
+
+            var now = DateTime.Now;
+            var today = now.Date;
+            var todaySlots = new[]
+            {
+                (Hour: 8, Minute: 0, Status: "DaXacNhan", Reason: "Tái khám tim mạch và kiểm tra huyết áp."),
+                (Hour: 8, Minute: 30, Status: "ChoXacNhan", Reason: "Đau tức ngực nhẹ khi vận động."),
+                (Hour: 9, Minute: 0, Status: "DangKham", Reason: "Theo dõi rối loạn nhịp tim."),
+                (Hour: 9, Minute: 30, Status: "HoanThanh", Reason: "Khám sức khỏe tim mạch định kỳ."),
+                (Hour: 10, Minute: 0, Status: "DaXacNhan", Reason: "Kiểm tra kết quả điện tâm đồ."),
+                (Hour: 10, Minute: 30, Status: "VangMat", Reason: "Tái khám tăng huyết áp."),
+                (Hour: 14, Minute: 0, Status: "DaHuy", Reason: "Tư vấn chế độ dinh dưỡng tim mạch.")
+            };
+
+            var seededTodayAppointments = new List<Appointment>();
+            for (var index = 0; index < todaySlots.Length; index++)
+            {
+                var slot = todaySlots[index];
+                var appointmentTime = today.AddHours(slot.Hour).AddMinutes(slot.Minute);
+                if (context.Appointments.Any(a => a.BacSiId == doctor.Id && a.ThoiGian == appointmentTime))
+                {
+                    continue;
+                }
+
+                var appointment = new Appointment
+                {
+                    BenhNhanId = patients[index % patients.Count].Id,
+                    BacSiId = doctor.Id,
+                    ThoiGian = appointmentTime,
+                    TrangThai = slot.Status,
+                    LyDoKham = slot.Reason,
+                    NgayTao = today.AddDays(-2).AddHours(9 + index)
+                };
+                context.Appointments.Add(appointment);
+                seededTodayAppointments.Add(appointment);
+            }
+            context.SaveChanges();
+
+            var medicines = context.Medicines.OrderBy(m => m.Id).Take(4).ToList();
+            var historicalSeeds = new[]
+            {
+                (DaysAgo: 1, Patient: demoPatient, Diagnosis: "Tăng huyết áp độ 1 đã kiểm soát", Amount: 420000m, Rating: 5),
+                (DaysAgo: 3, Patient: patients[1], Diagnosis: "Rối loạn lipid máu", Amount: 560000m, Rating: 4),
+                (DaysAgo: 5, Patient: patients[2], Diagnosis: "Ngoại tâm thu lành tính", Amount: 350000m, Rating: 5),
+                (DaysAgo: 12, Patient: demoPatient, Diagnosis: "Theo dõi bệnh mạch vành ổn định", Amount: 680000m, Rating: 4),
+                (DaysAgo: 34, Patient: patients[3], Diagnosis: "Tăng huyết áp nguyên phát", Amount: 470000m, Rating: 5),
+                (DaysAgo: 65, Patient: demoPatient, Diagnosis: "Rối loạn nhịp xoang nhẹ", Amount: 390000m, Rating: 5),
+                (DaysAgo: 96, Patient: patients[4], Diagnosis: "Đau ngực không điển hình", Amount: 610000m, Rating: 4),
+                (DaysAgo: 128, Patient: demoPatient, Diagnosis: "Khám tim mạch định kỳ", Amount: 300000m, Rating: 5)
+            };
+
+            foreach (var seed in historicalSeeds)
+            {
+                var appointmentTime = today.AddDays(-seed.DaysAgo).AddHours(15);
+                if (context.Appointments.Any(a => a.BacSiId == doctor.Id && a.ThoiGian == appointmentTime))
+                {
+                    continue;
+                }
+
+                var appointment = new Appointment
+                {
+                    BenhNhanId = seed.Patient.Id,
+                    BacSiId = doctor.Id,
+                    ThoiGian = appointmentTime,
+                    TrangThai = "HoanThanh",
+                    LyDoKham = "Khám và theo dõi sức khỏe tim mạch.",
+                    NgayTao = appointmentTime.AddDays(-2)
+                };
+                context.Appointments.Add(appointment);
+                context.SaveChanges();
+
+                var examination = new ExaminationRecord
+                {
+                    LichKhamId = appointment.Id,
+                    TrieuChung = "Mệt nhẹ khi gắng sức, không khó thở khi nghỉ.",
+                    HuyetAp = seed.DaysAgo % 2 == 0 ? "128/82" : "135/85",
+                    NhipTim = 72 + seed.DaysAgo % 8,
+                    NhietDo = 36.7m,
+                    CanNang = 68.5m,
+                    ChieuCao = 170m,
+                    BMI = 23.7m,
+                    ChanDoan = seed.Diagnosis,
+                    LoiDan = "Uống thuốc đúng đơn, giảm muối, vận động nhẹ 30 phút mỗi ngày và tái khám đúng hẹn.",
+                    ChiDinhCLS = "Điện tâm đồ, xét nghiệm mỡ máu.",
+                    KetQuaCLS = "Nhịp xoang, chức năng tim ổn định; tiếp tục theo dõi định kỳ.",
+                    NgayKham = appointmentTime
+                };
+                context.ExaminationRecords.Add(examination);
+                context.SaveChanges();
+
+                if (medicines.Count >= 2)
+                {
+                    var prescription = new Prescription { PhieuKhamId = examination.Id, NgayKe = appointmentTime };
+                    context.Prescriptions.Add(prescription);
+                    context.SaveChanges();
+                    context.PrescriptionDetails.AddRange(
+                        new PrescriptionDetail
+                        {
+                            DonThuocId = prescription.Id,
+                            ThuocId = medicines[0].Id,
+                            LieuDung = "Uống 1 viên sau ăn sáng, trong 7 ngày.",
+                            SoLuong = 7
+                        },
+                        new PrescriptionDetail
+                        {
+                            DonThuocId = prescription.Id,
+                            ThuocId = medicines[1].Id,
+                            LieuDung = "Uống 1 viên sau ăn tối, trong 7 ngày.",
+                            SoLuong = 7
+                        });
+                }
+
+                var paid = seed.DaysAgo != 1;
+                var invoice = new Invoice
+                {
+                    PhieuKhamId = examination.Id,
+                    TongTien = seed.Amount,
+                    TrangThaiThanhToan = paid ? "DaThanhToan" : "ChuaThanhToan",
+                    PhuongThuc = paid ? (seed.DaysAgo % 2 == 0 ? "TienMat" : "Online (VNPay)") : "ChuaThanhToan",
+                    MaGiaoDich = paid ? $"DEMO-{appointmentTime:yyyyMMdd}-{appointment.Id}" : null,
+                    NgayTao = appointmentTime,
+                    NgayThanhToan = paid ? appointmentTime.AddMinutes(35) : null
+                };
+                context.Invoices.Add(invoice);
+                context.SaveChanges();
+                context.InvoiceDetails.AddRange(
+                    new InvoiceDetail { HoaDonId = invoice.Id, LoaiPhi = "Phí khám chuyên khoa", SoTien = 180000m },
+                    new InvoiceDetail { HoaDonId = invoice.Id, LoaiPhi = "Cận lâm sàng và thuốc", SoTien = seed.Amount - 180000m });
+
+                context.Reviews.Add(new Review
+                {
+                    BenhNhanId = seed.Patient.Id,
+                    BacSiId = doctor.Id,
+                    SoSao = seed.Rating,
+                    NhanXet = seed.Rating == 5
+                        ? "Bác sĩ tư vấn kỹ, giải thích rõ ràng và hướng dẫn theo dõi cụ thể."
+                        : "Thăm khám cẩn thận, quy trình thuận tiện và thời gian chờ hợp lý.",
+                    NgayTao = appointmentTime.AddHours(2)
+                });
+                context.SaveChanges();
+            }
+
+            var futureTime = today.AddDays(2).AddHours(9);
+            if (!context.Appointments.Any(a => a.BenhNhanId == demoPatient.Id && a.ThoiGian == futureTime))
+            {
+                context.Appointments.Add(new Appointment
+                {
+                    BenhNhanId = demoPatient.Id,
+                    BacSiId = doctor.Id,
+                    ThoiGian = futureTime,
+                    TrangThai = "DaXacNhan",
+                    LyDoKham = "Tái khám theo hẹn và đánh giá đáp ứng điều trị.",
+                    NgayTao = now.AddDays(-1)
+                });
+            }
+
+            context.Notifications.AddRange(
+                new Notification
+                {
+                    NguoiDungId = demoPatient.NguoiDungId,
+                    NoiDung = $"[LichKham] Lịch tái khám đã xác nhận|Lịch khám lúc {futureTime:HH:mm dd/MM/yyyy} với bác sĩ {doctor.User.HoTen} đã được xác nhận.",
+                    NgayGui = now.AddMinutes(-25),
+                    DaDoc = false
+                },
+                new Notification
+                {
+                    NguoiDungId = demoPatient.NguoiDungId,
+                    NoiDung = "[HoSo] Hồ sơ sức khỏe đã cập nhật|Kết quả khám, đơn thuốc và lời dặn mới đã được bổ sung vào hồ sơ của bạn.",
+                    NgayGui = now.AddHours(-3),
+                    DaDoc = false
+                });
+
+            context.AuditLogs.AddRange(
+                new AuditLog
+                {
+                    NguoiDungId = doctor.NguoiDungId,
+                    HanhDong = "Hoàn tất phiên khám",
+                    ChiTiet = "Bác sĩ hoàn tất phiếu khám, kê đơn và chuyển thông tin lập hóa đơn cho bệnh nhân mẫu.",
+                    ThoiGian = now.AddMinutes(-40)
+                },
+                new AuditLog
+                {
+                    NguoiDungId = null,
+                    HanhDong = seedMarker,
+                    ChiTiet = "Khởi tạo bộ dữ liệu minh họa liên kết cho dashboard Admin, Bác sĩ và Bệnh nhân.",
+                    ThoiGian = now
+                });
+            context.SaveChanges();
         }
     }
 }

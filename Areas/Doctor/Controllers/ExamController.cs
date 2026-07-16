@@ -27,10 +27,13 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         [HttpGet]
         public async Task<IActionResult> Session(int id)
         {
+            var doctorId = await GetCurrentDoctorIdAsync();
+            if (!doctorId.HasValue) return Forbid();
+
             var appointment = await _context.Appointments
                 .Include(a => a.Patient.User)
                 .Include(a => a.Doctor.User)
-                .FirstOrDefaultAsync(a => a.Id == id);
+                .FirstOrDefaultAsync(a => a.Id == id && a.BacSiId == doctorId.Value);
 
             if (appointment == null) return NotFound();
 
@@ -60,6 +63,15 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         [HttpPost]
         public async Task<IActionResult> CheckAllergiesAndStock(int patientId, int medicineId, int qty)
         {
+            var doctorId = await GetCurrentDoctorIdAsync();
+            if (!doctorId.HasValue || qty <= 0) return Forbid();
+
+            var assignedPatient = await _context.Appointments.AnyAsync(a =>
+                a.BacSiId == doctorId.Value &&
+                a.BenhNhanId == patientId &&
+                a.TrangThai != "DaHuy");
+            if (!assignedPatient) return Forbid();
+
             var patient = await _context.Patients.FindAsync(patientId);
             var medicine = await _context.Medicines.FindAsync(medicineId);
 
@@ -108,11 +120,17 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CompleteSession(int appointmentId, string trieuChung, string huyetAp, int? nhipTim, decimal? nhietDo, decimal? canNang, decimal? chieuCao, string chanDoan, string loiDan, string chiDinhCls, string ketQuaCls, string presJson)
         {
+            var doctorId = await GetCurrentDoctorIdAsync();
+            if (!doctorId.HasValue) return Forbid();
+
             var appointment = await _context.Appointments
                 .Include(a => a.Patient.User)
-                .FirstOrDefaultAsync(a => a.Id == appointmentId);
+                .FirstOrDefaultAsync(a => a.Id == appointmentId && a.BacSiId == doctorId.Value);
 
             if (appointment == null) return NotFound();
+            if (appointment.TrangThai == "DaHuy" || appointment.TrangThai == "VangMat") return BadRequest("Lịch khám không còn hiệu lực để hoàn tất.");
+            if (await _context.ExaminationRecords.AnyAsync(e => e.LichKhamId == appointmentId))
+                return BadRequest("Phiên khám này đã được hoàn tất trước đó.");
 
             // 1. Create Examination Record
             var exam = new ExaminationRecord
@@ -281,6 +299,16 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             return claim != null ? int.Parse(claim.Value) : 2;
+        }
+
+        private async Task<int?> GetCurrentDoctorIdAsync()
+        {
+            var userId = GetCurrentUserId();
+            if (userId <= 0) return null;
+            return await _context.Doctors
+                .Where(d => d.NguoiDungId == userId)
+                .Select(d => (int?)d.Id)
+                .FirstOrDefaultAsync();
         }
 
         private class TempPrescriptionItem
