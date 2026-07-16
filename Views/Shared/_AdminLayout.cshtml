@@ -150,13 +150,13 @@
     @await RenderSectionAsync("Scripts", required: false)
     <script>
         function openAdminSidebar() {
-            document.getElementById('admin-sidebar')?.classList.remove('-translate-x-full');
+            document.getElementById('admin-sidebar')?.classList.add('mobile-sidebar-open');
             document.getElementById('admin-sidebar-backdrop')?.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
         }
 
         function closeAdminSidebar() {
-            document.getElementById('admin-sidebar')?.classList.add('-translate-x-full');
+            document.getElementById('admin-sidebar')?.classList.remove('mobile-sidebar-open');
             document.getElementById('admin-sidebar-backdrop')?.classList.add('hidden');
             document.body.classList.remove('overflow-hidden');
         }
@@ -168,4 +168,11 @@
 }
 @section Styles {
     @await RenderSectionAsync("Styles", required: false)
+    <style>
+        @@media (max-width: 767px) {
+            #admin-sidebar.mobile-sidebar-open {
+                transform: translateX(0) !important;
+            }
+        }
+    </style>
 }
