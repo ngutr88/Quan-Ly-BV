@@ -3,8 +3,16 @@
 }
 
 <div class="text-on-surface overflow-hidden flex h-screen w-screen">
+    <button id="admin-sidebar-backdrop" type="button" aria-label="Đóng menu"
+            class="hidden md:hidden fixed inset-0 bg-on-background/40 z-40"
+            onclick="closeAdminSidebar()"></button>
+
     <!-- Side Navigation Bar -->
-    <aside class="w-[280px] h-screen bg-surface-container-lowest border-r border-outline-variant flex flex-col py-unit-lg shrink-0 z-50">
+    <aside id="admin-sidebar" class="fixed md:relative inset-y-0 left-0 -translate-x-full md:translate-x-0 transition-transform duration-200 ease-out w-[280px] max-w-[85vw] h-screen bg-surface-container-lowest border-r border-outline-variant flex flex-col py-unit-lg shrink-0 z-50">
+        <button type="button" aria-label="Đóng menu" onclick="closeAdminSidebar()"
+                class="md:hidden absolute top-4 right-3 w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high">
+            <span class="material-symbols-outlined">close</span>
+        </button>
         <!-- Logo -->
         <div class="px-unit-lg mb-unit-xl">
             <a href="/Admin/Dashboard" class="flex items-center gap-unit-md group">
@@ -89,13 +97,17 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 h-screen overflow-y-auto flex flex-col">
+    <main class="flex-1 min-w-0 w-full h-screen overflow-y-auto flex flex-col">
         <!-- Top App Bar -->
-        <header class="h-16 w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-unit-lg gap-unit-md shrink-0 z-40">
+        <header class="h-16 w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-margin-mobile md:px-unit-lg gap-unit-sm md:gap-unit-md shrink-0 z-30">
             <div class="flex items-center gap-unit-lg flex-1">
+                <button type="button" aria-label="Mở menu quản trị" onclick="openAdminSidebar()"
+                        class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg text-primary hover:bg-surface-container-high shrink-0">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
                 @if (ViewData["ShowTopSearch"] as bool? == true)
                 {
-                    <div class="relative w-96">
+                    <div class="relative w-96 hidden md:block">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
                         <input class="w-full pl-10 pr-4 py-2 bg-surface-container rounded-lg border-none focus:ring-2 focus:ring-primary text-body-md"
                                placeholder="Tìm kiếm bệnh nhân, hồ sơ, mã hóa đơn..." type="text" />
@@ -123,7 +135,7 @@
         </header>
 
         <!-- Page Canvas -->
-        <div class="p-unit-lg max-w-[1800px] mx-auto w-full flex-1">
+        <div class="p-margin-mobile md:p-unit-lg max-w-[1800px] mx-auto w-full flex-1 overflow-x-hidden">
             @RenderBody()
         </div>
 
@@ -136,6 +148,23 @@
 
 @section Scripts {
     @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        function openAdminSidebar() {
+            document.getElementById('admin-sidebar')?.classList.remove('-translate-x-full');
+            document.getElementById('admin-sidebar-backdrop')?.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closeAdminSidebar() {
+            document.getElementById('admin-sidebar')?.classList.add('-translate-x-full');
+            document.getElementById('admin-sidebar-backdrop')?.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) closeAdminSidebar();
+        });
+    </script>
 }
 @section Styles {
     @await RenderSectionAsync("Styles", required: false)
