@@ -50,6 +50,10 @@
                     <span class="text-caption text-on-surface-variant block">Nhóm máu / BHYT</span>
                     <strong class="text-on-surface">@Model.Appointment.Patient.NhomMau / @(string.IsNullOrEmpty(Model.Appointment.Patient.SoBHYT) ? "Không có" : Model.Appointment.Patient.SoBHYT)</strong>
                 </div>
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Số CCCD</span>
+                    <strong class="text-on-surface font-mono">@(string.IsNullOrWhiteSpace(Model.Appointment.Patient.SoCCCD) ? "Chưa cung cấp" : Model.Appointment.Patient.SoCCCD)</strong>
+                </div>
             </div>
         </section>
 

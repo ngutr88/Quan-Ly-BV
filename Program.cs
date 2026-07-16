@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using QuanLyBenhVien.Data;
 
@@ -26,6 +27,13 @@ builder.Logging.AddDebug();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+var dataProtectionKeysPath = builder.Configuration["DataProtectionKeysPath"]
+    ?? Path.Combine(Path.GetTempPath(), "QuanLyBenhVien", "data-protection-keys");
+Directory.CreateDirectory(dataProtectionKeysPath);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+    .SetApplicationName("QuanLyBenhVien");
 
 // Render terminates TLS at its proxy and forwards requests to the container over HTTP.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>

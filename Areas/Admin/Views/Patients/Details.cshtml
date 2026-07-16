@@ -59,6 +59,10 @@
                     <span class="font-medium font-mono text-on-surface">@(string.IsNullOrEmpty(Model.SoBHYT) ? "Chưa cung cấp" : Model.SoBHYT)</span>
                 </div>
                 <div>
+                    <span class="text-caption text-on-surface-variant block">Số CCCD</span>
+                    <span class="font-medium font-mono text-on-surface">@(string.IsNullOrWhiteSpace(Model.SoCCCD) ? "Chưa cung cấp" : Model.SoCCCD)</span>
+                </div>
+                <div>
                     <span class="text-caption text-on-surface-variant block">Số điện thoại</span>
                     <span class="font-medium text-on-surface">@Model.User.Sdt</span>
                 </div>

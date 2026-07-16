@@ -9,6 +9,8 @@ services:
         value: Production
       - key: ConnectionStrings__DefaultConnection
         value: Data Source=/app/data/hms.db
+      - key: DataProtectionKeysPath
+        value: /app/data/data-protection-keys
     # SQLite needs persistent storage in production. Uncomment and use a paid plan.
     # disk:
     #   name: hospital-data

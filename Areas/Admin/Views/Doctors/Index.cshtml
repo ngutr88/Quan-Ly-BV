@@ -50,8 +50,8 @@
                     <th class="px-unit-md py-3">Bác sĩ</th>
                     <th class="px-unit-md py-3">Khoa công tác</th>
                     <th class="px-unit-md py-3">Chuyên môn</th>
-                    <th class="px-unit-md py-3">Trạng thái</th>
-                    <th class="px-unit-md py-3 text-right">Thao tác</th>
+                    <th class="px-unit-md py-3 whitespace-nowrap">Trạng thái</th>
+                    <th class="px-unit-md py-3 text-right whitespace-nowrap">Thao tác</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant">
@@ -89,14 +89,14 @@
                                 <div class="font-body-md font-medium">@doc.HocVi</div>
                                 <div class="text-caption text-on-surface-variant">@doc.ChuyenKhoa (@doc.SoNamKinhNghiem năm KN)</div>
                             </td>
-                            <td class="px-unit-md py-4">
+                            <td class="px-unit-md py-4 whitespace-nowrap">
                                 @if (doc.User.TrangThai == "Active")
                                 {
-                                    <span class="px-2.5 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Hoạt động</span>
+                                    <span class="px-2.5 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold whitespace-nowrap">Hoạt động</span>
                                 }
                                 else
                                 {
-                                    <span class="px-2.5 py-1 rounded-full bg-error-container text-error text-[11px] font-bold">Đã khóa</span>
+                                    <span class="px-2.5 py-1 rounded-full bg-error-container text-error text-[11px] font-bold whitespace-nowrap">Đã khóa</span>
                                 }
                             </td>
                             <td class="px-unit-md py-4 text-right">

@@ -13,6 +13,23 @@ namespace QuanLyBenhVien.Data
             context.Database.Migrate();
             SynchronizeDemoAccountCredentials(context);
 
+            // Production and long-lived local databases already contain the complete
+            // demo dataset. Avoid replaying all legacy patch blocks on every startup;
+            // with hundreds of doctors this can delay Render's health check for minutes.
+            var hasCompleteDemoDataset =
+                context.Departments.Count() >= 15 &&
+                context.Doctors.Count() >= 200 &&
+                context.Patients.Count() >= 10 &&
+                context.Medicines.Count() >= 10 &&
+                context.Invoices.Any(i => i.MaGiaoDich == "MM987654321");
+
+            if (hasCompleteDemoDataset)
+            {
+                SeedDefaultDoctorWorkSchedules(context);
+                SeedAdditionalPatientFamilies(context);
+                return;
+            }
+
             // Force re-seeding if the database exists but doesn't have the new seed data
             if (context.Invoices.Any() && !context.Invoices.Any(i => i.MaGiaoDich == "MM987654321"))
             {
@@ -1876,11 +1893,17 @@ namespace QuanLyBenhVien.Data
 
         private static void SynchronizeDemoAccountCredentials(ApplicationDbContext context)
         {
+            // Let the normal first-time seed create the complete relational graph.
+            if (!context.Users.Any())
+            {
+                return;
+            }
+
             var demoAccounts = new[]
             {
-                new { Email = "admin@hms.com", Password = "Admin@123", Role = "Admin" },
-                new { Email = "doctor@hms.com", Password = "Doctor@123", Role = "Doctor" },
-                new { Email = "patient@hms.com", Password = "Patient@123", Role = "Patient" }
+                new { Email = "admin@hms.com", Password = "Admin@123", Role = "Admin", Name = "Quản trị viên Hệ thống", Phone = "0900000001" },
+                new { Email = "doctor@hms.com", Password = "Doctor@123", Role = "Doctor", Name = "Nguyễn Văn Trung", Phone = "0900000002" },
+                new { Email = "patient@hms.com", Password = "Patient@123", Role = "Patient", Name = "Trần Văn A", Phone = "0900000003" }
             };
 
             var changed = false;
@@ -1889,7 +1912,18 @@ namespace QuanLyBenhVien.Data
                 var user = context.Users.FirstOrDefault(u => u.Email == demo.Email);
                 if (user == null)
                 {
-                    continue;
+                    user = new User
+                    {
+                        HoTen = demo.Name,
+                        Email = demo.Email,
+                        Sdt = demo.Phone,
+                        MatKhauHash = HashHelper.HashPassword(demo.Password),
+                        VaiTro = demo.Role,
+                        TrangThai = "Active"
+                    };
+                    context.Users.Add(user);
+                    context.SaveChanges();
+                    changed = true;
                 }
 
                 var expectedHash = HashHelper.HashPassword(demo.Password);
@@ -1898,6 +1932,39 @@ namespace QuanLyBenhVien.Data
                     user.MatKhauHash = expectedHash;
                     user.VaiTro = demo.Role;
                     user.TrangThai = "Active";
+                    changed = true;
+                }
+
+                if (demo.Role == "Doctor" &&
+                    !context.Doctors.Any(d => d.NguoiDungId == user.Id) &&
+                    context.Departments.Any())
+                {
+                    context.Doctors.Add(new Doctor
+                    {
+                        NguoiDungId = user.Id,
+                        KhoaId = context.Departments.OrderBy(d => d.Id).Select(d => d.Id).First(),
+                        ChuyenKhoa = "Nội tổng quát",
+                        HocVi = "BS",
+                        SoNamKinhNghiem = 10,
+                        LichLamViec = "Ca sáng (08:00 - 12:00) & Ca chiều (13:30 - 17:30) Thứ 2 đến Thứ 7",
+                        ChucVu = "Bác sĩ điều trị"
+                    });
+                    changed = true;
+                }
+
+                if (demo.Role == "Patient" && !context.Patients.Any(p => p.NguoiDungId == user.Id))
+                {
+                    context.Patients.Add(new Patient
+                    {
+                        NguoiDungId = user.Id,
+                        NgaySinh = new DateTime(1990, 1, 1),
+                        GioiTinh = "Nam",
+                        NhomMau = "O+",
+                        SoBHYT = "",
+                        SoCCCD = "",
+                        TienSuBenh = "Không",
+                        DiUng = "Không"
+                    });
                     changed = true;
                 }
             }
@@ -1910,17 +1977,88 @@ namespace QuanLyBenhVien.Data
 
         private static void SeedDefaultDoctorWorkSchedules(ApplicationDbContext context)
         {
-            var doctorsWithoutSchedules = context.Doctors
-                .Where(d => !context.DoctorWorkSchedules.Any(s => s.BacSiId == d.Id))
-                .ToList();
-
-            foreach (var doctor in doctorsWithoutSchedules)
+            // First, update all doctors' LichLamViec description to a wide schedule to avoid "no schedule" errors
+            var doctors = context.Doctors.ToList();
+            var docChanged = false;
+            foreach (var doctor in doctors)
             {
-                var schedules = DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec);
-                context.DoctorWorkSchedules.AddRange(schedules);
+                var wideSchedule = "Ca sáng (08:00 - 12:00) & Ca chiều (13:30 - 17:30) Thứ 2 đến Thứ 7";
+                // Let Huỳnh Văn Đạt (ER) keep Trực 24h
+                if (doctor.LichLamViec != null && doctor.LichLamViec.Contains("24h"))
+                {
+                    continue;
+                }
+                
+                if (doctor.LichLamViec != wideSchedule)
+                {
+                    doctor.LichLamViec = wideSchedule;
+                    docChanged = true;
+                }
+            }
+            if (docChanged)
+            {
+                context.SaveChanges();
             }
 
-            if (doctorsWithoutSchedules.Any())
+            // Sync the structured DoctorWorkSchedules with the updated LichLamViec descriptions
+            var changed = false;
+            var schedulesByDoctor = context.DoctorWorkSchedules
+                .ToList()
+                .GroupBy(s => s.BacSiId)
+                .ToDictionary(group => group.Key, group => group.ToList());
+
+            foreach (var doctor in doctors)
+            {
+                var targetSchedules = DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec);
+                var existingSchedules = schedulesByDoctor.GetValueOrDefault(doctor.Id) ?? new List<DoctorWorkSchedule>();
+
+                // Add missing ones
+                foreach (var ts in targetSchedules)
+                {
+                    var existingSchedule = existingSchedules.FirstOrDefault(es =>
+                        es.ThuTrongTuan == ts.ThuTrongTuan &&
+                        es.GioBatDau == ts.GioBatDau &&
+                        es.GioKetThuc == ts.GioKetThuc);
+
+                    if (existingSchedule == null)
+                    {
+                        context.DoctorWorkSchedules.Add(ts);
+                        changed = true;
+                        continue;
+                    }
+
+                    // Existing databases can contain an inactive or expired row with
+                    // the same time range. In that case the booking query still sees
+                    // no working shift, so restore the seeded demo availability.
+                    if (!existingSchedule.DangHoatDong ||
+                        existingSchedule.HieuLucTu != null ||
+                        existingSchedule.HieuLucDen != null ||
+                        existingSchedule.ThoiLuongKhamPhut != ts.ThoiLuongKhamPhut ||
+                        existingSchedule.SoBenhNhanToiDa != ts.SoBenhNhanToiDa)
+                    {
+                        existingSchedule.DangHoatDong = true;
+                        existingSchedule.HieuLucTu = null;
+                        existingSchedule.HieuLucDen = null;
+                        existingSchedule.ThoiLuongKhamPhut = ts.ThoiLuongKhamPhut;
+                        existingSchedule.SoBenhNhanToiDa = ts.SoBenhNhanToiDa;
+                        changed = true;
+                    }
+                }
+
+                // Remove extra ones
+                foreach (var es in existingSchedules)
+                {
+                    if (!targetSchedules.Any(ts => ts.ThuTrongTuan == es.ThuTrongTuan &&
+                                                   ts.GioBatDau == es.GioBatDau &&
+                                                   ts.GioKetThuc == es.GioKetThuc))
+                    {
+                        context.DoctorWorkSchedules.Remove(es);
+                        changed = true;
+                    }
+                }
+            }
+
+            if (changed)
             {
                 context.SaveChanges();
             }

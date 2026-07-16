@@ -16,7 +16,7 @@
         <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Thống kê cá nhân</h2>
         <p class="text-body-md text-on-surface-variant">Tổng quan hiệu suất khám bệnh của <strong>@doctor?.HocVi. @doctor?.User.HoTen</strong> — @doctor?.Department?.TenKhoa</p>
     </div>
-    <div class="text-caption text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg border border-outline-variant">
+    <div class="text-caption text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant">
         Cập nhật: @DateTime.Now.ToString("HH:mm dd/MM/yyyy")
     </div>
 </div>
@@ -75,19 +75,19 @@
         <p class="text-caption text-on-surface-variant mt-1">Tổng toàn bộ: @ViewBag.TotalCompleted ca</p>
     </div>
 
-    <!-- Heart-based satisfaction card -->
+    <!-- Rating -->
     <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md shadow-sm">
         <div class="flex items-center justify-between mb-unit-sm">
-            <span class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Chỉ số hài lòng</span>
-            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <span class="material-symbols-outlined text-primary text-[18px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+            <span class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Đánh giá</span>
+            <div class="w-8 h-8 rounded-lg bg-tertiary-fixed/30 flex items-center justify-center">
+                <span class="material-symbols-outlined text-tertiary text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
             </div>
         </div>
         <div class="flex items-baseline gap-1">
-            <span class="text-[28px] font-bold text-on-surface">@((avgRating / 5.0 * 100).ToString("F0"))%</span>
-            <span class="text-body-md text-on-surface-variant">tin cậy</span>
+            <span class="text-[28px] font-bold text-on-surface">@avgRating.ToString("F1")</span>
+            <span class="text-body-md text-on-surface-variant">/ 5.0</span>
         </div>
-        <p class="text-caption text-on-surface-variant mt-1">@totalReviews ý kiến phản hồi</p>
+        <p class="text-caption text-on-surface-variant mt-1">@totalReviews lượt đánh giá</p>
     </div>
 </div>
 
@@ -127,10 +127,10 @@
         </div>
     </div>
 
-    <!-- Rating breakdown (1 col) with Hearts -->
+    <!-- Rating breakdown (1 col) -->
     <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
         <div class="p-unit-md border-b border-outline-variant">
-            <h3 class="font-title-lg text-title-lg font-bold text-on-surface">Chỉ số tin cậy y tế</h3>
+            <h3 class="font-title-lg text-title-lg font-bold text-on-surface">Phân bổ đánh giá</h3>
         </div>
         <div class="p-unit-md space-y-unit-sm">
             <!-- Big rating display -->
@@ -140,31 +140,28 @@
                     <div class="flex gap-0.5">
                         @for (int s = 1; s <= 5; s++)
                         {
-                            <span class="material-symbols-outlined text-[18px] @(s <= (int)Math.Round(avgRating) ? "text-primary" : "text-outline-variant")"
-                                  style="font-variation-settings: 'FILL' 1;">favorite</span>
+                            <span class="material-symbols-outlined text-[18px] @(s <= (int)Math.Round(avgRating) ? "text-tertiary" : "text-outline-variant")"
+                                  style="font-variation-settings: 'FILL' 1;">star</span>
                         }
                     </div>
-                    <p class="text-caption text-on-surface-variant mt-0.5">@totalReviews lượt ghi nhận</p>
+                    <p class="text-caption text-on-surface-variant mt-0.5">@totalReviews đánh giá</p>
                 </div>
             </div>
 
             @{
                 var ratingBars = new[] {
-                    (label: 5, count: (int)(ViewBag.Rating5 ?? 0)),
-                    (label: 4, count: (int)(ViewBag.Rating4 ?? 0)),
-                    (label: 3, count: (int)(ViewBag.Rating3 ?? 0)),
-                    (label: 2, count: (int)(ViewBag.Rating2 ?? 0)),
-                    (label: 1, count: (int)(ViewBag.Rating1 ?? 0)),
+                    (label: "5 ⭐", count: (int)(ViewBag.Rating5 ?? 0)),
+                    (label: "4 ⭐", count: (int)(ViewBag.Rating4 ?? 0)),
+                    (label: "3 ⭐", count: (int)(ViewBag.Rating3 ?? 0)),
+                    (label: "2 ⭐", count: (int)(ViewBag.Rating2 ?? 0)),
+                    (label: "1 ⭐", count: (int)(ViewBag.Rating1 ?? 0)),
                 };
             }
             @foreach (var bar in ratingBars)
             {
                 var pct = totalReviews > 0 ? (int)Math.Round((double)bar.count / totalReviews * 100) : 0;
                 <div class="flex items-center gap-unit-sm text-caption">
-                    <span class="w-10 text-on-surface-variant shrink-0 flex items-center gap-0.5">
-                        @bar.label
-                        <span class="material-symbols-outlined text-[12px] text-primary" style="font-variation-settings: 'FILL' 1;">favorite</span>
-                    </span>
+                    <span class="w-8 text-on-surface-variant shrink-0">@bar.label</span>
                     <div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
                         <div class="h-full bg-primary rounded-full" style="width: @pct%;"></div>
                     </div>
@@ -220,12 +217,12 @@
         </div>
     </div>
 
-    <!-- Recent patient reviews with medical hearts -->
+    <!-- Recent reviews -->
     <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
         <div class="p-unit-md border-b border-outline-variant">
             <h3 class="font-title-lg text-title-lg font-bold text-on-surface flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
-                Ý kiến phản hồi từ Bệnh nhân
+                <span class="material-symbols-outlined text-tertiary text-[20px]" style="font-variation-settings: 'FILL' 1;">reviews</span>
+                Đánh giá gần đây
             </h3>
         </div>
         <div class="divide-y divide-outline-variant">
@@ -238,8 +235,8 @@
                             <div class="flex gap-0.5">
                                 @for (int s = 1; s <= 5; s++)
                                 {
-                                    <span class="material-symbols-outlined text-[14px] @(s <= review.SoSao ? "text-primary" : "text-outline-variant")"
-                                          style="font-variation-settings: 'FILL' 1;">favorite</span>
+                                    <span class="material-symbols-outlined text-[14px] @(s <= review.SoSao ? "text-tertiary" : "text-outline-variant")"
+                                          style="font-variation-settings: 'FILL' 1;">star</span>
                                 }
                             </div>
                             <span class="text-caption text-on-surface-variant">@review.NgayTao.ToString("dd/MM/yyyy")</span>

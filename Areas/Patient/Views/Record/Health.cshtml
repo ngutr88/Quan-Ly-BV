@@ -38,6 +38,10 @@
                 <span>@Model.NgaySinh.ToString("dd/MM/yyyy") (@(DateTime.Today.Year - Model.NgaySinh.Year) tuổi)</span>
             </div>
             <div>
+                <span class="text-caption text-on-surface-variant block">Số CCCD</span>
+                <span class="font-medium font-mono">@(string.IsNullOrWhiteSpace(Model.SoCCCD) ? "Chưa cung cấp" : Model.SoCCCD)</span>
+            </div>
+            <div>
                 <span class="text-caption text-on-surface-variant block">Tiền sử bệnh án</span>
                 <span class="italic text-on-surface-variant">@Model.TienSuBenh</span>
             </div>

@@ -5,34 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.2] - 2026-07-16
-
-### Added
-- Thêm cơ chế chọn vai trò đăng nhập lưới 3 thẻ vai trò (Role Cards Grid) trực quan tại trang Đăng nhập (`Auth/Login`).
-- Thêm biểu tượng trái tim y tế đỏ/xanh biểu thị sự hài lòng và tin cậy y khoa tại trang Thống kê Bác sĩ (`Doctor/Stats`).
-- Thêm các biểu đồ báo cáo và thống kê toàn viện trực tiếp trên Dashboard Admin (`Admin/Dashboard`).
-
-### Changed
-- Khôi phục cơ chế tìm kiếm thư mục `wwwroot` tùy biến trong `Program.cs`.
-- Tách trang giới thiệu bệnh viện thành các trang con và định tuyến các route công cộng đầy đủ trong `HomeController`.
-- Đồng bộ hóa mặc định Material Symbols Outlined sang màu xanh dương (#003f87) toàn diện hệ thống.
-- Gộp module Báo cáo & Thống kê trực tiếp vào Dashboard của Admin và loại bỏ liên kết sidebar dư thừa.
-
-### Fixed
-- Khắc phục lỗi treo trang đặt lịch Patient/Book bằng cách sắp xếp slot khám in-memory chống lỗi SQLite TimeSpan translation.
-- Sửa lỗi hiển thị thừa tiền tố "BS. BS." trước tên Bác sĩ và dọn dẹp cơ sở dữ liệu.
-- Dọn dẹp mã duplicate ở cuối trang chủ `Views/Home/Index.cshtml`.
-- Tăng z-index của toast container lên `z-[9999]` tránh bị che khuất khi đăng xuất.
-
 ## [1.2.1] - 2026-07-15
 
 ### Added
-- Thêm trang Landing Page giới thiệu tổng quan Bệnh viện (`Home/Index`) tích hợp đầy đủ thông tin giới thiệu, các chuyên khoa nổi bật, thống kê, quy trình y tế số hóa, ý kiến bệnh nhân, giờ làm việc và thông tin liên hệ.
-- Tích hợp cụm nút Đăng nhập / Đăng ký khám trực tuyến ở góc trên bên phải thanh điều hướng của Landing Page.
-- Bổ sung ảnh minh họa vector đại diện cho bệnh viện số tại `/images/hospital_hero_banner.png`.
+- Tách biệt trang Landing Page thành hệ thống 5 trang giới thiệu con độc lập:
+  - **Giới thiệu** (`Views/Home/About.cshtml`): Chi tiết lịch sử, tầm nhìn và đội ngũ ban giám đốc.
+  - **Chuyên khoa** (`Views/Home/Specialities.cshtml`): Grid card 8 khoa lâm sàng kèm mức giá khám niêm yết và thời gian làm việc.
+  - **Tính năng** (`Views/Home/Features.cshtml`): Quy trình đặt lịch, bệnh án điện tử cá nhân và cổng thanh toán điện tử.
+  - **Đánh giá** (`Views/Home/Testimonials.cshtml`): Nhận xét bệnh nhân thực tế và biểu mẫu đóng góp phản hồi.
+  - **Liên hệ** (`Views/Home/Contact.cshtml`): Hotline khẩn cấp, bản đồ vệ tinh mô phỏng và form gửi thắc mắc.
+- Thiết kế tệp Layout dùng chung công cộng mới (`Views/Shared/_HomeLayout.cshtml`) tích hợp Header điều hướng động nhận diện trang hoạt động và Footer thông tin đồng bộ.
+- Bổ sung danh mục điều hướng "Trang chủ" (Home) trực quan trên cả Header và Footer của Layout dùng chung.
+- Tích hợp bộ biểu đồ tương tác (Chart.js) cho trang Admin Dashboard biểu diễn xu hướng lượt khám & doanh thu 7 ngày qua (Mixed chart) và phân bổ trạng thái lịch hẹn trong ngày (Doughnut chart).
+- Tích hợp lưới chọn vai trò đăng nhập (Bệnh nhân, Bác sĩ, Quản trị viên) dạng Thẻ hiển thị biểu tượng (Role Cards Grid) trên trang Đăng nhập và thực hiện kiểm tra chéo vai trò tài khoản để gia tăng tính bảo mật.
+- Cải tiến giao diện Trang chủ (`/Home`): Thay thế ảnh minh họa hoạt họa cũ bằng ảnh chụp thực tế chất lượng cao (nữ bác sĩ và tòa nhà bệnh viện kiến trúc kính hiện đại) kết hợp tích hợp 2 thẻ kính mờ lơ lửng (Floating Badges) giúp trang chủ sinh động, chuyên nghiệp và bớt cảm giác nhân tạo.
 
 ### Changed
-- Cấu hình bổ sung middleware `app.UseStaticFiles()` trong `Program.cs` để hỗ trợ hiển thị hình ảnh và các tệp tĩnh từ thư mục `wwwroot`.
+- Tinh giản bố cục trang Admin Dashboard: Loại bỏ khu vực hiển thị nhật ký hoạt động hệ thống trùng lặp (do đã có trang quản lý Nhật ký hệ thống riêng biệt), cân đối lại khoảng trống hiển thị cho biểu đồ trực quan và danh sách lịch khám.
+- Cập nhật phương thức đăng xuất (`AuthController.Logout`) tự động chuyển hướng tất cả các tài khoản (Admin, Bác sĩ, Bệnh nhân) về lại Trang chủ công cộng thay vì trang đăng nhập.
+- Rút gọn trang chủ `Index.cshtml` sử dụng `_HomeLayout` mới, giữ lại các phần Hero Section, quick stats và lời gọi dịch vụ.
+- Cấu hình bổ sung middleware `app.UseStaticFiles()` và kích hoạt `UseStaticWebAssets()` kèm cơ chế tự động duyệt ngược cây thư mục cha trong `Program.cs` để tìm kiếm và phục vụ tệp tĩnh trong thư mục `wwwroot` gốc, sửa đổi đường dẫn ảnh sang dạng động Razor `~/` giúp hiển thị chính xác ảnh banner trong mọi môi trường chạy cục bộ (Visual Studio, IIS Express, chạy trực tiếp file `.exe` từ thư mục output `bin/`).
 - Cải tiến `HomeController.Index` tự động chuyển hướng người dùng đã đăng nhập về Dashboard của họ, và hiển thị trang Landing Page đối với khách vãng lai.
 - Đồng nhất hoàn toàn màu sắc chủ đạo của phân hệ Bác sĩ (Doctor views & layout) sang màu xanh dương (`primary`) giống Admin và Bệnh nhân.
 - Cập nhật active state của Sidebar nav, focus ring ô tìm kiếm, và avatar của bác sĩ trong `_DoctorLayout` sang màu xanh dương.
@@ -70,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cải thiện thẩm mỹ Sổ sức khỏe điện tử bằng cách thêm trạng thái Empty State trực quan khi chưa có dữ liệu đo đạc chỉ số sinh tồn.
 - Khắc phục lỗi khởi tạo cơ sở dữ liệu trên Visual Studio: Thay thế `EnsureCreated()` bằng `Migrate()` trong `DbSeeder` để áp dụng đầy đủ migrations (bao gồm bảng `NguoiThan`) khi chạy ứng dụng trên bất kỳ môi trường nào.
 
+
 ## [1.0.0] - 2026-06-21
 
 ### Added
@@ -88,4 +81,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Khắc phục lỗi lồng thẻ `<body>` không hợp lệ ở trang đăng nhập, căn giữa card đăng nhập và khung demo bằng Flexbox.
 
 ### Verified
-- Kiểm thử thành công toàn bộ giao diện và chức năng đăng nhập, phân quyền, hiển thị Dashboard của cả 3 vai trò Admin, Bác sĩ và Bệnh nhân thông qua Browser Automation Agent.\n
+- Kiểm thử thành công toàn bộ giao diện và chức năng đăng nhập, phân quyền, hiển thị Dashboard của cả 3 vai trò Admin, Bác sĩ và Bệnh nhân thông qua Browser Automation Agent.
