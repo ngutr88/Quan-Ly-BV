@@ -232,15 +232,18 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
         private async Task<IReadOnlyList<string>> GetAvailableSlotsAsync(int doctorId, DateTime date)
         {
             var dayOfWeek = (int)date.DayOfWeek;
-            var schedules = await _context.DoctorWorkSchedules
+            // SQLite cannot reliably translate ordering by TimeSpan. Materialize the
+            // filtered rows first, then sort in memory to keep this endpoint responsive.
+            var schedules = (await _context.DoctorWorkSchedules
                 .AsNoTracking()
                 .Where(s => s.BacSiId == doctorId &&
                             s.ThuTrongTuan == dayOfWeek &&
                             s.DangHoatDong &&
                             (s.HieuLucTu == null || s.HieuLucTu.Value.Date <= date.Date) &&
                             (s.HieuLucDen == null || s.HieuLucDen.Value.Date >= date.Date))
+                .ToListAsync())
                 .OrderBy(s => s.GioBatDau)
-                .ToListAsync();
+                .ToList();
 
             if (!schedules.Any())
             {

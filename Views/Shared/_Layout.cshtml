@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html class="light" lang="vi">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] | HMS - Quản lý Bệnh viện</title>
-    
+
     <!-- Tailwind CSS CDN & Plugins -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    
+
     <!-- Google Fonts & Material Symbols -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
 
     <!-- Tailwind Custom Theme Configuration -->
     <script id="tailwind-config">
@@ -89,41 +92,61 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            color: #003f87;
         }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid #e2e8f0;
         }
+
         .input-focus:focus {
             border-color: #0056B3;
             box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.1);
             outline: none;
         }
+
         .toast-animate {
             animation: slideIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
         }
+
         @@keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
+
 <body class="bg-surface min-h-screen">
     <!-- Notifications Container (Toasts) -->
     <div class="fixed top-unit-lg right-unit-lg z-[9999] flex flex-col gap-unit-sm max-w-sm" id="toast-container">
         <!-- Toast Notification Element -->
-        <div class="hidden toast-animate bg-white border-l-4 border-error p-unit-md shadow-lg rounded flex items-start gap-unit-sm" id="global-toast">
+        <div class="hidden toast-animate bg-white border-l-4 border-error p-unit-md shadow-lg rounded flex items-start gap-unit-sm"
+            id="global-toast">
             <span class="material-symbols-outlined text-error" id="global-toast-icon">error</span>
             <div class="flex-grow">
-                <p class="font-title-lg text-body-md text-on-surface font-semibold" id="global-toast-title">Thông báo</p>
+                <p class="font-title-lg text-body-md text-on-surface font-semibold" id="global-toast-title">Thông báo
+                </p>
                 <p class="text-caption text-on-surface-variant" id="global-toast-message">Nội dung thông báo.</p>
             </div>
-            <button class="text-outline hover:text-on-surface" onclick="hideGlobalToast()"><span class="material-symbols-outlined">close</span></button>
+            <button class="text-outline hover:text-on-surface" onclick="hideGlobalToast()"><span
+                    class="material-symbols-outlined">close</span></button>
         </div>
     </div>
 
@@ -171,21 +194,22 @@
         @if (TempData["SuccessMessage"] != null)
         {
             <text>
-                window.addEventListener('DOMContentLoaded', () => {
-                    showGlobalToast('Thành công', '@Html.Raw(TempData["SuccessMessage"])', 'success');
-                });
+                    window.addEventListener('DOMContentLoaded', () => {
+                        showGlobalToast('Thành công', '@Html.Raw(TempData["SuccessMessage"])', 'success');
+                    });
             </text>
         }
         @if (TempData["ErrorMessage"] != null)
         {
             <text>
-                window.addEventListener('DOMContentLoaded', () => {
-                    showGlobalToast('Lỗi', '@Html.Raw(TempData["ErrorMessage"])', 'error');
-                });
+                    window.addEventListener('DOMContentLoaded', () => {
+                        showGlobalToast('Lỗi', '@Html.Raw(TempData["ErrorMessage"])', 'error');
+                    });
             </text>
         }
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

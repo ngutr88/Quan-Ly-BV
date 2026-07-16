@@ -6,7 +6,7 @@
 <div class="bg-surface text-on-surface min-h-screen flex flex-col font-sans">
     <!-- Header Navigation -->
     <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-outline-variant/60">
-        <div class="max-w-[1440px] mx-auto px-unit-lg h-20 flex items-center justify-between">
+        <div class="max-w-[1440px] mx-auto px-4 md:px-unit-lg h-20 flex items-center justify-between gap-3">
             <!-- Logo -->
             <a href="/" class="flex items-center gap-unit-md group">
                 <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
@@ -29,15 +29,32 @@
             </nav>
 
             <!-- Authentication Actions -->
-            <div class="flex items-center gap-unit-md">
+            <div class="flex items-center gap-2 md:gap-unit-md">
+                <button type="button" id="home-menu-button" aria-expanded="false" aria-controls="home-mobile-menu"
+                    class="lg:hidden w-10 h-10 rounded-xl border border-outline-variant text-primary flex items-center justify-center hover:bg-primary/5 transition-colors"
+                    onclick="toggleHomeMenu()">
+                    <span class="material-symbols-outlined" id="home-menu-icon">menu</span>
+                    <span class="sr-only">Mở danh mục trang chủ</span>
+                </button>
                 <a href="/Auth/Login" class="px-unit-lg py-2.5 rounded-xl border border-primary/30 text-primary hover:bg-primary/5 transition-all duration-300 font-semibold text-body-md active:scale-95">
                     Đăng nhập
                 </a>
-                <a href="/Auth/Register" class="px-unit-lg py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white shadow-md shadow-primary/10 transition-all duration-300 font-semibold text-body-md active:scale-95">
+                <a href="/Auth/Register" class="hidden sm:inline-flex px-unit-lg py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white shadow-md shadow-primary/10 transition-all duration-300 font-semibold text-body-md active:scale-95">
                     Đăng ký tài khoản bệnh nhân
                 </a>
             </div>
         </div>
+        <nav id="home-mobile-menu" class="hidden lg:hidden border-t border-outline-variant/60 bg-white px-4 py-4 shadow-lg">
+            <div class="grid grid-cols-2 gap-2 text-sm font-semibold">
+                <a href="/" class="rounded-xl px-3 py-3 @(action == "Index" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Trang chủ</a>
+                <a href="/Home/About" class="rounded-xl px-3 py-3 @(action == "About" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Giới thiệu</a>
+                <a href="/Home/Specialities" class="rounded-xl px-3 py-3 @(action == "Specialities" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Chuyên khoa</a>
+                <a href="/Home/Features" class="rounded-xl px-3 py-3 @(action == "Features" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Tính năng</a>
+                <a href="/Home/Testimonials" class="rounded-xl px-3 py-3 @(action == "Testimonials" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Ý kiến khách hàng</a>
+                <a href="/Home/Contact" class="rounded-xl px-3 py-3 @(action == "Contact" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Liên hệ</a>
+                <a href="/Auth/Register" class="col-span-2 sm:hidden rounded-xl px-3 py-3 bg-primary text-white text-center">Đăng ký tài khoản bệnh nhân</a>
+            </div>
+        </nav>
     </header>
 
     <!-- Main Content -->
@@ -118,6 +135,17 @@
 
 @section Scripts {
     @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        function toggleHomeMenu() {
+            const menu = document.getElementById('home-mobile-menu');
+            const button = document.getElementById('home-menu-button');
+            const icon = document.getElementById('home-menu-icon');
+            const isOpening = menu.classList.contains('hidden');
+            menu.classList.toggle('hidden');
+            button.setAttribute('aria-expanded', isOpening ? 'true' : 'false');
+            icon.textContent = isOpening ? 'close' : 'menu';
+        }
+    </script>
 }
 @section Styles {
     @await RenderSectionAsync("Styles", required: false)

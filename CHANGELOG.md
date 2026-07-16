@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.2] - 2026-07-16
+
+### Added
+- Thêm cơ chế chọn vai trò đăng nhập lưới 3 thẻ vai trò (Role Cards Grid) trực quan tại trang Đăng nhập (`Auth/Login`).
+- Thêm biểu tượng trái tim y tế đỏ/xanh biểu thị sự hài lòng và tin cậy y khoa tại trang Thống kê Bác sĩ (`Doctor/Stats`).
+- Thêm các biểu đồ báo cáo và thống kê toàn viện trực tiếp trên Dashboard Admin (`Admin/Dashboard`).
+
+### Changed
+- Khôi phục cơ chế tìm kiếm thư mục `wwwroot` tùy biến trong `Program.cs`.
+- Tách trang giới thiệu bệnh viện thành các trang con và định tuyến các route công cộng đầy đủ trong `HomeController`.
+- Đồng bộ hóa mặc định Material Symbols Outlined sang màu xanh dương (#003f87) toàn diện hệ thống.
+- Gộp module Báo cáo & Thống kê trực tiếp vào Dashboard của Admin và loại bỏ liên kết sidebar dư thừa.
+
+### Fixed
+- Khắc phục lỗi treo trang đặt lịch Patient/Book bằng cách sắp xếp slot khám in-memory chống lỗi SQLite TimeSpan translation.
+- Sửa lỗi hiển thị thừa tiền tố "BS. BS." trước tên Bác sĩ và dọn dẹp cơ sở dữ liệu.
+- Dọn dẹp mã duplicate ở cuối trang chủ `Views/Home/Index.cshtml`.
+- Tăng z-index của toast container lên `z-[9999]` tránh bị che khuất khi đăng xuất.
+
 ## [1.2.1] - 2026-07-15
 
 ### Added
@@ -51,7 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cải thiện thẩm mỹ Sổ sức khỏe điện tử bằng cách thêm trạng thái Empty State trực quan khi chưa có dữ liệu đo đạc chỉ số sinh tồn.
 - Khắc phục lỗi khởi tạo cơ sở dữ liệu trên Visual Studio: Thay thế `EnsureCreated()` bằng `Migrate()` trong `DbSeeder` để áp dụng đầy đủ migrations (bao gồm bảng `NguoiThan`) khi chạy ứng dụng trên bất kỳ môi trường nào.
 
-
 ## [1.0.0] - 2026-06-21
 
 ### Added
@@ -70,15 +88,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Khắc phục lỗi lồng thẻ `<body>` không hợp lệ ở trang đăng nhập, căn giữa card đăng nhập và khung demo bằng Flexbox.
 
 ### Verified
-- Kiểm thử thành công toàn bộ giao diện và chức năng đăng nhập, phân quyền, hiển thị Dashboard của cả 3 vai trò Admin, Bác sĩ và Bệnh nhân thông qua Browser Automation Agent.
-- Xây dựng giao diện dùng chung Layout với Tailwind CSS và Material Icons.
-- Thiết kế Dashboard trực quan cho từng đối tượng (Admin, Doctor, Patient).
-
-### Fixed
-- Đổi port mặc định sang `5233` (HTTP) và `7233` (HTTPS) để tránh xung đột cổng khi chạy cục bộ.
-- Sửa lỗi truy vấn LINQ `string.Split` không tương thích với EF Core SQLite trong `AuthController.Login` bằng hàm `StartsWith`.
-- Sửa lỗi điều hướng phân quyền Bác sĩ sang đúng `DashboardController` của Doctor Area thay vì `QueueController` lỗi.
-- Khắc phục lỗi lồng thẻ `<body>` không hợp lệ ở trang đăng nhập, căn giữa card đăng nhập và khung demo bằng Flexbox.
-
-### Verified
-- Kiểm thử thành công toàn bộ giao diện và chức năng đăng nhập, phân quyền, hiển thị Dashboard của cả 3 vai trò Admin, Bác sĩ và Bệnh nhân thông qua Browser Automation Agent.
+- Kiểm thử thành công toàn bộ giao diện và chức năng đăng nhập, phân quyền, hiển thị Dashboard của cả 3 vai trò Admin, Bác sĩ và Bệnh nhân thông qua Browser Automation Agent.\n

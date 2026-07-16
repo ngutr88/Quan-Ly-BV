@@ -1,524 +1,79 @@
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "MediFlow HMS - Hệ thống Quản lý Bệnh viện";
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "MediFlow HMS - Chăm sóc sức khỏe toàn diện";
 }
 
-<!-- Custom style for smooth scroll -->
 @section Styles {
     <style>
-        html {
-            scroll-behavior: smooth;
-        }
-        .hero-gradient {
-            background: radial-gradient(circle at 80% 20%, rgba(215, 226, 255, 0.4) 0%, rgba(248, 249, 255, 1) 70%);
+        .home-hero {
+            background:
+                radial-gradient(circle at 82% 18%, rgba(215, 226, 255, .7), transparent 34%),
+                linear-gradient(135deg, #f8f9ff 0%, #ffffff 56%, #eef4ff 100%);
         }
     </style>
 }
 
-<div class="bg-surface text-on-surface min-h-screen flex flex-col font-sans">
-    <!-- Header Navigation -->
-    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-outline-variant/60">
-        <div class="max-w-[1440px] mx-auto px-unit-lg h-20 flex items-center justify-between">
-            <!-- Logo -->
-            <a href="/" class="flex items-center gap-unit-md group">
-                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
-                    <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">medical_services</span>
-                </div>
-                <div>
-                    <h1 class="font-headline-md text-headline-md font-bold text-primary leading-tight">MediFlow HMS</h1>
-                    <p class="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Chăm sóc sức khỏe toàn diện</p>
-                </div>
-            </a>
-
-            <!-- Mid Navigation Links -->
-            <nav class="hidden lg:flex items-center gap-8 text-body-md font-medium text-on-surface-variant">
-                <a href="#about" class="hover:text-primary transition-colors">Giới thiệu</a>
-                <a href="#specialities" class="hover:text-primary transition-colors">Chuyên khoa</a>
-                <a href="#features" class="hover:text-primary transition-colors">Tính năng nổi bật</a>
-                <a href="#testimonials" class="hover:text-primary transition-colors">Ý kiến khách hàng</a>
-                <a href="#contact" class="hover:text-primary transition-colors">Liên hệ</a>
-            </nav>
-
-            <!-- Authentication Actions -->
-            <div class="flex items-center gap-unit-md">
-                <a href="/Auth/Login" class="px-unit-lg py-2.5 rounded-xl border border-primary/30 text-primary hover:bg-primary/5 transition-all duration-300 font-semibold text-body-md active:scale-95">
-                    Đăng nhập
+<section class="home-hero overflow-hidden border-b border-outline-variant/40">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-unit-lg py-14 lg:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="space-y-7">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-caption uppercase tracking-wider">
+                <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                Cổng y tế số hiện đại
+            </div>
+            <h2 class="text-[40px] lg:text-[58px] font-black text-on-surface leading-[1.08] tracking-tight">
+                Chăm sóc sức khỏe
+                <span class="block text-primary">thông minh &amp; toàn diện</span>
+            </h2>
+            <p class="text-body-lg text-on-surface-variant leading-relaxed max-w-2xl">
+                Đặt lịch khám nhanh chóng, theo dõi hồ sơ sức khỏe an toàn và kết nối với đội ngũ bác sĩ chuyên khoa tại MediFlow.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="/Auth/Register" class="px-7 py-3.5 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/15 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+                    Đăng ký khám trực tuyến
+                    <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
                 </a>
-                <a href="/Auth/Register" class="px-unit-lg py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white shadow-md shadow-primary/10 transition-all duration-300 font-semibold text-body-md active:scale-95">
-                    Đăng ký khám
+                <a href="/Home/About" class="px-7 py-3.5 rounded-xl border border-outline bg-white/70 text-on-surface font-bold hover:bg-white transition-colors flex items-center justify-center">
+                    Khám phá MediFlow
                 </a>
             </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="flex-grow">
-        <!-- Hero Section -->
-        <section class="hero-gradient pt-12 pb-20 border-b border-outline-variant/30">
-            <div class="max-w-[1440px] mx-auto px-unit-lg grid grid-cols-1 lg:grid-cols-2 gap-unit-xl items-center">
-                <!-- Left Content Column -->
-                <div class="space-y-6 text-left">
-                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-caption uppercase tracking-wider animate-pulse">
-                        <span class="w-2 h-2 rounded-full bg-primary"></span>
-                        Cổng y tế số hiện đại
-                    </div>
-                    <h2 class="text-[40px] lg:text-[54px] font-bold text-on-surface leading-tight tracking-tight">
-                        Chăm sóc sức khỏe <br />
-                        <span class="text-primary bg-gradient-to-r from-primary to-surface-tint bg-clip-text text-transparent">Thông minh &amp; Toàn diện</span>
-                    </h2>
-                    <p class="text-body-lg text-on-surface-variant leading-relaxed max-w-xl">
-                        MediFlow mang đến giải pháp quản trị bệnh viện hiện đại. Đặt lịch trực tuyến nhanh chóng, quản lý bệnh án điện tử an toàn và kết nối bác sĩ chuyên khoa tức thì để tối ưu hóa hành trình chữa bệnh của bạn.
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-unit-md pt-2">
-                        <a href="/Auth/Register" class="px-8 py-4 rounded-xl bg-primary hover:bg-primary-container text-white font-bold text-body-lg shadow-lg shadow-primary/15 transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2 group">
-                            Đặt lịch hẹn trực tuyến
-                            <span class="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                        </a>
-                        <a href="#about" class="px-8 py-4 rounded-xl border border-outline hover:bg-surface-container-low text-on-surface font-bold text-body-lg transition-all duration-300 flex items-center justify-center gap-1">
-                            Tìm hiểu thêm
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Right Visual Column -->
-                <div class="relative flex justify-center lg:justify-end">
-                    <!-- Decorate blur circles -->
-                    <div class="absolute -top-10 -left-10 w-72 h-72 rounded-full bg-primary-fixed/30 filter blur-3xl opacity-60 z-0"></div>
-                    <div class="absolute -bottom-10 -right-10 w-72 h-72 rounded-full bg-secondary-fixed/20 filter blur-3xl opacity-60 z-0"></div>
-                    
-                    <div class="relative z-10 w-full max-w-[540px] rounded-2xl overflow-hidden shadow-2xl border border-white/40 transform hover:scale-[1.01] transition-transform duration-500">
-                        <img src="/images/hospital_hero_banner.png" alt="MediFlow Health Banner" class="w-full h-auto object-cover" />
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Quick Stats Banner -->
-        <section class="py-12 bg-white border-b border-outline-variant/40">
-            <div class="max-w-[1440px] mx-auto px-unit-lg">
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-                    <div class="space-y-1">
-                        <h4 class="text-[36px] lg:text-[48px] font-extrabold text-primary leading-tight">20+</h4>
-                        <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Khoa chuyên môn</p>
-                    </div>
-                    <div class="space-y-1">
-                        <h4 class="text-[36px] lg:text-[48px] font-extrabold text-primary leading-tight">150+</h4>
-                        <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Bác sĩ &amp; Chuyên gia</p>
-                    </div>
-                    <div class="space-y-1">
-                        <h4 class="text-[36px] lg:text-[48px] font-extrabold text-primary leading-tight">25,000+</h4>
-                        <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Lượt khám thành công</p>
-                    </div>
-                    <div class="space-y-1">
-                        <h4 class="text-[36px] lg:text-[48px] font-extrabold text-primary leading-tight">99.5%</h4>
-                        <p class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Khách hàng hài lòng</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Introduction Section -->
-        <section id="about" class="py-20 bg-surface">
-            <div class="max-w-[1440px] mx-auto px-unit-lg">
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-                    <span class="text-caption text-primary font-bold uppercase tracking-widest block">Giới thiệu bệnh viện</span>
-                    <h3 class="text-[32px] lg:text-[40px] font-bold text-on-surface">Vì sự nghiệp chăm sóc sức khỏe cộng đồng</h3>
-                    <div class="w-16 h-1.5 bg-primary rounded-full mx-auto"></div>
-                    <p class="text-body-lg text-on-surface-variant leading-relaxed pt-2">
-                        Bệnh viện MediFlow là đơn vị y tế đa khoa chất lượng cao, quy tụ đội ngũ y bác sĩ đầu ngành cùng cơ sở trang thiết bị hiện đại hàng đầu Việt Nam. Chúng tôi cam kết mang lại sự an tâm tuyệt đối cho khách hàng.
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-unit-lg">
-                    <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
-                        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                            <span class="material-symbols-outlined text-[24px]">verified_user</span>
-                        </div>
-                        <h4 class="text-title-lg font-bold text-on-surface mb-3">Chất lượng quốc tế</h4>
-                        <p class="text-body-md text-on-surface-variant leading-relaxed">
-                            Đạt chuẩn kiểm định y tế nghiêm ngặt, quy trình chẩn đoán chính xác và kiểm soát an toàn tối đa cho bệnh nhân.
-                        </p>
-                    </div>
-
-                    <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
-                        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                            <span class="material-symbols-outlined text-[24px]">group_add</span>
-                        </div>
-                        <h4 class="text-title-lg font-bold text-on-surface mb-3">Bác sĩ đầu ngành</h4>
-                        <p class="text-body-md text-on-surface-variant leading-relaxed">
-                            Các chuyên gia lâm sàng có nhiều năm kinh nghiệm công tác tại các bệnh viện lớn trong và ngoài nước trực tiếp điều trị.
-                        </p>
-                    </div>
-
-                    <div class="bg-white border border-outline-variant/60 rounded-2xl p-unit-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
-                        <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                            <span class="material-symbols-outlined text-[24px]">biotech</span>
-                        </div>
-                        <h4 class="text-title-lg font-bold text-on-surface mb-3">Công nghệ tiên tiến</h4>
-                        <p class="text-body-md text-on-surface-variant leading-relaxed">
-                            Trang bị máy móc sinh hóa, chẩn đoán hình ảnh, MRI và kỹ thuật nội soi hiện đại hỗ trợ phát hiện sớm bệnh lý.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Specialities Section -->
-        <section id="specialities" class="py-20 bg-white border-t border-outline-variant/20">
-            <div class="max-w-[1440px] mx-auto px-unit-lg">
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-                    <span class="text-caption text-primary font-bold uppercase tracking-widest block">Chuyên khoa nổi bật</span>
-                    <h3 class="text-[32px] lg:text-[40px] font-bold text-on-surface">Đa dạng khoa điều trị chuyên sâu</h3>
-                    <div class="w-16 h-1.5 bg-primary rounded-full mx-auto"></div>
-                    <p class="text-body-lg text-on-surface-variant leading-relaxed pt-2">
-                        Chúng tôi phục vụ người bệnh với dịch vụ khám chuyên khoa toàn diện, quy trình điều trị khép kín, an toàn và chuyên sâu.
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Khoa Nội -->
-                    <div class="p-unit-lg bg-surface border border-outline-variant/60 rounded-xl flex gap-unit-md items-start hover:border-primary transition-colors duration-300">
-                        <span class="material-symbols-outlined text-primary text-[32px] p-2 bg-primary/10 rounded-xl">medical_services</span>
-                        <div>
-                            <h4 class="text-title-lg font-bold text-on-surface mb-2">Khoa Nội tổng quát</h4>
-                            <p class="text-body-md text-on-surface-variant">Khám tầm soát lâm sàng, tư vấn phòng ngừa và điều trị các bệnh mãn tính, hô hấp, tiêu hóa.</p>
-                        </div>
-                    </div>
-
-                    <!-- Khoa Nhi -->
-                    <div class="p-unit-lg bg-surface border border-outline-variant/60 rounded-xl flex gap-unit-md items-start hover:border-primary transition-colors duration-300">
-                        <span class="material-symbols-outlined text-primary text-[32px] p-2 bg-primary/10 rounded-xl">child_care</span>
-                        <div>
-                            <h4 class="text-title-lg font-bold text-on-surface mb-2">Khoa Nhi</h4>
-                            <p class="text-body-md text-on-surface-variant">Chăm sóc sức khỏe toàn diện cho trẻ nhỏ, tiêm chủng vacxin, điều trị bệnh lý nhi khoa phổ biến.</p>
-                        </div>
-                    </div>
-
-                    <!-- Khoa Tim mạch -->
-                    <div class="p-unit-lg bg-surface border border-outline-variant/60 rounded-xl flex gap-unit-md items-start hover:border-primary transition-colors duration-300">
-                        <span class="material-symbols-outlined text-primary text-[32px] p-2 bg-primary/10 rounded-xl">cardiology</span>
-                        <div>
-                            <h4 class="text-title-lg font-bold text-on-surface mb-2">Khoa Tim mạch</h4>
-                            <p class="text-body-md text-on-surface-variant">Chẩn đoán và can thiệp điều trị cao huyết áp, suy tim, bệnh mạch vành, nhồi máu cơ tim.</p>
-                        </div>
-                    </div>
-
-                    <!-- Khoa Chấn thương chỉnh hình -->
-                    <div class="p-unit-lg bg-surface border border-outline-variant/60 rounded-xl flex gap-unit-md items-start hover:border-primary transition-colors duration-300">
-                        <span class="material-symbols-outlined text-primary text-[32px] p-2 bg-primary/10 rounded-xl">physical_therapy</span>
-                        <div>
-                            <h4 class="text-title-lg font-bold text-on-surface mb-2">Chấn thương chỉnh hình</h4>
-                            <p class="text-body-md text-on-surface-variant">Phẫu thuật thay khớp, chỉnh hình dị tật xương khớp, phục hồi chức năng sau tai nạn vận động.</p>
-                        </div>
-                    </div>
-
-                    <!-- Khoa Tai Mũi Họng -->
-                    <div class="p-unit-lg bg-surface border border-outline-variant/60 rounded-xl flex gap-unit-md items-start hover:border-primary transition-colors duration-300">
-                        <span class="material-symbols-outlined text-primary text-[32px] p-2 bg-primary/10 rounded-xl">hearing</span>
-                        <div>
-                            <h4 class="text-title-lg font-bold text-on-surface mb-2">Khoa Tai Mũi Họng</h4>
-                            <p class="text-body-md text-on-surface-variant">Khám nội soi, tầm soát viêm xoang, viêm tai giữa, điều trị khản tiếng, nghe kém bẩm sinh.</p>
-                        </div>
-                    </div>
-
-                    <!-- Khoa Sản phụ khoa -->
-                    <div class="p-unit-lg bg-surface border border-outline-variant/60 rounded-xl flex gap-unit-md items-start hover:border-primary transition-colors duration-300">
-                        <span class="material-symbols-outlined text-primary text-[32px] p-2 bg-primary/10 rounded-xl">pregnant_woman</span>
-                        <div>
-                            <h4 class="text-title-lg font-bold text-on-surface mb-2">Khoa Sản phụ khoa</h4>
-                            <p class="text-body-md text-on-surface-variant">Theo dõi thai kỳ trọn gói, xét nghiệm sàng lọc dị tật thai nhi, hỗ trợ sinh con và khám phụ khoa định kỳ.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Features & Benefits Section -->
-        <section id="features" class="py-20 bg-surface">
-            <div class="max-w-[1440px] mx-auto px-unit-lg">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-unit-xl items-center">
-                    <!-- Left: Benefits Illustration list -->
-                    <div class="space-y-6">
-                        <span class="text-caption text-primary font-bold uppercase tracking-widest block">Tính năng y tế số</span>
-                        <h3 class="text-[32px] lg:text-[40px] font-bold text-on-surface leading-tight">MediFlow mang y tế thông minh đến tầm tay của bạn</h3>
-                        <p class="text-body-lg text-on-surface-variant leading-relaxed">
-                            Quy trình đăng ký và khám bệnh khép kín giúp tiết kiệm tối đa thời gian chờ đợi tại quầy làm thủ tục truyền thống.
-                        </p>
-                        
-                        <div class="space-y-4 pt-4">
-                            <div class="flex gap-unit-md">
-                                <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary shrink-0"><span class="material-symbols-outlined">event_available</span></div>
-                                <div>
-                                    <h5 class="font-bold text-body-lg">Đặt lịch hẹn trực tuyến 24/7</h5>
-                                    <p class="text-body-md text-on-surface-variant">Chọn bác sĩ, lựa chọn khung giờ phù hợp và điền lý do khám chỉ trong 1 phút.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-unit-md">
-                                <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary shrink-0"><span class="material-symbols-outlined">history_edu</span></div>
-                                <div>
-                                    <h5 class="font-bold text-body-lg">Sổ sức khỏe điện tử liên tục</h5>
-                                    <p class="text-body-md text-on-surface-variant">Xem lại chẩn đoán lâm sàng, đơn thuốc, lịch sử tái khám mọi lúc mà không cần sổ giấy.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-unit-md">
-                                <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary shrink-0"><span class="material-symbols-outlined">payments</span></div>
-                                <div>
-                                    <h5 class="font-bold text-body-lg">Thanh toán hóa đơn linh hoạt</h5>
-                                    <p class="text-body-md text-on-surface-variant">Hỗ trợ các hình thức VNPay, MoMo, ZaloPay, thanh toán tại quầy bảo mật, nhanh gọn.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-unit-md">
-                                <div class="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary shrink-0"><span class="material-symbols-outlined">forum</span></div>
-                                <div>
-                                    <h5 class="font-bold text-body-lg">Tin nhắn tư vấn từ xa</h5>
-                                    <p class="text-body-md text-on-surface-variant">Nhận tư vấn chăm sóc sức khỏe, giải đáp thắc mắc về đơn thuốc từ bác sĩ phụ trách.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Card dashboard mockup visual -->
-                    <div class="bg-white border border-outline-variant/65 rounded-2xl p-unit-lg shadow-xl space-y-6">
-                        <div class="flex justify-between items-center border-b border-outline-variant/60 pb-4">
-                            <div class="flex items-center gap-unit-sm">
-                                <span class="w-3.5 h-3.5 rounded-full bg-primary"></span>
-                                <strong class="text-body-lg text-primary font-bold">Quy trình đặt lịch trực tuyến</strong>
-                            </div>
-                            <span class="text-caption text-on-surface-variant font-semibold">Demo MediFlow Portal</span>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <div class="p-unit-md bg-surface border border-outline-variant/60 rounded-xl flex justify-between items-center">
-                                <div class="flex items-center gap-unit-md">
-                                    <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">1</div>
-                                    <div>
-                                        <p class="font-bold text-body-md">Đăng ký tài khoản</p>
-                                        <p class="text-caption text-on-surface-variant">Nhập thông tin cá nhân và số thẻ BHYT</p>
-                                    </div>
-                                </div>
-                                <span class="material-symbols-outlined text-primary font-bold">check_circle</span>
-                            </div>
-
-                            <div class="p-unit-md bg-surface border border-outline-variant/60 rounded-xl flex justify-between items-center">
-                                <div class="flex items-center gap-unit-md">
-                                    <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">2</div>
-                                    <div>
-                                        <p class="font-bold text-body-md">Chọn bác sĩ &amp; Khung giờ</p>
-                                        <p class="text-caption text-on-surface-variant">Lựa chọn chuyên khoa, bác sĩ phù hợp lịch</p>
-                                    </div>
-                                </div>
-                                <span class="material-symbols-outlined text-primary font-bold">check_circle</span>
-                            </div>
-
-                            <div class="p-unit-md bg-surface border border-outline-variant/60 rounded-xl flex justify-between items-center">
-                                <div class="flex items-center gap-unit-md">
-                                    <div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">3</div>
-                                    <div>
-                                        <p class="font-bold text-body-md">Nhận tin nhắn OTP &amp; Xác nhận</p>
-                                        <p class="text-caption text-on-surface-variant">Lịch được xếp tự động vào hàng đợi của khoa</p>
-                                    </div>
-                                </div>
-                                <span class="material-symbols-outlined text-primary font-bold">check_circle</span>
-                            </div>
-                        </div>
-
-                        <div class="pt-2 text-center">
-                            <a href="/Auth/Register" class="inline-flex items-center gap-2 text-primary font-bold hover:underline">
-                                Bắt đầu đăng ký tài khoản bệnh nhân ngay 
-                                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Testimonials Section -->
-        <section id="testimonials" class="py-20 bg-white border-t border-b border-outline-variant/20">
-            <div class="max-w-[1440px] mx-auto px-unit-lg">
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
-                    <span class="text-caption text-primary font-bold uppercase tracking-widest block">Đánh giá thực tế</span>
-                    <h3 class="text-[32px] lg:text-[40px] font-bold text-on-surface">Bệnh nhân của chúng tôi nói gì</h3>
-                    <div class="w-16 h-1.5 bg-primary rounded-full mx-auto"></div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-unit-lg">
-                    <!-- Testimonial 1 -->
-                    <div class="bg-surface border border-outline-variant/60 rounded-2xl p-unit-lg space-y-4">
-                        <div class="flex gap-0.5 text-tertiary">
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                        </div>
-                        <p class="text-body-md text-on-surface-variant italic leading-relaxed">
-                            "Lần đầu tiên tôi trải nghiệm việc đặt lịch và thanh toán online tại viện nhanh như vậy. Đến giờ hẹn chỉ cần check-in trực tiếp tại phòng khám mà không phải xếp hàng chờ cả tiếng."
-                        </p>
-                        <div class="flex items-center gap-unit-md pt-2">
-                            <div class="w-10 h-10 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold">NT</div>
-                            <div>
-                                <h5 class="font-bold text-body-md text-on-surface">Nguyễn Thanh Tùng</h5>
-                                <p class="text-caption text-on-surface-variant">Bệnh nhân khoa Tim mạch</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Testimonial 2 -->
-                    <div class="bg-surface border border-outline-variant/60 rounded-2xl p-unit-lg space-y-4">
-                        <div class="flex gap-0.5 text-tertiary">
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                        </div>
-                        <p class="text-body-md text-on-surface-variant italic leading-relaxed">
-                            "Bác sĩ tư vấn rất chi tiết, ân cần. Sau khi khám xong tôi vẫn có thể nhắn tin hỏi bác sĩ về liều dùng thuốc qua hệ thống mà không cần tốn thời gian di chuyển tới viện."
-                        </p>
-                        <div class="flex items-center gap-unit-md pt-2">
-                            <div class="w-10 h-10 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold">ML</div>
-                            <div>
-                                <h5 class="font-bold text-body-md text-on-surface">Mai Phương Linh</h5>
-                                <p class="text-caption text-on-surface-variant">Bệnh nhân khoa Nội</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Testimonial 3 -->
-                    <div class="bg-surface border border-outline-variant/60 rounded-2xl p-unit-lg space-y-4">
-                        <div class="flex gap-0.5 text-tertiary">
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                            <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                        </div>
-                        <p class="text-body-md text-on-surface-variant italic leading-relaxed">
-                            "Quy trình y tế rõ ràng. Tôi có thể đặt lịch khám hộ cho mẹ ở quê, thanh toán từ xa qua ZaloPay rất nhanh và có bệnh án lưu trữ trực tuyến để dễ dàng đối chiếu sau này."
-                        </p>
-                        <div class="flex items-center gap-unit-md pt-2">
-                            <div class="w-10 h-10 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold">VH</div>
-                            <div>
-                                <h5 class="font-bold text-body-md text-on-surface">Vũ Minh Huy</h5>
-                                <p class="text-caption text-on-surface-variant">Bệnh nhân đăng ký hộ người thân</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA Callout Block -->
-        <section class="py-20 bg-gradient-to-r from-primary-fixed to-primary-fixed-dim text-on-primary-fixed text-center relative overflow-hidden">
-            <!-- Background glow -->
-            <div class="absolute inset-0 bg-primary/10 opacity-30 z-0"></div>
-            
-            <div class="max-w-4xl mx-auto px-unit-lg relative z-10 space-y-6">
-                <h3 class="text-[32px] lg:text-[44px] font-bold leading-tight">Đặt lịch khám trực tuyến ngay hôm nay</h3>
-                <p class="text-body-lg opacity-90 max-w-2xl mx-auto">
-                    Trải nghiệm dịch vụ chăm sóc y khoa chu đáo, hiện đại, giảm thiểu thời gian chờ đợi.
-                </p>
-                <div class="flex justify-center gap-unit-md pt-4">
-                    <a href="/Auth/Register" class="px-8 py-4 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-primary-container hover:-translate-y-0.5 active:scale-95 transition-all duration-300">
-                        Đăng ký tài khoản mới
-                    </a>
-                    <a href="/Auth/Login" class="px-8 py-4 bg-white/40 text-on-primary-fixed border border-white/50 font-bold rounded-xl hover:bg-white/60 active:scale-95 transition-all duration-300">
-                        Đăng nhập hệ thống
-                    </a>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer Section -->
-    <footer id="contact" class="bg-inverse-surface text-inverse-on-surface pt-16 pb-8 border-t border-outline-variant/20 z-10">
-        <div class="max-w-[1440px] mx-auto px-unit-lg">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-unit-xl pb-12 border-b border-outline/25">
-                <!-- Col 1: About Hospital logo -->
-                <div class="space-y-4">
-                    <div class="flex items-center gap-unit-md">
-                        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                            <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">medical_services</span>
-                        </div>
-                        <h4 class="font-bold text-title-lg text-white">MediFlow HMS</h4>
-                    </div>
-                    <p class="text-caption text-outline-variant leading-relaxed">
-                        Hệ thống bệnh viện đa khoa số 1 về chăm sóc sức khỏe trực tuyến và quản trị thông minh tại Việt Nam.
-                    </p>
-                </div>
-
-                <!-- Col 2: Services / Hours -->
-                <div class="space-y-4">
-                    <h5 class="font-bold text-body-lg text-white">Giờ làm việc</h5>
-                    <ul class="text-caption text-outline-variant space-y-2">
-                        <li>Thứ Hai - Chủ Nhật: 07:30 - 21:00</li>
-                        <li>Cấp cứu khẩn cấp: 24/7</li>
-                        <li>Phòng khám yêu cầu: 08:00 - 18:00</li>
-                    </ul>
-                </div>
-
-                <!-- Col 3: Quick Navigation -->
-                <div class="space-y-4">
-                    <h5 class="font-bold text-body-lg text-white">Liên kết nhanh</h5>
-                    <ul class="text-caption text-outline-variant space-y-2">
-                        <li><a href="#about" class="hover:text-white transition-colors">Giới thiệu</a></li>
-                        <li><a href="#specialities" class="hover:text-white transition-colors">Danh mục khoa</a></li>
-                        <li><a href="#features" class="hover:text-white transition-colors">Quy trình y tế số</a></li>
-                        <li><a href="/Auth/Login" class="hover:text-white transition-colors">Đăng nhập tài khoản</a></li>
-                    </ul>
-                </div>
-
-                <!-- Col 4: Contact Detail -->
-                <div class="space-y-4">
-                    <h5 class="font-bold text-body-lg text-white">Thông tin liên hệ</h5>
-                    <ul class="text-caption text-outline-variant space-y-2">
-                        <li class="flex items-start gap-2">
-                            <span class="material-symbols-outlined text-[16px] text-primary pt-0.5">location_on</span>
-                            <span>Số 120 Đường Ba Tháng Hai, Quận 10, TP. Hồ Chí Minh</span>
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-[16px] text-primary">call</span>
-                            <span>Hotline: 1900 6868 (Cấp cứu: 028.115)</span>
-                        </li>
-                        <li class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-[16px] text-primary">mail</span>
-                            <span>support@mediflow.vn</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="pt-8 text-center text-caption text-outline-variant flex flex-col md:flex-row justify-between items-center gap-4">
-                <p>© 2026 HMS MediFlow • Hệ thống quản lý thông tin bệnh viện.</p>
-                <div class="flex gap-4">
-                    <a href="#" class="hover:text-white transition-colors">Điều khoản sử dụng</a>
-                    <span>•</span>
-                    <a href="#" class="hover:text-white transition-colors">Chính sách bảo mật y tế</a>
-                </div>
+            <div class="flex flex-wrap gap-x-6 gap-y-2 text-caption font-semibold text-on-surface-variant">
+                <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>Bảo mật hồ sơ y tế</span>
+                <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[18px]">schedule</span>Đặt lịch 24/7</span>
+                <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-primary text-[18px]">support_agent</span>Hỗ trợ tận tâm</span>
             </div>
         </div>
-    </footer>
-</div>
+
+        <div class="relative mx-auto w-full max-w-[590px]">
+            <div class="absolute -inset-5 bg-primary/10 rounded-[2rem] blur-2xl"></div>
+            <img src="~/images/hospital_hero_banner.png" alt="Bác sĩ MediFlow và bệnh viện hiện đại"
+                 class="relative w-full aspect-[4/3] object-cover rounded-[1.75rem] shadow-2xl border-4 border-white" />
+            <div class="absolute top-5 -left-3 md:-left-8 bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary">verified</span>
+                <div><strong class="block text-sm">Tiêu chuẩn JCI</strong><span class="text-[11px] text-on-surface-variant">Chất lượng quốc tế</span></div>
+            </div>
+            <div class="absolute bottom-5 -right-2 md:-right-7 bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white flex items-center gap-3">
+                <span class="material-symbols-outlined text-primary">medical_services</span>
+                <div><strong class="block text-sm">150+ Bác sĩ</strong><span class="text-[11px] text-on-surface-variant">Nhiều chuyên khoa</span></div>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- CTA Callout Block -->
-<section class="py-20 bg-gradient-to-r from-primary-fixed to-primary-fixed-dim text-on-primary-fixed text-center relative overflow-hidden">
-    <div class="absolute inset-0 bg-primary/10 opacity-30 z-0"></div>
-    <div class="max-w-4xl mx-auto px-unit-lg relative z-10 space-y-6">
-        <h3 class="text-[32px] lg:text-[44px] font-bold leading-tight">Đặt lịch khám trực tuyến ngay hôm nay</h3>
-        <p class="text-body-lg opacity-90 max-w-2xl mx-auto">
-            Trải nghiệm dịch vụ chăm sóc y khoa chu đáo, hiện đại, giảm thiểu thời gian chờ đợi.
-        </p>
-        <div class="flex justify-center gap-unit-md pt-4">
-            <a href="/Auth/Register" class="px-8 py-4 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-primary-container hover:-translate-y-0.5 active:scale-95 transition-all duration-300">
-                Đăng ký tài khoản mới
-            </a>
-            <a href="/Auth/Login" class="px-8 py-4 bg-white/40 text-on-primary-fixed border border-white/50 font-bold rounded-xl hover:bg-white/60 active:scale-95 transition-all duration-300">
-                Đăng nhập hệ thống
-            </a>
+<section class="bg-white border-b border-outline-variant/40">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg py-10 grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="text-center"><strong class="block text-3xl text-primary font-black">20+</strong><span class="text-caption text-on-surface-variant font-semibold">Khoa chuyên môn</span></div>
+        <div class="text-center"><strong class="block text-3xl text-primary font-black">150+</strong><span class="text-caption text-on-surface-variant font-semibold">Bác sĩ &amp; chuyên gia</span></div>
+        <div class="text-center"><strong class="block text-3xl text-primary font-black">25.000+</strong><span class="text-caption text-on-surface-variant font-semibold">Lượt khám thành công</span></div>
+        <div class="text-center"><strong class="block text-3xl text-primary font-black">99,5%</strong><span class="text-caption text-on-surface-variant font-semibold">Khách hàng hài lòng</span></div>
+    </div>
+</section>
+
+<section class="bg-surface py-14">
+    <div class="max-w-[1100px] mx-auto px-4 md:px-unit-lg rounded-3xl bg-primary text-white p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-7 shadow-xl">
+        <div>
+            <p class="text-primary-fixed font-bold uppercase tracking-wider text-caption mb-2">Bắt đầu hành trình chăm sóc sức khỏe</p>
+            <h3 class="text-2xl md:text-3xl font-black">Đặt lịch với bác sĩ phù hợp ngay hôm nay</h3>
         </div>
+        <a href="/Auth/Register" class="shrink-0 px-7 py-3.5 rounded-xl bg-white text-primary font-bold hover:bg-primary-fixed transition-colors">Tạo tài khoản bệnh nhân</a>
     </div>
 </section>

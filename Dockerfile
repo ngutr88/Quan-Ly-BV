@@ -13,4 +13,7 @@ ENV ASPNETCORE_URLS=http://+:8080
 ENV DOTNET_USE_POLLING_FILE_WATCHER=true
 RUN mkdir -p /app/data
 COPY --from=build /app/publish .
+# Start production with the same checked-in SQLite snapshot used locally.
+# On Render Free this snapshot is restored whenever a fresh container is created.
+COPY --from=build /src/hms.db /app/data/hms.db
 ENTRYPOINT ["dotnet", "QuanLyBenhVien.dll"]

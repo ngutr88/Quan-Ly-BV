@@ -1,27 +1,33 @@
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
+
     ViewData["Title"] = "Đăng ký lịch khám";
-    var depts = ViewBag.Departments as List<QuanLyBenhVien.Models.Department> ?? new List<QuanLyBenhVien.Models.Department>();
+
+    var depts = ViewBag.Departments as List<QuanLyBenhVien.Models.Department> ?? new
+    List<QuanLyBenhVien.Models.Department>();
 }
 
 @section Styles {
-<style>
-    .booking-summary-card {
-        transition: all 0.25s ease;
-    }
-    .slot-pill-btn {
-        transition: all 0.18s ease;
-    }
-    .slot-pill-btn:hover {
-        transform: translateY(-1px);
-    }
-</style>
+    <style>
+        .booking-summary-card {
+            transition: all 0.25s ease;
+        }
+
+        .slot-pill-btn {
+            transition: all 0.18s ease;
+        }
+
+        .slot-pill-btn:hover {
+            transform: translateY(-1px);
+        }
+    </style>
 }
 
 <div class="w-full max-w-6xl mx-auto animate-fadein">
     <!-- Back to Dashboard -->
     <div class="mb-6">
-        <a href="/Patient/Dashboard" class="inline-flex items-center gap-1.5 text-primary hover:underline text-body-md font-semibold">
+        <a href="/Patient/Dashboard"
+            class="inline-flex items-center gap-1.5 text-primary hover:underline text-body-md font-semibold">
             <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại Trang chủ
         </a>
     </div>
@@ -29,45 +35,59 @@
     <!-- Header Section -->
     <div class="border-b border-outline-variant/60 pb-4 mb-6">
         <h2 class="font-headline-lg text-2xl md:text-3xl font-bold text-on-surface">Đăng ký Lịch hẹn khám</h2>
-        <p class="text-body-md text-on-surface-variant mt-1">Hệ thống đặt lịch thăm khám thông minh, an toàn và bảo mật thông tin y tế.</p>
+        <p class="text-body-md text-on-surface-variant mt-1">Hệ thống đặt lịch thăm khám thông minh, an toàn và bảo mật
+            thông tin y tế.</p>
     </div>
 
     <!-- Main Grid: Form on left, Summary/Tips on right -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
+
         <!-- Left Side: Registration Form -->
-        <div class="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 md:p-8 shadow-sm">
+        <div
+            class="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 md:p-8 shadow-sm">
             <form action="/Patient/Book/ConfirmBooking" method="POST" class="space-y-6">
                 @Html.AntiForgeryToken()
 
                 <!-- Choose Patient (Self or Dependent) -->
                 @{
                     var patientInfo = ViewBag.Patient as QuanLyBenhVien.Models.Patient;
-                    var dependentsList = ViewBag.Dependents as List<QuanLyBenhVien.Models.Dependent> ?? new List<QuanLyBenhVien.Models.Dependent>();
+
+                    var dependentsList = ViewBag.Dependents as List<QuanLyBenhVien.Models.Dependent> ?? new
+                    List<QuanLyBenhVien.Models.Dependent>();
                 }
                 <div class="space-y-2">
-                    <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]" for="patientSelector">
+                    <label
+                        class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]"
+                        for="patientSelector">
                         Người bệnh đăng ký khám <span class="text-error">*</span>
                     </label>
-                    <select class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus" 
-                            id="patientSelector" name="bookingFor" required onchange="updateSummary()">
-                        <option value="Self" data-display="Bản thân (@patientInfo?.User.HoTen)">Bản thân (@patientInfo?.User.HoTen)</option>
+                    <select
+                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus"
+                        id="patientSelector" name="bookingFor" required onchange="updateSummary()">
+                        <option value="Self" data-display="Bản thân (@patientInfo?.User.HoTen)">Bản thân
+                            (@patientInfo?.User.HoTen)</option>
                         @foreach (var dep in dependentsList)
+
                         {
-                            <option value="@dep.Id" data-name="@dep.HoTen" data-display="Người thân: @dep.HoTen">Người thân: @dep.HoTen (@dep.QuanHe)</option>
+                            <option value="@dep.Id" data-name="@dep.HoTen" data-display="Người thân: @dep.HoTen">Người thân:
+                                @dep.HoTen (@dep.QuanHe)</option>
                         }
                     </select>
                 </div>
 
                 <!-- Choose Department -->
                 <div class="space-y-2">
-                    <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]" for="deptSelector">
+                    <label
+                        class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]"
+                        for="deptSelector">
                         Chọn Khoa khám chuyên khoa <span class="text-error">*</span>
                     </label>
-                    <select class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus" 
-                            id="deptSelector" name="deptId" required onchange="onDepartmentChanged()">
+                    <select
+                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus"
+                        id="deptSelector" name="deptId" required onchange="onDepartmentChanged()">
                         <option value="" data-location="">-- Chọn chuyên khoa --</option>
                         @foreach (var dept in depts)
+
                         {
                             <option value="@dept.Id" data-location="@dept.ViTri">@dept.TenKhoa</option>
                         }
@@ -75,7 +95,8 @@
                 </div>
 
                 <!-- Dynamic Location Display Box -->
-                <div id="deptLocationContainer" class="hidden p-4 bg-primary-container/20 border border-primary/20 rounded-xl flex items-start gap-3">
+                <div id="deptLocationContainer"
+                    class="hidden p-4 bg-primary-container/20 border border-primary/20 rounded-xl flex items-start gap-3">
                     <span class="material-symbols-outlined text-primary text-[20px] mt-0.5">location_on</span>
                     <div>
                         <h4 class="font-bold text-sm text-primary">Địa điểm phòng khám</h4>
@@ -85,11 +106,14 @@
 
                 <!-- Choose Doctor -->
                 <div class="space-y-2">
-                    <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]" for="doctorSelector">
+                    <label
+                        class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]"
+                        for="doctorSelector">
                         Chọn Bác sĩ điều trị <span class="text-error">*</span>
                     </label>
-                    <select class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus" 
-                            id="doctorSelector" name="doctorId" required disabled onchange="checkSlotsTrigger()">
+                    <select
+                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus"
+                        id="doctorSelector" name="doctorId" required disabled onchange="checkSlotsTrigger()">
                         <option value="">-- Vui lòng chọn khoa trước --</option>
                     </select>
                 </div>
@@ -98,16 +122,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Choose Date -->
                     <div class="space-y-2">
-                        <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]" for="bookingDate">
+                        <label
+                            class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]"
+                            for="bookingDate">
                             Chọn Ngày khám <span class="text-error">*</span>
                         </label>
-                        <input class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus" 
-                               id="bookingDate" name="bookingDate" required type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" max="@DateTime.Today.AddDays(14).ToString("yyyy-MM-dd")" onchange="loadSlots()" disabled />
+                        <input
+                            class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus"
+                            id="bookingDate" name="bookingDate" required type="date"
+                            min="@DateTime.Today.ToString("yyyy-MM-dd")"
+                            max="@DateTime.Today.AddDays(14).ToString("yyyy-MM-dd")" onchange="loadSlots()" disabled />
                     </div>
 
                     <!-- Slots Info -->
                     <div class="space-y-2">
-                        <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]">
+                        <label
+                            class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]">
                             Trạng thái khung giờ <span class="text-error">*</span>
                         </label>
                         <div class="text-[12px] text-on-surface-variant font-medium py-3" id="slots-info">
@@ -126,19 +156,27 @@
 
                 <!-- Reason -->
                 <div class="space-y-2">
-                    <label class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]" for="lyDo">
+                    <label
+                        class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]"
+                        for="lyDo">
                         Triệu chứng lâm sàng / Lý do khám <span class="text-error">*</span>
                     </label>
-                    <textarea class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus" 
-                              id="lyDo" name="lyDo" rows="3" placeholder="Mô tả ngắn gọn lý do khám (ví dụ: đau họng, nhức đầu, ho sốt nhẹ...)" required></textarea>
+                    <textarea
+                        class="w-full px-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-xl font-body-md input-focus"
+                        id="lyDo" name="lyDo" rows="3"
+                        placeholder="Mô tả ngắn gọn lý do khám (ví dụ: đau họng, nhức đầu, ho sốt nhẹ...)"
+                        required></textarea>
                 </div>
 
                 <!-- Submit Buttons -->
                 <div class="flex items-center gap-4 pt-4 border-t border-outline-variant/60">
-                    <button class="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl hover:bg-primary/95 transition-all active:scale-[0.98] shadow flex items-center gap-1.5" type="submit" id="submitBtn" disabled>
+                    <button
+                        class="bg-primary text-on-primary font-bold px-6 py-3 rounded-xl hover:bg-primary/95 transition-all active:scale-[0.98] shadow flex items-center gap-1.5"
+                        type="submit" id="submitBtn" disabled>
                         <span class="material-symbols-outlined">check_circle</span> Xác nhận đặt lịch
                     </button>
-                    <a href="/Patient/Dashboard" class="text-on-surface-variant hover:underline font-semibold text-sm">Hủy bỏ</a>
+                    <a href="/Patient/Dashboard"
+                        class="text-on-surface-variant hover:underline font-semibold text-sm">Hủy bỏ</a>
                 </div>
             </form>
         </div>
@@ -146,7 +184,8 @@
         <!-- Right Side: Real-time Booking Summary & Instructions -->
         <div class="lg:col-span-4 space-y-6">
             <!-- Summary Box -->
-            <div class="booking-summary-card bg-primary-container/20 border border-primary/10 rounded-2xl p-6 shadow-sm">
+            <div
+                class="booking-summary-card bg-primary-container/20 border border-primary/10 rounded-2xl p-6 shadow-sm">
                 <h3 class="font-bold text-title-lg text-primary flex items-center gap-2 mb-4">
                     <span class="material-symbols-outlined">assignment</span>
                     Thông tin đăng ký
@@ -162,7 +201,8 @@
                     </div>
                     <div class="flex justify-between border-b border-outline-variant/30 pb-2">
                         <span class="text-on-surface-variant">Địa điểm khám:</span>
-                        <strong id="summaryLocation" class="font-semibold text-on-surface-variant text-right">Chưa chọn</strong>
+                        <strong id="summaryLocation" class="font-semibold text-on-surface-variant text-right">Chưa
+                            chọn</strong>
                     </div>
                     <div class="flex justify-between border-b border-outline-variant/30 pb-2">
                         <span class="text-on-surface-variant">Bác sĩ:</span>
@@ -184,8 +224,10 @@
                 <ul class="text-[12px] text-on-surface-variant space-y-2 list-disc pl-4">
                     <li>Vui lòng lựa chọn chính xác khoa khám theo nhu cầu bệnh lý.</li>
                     <li>Lịch hẹn có thể được đăng ký tối đa 14 ngày kế tiếp.</li>
-                    <li>Mỗi ca khám trực tuyến sẽ được xếp thứ tự giờ khám chi tiết, vui lòng có mặt trước giờ hẹn ít nhất 10 phút.</li>
-                    <li>Sau khi xác nhận lịch khám, trạng thái sẽ là <strong>Chờ duyệt</strong> cho tới khi bệnh viện xác nhận lịch hẹn của bạn.</li>
+                    <li>Mỗi ca khám trực tuyến sẽ được xếp thứ tự giờ khám chi tiết, vui lòng có mặt trước giờ hẹn ít
+                        nhất 10 phút.</li>
+                    <li>Sau khi xác nhận lịch khám, trạng thái sẽ là <strong>Chờ duyệt</strong> cho tới khi bệnh viện
+                        xác nhận lịch hẹn của bạn.</li>
                 </ul>
             </div>
         </div>
@@ -295,29 +337,35 @@
 
             if (!deptId) return;
 
-            const response = await fetch(`/Patient/Book/GetDoctors?deptId=${deptId}`);
-            const doctors = await response.json();
+            try {
+                const response = await fetchWithTimeout(`/Patient/Book/GetDoctors?deptId=${deptId}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const doctors = await response.json();
 
-            if (doctors.length === 0) {
-                docSelector.innerHTML = '<option value="">Không có bác sĩ làm việc ở khoa này</option>';
-                return;
+                if (doctors.length === 0) {
+                    docSelector.innerHTML = '<option value="">Không có bác sĩ làm việc ở khoa này</option>';
+                    return;
+                }
+
+                doctors.forEach(doc => {
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    opt.innerText = doc.name;
+                    docSelector.appendChild(opt);
+                });
+
+                docSelector.disabled = false;
+            } catch (error) {
+                docSelector.innerHTML = '<option value="">Không thể tải danh sách bác sĩ</option>';
+                document.getElementById('slots-info').innerText = 'Không thể kết nối để tải bác sĩ. Vui lòng thử lại.';
             }
-
-            doctors.forEach(doc => {
-                const opt = document.createElement('option');
-                opt.value = doc.id;
-                opt.innerText = doc.name;
-                docSelector.appendChild(opt);
-            });
-
-            docSelector.disabled = false;
         }
 
         function checkSlotsTrigger() {
             const docId = document.getElementById('doctorSelector').value;
             const dateInput = document.getElementById('bookingDate');
             resetSlots();
-            
+
             if (docId) {
                 dateInput.disabled = false;
             } else {
@@ -357,32 +405,54 @@
 
             info.innerText = "Đang kiểm tra lịch trống của bác sĩ...";
 
-            const response = await fetch(`/Patient/Book/GetSlots?doctorId=${docId}&date=${date}`);
-            const result = await response.json();
+            try {
+                const response = await fetchWithTimeout(`/Patient/Book/GetSlots?doctorId=${docId}&date=${date}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const result = await response.json();
 
-            if (result.success === false) {
-                info.innerText = result.message;
-                return;
+                if (result.success === false) {
+                    info.innerText = result.message;
+                    return;
+                }
+
+                const slots = result.slots || [];
+                if (slots.length === 0) {
+                    info.innerText = "Rất tiếc! Bác sĩ đã kín lịch khám trong ngày này. Vui lòng chọn ngày khác.";
+                    return;
+                }
+
+                info.classList.add('hidden');
+                container.classList.remove('hidden');
+
+                slots.forEach(slot => {
+                    const btn = document.createElement('button');
+                    btn.type = "button";
+                    btn.className = "slot-pill-btn py-2 bg-surface-container border border-outline-variant text-body-md rounded-lg font-bold transition-all text-center text-on-surface hover:bg-surface-container-high";
+                    btn.innerText = slot.time;
+                    btn.onclick = () => selectSlot(btn, slot.time);
+                    container.appendChild(btn);
+                });
+                updateSummary();
+            } catch (error) {
+                info.classList.remove('hidden');
+                container.classList.add('hidden');
+                info.innerText = error.name === 'AbortError'
+                    ? 'Hệ thống kiểm tra lịch đang phản hồi chậm. Vui lòng thử lại.'
+                    : 'Không thể kiểm tra lịch trống của bác sĩ. Vui lòng thử lại sau.';
             }
+        }
 
-            const slots = result.slots;
-            if (slots.length === 0) {
-                info.innerText = "Rất tiếc! Bác sĩ đã kín lịch khám trong ngày này. Vui lòng chọn ngày khác.";
-                return;
+        async function fetchWithTimeout(url, timeoutMs = 10000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                return await fetch(url, {
+                    signal: controller.signal,
+                    headers: { 'Accept': 'application/json' }
+                });
+            } finally {
+                clearTimeout(timeoutId);
             }
-
-            info.classList.add('hidden');
-            container.classList.remove('hidden');
-
-            slots.forEach(slot => {
-                const btn = document.createElement('button');
-                btn.type = "button";
-                btn.className = "slot-pill-btn py-2 bg-surface-container border border-outline-variant text-body-md rounded-lg font-bold transition-all text-center text-on-surface hover:bg-surface-container-high";
-                btn.innerText = slot.time;
-                btn.onclick = () => selectSlot(btn, slot.time);
-                container.appendChild(btn);
-            });
-            updateSummary();
         }
 
         function selectSlot(element, time) {

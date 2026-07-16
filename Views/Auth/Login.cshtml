@@ -66,6 +66,32 @@
             </div>
 
             <form class="space-y-5" action="/Auth/Login" method="POST">
+                <!-- Role Selection Cards Grid -->
+                <div class="space-y-2">
+                    <label class="block text-caption font-semibold text-on-surface-variant">Lựa chọn vai trò đăng nhập *</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <!-- Patient Card -->
+                        <button type="button" id="role-patient" onclick="selectLoginRole('Patient')"
+                            class="flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer bg-primary/5 border-primary text-primary shadow-sm scale-[1.02] gap-1">
+                            <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">person</span>
+                            <span class="font-bold text-caption">Bệnh nhân</span>
+                        </button>
+                        <!-- Doctor Card -->
+                        <button type="button" id="role-doctor" onclick="selectLoginRole('Doctor')"
+                            class="flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer border-outline-variant hover:border-primary/50 hover:bg-surface-container-low text-on-surface-variant hover:text-on-surface gap-1">
+                            <span class="material-symbols-outlined text-[24px]">stethoscope</span>
+                            <span class="font-bold text-caption">Bác sĩ</span>
+                        </button>
+                        <!-- Admin Card -->
+                        <button type="button" id="role-admin" onclick="selectLoginRole('Admin')"
+                            class="flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer border-outline-variant hover:border-primary/50 hover:bg-surface-container-low text-on-surface-variant hover:text-on-surface gap-1">
+                            <span class="material-symbols-outlined text-[24px]">admin_panel_settings</span>
+                            <span class="font-bold text-caption">Quản trị viên</span>
+                        </button>
+                    </div>
+                    <input type="hidden" name="role" id="selected-role-input" value="Patient" />
+                </div>
+
                 <!-- Username Input -->
                 <div class="space-y-1.5">
                     <label class="block text-caption font-semibold text-on-surface-variant" for="identifier">Email / Số điện thoại</label>
@@ -178,6 +204,22 @@
             }
         }
 
+        function selectLoginRole(role) {
+            document.getElementById('selected-role-input').value = role;
+
+            const rolesList = ['Patient', 'Doctor', 'Admin'];
+            rolesList.forEach(r => {
+                const btn = document.getElementById('role-' + r.toLowerCase());
+                if (r === role) {
+                    btn.className = "flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer bg-primary/5 border-primary text-primary shadow-sm scale-[1.02] gap-1";
+                    btn.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 1";
+                } else {
+                    btn.className = "flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all cursor-pointer border-outline-variant hover:border-primary/50 hover:bg-surface-container-low text-on-surface-variant hover:text-on-surface gap-1";
+                    btn.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 0";
+                }
+            });
+        }
+
         const roles = {
             admin: {
                 username: "admin@hms.com",
@@ -208,6 +250,11 @@
             // Fill inputs
             document.getElementById('identifier').value = selectedRole.username;
             document.getElementById('password').value = selectedRole.password;
+
+            // Select role in segmented control
+            if (roleKey === 'admin') selectLoginRole('Admin');
+            if (roleKey === 'doctor') selectLoginRole('Doctor');
+            if (roleKey === 'patient') selectLoginRole('Patient');
 
             // Update pills UI
             document.querySelectorAll('.demo-pill').forEach(p => {

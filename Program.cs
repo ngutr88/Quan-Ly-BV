@@ -5,6 +5,20 @@ using QuanLyBenhVien.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseStaticWebAssets();
+if (string.IsNullOrEmpty(builder.Environment.WebRootPath) || !Directory.Exists(builder.Environment.WebRootPath))
+{
+    var currentDir = new DirectoryInfo(AppContext.BaseDirectory);
+    while (currentDir != null)
+    {
+        var candidate = Path.Combine(currentDir.FullName, "wwwroot");
+        if (Directory.Exists(candidate))
+        {
+            builder.Environment.WebRootPath = candidate;
+            break;
+        }
+        currentDir = currentDir.Parent;
+    }
+}
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -17,7 +31,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
+    options.KnownIPNetworks.Clear();
     options.KnownProxies.Clear();
 });
 
