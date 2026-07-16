@@ -1869,8 +1869,43 @@ namespace QuanLyBenhVien.Data
                 }
             }
 
+            SynchronizeDemoAccountCredentials(context);
             SeedDefaultDoctorWorkSchedules(context);
             SeedAdditionalPatientFamilies(context);
+        }
+
+        private static void SynchronizeDemoAccountCredentials(ApplicationDbContext context)
+        {
+            var demoAccounts = new[]
+            {
+                new { Email = "admin@hms.com", Password = "Admin@123", Role = "Admin" },
+                new { Email = "doctor@hms.com", Password = "Doctor@123", Role = "Doctor" },
+                new { Email = "patient@hms.com", Password = "Patient@123", Role = "Patient" }
+            };
+
+            var changed = false;
+            foreach (var demo in demoAccounts)
+            {
+                var user = context.Users.FirstOrDefault(u => u.Email == demo.Email);
+                if (user == null)
+                {
+                    continue;
+                }
+
+                var expectedHash = HashHelper.HashPassword(demo.Password);
+                if (user.MatKhauHash != expectedHash || user.VaiTro != demo.Role || user.TrangThai != "Active")
+                {
+                    user.MatKhauHash = expectedHash;
+                    user.VaiTro = demo.Role;
+                    user.TrangThai = "Active";
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                context.SaveChanges();
+            }
         }
 
         private static void SeedDefaultDoctorWorkSchedules(ApplicationDbContext context)
