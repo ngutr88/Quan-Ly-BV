@@ -104,14 +104,14 @@
             outline: none;
         }
         .toast-animate {
-            animation: slideIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+            animation: toastSlideDown 0.25s ease-out forwards;
         }
         #toast-container {
             top: max(1rem, env(safe-area-inset-top));
         }
-        @@keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        @@keyframes toastSlideDown {
+            from { transform: translateY(-12px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
     </style>
     @await RenderSectionAsync("Styles", required: false)
