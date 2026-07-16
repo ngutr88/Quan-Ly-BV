@@ -150,18 +150,23 @@
 
             @{
                 var ratingBars = new[] {
-                    (label: "5 ⭐", count: (int)(ViewBag.Rating5 ?? 0)),
-                    (label: "4 ⭐", count: (int)(ViewBag.Rating4 ?? 0)),
-                    (label: "3 ⭐", count: (int)(ViewBag.Rating3 ?? 0)),
-                    (label: "2 ⭐", count: (int)(ViewBag.Rating2 ?? 0)),
-                    (label: "1 ⭐", count: (int)(ViewBag.Rating1 ?? 0)),
+                    (rating: 5, count: (int)(ViewBag.Rating5 ?? 0)),
+                    (rating: 4, count: (int)(ViewBag.Rating4 ?? 0)),
+                    (rating: 3, count: (int)(ViewBag.Rating3 ?? 0)),
+                    (rating: 2, count: (int)(ViewBag.Rating2 ?? 0)),
+                    (rating: 1, count: (int)(ViewBag.Rating1 ?? 0)),
                 };
             }
             @foreach (var bar in ratingBars)
             {
                 var pct = totalReviews > 0 ? (int)Math.Round((double)bar.count / totalReviews * 100) : 0;
                 <div class="flex items-center gap-unit-sm text-caption">
-                    <span class="w-8 text-on-surface-variant shrink-0">@bar.label</span>
+                    <span class="w-10 text-on-surface-variant shrink-0 inline-flex items-center gap-1">
+                        <span>@bar.rating</span>
+                        <svg class="w-[18px] h-[18px] text-primary shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                        </svg>
+                    </span>
                     <div class="flex-1 h-2 bg-surface-container rounded-full overflow-hidden">
                         <div class="h-full bg-primary rounded-full" style="width: @pct%;"></div>
                     </div>
