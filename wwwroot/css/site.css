@@ -18,7 +18,104 @@ html {
 }
 
 body {
-  margin-bottom: 60px;
+  margin: 0;
+}
+
+/* Patient portal visual system */
+.patient-shell {
+  --patient-shadow-sm: 0 5px 16px rgba(14, 47, 83, 0.07), 0 1px 3px rgba(14, 47, 83, 0.06);
+  --patient-shadow-md: 0 14px 34px rgba(14, 47, 83, 0.11), 0 3px 9px rgba(14, 47, 83, 0.07);
+  --patient-shadow-lg: 0 24px 55px rgba(0, 63, 135, 0.16), 0 6px 18px rgba(14, 47, 83, 0.08);
+  background:
+    radial-gradient(circle at 92% 5%, rgba(172, 199, 255, 0.32), transparent 25rem),
+    linear-gradient(145deg, #f8fbff 0%, #f2f7ff 55%, #f8f9ff 100%);
+}
+
+.patient-sidebar {
+  box-shadow: 10px 0 36px rgba(14, 47, 83, 0.07);
+}
+
+.patient-sidebar nav a {
+  position: relative;
+}
+
+.patient-sidebar nav a:hover {
+  box-shadow: var(--patient-shadow-sm);
+  transform: translateX(3px);
+}
+
+.patient-topbar {
+  box-shadow: 0 8px 24px rgba(14, 47, 83, 0.07);
+}
+
+.patient-content .glass-card,
+.patient-content .shadow-sm {
+  box-shadow: var(--patient-shadow-sm) !important;
+}
+
+.patient-content .shadow,
+.patient-content .shadow-md {
+  box-shadow: var(--patient-shadow-md) !important;
+}
+
+.patient-content .shadow-lg,
+.patient-content .shadow-xl,
+.patient-content .shadow-2xl {
+  box-shadow: var(--patient-shadow-lg) !important;
+}
+
+.patient-content .glass-card,
+.patient-content [class*="bg-white"][class*="border"][class*="rounded"],
+.patient-content [class*="bg-surface-container-lowest"][class*="border"][class*="rounded"] {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.patient-content .glass-card:hover,
+.patient-content [class*="bg-white"][class*="border"][class*="rounded"]:hover,
+.patient-content [class*="bg-surface-container-lowest"][class*="border"][class*="rounded"]:hover {
+  box-shadow: var(--patient-shadow-md) !important;
+  border-color: rgba(0, 86, 179, 0.28);
+}
+
+.patient-content a[class*="shadow"],
+.patient-content button[class*="shadow"] {
+  transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+.patient-content a[class*="shadow"]:hover,
+.patient-content button[class*="shadow"]:hover {
+  transform: translateY(-2px);
+  filter: saturate(1.05);
+  box-shadow: var(--patient-shadow-md) !important;
+}
+
+.patient-content input:focus,
+.patient-content select:focus,
+.patient-content textarea:focus {
+  box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.11), var(--patient-shadow-sm) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .patient-shell *,
+  .patient-shell *::before,
+  .patient-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .patient-content {
+    background: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(239,244,255,0.5));
+  }
+
+  .patient-content .shadow-lg,
+  .patient-content .shadow-xl,
+  .patient-content .shadow-2xl {
+    box-shadow: var(--patient-shadow-md) !important;
+  }
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
