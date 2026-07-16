@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Chặn bác sĩ hoàn tất lịch đã hủy/vắng mặt hoặc tạo phiếu khám trùng cho một lịch khám đã hoàn tất.
 - Giới hạn API kiểm tra dị ứng và tồn kho trong phạm vi bệnh nhân đã được phân công cho bác sĩ hiện tại.
 - Sửa bố cục trang OTP bị dồn về bên trái, placeholder gây nhầm là mã đã nhập và validation không rõ ràng; bổ sung kiểm tra 6 chữ số và anti-forgery cho thao tác xác thực.
+- Căn thẳng hàng năm ô chỉ số sinh tồn trong phiên khám bác sĩ khi nhãn có độ dài khác nhau.
 
 ## [1.2.1] - 2026-07-15
 
