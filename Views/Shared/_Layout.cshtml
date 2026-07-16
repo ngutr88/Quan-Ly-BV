@@ -106,6 +106,9 @@
         .toast-animate {
             animation: slideIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
         }
+        #toast-container {
+            top: max(1rem, env(safe-area-inset-top));
+        }
         @@keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -115,9 +118,9 @@
 </head>
 <body class="bg-surface min-h-screen">
     <!-- Notifications Container (Toasts) -->
-    <div class="fixed top-unit-lg right-unit-lg z-50 flex flex-col gap-unit-sm max-w-sm" id="toast-container">
+    <div class="fixed left-4 right-4 sm:left-auto sm:right-6 sm:w-full sm:max-w-sm z-[9999] flex flex-col gap-unit-sm pointer-events-none" id="toast-container" role="region" aria-live="polite" aria-atomic="true">
         <!-- Toast Notification Element -->
-        <div class="hidden toast-animate bg-white border-l-4 border-error p-unit-md shadow-lg rounded flex items-start gap-unit-sm" id="global-toast">
+        <div class="hidden w-full pointer-events-auto toast-animate bg-white border-l-4 border-error p-unit-md shadow-2xl rounded-lg flex items-start gap-unit-sm" id="global-toast">
             <span class="material-symbols-outlined text-error" id="global-toast-icon">error</span>
             <div class="flex-grow">
                 <p class="font-title-lg text-body-md text-on-surface font-semibold" id="global-toast-title">Thông báo</p>
@@ -140,7 +143,7 @@
             toastTitle.innerText = title;
             toastMsg.innerText = msg;
 
-            toast.className = "toast-animate bg-white border-l-4 p-unit-md shadow-lg rounded flex items-start gap-unit-sm";
+            toast.className = "w-full pointer-events-auto toast-animate bg-white border-l-4 p-unit-md shadow-2xl rounded-lg flex items-start gap-unit-sm";
             if (type === 'success') {
                 toast.classList.add('border-secondary');
                 toastIcon.innerText = 'check_circle';
