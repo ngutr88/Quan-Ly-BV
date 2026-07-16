@@ -1890,6 +1890,7 @@ namespace QuanLyBenhVien.Data
 
             SeedDefaultDoctorWorkSchedules(context);
             SeedAdditionalPatientFamilies(context);
+            SeedRoleOverviewDemoData(context);
         }
 
         private static void SynchronizeDemoAccountCredentials(ApplicationDbContext context)
