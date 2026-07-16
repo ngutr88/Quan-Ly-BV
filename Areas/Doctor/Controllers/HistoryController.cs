@@ -69,15 +69,21 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             if (!doctorId.HasValue) return Forbid();
 
             // id is AppointmentId (LichKhamId)
-            var record = await _context.ExaminationRecords
+            var recordQuery = _context.ExaminationRecords
                 .Include(e => e.Appointment.Patient.User)
                 .Include(e => e.Appointment.Doctor.User)
                 .Include(e => e.Appointment.Doctor.Department)
-                .FirstOrDefaultAsync(e => e.LichKhamId == id && e.Appointment.BacSiId == doctorId.Value);
+                .Where(e => e.Appointment.BacSiId == doctorId.Value);
+
+            // Route chuẩn dùng LichKhamId; fallback theo PhieuKham.Id để các liên kết cũ
+            // và bookmark đã lưu trước đây vẫn mở đúng hồ sơ thuộc bác sĩ hiện tại.
+            var record = await recordQuery.FirstOrDefaultAsync(e => e.LichKhamId == id)
+                ?? await recordQuery.FirstOrDefaultAsync(e => e.Id == id);
 
             if (record == null)
             {
-                return NotFound("Không tìm thấy hồ sơ bệnh án.");
+                TempData["ErrorMessage"] = "Không tìm thấy hồ sơ bệnh án hoặc hồ sơ không thuộc phạm vi phụ trách của bạn.";
+                return RedirectToAction(nameof(Index));
             }
 
             // Fetch Prescription (if any)

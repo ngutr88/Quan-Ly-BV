@@ -13,6 +13,7 @@ namespace QuanLyBenhVien.Data
             context.Database.Migrate();
             SynchronizeDemoAccountCredentials(context);
             SynchronizePatientCccd(context);
+            SynchronizeCompletedAppointmentStates(context);
             SeedRoleOverviewDemoData(context);
 
             // Production and long-lived local databases already contain the complete
@@ -1893,6 +1894,29 @@ namespace QuanLyBenhVien.Data
             SeedAdditionalPatientFamilies(context);
             SynchronizePatientCccd(context);
             SeedRoleOverviewDemoData(context);
+            SynchronizeCompletedAppointmentStates(context);
+        }
+
+        private static void SynchronizeCompletedAppointmentStates(ApplicationDbContext context)
+        {
+            var completedAppointmentIdsWithRecords = context.ExaminationRecords
+                .Select(e => e.LichKhamId)
+                .ToHashSet();
+            var invalidCompletedAppointments = context.Appointments
+                .Where(a => a.TrangThai == "HoanThanh")
+                .ToList()
+                .Where(a => !completedAppointmentIdsWithRecords.Contains(a.Id))
+                .ToList();
+
+            if (invalidCompletedAppointments.Count == 0) return;
+
+            foreach (var appointment in invalidCompletedAppointments)
+            {
+                // Hoàn thành bắt buộc phải có phiếu khám; đưa ca thiếu hồ sơ về trạng thái
+                // đã xác nhận để bác sĩ có thể tiếp tục và hoàn tất đúng quy trình.
+                appointment.TrangThai = "DaXacNhan";
+            }
+            context.SaveChanges();
         }
 
         private static void SynchronizePatientCccd(ApplicationDbContext context)

@@ -201,7 +201,7 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            return claim != null ? int.Parse(claim.Value) : 3;
+            return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
         }
     }
 }

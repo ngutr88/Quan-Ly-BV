@@ -65,6 +65,10 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                 .ToListAsync();
 
             ViewBag.DoctorProfile = doctor;
+            ViewBag.RecordAppointmentIds = (await _context.ExaminationRecords
+                .Where(e => e.Appointment.BacSiId == doctor.Id)
+                .Select(e => e.LichKhamId)
+                .ToListAsync()).ToHashSet();
             return View(queue);
         }
 

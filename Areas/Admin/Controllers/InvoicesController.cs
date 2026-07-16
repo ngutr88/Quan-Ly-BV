@@ -93,7 +93,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            return claim != null ? int.Parse(claim.Value) : 1;
+            return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
         }
     }
 }

@@ -298,7 +298,7 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            return claim != null ? int.Parse(claim.Value) : 2;
+            return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
         }
 
         private async Task<int?> GetCurrentDoctorIdAsync()

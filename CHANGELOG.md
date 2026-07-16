@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Giới hạn API kiểm tra dị ứng và tồn kho trong phạm vi bệnh nhân đã được phân công cho bác sĩ hiện tại.
 - Sửa bố cục trang OTP bị dồn về bên trái, placeholder gây nhầm là mã đã nhập và validation không rõ ràng; bổ sung kiểm tra 6 chữ số và anti-forgery cho thao tác xác thực.
 - Căn thẳng hàng năm ô chỉ số sinh tồn trong phiên khám bác sĩ khi nhãn có độ dài khác nhau.
+- Sửa liên kết hồ sơ bệnh án cũ dùng nhầm ID phiếu khám/lịch khám; trang không tìm thấy giờ quay về danh sách có thông báo thay vì trả trang chữ thô.
+- Đồng bộ các lịch mang trạng thái hoàn thành nhưng chưa có phiếu khám về trạng thái đã xác nhận, đúng điều kiện hoàn tất phiên khám.
+- Loại bỏ fallback ID tài khoản mẫu trong các controller Admin, Bác sĩ và Bệnh nhân để tránh truy cập nhầm dữ liệu khi claim không hợp lệ.
 
 ## [1.2.1] - 2026-07-15
 

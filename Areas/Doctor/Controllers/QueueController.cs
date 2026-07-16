@@ -76,6 +76,8 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             ViewBag.SelectedAppointment = selectedApp;
             ViewBag.LastRecord = lastRecord;
             ViewBag.HistoryExams = historyExams;
+            ViewBag.SelectedHasRecord = selectedApp != null && await _context.ExaminationRecords
+                .AnyAsync(e => e.LichKhamId == selectedApp.Id);
 
             return View();
         }
@@ -83,7 +85,7 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            return claim != null ? int.Parse(claim.Value) : 2;
+            return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
         }
     }
 }

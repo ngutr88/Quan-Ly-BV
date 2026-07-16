@@ -4,6 +4,7 @@
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
     ViewData["Title"] = "Trang chủ Bác sĩ";
     var doctor = ViewBag.DoctorProfile as QuanLyBenhVien.Models.Doctor;
+    var recordAppointmentIds = ViewBag.RecordAppointmentIds as HashSet<int> ?? new HashSet<int>();
 }
 
 <!-- Welcome banner -->
@@ -105,7 +106,7 @@
                                 {
                                     <span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Đang khám</span>
                                 }
-                                else if (app.TrangThai == "HoanThanh")
+                                else if (app.TrangThai == "HoanThanh" && recordAppointmentIds.Contains(app.Id))
                                 {
                                     <span class="px-2 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">Đã hoàn thành</span>
                                 }
@@ -120,6 +121,10 @@
                                     <a href="/Doctor/Exam/Session/@app.Id" class="inline-flex items-center gap-0.5 bg-primary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-primary-container transition-all active:scale-95 font-semibold shadow-sm">
                                         <span class="material-symbols-outlined text-[16px]">clinical_notes</span> Bắt đầu khám
                                     </a>
+                                }
+                                else if (app.TrangThai == "HoanThanh")
+                                {
+                                    <span class="text-caption text-on-surface-variant">Hồ sơ đang đồng bộ</span>
                                 }
                                 else if (app.TrangThai == "HoanThanh")
                                 {

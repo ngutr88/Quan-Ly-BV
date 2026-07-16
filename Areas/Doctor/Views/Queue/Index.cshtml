@@ -6,6 +6,7 @@
     var selectedApp = ViewBag.SelectedAppointment as QuanLyBenhVien.Models.Appointment;
     var lastRecord = ViewBag.LastRecord as QuanLyBenhVien.Models.ExaminationRecord;
     var historyExams = ViewBag.HistoryExams as List<QuanLyBenhVien.Models.ExaminationRecord> ?? new List<QuanLyBenhVien.Models.ExaminationRecord>();
+    var selectedHasRecord = ViewBag.SelectedHasRecord is true;
 
     // Split queue into Morning and Afternoon sessions
     var morningQueue = queue.Where(a => a.ThoiGian.Hour < 13).ToList();
@@ -171,11 +172,15 @@
                             <span class="material-symbols-outlined text-[20px]">clinical_notes</span> Bắt đầu khám
                         </a>
                     }
-                    else if (selectedApp.TrangThai == "HoanThanh")
+                    else if (selectedApp.TrangThai == "HoanThanh" && selectedHasRecord)
                     {
                         <a href="/Doctor/History/RecordDetails/@selectedApp.Id" class="bg-primary text-white hover:bg-primary-container px-unit-lg py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-1 active:scale-95 transition-all">
                             <span class="material-symbols-outlined text-[20px]">visibility</span> Xem bệnh án
                         </a>
+                    }
+                    else if (selectedApp.TrangThai == "HoanThanh")
+                    {
+                        <span class="px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-caption font-semibold">Hồ sơ đang được đồng bộ</span>
                     }
                 </div>
             </div>
