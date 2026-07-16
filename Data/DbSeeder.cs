@@ -11,6 +11,7 @@ namespace QuanLyBenhVien.Data
         public static void Seed(ApplicationDbContext context)
         {
             context.Database.Migrate();
+            SynchronizeDemoAccountCredentials(context);
 
             // Force re-seeding if the database exists but doesn't have the new seed data
             if (context.Invoices.Any() && !context.Invoices.Any(i => i.MaGiaoDich == "MM987654321"))
@@ -1869,7 +1870,6 @@ namespace QuanLyBenhVien.Data
                 }
             }
 
-            SynchronizeDemoAccountCredentials(context);
             SeedDefaultDoctorWorkSchedules(context);
             SeedAdditionalPatientFamilies(context);
         }
