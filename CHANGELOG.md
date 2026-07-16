@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Bổ sung bộ dữ liệu minh họa liên kết cho ba vai trò Admin, Bác sĩ và Bệnh nhân: lịch khám theo nhiều trạng thái, hàng đợi trong ngày, hồ sơ khám, chỉ số sinh tồn, đơn thuốc, hóa đơn, đánh giá, thông báo và nhật ký hệ thống.
 - Dữ liệu lịch sử được phân bố theo ngày và tháng để các biểu đồ doanh thu, lượt khám và thống kê cá nhân hiển thị trực quan trên database Render hiện hữu.
+- Tự động bổ sung CCCD mẫu 12 chữ số cho hồ sơ bệnh nhân còn trống mà không ghi đè dữ liệu đã có.
 
 ### Fixed
 - Ràng buộc quyền truy cập chi tiết hồ sơ và phiên khám theo đúng bác sĩ được phân công ở phía server.

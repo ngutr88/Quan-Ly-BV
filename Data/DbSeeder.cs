@@ -12,6 +12,7 @@ namespace QuanLyBenhVien.Data
         {
             context.Database.Migrate();
             SynchronizeDemoAccountCredentials(context);
+            SynchronizePatientCccd(context);
             SeedRoleOverviewDemoData(context);
 
             // Production and long-lived local databases already contain the complete
@@ -1890,7 +1891,29 @@ namespace QuanLyBenhVien.Data
 
             SeedDefaultDoctorWorkSchedules(context);
             SeedAdditionalPatientFamilies(context);
+            SynchronizePatientCccd(context);
             SeedRoleOverviewDemoData(context);
+        }
+
+        private static void SynchronizePatientCccd(ApplicationDbContext context)
+        {
+            var patientsWithoutCccd = context.Patients
+                .Where(p => string.IsNullOrWhiteSpace(p.SoCCCD))
+                .OrderBy(p => p.Id)
+                .ToList();
+
+            if (patientsWithoutCccd.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var patient in patientsWithoutCccd)
+            {
+                // Dữ liệu minh họa 12 chữ số; chỉ điền hồ sơ trống và không ghi đè CCCD đã có.
+                patient.SoCCCD = $"079{patient.Id:D9}";
+            }
+
+            context.SaveChanges();
         }
 
         private static void SynchronizeDemoAccountCredentials(ApplicationDbContext context)
