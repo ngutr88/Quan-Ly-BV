@@ -3,8 +3,8 @@
     ViewData["Title"] = "Xác thực OTP";
 }
 
-<body class="bg-surface min-h-screen flex flex-col items-center justify-center p-margin-mobile">
-    <main class="w-full max-w-lg flex flex-col items-center py-unit-xl">
+<section class="bg-surface min-h-screen w-full flex items-center justify-center px-4 py-8 sm:px-6">
+    <main class="w-full max-w-lg mx-auto flex flex-col items-center">
         <!-- Header -->
         <header class="text-center mb-unit-lg">
             <div class="inline-flex items-center justify-center bg-primary rounded-full w-14 h-14 mb-unit-md text-white">
@@ -18,13 +18,15 @@
 
         <!-- OTP Card -->
         <div class="glass-card w-full rounded-xl p-unit-lg shadow-sm text-center">
-            <form action="/Auth/VerifyOtp" method="POST" class="space-y-unit-lg">
+            <form asp-controller="Auth" asp-action="VerifyOtp" method="post" class="space-y-unit-lg" id="otp-form">
                 <div class="space-y-unit-sm">
                     <label class="block text-body-md font-semibold text-on-surface-variant" for="otp">Nhập mã xác thực của bạn</label>
                     <div class="flex justify-center gap-unit-sm">
                         <!-- We can render a clean single input box or separate 6 input boxes. A single clean centered input is responsive and easy to handle in standard forms. -->
-                        <input class="w-64 tracking-[1em] text-center text-headline-lg font-bold px-4 py-3 bg-surface border border-outline-variant rounded-lg input-focus" 
-                               id="otp" name="otp" placeholder="123456" required maxlength="6" minlength="6" type="text" autocomplete="one-time-code" />
+                        <input class="w-full max-w-64 tracking-[0.65em] text-center text-headline-lg font-bold pl-[0.65em] pr-0 py-3 bg-surface border border-outline-variant rounded-lg input-focus"
+                               id="otp" name="otp" placeholder="••••••" required maxlength="6" minlength="6"
+                               pattern="[0-9]{6}" inputmode="numeric" type="text" autocomplete="one-time-code"
+                               title="Vui lòng nhập đủ 6 chữ số OTP" />
                     </div>
                     <p class="text-caption text-on-surface-variant">Mã OTP trải nghiệm nhanh là: <strong class="text-primary">123456</strong></p>
                 </div>
@@ -39,7 +41,7 @@
             <div class="mt-unit-lg pt-unit-md border-t border-outline-variant text-center space-y-unit-sm">
                 <p class="text-caption text-on-surface-variant">
                     Không nhận được mã? 
-                    <button class="text-primary font-bold hover:underline" onclick="resendOtp()">Gửi lại mã OTP</button>
+                    <button type="button" class="text-primary font-bold hover:underline" onclick="resendOtp()">Gửi lại mã OTP</button>
                 </p>
                 <a href="/Auth/Register" class="text-caption text-outline hover:text-primary hover:underline transition-colors block">
                     Sửa thông tin liên hệ đăng ký
@@ -49,8 +51,23 @@
     </main>
 
     <script>
+        const otpInput = document.getElementById('otp');
+        otpInput.addEventListener('input', () => {
+            otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 6);
+            otpInput.setCustomValidity('');
+        });
+
+        document.getElementById('otp-form').addEventListener('submit', event => {
+            if (!/^\d{6}$/.test(otpInput.value)) {
+                event.preventDefault();
+                otpInput.setCustomValidity('Vui lòng nhập đủ 6 chữ số OTP.');
+                otpInput.reportValidity();
+                otpInput.focus();
+            }
+        });
+
         function resendOtp() {
             showGlobalToast('Gửi lại thành công', 'Mã xác thực mới (123456) đã được gửi lại.', 'success');
         }
     </script>
-</body>
+</section>

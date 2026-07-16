@@ -167,10 +167,12 @@ namespace QuanLyBenhVien.Controllers
 
         // POST: /Auth/VerifyOtp
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> VerifyOtp(string otp)
         {
+            otp = (otp ?? string.Empty).Trim();
             var sessionOtp = HttpContext.Session.GetString("Reg_OTP");
-            if (sessionOtp != otp)
+            if (otp.Length != 6 || !otp.All(char.IsDigit) || sessionOtp != otp)
             {
                 TempData["ErrorMessage"] = "Mã OTP không chính xác. Thử lại với mã '123456'.";
                 ViewBag.Email = HttpContext.Session.GetString("Reg_Email");

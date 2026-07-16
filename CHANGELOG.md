@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ràng buộc quyền truy cập chi tiết hồ sơ và phiên khám theo đúng bác sĩ được phân công ở phía server.
 - Chặn bác sĩ hoàn tất lịch đã hủy/vắng mặt hoặc tạo phiếu khám trùng cho một lịch khám đã hoàn tất.
 - Giới hạn API kiểm tra dị ứng và tồn kho trong phạm vi bệnh nhân đã được phân công cho bác sĩ hiện tại.
+- Sửa bố cục trang OTP bị dồn về bên trái, placeholder gây nhầm là mã đã nhập và validation không rõ ràng; bổ sung kiểm tra 6 chữ số và anti-forgery cho thao tác xác thực.
 
 ## [1.2.1] - 2026-07-15
 
