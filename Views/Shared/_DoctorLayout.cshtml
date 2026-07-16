@@ -2,7 +2,7 @@
     Layout = "_Layout";
 }
 
-<div class="text-on-surface overflow-hidden flex h-screen w-screen">
+<div id="doctor-portal" class="text-on-surface overflow-hidden flex h-screen w-screen">
     <button id="doctor-sidebar-backdrop" type="button" aria-label="Đóng menu"
             class="hidden md:hidden fixed inset-0 bg-on-background/40 z-40"
             onclick="closeDoctorSidebar()"></button>
@@ -153,6 +153,20 @@
 @section Styles {
     @await RenderSectionAsync("Styles", required: false)
     <style>
+        #doctor-portal .material-symbols-outlined {
+            color: #003f87 !important;
+        }
+
+        #doctor-portal .text-white .material-symbols-outlined,
+        #doctor-portal .material-symbols-outlined.text-white {
+            color: #ffffff !important;
+        }
+
+        #doctor-portal .text-error .material-symbols-outlined,
+        #doctor-portal .material-symbols-outlined.text-error {
+            color: #ba1a1a !important;
+        }
+
         @@media (max-width: 767px) {
             #doctor-sidebar.mobile-sidebar-open {
                 transform: translateX(0) !important;
