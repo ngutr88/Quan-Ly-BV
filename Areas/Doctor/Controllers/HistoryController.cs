@@ -24,17 +24,17 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         // GET: Doctor/History
         public async Task<IActionResult> Index(string searchString)
         {
-            var doctorUserEmail = User.Identity?.Name;
+            var currentUserId = GetCurrentUserId();
             var doctor = await _context.Doctors
                 .Include(d => d.User)
-                .FirstOrDefaultAsync(d => d.User.HoTen == doctorUserEmail || d.User.Email == doctorUserEmail);
+                .FirstOrDefaultAsync(d => d.NguoiDungId == currentUserId);
 
             if (doctor == null)
             {
-                var currentUserId = GetCurrentUserId();
+                var identityValue = User.Identity?.Name;
                 doctor = await _context.Doctors
                     .Include(d => d.User)
-                    .FirstOrDefaultAsync(d => d.NguoiDungId == currentUserId);
+                    .FirstOrDefaultAsync(d => d.User.HoTen == identityValue || d.User.Email == identityValue);
             }
 
             if (doctor == null) return NotFound("Bác sĩ không tồn tại trong hệ thống.");
