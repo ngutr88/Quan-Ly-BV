@@ -28,6 +28,15 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
                 .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.NguoiDungId == patientUserId);
 
+            if (patient == null)
+            {
+                var email = User.FindFirstValue(ClaimTypes.Email);
+                var identityName = User.Identity?.Name;
+                patient = await _context.Patients
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.User.Email == email || p.User.Email == identityName || p.User.HoTen == identityName);
+            }
+
             if (patient == null) return NotFound("Hồ sơ bệnh nhân không tồn tại.");
 
             // 1. Upcoming Appointments
@@ -60,7 +69,7 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
-            return claim != null ? int.Parse(claim.Value) : 3; // Default seeded patient user id
+            return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
         }
     }
 }

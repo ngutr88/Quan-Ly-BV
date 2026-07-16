@@ -18,7 +18,7 @@
             <span class="w-2 h-2 rounded-full bg-secondary animate-ping"></span> Live System
         </span>
     </div>
-</div>
+    </div>
 
 <!-- KPI Cards Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-unit-md mb-unit-lg">
@@ -249,6 +249,14 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+            const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels ?? Array.Empty<string>()));
+            const appointmentData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartData ?? Array.Empty<int>()));
+            const revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RevenueChartData ?? Array.Empty<decimal>()));
+            const pending = @ViewBag.PendingAppCount;
+            const confirmed = @ViewBag.ConfirmedAppCount;
             const completed = @ViewBag.CompletedAppCount;
             const cancelled = @ViewBag.CancelledAppCount;
 
@@ -487,4 +495,3 @@
             });
         });
     </script>
-}
