@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using QuanLyBenhVien.Models;
+using QuanLyBenhVien.Models.ViewModels;
 
 namespace QuanLyBenhVien.Controllers;
 

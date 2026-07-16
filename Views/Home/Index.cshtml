@@ -10,6 +10,30 @@
                 radial-gradient(circle at 82% 18%, rgba(215, 226, 255, .7), transparent 34%),
                 linear-gradient(135deg, #f8f9ff 0%, #ffffff 56%, #eef4ff 100%);
         }
+
+        .hero-visual {
+            box-shadow: 0 32px 80px -34px rgba(15, 45, 85, .48),
+                        0 14px 32px -18px rgba(0, 86, 179, .35);
+        }
+
+        .hero-float-card {
+            box-shadow: 0 18px 45px -24px rgba(15, 45, 85, .55);
+        }
+
+        .home-stat {
+            border: 1px solid rgba(199, 205, 216, .65);
+            box-shadow: 0 12px 30px -24px rgba(15, 45, 85, .55);
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+
+        .home-stat:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 22px 42px -25px rgba(0, 86, 179, .42);
+        }
+
+        .home-cta {
+            box-shadow: 0 28px 70px -35px rgba(0, 50, 112, .75);
+        }
     </style>
 }
 
@@ -43,15 +67,17 @@
             </div>
         </div>
 
-        <div class="relative mx-auto w-full max-w-[590px]">
-            <div class="absolute -inset-5 bg-primary/10 rounded-[2rem] blur-2xl"></div>
-            <img src="~/images/hospital_hero_banner.png" alt="Bác sĩ MediFlow và bệnh viện hiện đại"
-                 class="relative w-full aspect-[4/3] object-cover rounded-[1.75rem] shadow-2xl border-4 border-white" />
-            <div class="absolute top-5 -left-3 md:-left-8 bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white flex items-center gap-3">
+        <div class="relative mx-auto w-full max-w-[620px]">
+            <div class="absolute -inset-6 bg-primary/15 rounded-[2.25rem] blur-3xl"></div>
+            <div class="relative rounded-[2rem] border border-white/80 bg-white/60 p-2 backdrop-blur-sm hero-visual">
+                <img src="~/images/hospital_hero_consultation.png" alt="Bác sĩ MediFlow tư vấn sức khỏe cho bệnh nhân"
+                     class="w-full aspect-[4/3] object-cover object-center rounded-[1.55rem]" />
+            </div>
+            <div class="hero-float-card absolute top-5 -left-3 md:-left-8 bg-white/92 backdrop-blur-md px-4 py-3 rounded-2xl border border-white flex items-center gap-3">
                 <span class="material-symbols-outlined text-primary">verified</span>
                 <div><strong class="block text-sm">Tiêu chuẩn JCI</strong><span class="text-[11px] text-on-surface-variant">Chất lượng quốc tế</span></div>
             </div>
-            <div class="absolute bottom-5 -right-2 md:-right-7 bg-white/90 backdrop-blur-md px-4 py-3 rounded-2xl shadow-xl border border-white flex items-center gap-3">
+            <div class="hero-float-card absolute bottom-5 -right-2 md:-right-7 bg-white/92 backdrop-blur-md px-4 py-3 rounded-2xl border border-white flex items-center gap-3">
                 <span class="material-symbols-outlined text-primary">medical_services</span>
                 <div><strong class="block text-sm">150+ Bác sĩ</strong><span class="text-[11px] text-on-surface-variant">Nhiều chuyên khoa</span></div>
             </div>
@@ -60,16 +86,16 @@
 </section>
 
 <section class="bg-white border-b border-outline-variant/40">
-    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg py-10 grid grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="text-center"><strong class="block text-3xl text-primary font-black">20+</strong><span class="text-caption text-on-surface-variant font-semibold">Khoa chuyên môn</span></div>
-        <div class="text-center"><strong class="block text-3xl text-primary font-black">150+</strong><span class="text-caption text-on-surface-variant font-semibold">Bác sĩ &amp; chuyên gia</span></div>
-        <div class="text-center"><strong class="block text-3xl text-primary font-black">25.000+</strong><span class="text-caption text-on-surface-variant font-semibold">Lượt khám thành công</span></div>
-        <div class="text-center"><strong class="block text-3xl text-primary font-black">99,5%</strong><span class="text-caption text-on-surface-variant font-semibold">Khách hàng hài lòng</span></div>
+    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg py-10 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center"><strong class="block text-3xl text-primary font-black">20+</strong><span class="text-caption text-on-surface-variant font-semibold">Khoa chuyên môn</span></div>
+        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center"><strong class="block text-3xl text-primary font-black">150+</strong><span class="text-caption text-on-surface-variant font-semibold">Bác sĩ &amp; chuyên gia</span></div>
+        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center"><strong class="block text-3xl text-primary font-black">25.000+</strong><span class="text-caption text-on-surface-variant font-semibold">Lượt khám thành công</span></div>
+        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center"><strong class="block text-3xl text-primary font-black">99,5%</strong><span class="text-caption text-on-surface-variant font-semibold">Khách hàng hài lòng</span></div>
     </div>
 </section>
 
 <section class="bg-surface py-14">
-    <div class="max-w-[1100px] mx-auto px-4 md:px-unit-lg rounded-3xl bg-primary text-white p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-7 shadow-xl">
+    <div class="home-cta max-w-[1100px] mx-auto px-4 md:px-unit-lg rounded-3xl bg-primary text-white p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-7">
         <div>
             <p class="text-primary-fixed font-bold uppercase tracking-wider text-caption mb-2">Bắt đầu hành trình chăm sóc sức khỏe</p>
             <h3 class="text-2xl md:text-3xl font-black">Đặt lịch với bác sĩ phù hợp ngay hôm nay</h3>

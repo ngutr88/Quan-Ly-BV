@@ -1,4 +1,4 @@
-namespace QuanLyBenhVien.Models;
+namespace QuanLyBenhVien.Models.ViewModels;
 
 public class ErrorViewModel
 {
