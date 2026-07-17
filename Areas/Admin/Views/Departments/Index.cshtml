@@ -50,10 +50,10 @@
 </div>
 
 <!-- Two-Pane Layout -->
-<div class="flex flex-col lg:flex-row gap-gutter">
+<div class="departments-layout flex flex-col lg:flex-row gap-gutter">
     <!-- Left Pane: Department List (30%) -->
-    <div class="lg:w-[350px] flex flex-col gap-unit-md shrink-0">
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md shadow-sm h-fit">
+    <div class="departments-pane lg:w-[350px] flex flex-col gap-unit-md shrink-0">
+        <div class="departments-list-card bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md shadow-sm h-fit">
             <div class="flex items-center justify-between mb-unit-md">
                 <h3 class="font-title-lg text-title-lg text-on-surface font-bold">Danh sách khoa</h3>
                 <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-caption font-bold">@depts.Count Khoa</span>
@@ -94,7 +94,7 @@
     </div>
 
     <!-- Right Pane: Details (70%) -->
-    <div class="flex-1 flex flex-col gap-unit-lg">
+    <div class="departments-pane departments-details-pane flex-1 flex flex-col gap-unit-lg">
         @if (selectedDept != null)
         {
             <!-- Department Summary Card -->
@@ -159,7 +159,7 @@
             </section>
 
             <!-- Services Management Section -->
-            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex-1">
+            <section class="departments-services-card bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm flex-1">
                 <div class="p-unit-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low/20">
                     <h3 class="text-title-lg font-title-lg font-bold text-on-surface">Danh mục dịch vụ y tế</h3>
                     <button onclick="openModal('addServiceModal')" class="px-4 py-1.5 bg-primary text-white text-label-md font-bold rounded-lg hover:bg-primary-container transition-all cursor-pointer">
@@ -182,7 +182,7 @@
                 }
                 else
                 {
-                    <div class="overflow-x-auto">
+                    <div class="departments-services-scroll overflow-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-surface-bright">
@@ -422,4 +422,70 @@
             }
         });
     </script>
+}
+
+@section Styles {
+    <style>
+        /* Keep the department browser and detail area independent on desktop. */
+        .departments-layout {
+            min-height: 0;
+        }
+
+        .departments-pane {
+            min-height: 0;
+        }
+
+        .departments-list-card {
+            max-height: calc(100vh - 330px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+        }
+
+        .departments-services-card {
+            min-height: 0;
+            max-height: calc(100vh - 230px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .departments-services-scroll {
+            min-height: 0;
+            flex: 1 1 auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
+        }
+
+        .departments-list-card::-webkit-scrollbar,
+        .departments-services-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .departments-list-card::-webkit-scrollbar-track,
+        .departments-services-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .departments-list-card::-webkit-scrollbar-thumb,
+        .departments-services-scroll::-webkit-scrollbar-thumb {
+            background: rgb(148 163 184 / 45%);
+            border-radius: 999px;
+        }
+
+        .departments-list-card::-webkit-scrollbar-thumb:hover,
+        .departments-services-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgb(100 116 139 / 65%);
+        }
+
+        @@media (max-width: 1023.98px) {
+            .departments-list-card,
+            .departments-services-card {
+                max-height: none;
+            }
+
+            .departments-services-scroll {
+                overflow: visible;
+            }
+        }
+    </style>
 }

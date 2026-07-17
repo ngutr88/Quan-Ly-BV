@@ -14,6 +14,7 @@ namespace QuanLyBenhVien.Data
             SynchronizeDemoAccountCredentials(context);
             SynchronizePatientCccd(context);
             SynchronizeCompletedAppointmentStates(context);
+            SeedAdditionalRoleAccounts(context);
             SeedRoleOverviewDemoData(context);
 
             // Production and long-lived local databases already contain the complete
@@ -2253,6 +2254,126 @@ namespace QuanLyBenhVien.Data
                     });
                     changed = true;
                 }
+            }
+
+            if (changed)
+            {
+                context.SaveChanges();
+            }
+        }
+
+        private static void SeedAdditionalRoleAccounts(ApplicationDbContext context)
+        {
+            var departments = context.Departments.OrderBy(d => d.Id).ToList();
+            if (departments.Count == 0)
+            {
+                return;
+            }
+
+            var changed = false;
+            var adminSeeds = new[]
+            {
+                ("Nguyen Minh Quan", "admin.operations@hms.com", "0901000001"),
+                ("Le Thu Huong", "admin.finance@hms.com", "0901000002"),
+                ("Tran Duc Long", "admin.reception@hms.com", "0901000003")
+            };
+
+            foreach (var seed in adminSeeds)
+            {
+                if (context.Users.Any(u => u.Email == seed.Item2)) continue;
+
+                context.Users.Add(new User
+                {
+                    HoTen = seed.Item1,
+                    Email = seed.Item2,
+                    Sdt = seed.Item3,
+                    MatKhauHash = HashHelper.HashPassword("Admin@123"),
+                    VaiTro = "Admin",
+                    TrangThai = "Active"
+                });
+                changed = true;
+            }
+
+            var doctorSeeds = new[]
+            {
+                ("Nguyen Hoang Phuc", "doctor.phuc@hms.com", "0902000001", "Noi tong quat", "ThS", 12, "Bac si"),
+                ("Pham Ngoc Anh", "doctor.anh@hms.com", "0902000002", "Nhi khoa", "BS", 8, "Bac si"),
+                ("Vo Thanh Dat", "doctor.dat@hms.com", "0902000003", "Ngoai tong hop", "TS", 16, "Pho truong khoa"),
+                ("Do Minh Chau", "doctor.chau@hms.com", "0902000004", "Da lieu", "ThS", 10, "Bac si"),
+                ("Bui Quoc Thai", "doctor.thai@hms.com", "0902000005", "Tai Mui Hong", "BS", 6, "Bac si"),
+                ("Hoang Yen Nhi", "doctor.nhi@hms.com", "0902000006", "San phu khoa", "BS", 9, "Bac si")
+            };
+
+            for (var index = 0; index < doctorSeeds.Length; index++)
+            {
+                var seed = doctorSeeds[index];
+                if (context.Users.Any(u => u.Email == seed.Item2)) continue;
+
+                var user = new User
+                {
+                    HoTen = seed.Item1,
+                    Email = seed.Item2,
+                    Sdt = seed.Item3,
+                    MatKhauHash = HashHelper.HashPassword("Doctor@123"),
+                    VaiTro = "Doctor",
+                    TrangThai = "Active"
+                };
+                context.Users.Add(user);
+                context.SaveChanges();
+
+                context.Doctors.Add(new Doctor
+                {
+                    NguoiDungId = user.Id,
+                    KhoaId = departments[index % departments.Count].Id,
+                    ChuyenKhoa = seed.Item4,
+                    HocVi = seed.Item5,
+                    SoNamKinhNghiem = seed.Item6,
+                    ChucVu = seed.Item7,
+                    LichLamViec = "Ca sang (08:00 - 12:00) & Ca chieu (13:30 - 17:30) Thu 2 den Thu 7"
+                });
+                changed = true;
+            }
+
+            var patientSeeds = new[]
+            {
+                ("Nguyen Ha My", "patient.demo01@hms.com", "0903000001", new DateTime(1992, 4, 18), "Nu", "A+", "Tang huyet ap nhe", "Dị ung hai san"),
+                ("Tran Gia Huy", "patient.demo02@hms.com", "0903000002", new DateTime(1988, 9, 7), "Nam", "O+", "Viem da day", "Khong ghi nhan"),
+                ("Le Bao Chau", "patient.demo03@hms.com", "0903000003", new DateTime(2015, 2, 21), "Nu", "B+", "Viem mui di ung theo mua", "Dị ung Penicillin"),
+                ("Pham Duc Anh", "patient.demo04@hms.com", "0903000004", new DateTime(1975, 11, 30), "Nam", "AB+", "Roi loan lipid mau", "Khong ghi nhan"),
+                ("Vo Khanh Linh", "patient.demo05@hms.com", "0903000005", new DateTime(1998, 6, 12), "Nu", "O-", "Khong", "Dị ung Ibuprofen"),
+                ("Doan Minh Kiet", "patient.demo06@hms.com", "0903000006", new DateTime(1969, 1, 9), "Nam", "B-", "Dai thao duong type 2", "Dị ung thuoc can quang"),
+                ("Bui Thanh Tam", "patient.demo07@hms.com", "0903000007", new DateTime(1983, 7, 26), "Nu", "A-", "Migraine", "Khong ghi nhan"),
+                ("Hoang Anh Tuan", "patient.demo08@hms.com", "0903000008", new DateTime(2001, 12, 4), "Nam", "O+", "Hen phe quan nhe", "Dị ung Aspirin")
+            };
+
+            foreach (var seed in patientSeeds)
+            {
+                if (context.Users.Any(u => u.Email == seed.Item2)) continue;
+
+                var user = new User
+                {
+                    HoTen = seed.Item1,
+                    Email = seed.Item2,
+                    Sdt = seed.Item3,
+                    MatKhauHash = HashHelper.HashPassword("Patient@123"),
+                    VaiTro = "Patient",
+                    TrangThai = "Active"
+                };
+                context.Users.Add(user);
+                context.SaveChanges();
+
+                context.Patients.Add(new Patient
+                {
+                    NguoiDungId = user.Id,
+                    NgaySinh = seed.Item4,
+                    GioiTinh = seed.Item5,
+                    NhomMau = seed.Item6,
+                    SoBHYT = $"DN{user.Id:D10}",
+                    SoCCCD = $"079{user.Id:D9}",
+                    TienSuBenh = seed.Item7,
+                    DiUng = seed.Item8
+                });
+                changed = true;
             }
 
             if (changed)
