@@ -205,6 +205,55 @@ body {
   box-shadow: inset 3px 0 0 rgba(0, 86, 179, 0.35);
 }
 
+/* Scrollable data tables keep column labels visible while reconciling long lists. */
+.staff-content .overflow-x-auto:has(> table),
+.patient-content .overflow-x-auto:has(> table) {
+  max-height: min(65vh, 680px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.staff-content .overflow-x-auto:has(> table) > table,
+.patient-content .overflow-x-auto:has(> table) > table {
+  min-width: max-content;
+}
+
+.staff-content .overflow-x-auto:has(> table) > table thead,
+.patient-content .overflow-x-auto:has(> table) > table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.staff-content .overflow-x-auto:has(> table) > table thead tr,
+.patient-content .overflow-x-auto:has(> table) > table thead tr {
+  box-shadow: 0 1px 0 rgba(113, 119, 128, 0.28), 0 7px 14px rgba(15, 45, 78, 0.08);
+}
+
+.staff-content .overflow-x-auto:has(> table) > table thead th,
+.patient-content .overflow-x-auto:has(> table) > table thead th {
+  background: #edf3ff;
+}
+
+.staff-content .overflow-x-auto:has(> table)::-webkit-scrollbar,
+.patient-content .overflow-x-auto:has(> table)::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.staff-content .overflow-x-auto:has(> table)::-webkit-scrollbar-thumb,
+.patient-content .overflow-x-auto:has(> table)::-webkit-scrollbar-thumb {
+  background: #a8b6ca;
+  border: 2px solid #f7f9ff;
+  border-radius: 999px;
+}
+
+.staff-content .overflow-x-auto:has(> table)::-webkit-scrollbar-thumb:hover,
+.patient-content .overflow-x-auto:has(> table)::-webkit-scrollbar-thumb:hover {
+  background: #73849d;
+}
+
 .staff-content a[class*="shadow"],
 .staff-content button[class*="shadow"] {
   transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
