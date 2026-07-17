@@ -2,13 +2,13 @@
     Layout = "_Layout";
 }
 
-<div id="doctor-portal" class="text-on-surface overflow-hidden flex h-screen w-screen">
+<div id="doctor-portal" class="staff-portal doctor-portal text-on-surface overflow-hidden flex h-screen w-screen">
     <button id="doctor-sidebar-backdrop" type="button" aria-label="Đóng menu"
             class="hidden md:hidden fixed inset-0 bg-on-background/40 z-40"
             onclick="closeDoctorSidebar()"></button>
 
     <!-- Side Navigation Bar -->
-    <aside id="doctor-sidebar" class="fixed md:relative inset-y-0 left-0 -translate-x-full md:translate-x-0 transition-transform duration-200 ease-out w-[280px] max-w-[85vw] h-screen bg-surface-container-lowest border-r border-outline-variant flex flex-col py-unit-lg shrink-0 z-50">
+    <aside id="doctor-sidebar" class="staff-sidebar fixed md:relative inset-y-0 left-0 -translate-x-full md:translate-x-0 transition-transform duration-200 ease-out w-[280px] max-w-[85vw] h-screen bg-surface-container-lowest border-r border-outline-variant flex flex-col py-unit-lg shrink-0 z-50">
         <button type="button" aria-label="Đóng menu" onclick="closeDoctorSidebar()"
                 class="md:hidden absolute top-4 right-3 w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high">
             <span class="material-symbols-outlined">close</span>
@@ -71,7 +71,7 @@
     <!-- Main Content Area -->
     <main class="flex-1 min-w-0 w-full h-screen overflow-y-auto flex flex-col">
         <!-- Top App Bar -->
-        <header class="h-16 w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-margin-mobile md:px-unit-lg gap-unit-sm md:gap-unit-md shrink-0 z-30">
+        <header class="staff-topbar h-16 w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-margin-mobile md:px-unit-lg gap-unit-sm md:gap-unit-md shrink-0 z-30">
             <div class="flex items-center gap-unit-lg flex-1">
                 <button type="button" aria-label="Mở menu bác sĩ" onclick="openDoctorSidebar()"
                         class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg text-primary hover:bg-surface-container-high shrink-0">
@@ -109,7 +109,7 @@
         </header>
 
         <!-- Page Canvas -->
-        <div class="p-margin-mobile md:p-unit-lg max-w-[1800px] mx-auto w-full flex-1 overflow-x-hidden">
+        <div class="staff-content p-margin-mobile md:p-unit-lg max-w-[1800px] mx-auto w-full flex-1 overflow-x-hidden">
             @RenderBody()
         </div>
 
