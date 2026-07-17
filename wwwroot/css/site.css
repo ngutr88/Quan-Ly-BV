@@ -208,6 +208,9 @@ body {
 /* Scrollable data tables keep column labels visible while reconciling long lists. */
 .staff-content .overflow-x-auto:has(> table),
 .patient-content .overflow-x-auto:has(> table) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   max-height: min(65vh, 680px);
   overflow: auto;
   overscroll-behavior: contain;
@@ -216,7 +219,8 @@ body {
 
 .staff-content .overflow-x-auto:has(> table) > table,
 .patient-content .overflow-x-auto:has(> table) > table {
-  min-width: max-content;
+  width: 100%;
+  min-width: 760px;
 }
 
 .staff-content .overflow-x-auto:has(> table) > table thead,
@@ -252,6 +256,22 @@ body {
 .staff-content .overflow-x-auto:has(> table)::-webkit-scrollbar-thumb:hover,
 .patient-content .overflow-x-auto:has(> table)::-webkit-scrollbar-thumb:hover {
   background: #73849d;
+}
+
+/* Staff has several long identity fields; contain them inside its own scroll area. */
+.staff-content .staff-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.staff-content .staff-table-scroll > table {
+  width: 100%;
+  min-width: 960px !important;
+}
+
+.staff-content .staff-table-scroll td:not(.whitespace-nowrap) {
+  overflow-wrap: anywhere;
 }
 
 .staff-content a[class*="shadow"],
