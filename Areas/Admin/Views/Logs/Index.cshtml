@@ -99,7 +99,7 @@
                         var userName = log.User != null ? log.User.HoTen : "Hệ thống";
                         var userRole = log.User != null ? log.User.VaiTro : "System";
                         var roleBadge = userRole == "Admin" ? "bg-primary-container/20 text-primary-fixed-dim" : 
-                                        userRole == "Doctor" ? "bg-secondary-container/20 text-on-secondary-container" : "bg-surface-variant text-on-surface-variant";
+                                        userRole == "Doctor" ? "bg-primary/10 text-primary" : "bg-surface-variant text-on-surface-variant";
 
                         <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer" 
                             onclick="openDetail('@log.Id', '@log.ThoiGian.ToString("dd/MM/yyyy HH:mm:ss")', '@userName', '@userRole', '@log.HanhDong', '@Html.Raw(JavaScriptEncoder.Default.Encode(log.ChiTiet))', '@severity', '@log.IpAddress')">
