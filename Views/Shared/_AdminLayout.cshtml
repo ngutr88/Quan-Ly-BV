@@ -2,7 +2,7 @@
     Layout = "_Layout";
 }
 
-<div class="staff-portal admin-portal text-on-surface overflow-hidden flex h-screen w-screen">
+<div class="staff-portal admin-portal text-on-surface overflow-hidden flex h-screen w-full max-w-full">
     <button id="admin-sidebar-backdrop" type="button" aria-label="Đóng menu"
             class="hidden md:hidden fixed inset-0 bg-on-background/40 z-40"
             onclick="closeAdminSidebar()"></button>
@@ -97,7 +97,7 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 min-w-0 w-full h-screen overflow-y-auto flex flex-col">
+    <main class="flex-1 min-w-0 w-full max-w-full h-screen overflow-x-hidden overflow-y-auto flex flex-col">
         <!-- Top App Bar -->
         <header class="staff-topbar h-16 w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-margin-mobile md:px-unit-lg gap-unit-sm md:gap-unit-md shrink-0 z-30">
             <div class="flex items-center gap-unit-lg flex-1">
@@ -135,7 +135,7 @@
         </header>
 
         <!-- Page Canvas -->
-        <div class="staff-content p-margin-mobile md:p-unit-lg max-w-[1800px] mx-auto w-full flex-1 overflow-x-hidden">
+        <div class="staff-content min-w-0 max-w-full p-margin-mobile md:p-unit-lg max-w-[1800px] mx-auto w-full flex-1 overflow-x-hidden">
             @RenderBody()
         </div>
 

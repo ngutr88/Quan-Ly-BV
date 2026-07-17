@@ -21,6 +21,48 @@ body {
   margin: 0;
 }
 
+/* Public pages must shrink to the viewport instead of creating page-level scrolling. */
+.home-shell,
+.home-shell header,
+.home-content,
+.home-content > *,
+.home-shell footer,
+.home-shell footer > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.home-content .grid > *,
+.home-content .flex > *,
+.home-shell footer .grid > *,
+.home-shell footer .flex > * {
+  min-width: 0;
+}
+
+.home-content img,
+.home-content video,
+.home-content canvas,
+.home-content svg,
+.home-shell footer img,
+.home-shell footer svg {
+  max-width: 100%;
+}
+
+.home-content input,
+.home-content select,
+.home-content textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.home-content p,
+.home-content dd,
+.home-content li,
+.home-shell footer p,
+.home-shell footer li {
+  overflow-wrap: anywhere;
+}
+
 /* Patient portal visual system */
 .patient-shell {
   --patient-shadow-sm: 0 5px 16px rgba(14, 47, 83, 0.07), 0 1px 3px rgba(14, 47, 83, 0.06);
@@ -46,6 +88,22 @@ body {
 
 .patient-topbar {
   box-shadow: 0 8px 24px rgba(14, 47, 83, 0.07);
+}
+
+.patient-shell,
+.patient-shell main,
+.patient-content,
+.patient-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.patient-content img,
+.patient-content video,
+.patient-content canvas,
+.patient-content svg {
+  max-width: 100%;
+  height: auto;
 }
 
 .patient-content .glass-card,
@@ -107,6 +165,12 @@ body {
 }
 
 @media (max-width: 767px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   .patient-content {
     background: linear-gradient(180deg, rgba(255,255,255,0.28), rgba(239,244,255,0.5));
   }
@@ -126,6 +190,49 @@ body {
   background:
     radial-gradient(circle at 88% 0%, rgba(172, 199, 255, 0.25), transparent 28rem),
     linear-gradient(145deg, #f8fbff 0%, #f3f7ff 52%, #f8f9ff 100%);
+}
+
+.staff-portal,
+.staff-portal main,
+.staff-content,
+.staff-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.staff-content .grid > *,
+.staff-content .flex > *,
+.patient-content .grid > *,
+.patient-content .flex > * {
+  min-width: 0;
+}
+
+.staff-content img,
+.staff-content video,
+.staff-content canvas,
+.staff-content svg,
+.patient-content img,
+.patient-content video,
+.patient-content canvas,
+.patient-content svg {
+  max-width: 100%;
+}
+
+.staff-content input,
+.staff-content select,
+.staff-content textarea,
+.patient-content input,
+.patient-content select,
+.patient-content textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.staff-content [class~="overflow-x-auto"],
+.patient-content [class~="overflow-x-auto"] {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .doctor-portal {
@@ -303,6 +410,20 @@ body {
 }
 
 @media (max-width: 767px) {
+  .staff-content > .flex,
+  .patient-content > .flex {
+    flex-wrap: wrap;
+  }
+
+  .staff-content p,
+  .staff-content dd,
+  .staff-content td,
+  .patient-content p,
+  .patient-content dd,
+  .patient-content td {
+    overflow-wrap: anywhere;
+  }
+
   .staff-sidebar {
     box-shadow: var(--staff-shadow-lg);
   }

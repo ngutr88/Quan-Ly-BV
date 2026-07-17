@@ -6,7 +6,7 @@
     var unreadNotificationCount = _dbContext.Notifications.Count(n => n.NguoiDungId == currentPatientUserId && !n.DaDoc);
 }
 
-<div class="patient-shell text-on-surface overflow-hidden flex h-screen w-screen">
+<div class="patient-shell text-on-surface overflow-hidden flex h-screen w-full max-w-full">
     <!-- Side Navigation Bar (Desktop Only) -->
     <aside class="patient-sidebar hidden md:flex flex-col w-[280px] h-screen bg-surface-container-lowest border-r border-outline-variant py-unit-lg shrink-0 z-50">
         <!-- Logo -->
@@ -78,9 +78,9 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 h-screen overflow-y-auto flex flex-col">
+    <main class="flex-1 min-w-0 max-w-full h-screen overflow-x-hidden overflow-y-auto flex flex-col">
         <!-- Top App Bar -->
-        <header class="patient-topbar h-16 w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-unit-lg gap-unit-md shrink-0 z-40">
+        <header class="patient-topbar h-16 w-full max-w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-3 md:px-unit-lg gap-1 sm:gap-unit-md shrink-0 z-40">
             <!-- Brand Logo (Mobile Only) -->
             <a href="/Patient/Dashboard" class="flex items-center gap-unit-sm group md:hidden">
                 <div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
@@ -98,7 +98,7 @@
             </div>
 
             <!-- Topbar User Actions (Notifications and Quick Profile) -->
-            <div class="flex items-center gap-unit-sm">
+            <div class="flex items-center gap-1 sm:gap-unit-sm shrink-0">
                 <!-- Notification Bell -->
                 <a href="/Patient/Notification" class="relative flex items-center justify-center p-2 rounded-full hover:bg-surface-container transition-colors text-primary" title="Thông báo">
                     <span class="material-symbols-outlined text-[24px]">notifications</span>
@@ -119,11 +119,18 @@
                     </div>
                     <span class="hidden sm:inline font-label-md text-label-md text-on-surface">@User.Identity?.Name</span>
                 </div>
+
+                <!-- Mobile logout is kept in the top bar because the desktop sidebar is hidden. -->
+                <a href="/Auth/Logout"
+                   class="md:hidden flex items-center justify-center p-2 rounded-full text-error hover:bg-error-container/20 transition-colors"
+                   aria-label="Đăng xuất" title="Đăng xuất">
+                    <span class="material-symbols-outlined text-[24px] text-error">logout</span>
+                </a>
             </div>
         </header>
 
         <!-- Main Dynamic Content -->
-        <div class="patient-content flex-grow overflow-y-auto p-margin-mobile md:p-unit-lg pb-24 md:pb-8 flex flex-col">
+        <div class="patient-content w-full min-w-0 max-w-full flex-grow overflow-x-hidden overflow-y-auto p-margin-mobile md:p-unit-lg pb-24 md:pb-8 flex flex-col">
             @RenderBody()
         </div>
 

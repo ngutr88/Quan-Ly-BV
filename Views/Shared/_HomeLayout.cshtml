@@ -3,18 +3,18 @@
     var action = ViewContext.RouteData.Values["action"]?.ToString();
 }
 
-<div class="bg-surface text-on-surface min-h-screen flex flex-col font-sans">
+<div class="home-shell w-full max-w-full overflow-x-hidden bg-surface text-on-surface min-h-screen flex flex-col font-sans">
     <!-- Header Navigation -->
     <header class="sticky top-0 z-50 bg-white/88 backdrop-blur-md border-b border-outline-variant/60 shadow-[0_8px_30px_-24px_rgba(15,45,85,0.5)]">
-        <div class="max-w-[1440px] mx-auto px-4 md:px-unit-lg h-20 flex items-center justify-between gap-3">
+        <div class="w-full min-w-0 max-w-[1440px] mx-auto px-3 sm:px-4 md:px-unit-lg min-h-20 flex items-center justify-between gap-2 sm:gap-3">
             <!-- Logo -->
-            <a href="/" class="flex items-center gap-unit-md group">
+            <a href="/" class="flex min-w-0 items-center gap-2 sm:gap-unit-md group">
                 <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
                     <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">medical_services</span>
                 </div>
-                <div>
-                    <h1 class="font-headline-md text-headline-md font-bold text-primary leading-tight">MediFlow HMS</h1>
-                    <p class="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Chăm sóc sức khỏe toàn diện</p>
+                <div class="min-w-0">
+                    <h1 class="font-headline-md text-lg sm:text-headline-md font-bold text-primary leading-tight whitespace-nowrap">MediFlow HMS</h1>
+                    <p class="hidden sm:block text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Chăm sóc sức khỏe toàn diện</p>
                 </div>
             </a>
 
@@ -29,14 +29,14 @@
             </nav>
 
             <!-- Authentication Actions -->
-            <div class="flex items-center gap-2 md:gap-unit-md">
+            <div class="flex shrink-0 items-center gap-1.5 md:gap-unit-md">
                 <button type="button" id="home-menu-button" aria-expanded="false" aria-controls="home-mobile-menu"
                     class="lg:hidden w-10 h-10 rounded-xl border border-outline-variant text-primary flex items-center justify-center hover:bg-primary/5 transition-colors"
                     onclick="toggleHomeMenu()">
                     <span class="material-symbols-outlined" id="home-menu-icon">menu</span>
                     <span class="sr-only">Mở danh mục trang chủ</span>
                 </button>
-                <a href="/Auth/Login" class="px-unit-lg py-2.5 rounded-xl border border-primary/30 text-primary hover:bg-primary/5 transition-all duration-300 font-semibold text-body-md active:scale-95">
+                <a href="/Auth/Login" class="px-3 md:px-unit-lg py-2.5 rounded-xl border border-primary/30 text-primary hover:bg-primary/5 transition-all duration-300 font-semibold text-sm md:text-body-md active:scale-95 whitespace-nowrap">
                     Đăng nhập
                 </a>
                 <a href="/Auth/Register" class="hidden sm:inline-flex px-unit-lg py-2.5 rounded-xl bg-primary hover:bg-primary-container text-white shadow-md shadow-primary/10 transition-all duration-300 font-semibold text-body-md active:scale-95">
@@ -58,13 +58,13 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow">
+    <main class="home-content w-full min-w-0 max-w-full flex-grow overflow-x-hidden">
         @RenderBody()
     </main>
 
     <!-- Footer Section -->
     <footer class="bg-inverse-surface text-inverse-on-surface pt-16 pb-8 border-t border-outline-variant/20 z-10">
-        <div class="max-w-[1440px] mx-auto px-unit-lg">
+        <div class="w-full min-w-0 max-w-[1440px] mx-auto px-4 md:px-unit-lg">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-unit-xl pb-12 border-b border-outline/25">
                 <!-- Col 1: About Hospital logo -->
                 <div class="space-y-4">
