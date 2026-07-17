@@ -2264,7 +2264,18 @@ namespace QuanLyBenhVien.Data
         private static void SeedRoleOverviewDemoData(ApplicationDbContext context)
         {
             const string seedMarker = "SEED_ROLE_OVERVIEW_20260716_V1";
-            if (context.AuditLogs.Any(l => l.HanhDong == seedMarker))
+            const string localizedSeedAction = "Khởi tạo dữ liệu tổng quan vai trò";
+            const string seedDetail = "Khởi tạo bộ dữ liệu minh họa liên kết cho dashboard Admin, Bác sĩ và Bệnh nhân.";
+
+            var legacySeedLog = context.AuditLogs.FirstOrDefault(l => l.HanhDong == seedMarker);
+            if (legacySeedLog != null)
+            {
+                legacySeedLog.HanhDong = localizedSeedAction;
+                context.SaveChanges();
+                return;
+            }
+
+            if (context.AuditLogs.Any(l => l.HanhDong == localizedSeedAction && l.ChiTiet == seedDetail))
             {
                 return;
             }
@@ -2468,8 +2479,8 @@ namespace QuanLyBenhVien.Data
                 new AuditLog
                 {
                     NguoiDungId = null,
-                    HanhDong = seedMarker,
-                    ChiTiet = "Khởi tạo bộ dữ liệu minh họa liên kết cho dashboard Admin, Bác sĩ và Bệnh nhân.",
+                    HanhDong = localizedSeedAction,
+                    ChiTiet = seedDetail,
                     ThoiGian = now
                 });
             context.SaveChanges();

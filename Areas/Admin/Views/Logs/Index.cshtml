@@ -8,6 +8,9 @@
     var searchString = ViewBag.SearchString as string;
     var roleFilter = ViewBag.RoleFilter as string;
     var actionFilter = ViewBag.ActionFilter as string;
+    string GetActionLabel(string action) => action == "SEED_ROLE_OVERVIEW_20260716_V1"
+        ? "Khởi tạo dữ liệu tổng quan vai trò"
+        : action;
 }
 
 <!-- Breadcrumb & Title -->
@@ -42,7 +45,7 @@
                 <option value="">Tất cả hành động</option>
                 @foreach (var act in actionsList)
                 {
-                    <option value="@act" selected="@(actionFilter == act)">@act</option>
+                    <option value="@act" selected="@(actionFilter == act)">@GetActionLabel(act)</option>
                 }
             </select>
         </div>
@@ -102,7 +105,7 @@
                                         userRole == "Doctor" ? "bg-primary/10 text-primary" : "bg-surface-variant text-on-surface-variant";
 
                         <tr class="hover:bg-surface-container-low transition-colors group cursor-pointer" 
-                            onclick="openDetail('@log.Id', '@log.ThoiGian.ToString("dd/MM/yyyy HH:mm:ss")', '@userName', '@userRole', '@log.HanhDong', '@Html.Raw(JavaScriptEncoder.Default.Encode(log.ChiTiet))', '@severity', '@log.IpAddress')">
+                            onclick="openDetail('@log.Id', '@log.ThoiGian.ToString("dd/MM/yyyy HH:mm:ss")', '@userName', '@userRole', '@GetActionLabel(log.HanhDong)', '@Html.Raw(JavaScriptEncoder.Default.Encode(log.ChiTiet))', '@severity', '@log.IpAddress')">
                             <td class="px-4 py-3 font-body-md text-on-surface">
                                 @log.ThoiGian.ToString("HH:mm:ss") <br/> 
                                 <span class="text-caption text-on-surface-variant">@log.ThoiGian.ToString("dd/MM/yyyy")</span>
@@ -118,7 +121,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 font-body-md text-on-surface font-semibold">@log.HanhDong</td>
+                            <td class="px-4 py-3 font-body-md text-on-surface font-semibold">@GetActionLabel(log.HanhDong)</td>
                             <td class="px-4 py-3 font-body-md text-on-surface-variant font-mono">@log.IpAddress</td>
                             <td class="px-4 py-3 text-center">
                                 <span class="inline-flex px-2 py-1 rounded text-[10px] font-bold uppercase @severityClass">@severity</span>
