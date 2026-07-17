@@ -93,6 +93,20 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
 
             if (invoice == null) return NotFound();
 
+            // Callback có thể được gửi lại nhiều lần. Không ghi nhận giao dịch thứ hai
+            // hoặc tạo thêm audit/notification cho một hóa đơn đã thanh toán.
+            if (invoice.TrangThaiThanhToan == "DaThanhToan")
+            {
+                TempData["SuccessMessage"] = $"Hóa đơn HD-{id.ToString("D5")} đã được thanh toán trước đó.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (paymentStatus != "success" && paymentStatus != "failed" && paymentStatus != "processing")
+                return BadRequest("Trạng thái thanh toán không hợp lệ.");
+
+            if (string.IsNullOrWhiteSpace(paymentMethod))
+                return BadRequest("Thiếu phương thức thanh toán.");
+
             string methodDisplayName = paymentMethod switch
             {
                 "vnpay" => "Online (VNPay)",

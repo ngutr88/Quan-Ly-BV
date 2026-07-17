@@ -132,6 +132,40 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             if (await _context.ExaminationRecords.AnyAsync(e => e.LichKhamId == appointmentId))
                 return BadRequest("Phiên khám này đã được hoàn tất trước đó.");
 
+            List<TempPrescriptionItem> items;
+            try
+            {
+                items = string.IsNullOrWhiteSpace(presJson) || presJson == "[]"
+                    ? new List<TempPrescriptionItem>()
+                    : JsonSerializer.Deserialize<List<TempPrescriptionItem>>(presJson) ?? new List<TempPrescriptionItem>();
+            }
+            catch (JsonException)
+            {
+                return BadRequest("Đơn thuốc không đúng định dạng.");
+            }
+
+            var requestedQuantities = items
+                .GroupBy(i => i.MedicineId)
+                .ToDictionary(g => g.Key, g => g.Sum(i => i.Qty));
+            if (requestedQuantities.Any(x => x.Key <= 0 || x.Value <= 0))
+                return BadRequest("Số lượng thuốc phải là số nguyên dương.");
+
+            foreach (var request in requestedQuantities)
+            {
+                var medicine = await _context.Medicines
+                    .Include(m => m.LoThuocs)
+                    .FirstOrDefaultAsync(m => m.Id == request.Key);
+                if (medicine == null) return BadRequest("Một hoặc nhiều thuốc không tồn tại.");
+
+                var available = medicine.LoThuocs
+                    .Where(b => b.HanSuDung > DateTime.Today && b.SoLuongTon > 0)
+                    .Sum(b => b.SoLuongTon);
+                if (available < request.Value || medicine.TonKho < request.Value)
+                    return BadRequest($"Thuốc {medicine.TenThuoc} không đủ tồn kho hợp lệ.");
+            }
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
             // 1. Create Examination Record
             var exam = new ExaminationRecord
             {
@@ -174,13 +208,12 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                 _context.Prescriptions.Add(prescription);
                 await _context.SaveChangesAsync();
 
-                var items = JsonSerializer.Deserialize<List<TempPrescriptionItem>>(presJson);
-                if (items != null)
+                if (items.Count > 0)
                 {
                     foreach (var item in items)
                     {
                         var medicine = await _context.Medicines.FindAsync(item.MedicineId);
-                        if (medicine == null) continue;
+                        if (medicine == null) return BadRequest("Một hoặc nhiều thuốc không tồn tại.");
 
                         // Create Prescription Detail link
                         var detail = new PrescriptionDetail
@@ -196,7 +229,7 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                         int remainingToDeduct = item.Qty;
                         
                         var activeBatches = await _context.MedicineBatches
-                            .Where(b => b.ThuocId == item.MedicineId && b.SoLuongTon > 0)
+                            .Where(b => b.ThuocId == item.MedicineId && b.HanSuDung > DateTime.Today && b.SoLuongTon > 0)
                             .OrderBy(b => b.HanSuDung) // Oldest batches (soonest expiry) first
                             .ToListAsync();
 
@@ -216,6 +249,9 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                             }
                             _context.Entry(batch).State = EntityState.Modified;
                         }
+
+                        if (remainingToDeduct > 0)
+                            return BadRequest($"Thuốc {medicine.TenThuoc} không đủ tồn kho hợp lệ.");
 
                         // Update overall medicine inventory
                         medicine.TonKho = Math.Max(0, medicine.TonKho - item.Qty);
@@ -290,6 +326,8 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             });
 
             await _context.SaveChangesAsync();
+
+            await transaction.CommitAsync();
 
             TempData["SuccessMessage"] = $"Đã hoàn tất ca khám cho bệnh nhân {appointment.Patient.User.HoTen}. Đơn thuốc và hóa đơn đã được khởi tạo thành công.";
             return RedirectToAction("Index", "Queue");
