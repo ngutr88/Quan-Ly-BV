@@ -52,6 +52,10 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                 .OrderByDescending(e => e.NgayKham)
                 .Take(5)
                 .ToListAsync();
+            ViewBag.PatientDocuments = await _context.PatientDocuments
+                .Where(d => d.BenhNhanId == appointment.BenhNhanId)
+                .OrderByDescending(d => d.NgayTaiLen)
+                .ToListAsync();
 
             // Fetch drug catalog for search
             ViewBag.Medicines = await _context.Medicines.Where(m => m.TonKho > 0).ToListAsync();
@@ -64,7 +68,8 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         public async Task<IActionResult> CheckAllergiesAndStock(int patientId, int medicineId, int qty)
         {
             var doctorId = await GetCurrentDoctorIdAsync();
-            if (!doctorId.HasValue || qty <= 0) return Forbid();
+            if (!doctorId.HasValue) return Forbid();
+            if (qty <= 0) return BadRequest(new { success = false, message = "Số lượng thuốc phải lớn hơn 0." });
 
             var assignedPatient = await _context.Appointments.AnyAsync(a =>
                 a.BacSiId == doctorId.Value &&

@@ -2,6 +2,7 @@
 
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    var patientDocuments = ViewBag.PatientDocuments as List<QuanLyBenhVien.Models.PatientDocument> ?? new List<QuanLyBenhVien.Models.PatientDocument>();
     ViewData["Title"] = "Đơn thuốc & Bệnh án";
 }
 
@@ -44,6 +45,37 @@
         <h2 class="font-headline-lg text-2xl md:text-3xl font-bold text-on-surface">Lịch sử điều trị &amp; Đơn thuốc</h2>
         <p class="text-body-md text-on-surface-variant mt-1">Tra cứu chẩn đoán y khoa, lời dặn của bác sĩ điều trị và xem đơn thuốc điện tử.</p>
     </div>
+
+    <section class="mb-6 bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+            <div>
+                <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-primary">folder_shared</span> Sổ khám & giấy tờ khám trước</h3>
+                <p class="text-body-md text-on-surface-variant mt-1">Bác sĩ phụ trách lịch hẹn có thể xem các tài liệu này trước khi khám.</p>
+            </div>
+            <form method="post" action="/Patient/Record/UploadDocument" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
+                @Html.AntiForgeryToken()
+                <input type="text" name="tenTaiLieu" placeholder="Tên tài liệu" class="border border-outline-variant rounded-lg px-3 py-2 text-sm" />
+                <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required class="max-w-[220px] text-sm" />
+                <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-container">Tải lên</button>
+            </form>
+        </div>
+        @if (patientDocuments.Any())
+        {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                @foreach (var document in patientDocuments)
+                {
+                    <div class="flex items-center justify-between gap-3 border border-outline-variant rounded-xl p-3">
+                        <div class="min-w-0"><p class="font-semibold truncate">@document.TenTaiLieu</p><p class="text-xs text-on-surface-variant">@document.NgayTaiLen.ToString("dd/MM/yyyy HH:mm") · @(document.KichThuoc / 1024) KB</p></div>
+                        <div class="flex items-center gap-1 shrink-0"><a href="/Patient/Record/DownloadDocument/@document.Id" target="_blank" class="p-2 text-primary hover:bg-primary/10 rounded-lg" title="Xem tài liệu"><span class="material-symbols-outlined">visibility</span></a><form method="post" action="/Patient/Record/DeleteDocument/@document.Id">@Html.AntiForgeryToken()<button class="p-2 text-error hover:bg-error/10 rounded-lg" title="Xóa tài liệu"><span class="material-symbols-outlined">delete</span></button></form></div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-body-md text-on-surface-variant italic">Chưa có giấy tờ khám trước được tải lên.</p>
+        }
+    </section>
 
     <!-- Cards Grid -->
     <div class="space-y-4">

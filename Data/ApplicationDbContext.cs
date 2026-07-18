@@ -27,6 +27,7 @@ namespace QuanLyBenhVien.Data
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
         public DbSet<Dependent> Dependents { get; set; } = null!;
         public DbSet<DoctorWorkSchedule> DoctorWorkSchedules { get; set; } = null!;
+        public DbSet<PatientDocument> PatientDocuments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -145,6 +146,12 @@ namespace QuanLyBenhVien.Data
             modelBuilder.Entity<Dependent>()
                 .HasOne(d => d.Patient)
                 .WithMany(p => p.Dependents)
+                .HasForeignKey(d => d.BenhNhanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PatientDocument>()
+                .HasOne(d => d.Patient)
+                .WithMany()
                 .HasForeignKey(d => d.BenhNhanId)
                 .OnDelete(DeleteBehavior.Cascade);
 

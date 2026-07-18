@@ -4,6 +4,7 @@
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
     ViewData["Title"] = "Phiên khám bệnh";
     var historyExams = ViewBag.HistoryExams as List<QuanLyBenhVien.Models.ExaminationRecord> ?? new List<QuanLyBenhVien.Models.ExaminationRecord>();
+    var patientDocuments = ViewBag.PatientDocuments as List<QuanLyBenhVien.Models.PatientDocument> ?? new List<QuanLyBenhVien.Models.PatientDocument>();
     var medicines = ViewBag.Medicines as List<QuanLyBenhVien.Models.Medicine> ?? new List<QuanLyBenhVien.Models.Medicine>();
 }
 
@@ -172,6 +173,27 @@
             </div>
         </form>
     </div>
+
+    <!-- Right panel: Patient medical history (1 col) -->
+    <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md">
+        <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2 mb-3"><span class="material-symbols-outlined text-primary">folder_shared</span> Giấy tờ khám bệnh nhân cung cấp</h3>
+        @if (patientDocuments.Any())
+        {
+            <div class="space-y-2">
+                @foreach (var document in patientDocuments)
+                {
+                    <a href="/Doctor/Queue/DownloadPatientDocument/@document.Id" target="_blank" class="flex items-center gap-2 border border-outline-variant rounded-lg p-2 hover:border-primary">
+                        <span class="material-symbols-outlined text-primary">@(document.ContentType == "application/pdf" ? "picture_as_pdf" : "image")</span>
+                        <span class="truncate text-body-md font-semibold">@document.TenTaiLieu</span>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-body-md text-on-surface-variant italic">Chưa có giấy tờ khám trước.</p>
+        }
+    </section>
 
     <!-- Right panel: Patient medical history (1 col) -->
     <div class="space-y-unit-lg">

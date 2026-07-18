@@ -5,6 +5,38 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QuanLyBenhVien.Models
 {
+    [Table("TaiLieuBenhNhan")]
+    public class PatientDocument
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int BenhNhanId { get; set; }
+
+        [ForeignKey("BenhNhanId")]
+        public virtual Patient Patient { get; set; } = null!;
+
+        [Required, StringLength(150)]
+        public string TenTaiLieu { get; set; } = string.Empty;
+
+        [Required, StringLength(100)]
+        public string LoaiTaiLieu { get; set; } = "GiayToKhamBenh";
+
+        [Required, StringLength(260)]
+        public string TenLuuTru { get; set; } = string.Empty;
+
+        [Required, StringLength(100)]
+        public string ContentType { get; set; } = string.Empty;
+
+        public long KichThuoc { get; set; }
+
+        [StringLength(500)]
+        public string GhiChu { get; set; } = string.Empty;
+
+        public DateTime NgayTaiLen { get; set; } = DateTime.Now;
+    }
+
     [Table("PhieuKham")]
     public class ExaminationRecord
     {

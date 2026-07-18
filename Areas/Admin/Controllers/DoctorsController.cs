@@ -209,6 +209,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
 
         // POST: Admin/Doctors/ToggleStatus/5
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleStatus(int id)
         {
             var doctor = await _context.Doctors.Include(d => d.User).FirstOrDefaultAsync(d => d.Id == id);

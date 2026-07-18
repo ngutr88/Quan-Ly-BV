@@ -21,6 +21,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <div class="flex flex-col gap-unit-lg w-full animate-fade-in">
+    @Html.AntiForgeryToken()
     @if (hasOverdue)
     {
         <!-- Warning Banner -->
@@ -180,7 +181,7 @@
                     </h3>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="invoice-table-scroll overflow-x-auto" aria-label="Vùng cuộn danh sách hóa đơn">
                     <table class="w-full text-left border-collapse" id="invoices-table">
                         <thead>
                             <tr class="bg-surface-container-low border-b border-outline-variant">
@@ -316,7 +317,7 @@
                             <span class="material-symbols-outlined text-[20px] text-secondary">picture_as_pdf</span>
                             <span class="font-semibold">Tải PDF</span>
                         </button>
-                        <button onclick="sendEmailReceipt()" class="flex flex-col items-center justify-center gap-1.5 p-2 bg-surface hover:bg-surface-container-high border border-outline-variant/60 rounded-xl text-caption text-on-surface transition-all active:scale-95" title="Gửi biên lai qua Email">
+                        <button onclick="sendEmailReceipt(event)" class="flex flex-col items-center justify-center gap-1.5 p-2 bg-surface hover:bg-surface-container-high border border-outline-variant/60 rounded-xl text-caption text-on-surface transition-all active:scale-95" title="Gửi biên lai qua Email">
                             <span class="material-symbols-outlined text-[20px] text-tertiary">email</span>
                             <span class="font-semibold">Gửi Email</span>
                         </button>
@@ -799,7 +800,7 @@
         }
 
         // Send Email Receipt
-        function sendEmailReceipt() {
+        function sendEmailReceipt(event) {
             if (!activeInvoiceId) return;
 
             const button = event.currentTarget;
@@ -808,7 +809,10 @@
             button.innerHTML = `<span class="material-symbols-outlined text-[20px] text-tertiary animate-spin">sync</span> <span class="font-semibold">Đang gửi...</span>`;
 
             fetch(`/Patient/Payment/SendEmailReceipt/${activeInvoiceId}`, {
-                method: "POST"
+                method: "POST",
+                headers: {
+                    "RequestVerificationToken": document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
             })
             .then(res => res.json())
             .then(data => {

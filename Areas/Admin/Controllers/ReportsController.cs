@@ -9,6 +9,6 @@ public class ReportsController : Controller
 {
     public IActionResult Index()
     {
-        return RedirectToAction("Index", "Dashboard", new { area = "Admin", fragment = "reports-section" });
+        return View();
     }
 }

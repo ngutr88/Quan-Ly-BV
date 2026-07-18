@@ -195,9 +195,23 @@ body {
 .staff-portal,
 .staff-portal main,
 .staff-content,
-.staff-content > * {
+.staff-content > *,
+.patient-shell main,
+.patient-content,
+.patient-content > *,
+.home-content,
+.home-content > * {
   min-width: 0;
   max-width: 100%;
+}
+
+/* The page canvas owns page scrolling. Individual cards/tables own only
+   their bounded scroll area, preventing one block from moving its siblings. */
+.staff-content,
+.patient-content,
+.home-content {
+  min-height: 0;
+  overscroll-behavior: contain;
 }
 
 .staff-content .grid > *,
@@ -229,7 +243,11 @@ body {
 }
 
 .staff-content [class~="overflow-x-auto"],
-.patient-content [class~="overflow-x-auto"] {
+.staff-content [class~="overflow-auto"],
+.patient-content [class~="overflow-x-auto"],
+.patient-content [class~="overflow-auto"],
+.home-content [class~="overflow-x-auto"],
+.home-content [class~="overflow-auto"] {
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -313,55 +331,66 @@ body {
 }
 
 /* Scrollable data tables keep column labels visible while reconciling long lists. */
-.staff-content .overflow-x-auto:has(> table),
-.patient-content .overflow-x-auto:has(> table) {
+.staff-content :is(.overflow-x-auto, .overflow-auto):has(> table),
+.patient-content :is(.overflow-x-auto, .overflow-auto):has(> table),
+.home-content :is(.overflow-x-auto, .overflow-auto):has(> table) {
   width: 100%;
   max-width: 100%;
   min-width: 0;
   max-height: min(65vh, 680px);
   overflow: auto;
   overscroll-behavior: contain;
+  overscroll-behavior-x: contain;
+  isolation: isolate;
+  touch-action: pan-x pan-y;
   scrollbar-gutter: stable;
 }
 
-.staff-content .overflow-x-auto:has(> table) > table,
-.patient-content .overflow-x-auto:has(> table) > table {
+.staff-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table,
+.patient-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table,
+.home-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table {
   width: 100%;
   min-width: 760px;
 }
 
-.staff-content .overflow-x-auto:has(> table) > table thead,
-.patient-content .overflow-x-auto:has(> table) > table thead {
+.staff-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table thead,
+.patient-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table thead,
+.home-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table thead {
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
-.staff-content .overflow-x-auto:has(> table) > table thead tr,
-.patient-content .overflow-x-auto:has(> table) > table thead tr {
+.staff-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table thead tr,
+.patient-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table thead tr,
+.home-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table thead tr {
   box-shadow: 0 1px 0 rgba(113, 119, 128, 0.28), 0 7px 14px rgba(15, 45, 78, 0.08);
 }
 
-.staff-content .overflow-x-auto:has(> table) > table thead th,
-.patient-content .overflow-x-auto:has(> table) > table thead th {
+.staff-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table thead th,
+.patient-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table thead th,
+.home-content :is(.overflow-x-auto, .overflow-auto):has(> table) > table thead th {
   background: #edf3ff;
 }
 
-.staff-content .overflow-x-auto:has(> table)::-webkit-scrollbar,
-.patient-content .overflow-x-auto:has(> table)::-webkit-scrollbar {
+.staff-content :is(.overflow-x-auto, .overflow-auto):has(> table)::-webkit-scrollbar,
+.patient-content :is(.overflow-x-auto, .overflow-auto):has(> table)::-webkit-scrollbar,
+.home-content :is(.overflow-x-auto, .overflow-auto):has(> table)::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
-.staff-content .overflow-x-auto:has(> table)::-webkit-scrollbar-thumb,
-.patient-content .overflow-x-auto:has(> table)::-webkit-scrollbar-thumb {
+.staff-content :is(.overflow-x-auto, .overflow-auto):has(> table)::-webkit-scrollbar-thumb,
+.patient-content :is(.overflow-x-auto, .overflow-auto):has(> table)::-webkit-scrollbar-thumb,
+.home-content :is(.overflow-x-auto, .overflow-auto):has(> table)::-webkit-scrollbar-thumb {
   background: #a8b6ca;
   border: 2px solid #f7f9ff;
   border-radius: 999px;
 }
 
-.staff-content .overflow-x-auto:has(> table)::-webkit-scrollbar-thumb:hover,
-.patient-content .overflow-x-auto:has(> table)::-webkit-scrollbar-thumb:hover {
+.staff-content :is(.overflow-x-auto, .overflow-auto):has(> table)::-webkit-scrollbar-thumb:hover,
+.patient-content :is(.overflow-x-auto, .overflow-auto):has(> table)::-webkit-scrollbar-thumb:hover,
+.home-content :is(.overflow-x-auto, .overflow-auto):has(> table)::-webkit-scrollbar-thumb:hover {
   background: #73849d;
 }
 
@@ -375,6 +404,27 @@ body {
 .staff-content .staff-table-scroll > table {
   width: 100%;
   min-width: 960px !important;
+}
+
+/* The invoice list is intentionally bounded so its own scrollbar remains
+   inside the card instead of moving the transaction/details panels. */
+.patient-content .invoice-table-scroll {
+  height: min(52vh, 460px);
+  max-height: min(52vh, 460px) !important;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.patient-content .invoice-table-scroll > table {
+  min-width: 760px;
+}
+
+@media (max-width: 767px) {
+  .patient-content .invoice-table-scroll {
+    height: 360px;
+    max-height: 360px !important;
+  }
 }
 
 .staff-content .staff-table-scroll td:not(.whitespace-nowrap) {
@@ -442,4 +492,57 @@ body {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
+}
+
+/* Shared clinical design language — aligns every portal with the secure login experience. */
+:root {
+  --clinical-ink: #102a43;
+  --clinical-muted: #627d98;
+  --clinical-teal: #0b5cab;
+  --clinical-teal-dark: #08457f;
+  --clinical-line: #d9e5ec;
+  --clinical-shadow-sm: 0 5px 16px rgba(14, 47, 83, .07), 0 1px 3px rgba(14, 47, 83, .05);
+  --clinical-shadow-md: 0 15px 34px rgba(14, 47, 83, .10), 0 3px 9px rgba(14, 47, 83, .06);
+}
+
+body { color: var(--clinical-ink); font-family: 'Inter', system-ui, sans-serif; text-rendering: optimizeLegibility; }
+a, button, input, select, textarea, summary { -webkit-tap-highlight-color: transparent; }
+:where(a, button, input, select, textarea, summary):focus-visible { outline: 3px solid rgba(8, 127, 140, .28); outline-offset: 2px; }
+
+/* Admin, doctor and patient workspaces */
+.staff-portal, .patient-shell {
+  background: radial-gradient(circle at 92% 0%, rgba(169, 212, 255, .2), transparent 24rem), linear-gradient(145deg, #f7faff 0%, #f1f6fd 52%, #f8fbff 100%);
+}
+.staff-sidebar, .patient-sidebar { background: rgba(255, 255, 255, .94) !important; border-color: var(--clinical-line) !important; box-shadow: 10px 0 36px rgba(14, 47, 83, .06) !important; }
+.staff-sidebar .text-primary, .patient-sidebar .text-primary, .staff-topbar .text-primary, .patient-topbar .text-primary { color: var(--clinical-teal) !important; }
+.staff-sidebar nav a, .patient-sidebar nav a, .staff-sidebar > div:last-child a, .patient-sidebar > div:last-child a { border-radius: .75rem; color: #526d82; font-weight: 600; }
+.staff-sidebar nav a:hover, .patient-sidebar nav a:hover, .staff-sidebar > div:last-child a:hover, .patient-sidebar > div:last-child a:hover { background: #edf4ff !important; color: var(--clinical-teal) !important; transform: translateX(3px); }
+.staff-sidebar nav a[class*="bg-primary-container/10"], .patient-sidebar nav a[class*="bg-primary-container/10"], .staff-sidebar > div:last-child a[class*="bg-primary-container/10"], .patient-sidebar > div:last-child a[class*="bg-primary-container/10"] { background: #e8f1ff !important; color: var(--clinical-teal) !important; box-shadow: inset 3px 0 0 var(--clinical-teal), var(--clinical-shadow-sm); }
+.staff-topbar, .patient-topbar { background: rgba(255, 255, 255, .84) !important; border-color: var(--clinical-line) !important; box-shadow: 0 8px 24px rgba(14, 47, 83, .06) !important; }
+.staff-topbar input, .patient-topbar input { background: #f2f7f9 !important; border: 1px solid transparent !important; border-radius: .7rem !important; }
+.staff-topbar input:focus, .patient-topbar input:focus { border-color: #70a9e8 !important; box-shadow: 0 0 0 4px rgba(11, 92, 171, .10) !important; }
+.staff-content, .patient-content { color: var(--clinical-ink); }
+.staff-content h1, .staff-content h2, .staff-content h3, .patient-content h1, .patient-content h2, .patient-content h3 { letter-spacing: -.025em; }
+.staff-content .glass-card, .patient-content .glass-card, .staff-content [class*="bg-white"][class*="rounded"], .patient-content [class*="bg-white"][class*="rounded"], .staff-content [class*="bg-surface-container-lowest"][class*="rounded"], .patient-content [class*="bg-surface-container-lowest"][class*="rounded"] { border-color: var(--clinical-line) !important; border-radius: 1rem !important; box-shadow: var(--clinical-shadow-sm) !important; }
+.staff-content .glass-card:hover, .patient-content .glass-card:hover, .staff-content [class*="bg-white"][class*="rounded"]:hover, .patient-content [class*="bg-white"][class*="rounded"]:hover { border-color: #9acfcf !important; box-shadow: var(--clinical-shadow-md) !important; }
+.staff-content :where(input, select, textarea), .patient-content :where(input, select, textarea) { border-color: #cbd8e3 !important; border-radius: .7rem !important; background-color: #fff !important; }
+.staff-content :where(input, select, textarea):focus, .patient-content :where(input, select, textarea):focus { border-color: #70a9e8 !important; box-shadow: 0 0 0 4px rgba(11, 92, 171, .10) !important; outline: none; }
+.staff-content table, .patient-content table { border-color: var(--clinical-line) !important; }
+.staff-content table thead th, .patient-content table thead th { background: #eaf3ff !important; color: #36566c; font-size: .76rem; letter-spacing: .045em; text-transform: uppercase; }
+.staff-content table tbody tr:hover, .patient-content table tbody tr:hover { background: #f2f7ff !important; box-shadow: inset 3px 0 0 rgba(11, 92, 171, .38); }
+
+/* Public pages inherit the same calm palette and hierarchy. */
+.home-shell { background: #f7fafc !important; }
+.home-shell header { background: rgba(255, 255, 255, .90) !important; border-color: var(--clinical-line) !important; box-shadow: 0 8px 28px rgba(14, 47, 83, .07) !important; }
+.home-shell header .text-primary, .home-shell header nav a:hover { color: var(--clinical-teal) !important; }
+.home-shell header a.bg-primary { background: var(--clinical-teal) !important; color: #fff !important; }
+.home-shell header a.bg-primary:hover { background: var(--clinical-teal-dark) !important; color: #fff !important; }
+.home-content section > [class*="rounded"], .home-content article[class*="rounded"] { border-color: var(--clinical-line) !important; }
+
+@media (max-width: 767px) {
+  .staff-content, .patient-content { background: linear-gradient(180deg, rgba(255, 255, 255, .38), rgba(235, 243, 255, .62)); }
+  .staff-content .grid, .patient-content .grid { row-gap: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

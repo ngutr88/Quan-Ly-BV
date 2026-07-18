@@ -7,6 +7,7 @@
     var lastRecord = ViewBag.LastRecord as QuanLyBenhVien.Models.ExaminationRecord;
     var historyExams = ViewBag.HistoryExams as List<QuanLyBenhVien.Models.ExaminationRecord> ?? new List<QuanLyBenhVien.Models.ExaminationRecord>();
     var selectedHasRecord = ViewBag.SelectedHasRecord is true;
+    var patientDocuments = ViewBag.PatientDocuments as List<QuanLyBenhVien.Models.PatientDocument> ?? new List<QuanLyBenhVien.Models.PatientDocument>();
 
     // Split queue into Morning and Afternoon sessions
     var morningQueue = queue.Where(a => a.ThoiGian.Hour < 13).ToList();
@@ -231,6 +232,27 @@
                             </p>
                         </div>
                     </div>
+                </div>
+
+                <!-- Vital Signs -->
+                <div class="space-y-unit-md">
+                    <h4 class="text-title-lg font-title-lg text-on-surface font-bold flex items-center gap-unit-sm"><span class="material-symbols-outlined text-primary">folder_shared</span> Sổ khám & giấy tờ bệnh nhân cung cấp</h4>
+                    @if (patientDocuments.Any())
+                    {
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+                            @foreach (var document in patientDocuments)
+                            {
+                                <a href="/Doctor/Queue/DownloadPatientDocument/@document.Id" target="_blank" class="flex items-center gap-3 border border-outline-variant rounded-xl p-unit-md hover:border-primary hover:bg-primary/5 transition-colors">
+                                    <span class="material-symbols-outlined text-primary">@(document.ContentType == "application/pdf" ? "picture_as_pdf" : "image")</span>
+                                    <span class="min-w-0"><span class="block font-semibold truncate">@document.TenTaiLieu</span><span class="block text-caption text-on-surface-variant">@document.NgayTaiLen.ToString("dd/MM/yyyy HH:mm") · Tài liệu bệnh nhân cung cấp</span></span>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-body-md text-on-surface-variant italic">Bệnh nhân chưa cung cấp giấy tờ khám trước.</p>
+                    }
                 </div>
 
                 <!-- Vital Signs -->

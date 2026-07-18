@@ -108,6 +108,7 @@
                                         <span class="material-symbols-outlined">edit</span>
                                     </a>
                                     <form method="POST" action="/Admin/Doctors/ToggleStatus/@doc.Id" class="inline" onsubmit="return confirm('Bạn có chắc muốn thay đổi trạng thái của bác sĩ này?')">
+                                        @Html.AntiForgeryToken()
                                         <button type="submit" class="p-1 @(doc.User.TrangThai == "Active" ? "text-error hover:text-red-700" : "text-secondary hover:text-green-700") transition-colors" title="@(doc.User.TrangThai == "Active" ? "Khóa tài khoản" : "Mở khóa tài khoản")">
                                             <span class="material-symbols-outlined">@(doc.User.TrangThai == "Active" ? "lock" : "lock_open")</span>
                                         </button>

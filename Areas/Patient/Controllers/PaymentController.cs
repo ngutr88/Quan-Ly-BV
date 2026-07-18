@@ -202,6 +202,7 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
 
         // POST: /Patient/Payment/SendEmailReceipt/5
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendEmailReceipt(int id)
         {
             var patientUserId = GetCurrentUserId();

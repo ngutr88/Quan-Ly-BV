@@ -1,73 +1,37 @@
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Xác thực OTP";
+    ViewData["Title"] = "Xác thực hồ sơ";
 }
 
-<section class="bg-surface min-h-screen w-full flex items-center justify-center px-4 py-8 sm:px-6">
-    <main class="w-full max-w-lg mx-auto flex flex-col items-center">
-        <!-- Header -->
-        <header class="text-center mb-unit-lg">
-            <div class="inline-flex items-center justify-center bg-primary rounded-full w-14 h-14 mb-unit-md text-white">
-                <span class="material-symbols-outlined text-headline-lg">sms</span>
-            </div>
-            <h1 class="font-headline-md text-primary font-bold tracking-tight">Xác thực OTP</h1>
-            <p class="font-body-md text-on-surface-variant mt-unit-sm">
-                Chúng tôi đã gửi mã xác thực gồm 6 số tới địa chỉ email: <strong class="text-on-surface">@ViewBag.Email</strong>
-            </p>
-        </header>
+@section Styles {
+<style>
+    .verify-shell{min-height:100svh;display:grid;place-items:center;padding:2rem 1rem;background:radial-gradient(circle at 15% 10%,rgba(118,228,207,.13),transparent 30%),#f5f8fb;color:#102a43}.verify-card{width:min(100%,31rem);background:#fff;border:1px solid #d9e5ec;border-radius:1.15rem;padding:clamp(1.5rem,4vw,2.5rem);box-shadow:0 18px 42px rgba(14,47,83,.1);text-align:center}.verify-mark{display:grid;place-items:center;width:4rem;height:4rem;margin:0 auto 1.25rem;border-radius:1.15rem;background:#e9f8f7;color:#087f8c}.verify-title{margin:0;font-size:clamp(1.7rem,4vw,2.15rem);letter-spacing:-.035em}.verify-copy{margin:.7rem 0 1.7rem;color:#627d98;line-height:1.65}.verify-email{display:inline-block;max-width:100%;overflow-wrap:anywhere;color:#36566c;font-weight:700}.verify-label{display:block;margin-bottom:.55rem;color:#36566c;font-size:.82rem;font-weight:700}.verify-input{width:100%;height:4rem;border:1px solid #cbd8e3;border-radius:.8rem;color:#102a43;background:#fff;text-align:center;font-size:1.75rem;font-weight:700;letter-spacing:.55em;padding-left:.55em;transition:border-color .18s,box-shadow .18s}.verify-input:focus{border-color:#087f8c;box-shadow:0 0 0 4px rgba(8,127,140,.1);outline:none}.verify-demo{margin:.7rem 0 1.35rem;color:#829ab1;font-size:.78rem}.verify-demo strong{color:#087f8c}.verify-submit{width:100%;height:3.25rem;border:0;border-radius:.72rem;background:#086b7d;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;gap:.5rem;box-shadow:0 10px 22px rgba(8,107,125,.2);transition:transform .18s,background .18s}.verify-submit:hover{background:#075b6b;transform:translateY(-1px)}.verify-actions{border-top:1px solid #e6eef2;margin-top:1.35rem;padding-top:1.1rem;display:grid;gap:.7rem;color:#627d98;font-size:.8rem}.verify-actions button,.verify-actions a{color:#087083;font-weight:700}.verify-security{display:flex;justify-content:center;align-items:center;gap:.35rem;color:#829ab1;font-size:.72rem;margin-top:1.2rem}.verify-security .material-symbols-outlined{font-size:1rem}@@media(prefers-reduced-motion:reduce){.verify-submit{transition:none}.verify-submit:hover{transform:none}}
+    .verify-shell{background:radial-gradient(circle at 15% 10%,rgba(169,212,255,.2),transparent 30%),#f5f8fb}.verify-mark{background:#eaf3ff;color:#0b5cab}.verify-input:focus{border-color:#70a9e8;box-shadow:0 0 0 4px rgba(11,92,171,.1)}.verify-demo strong,.verify-actions button,.verify-actions a{color:#0b5cab}.verify-submit{background:#0b5cab;box-shadow:0 10px 22px rgba(11,92,171,.2)}.verify-submit:hover{background:#08457f}
+</style>
+}
 
-        <!-- OTP Card -->
-        <div class="glass-card w-full rounded-xl p-unit-lg shadow-sm text-center">
-            <form asp-controller="Auth" asp-action="VerifyOtp" method="post" class="space-y-unit-lg" id="otp-form">
-                <div class="space-y-unit-sm">
-                    <label class="block text-body-md font-semibold text-on-surface-variant" for="otp">Nhập mã xác thực của bạn</label>
-                    <div class="flex justify-center gap-unit-sm">
-                        <!-- We can render a clean single input box or separate 6 input boxes. A single clean centered input is responsive and easy to handle in standard forms. -->
-                        <input class="w-full max-w-64 tracking-[0.65em] text-center text-headline-lg font-bold pl-[0.65em] pr-0 py-3 bg-surface border border-outline-variant rounded-lg input-focus"
-                               id="otp" name="otp" placeholder="••••••" required maxlength="6" minlength="6"
-                               pattern="[0-9]{6}" inputmode="numeric" type="text" autocomplete="one-time-code"
-                               title="Vui lòng nhập đủ 6 chữ số OTP" />
-                    </div>
-                    <p class="text-caption text-on-surface-variant">Mã OTP trải nghiệm nhanh là: <strong class="text-primary">123456</strong></p>
-                </div>
+<main class="verify-shell">
+    <section class="verify-card" aria-labelledby="verify-title">
+        <div class="verify-mark"><span class="material-symbols-outlined" style="font-size:2rem">mark_email_read</span></div>
+        <h1 id="verify-title" class="verify-title">Xác thực hồ sơ</h1>
+        <p class="verify-copy">Nhập mã 6 chữ số đã được gửi tới<br/><span class="verify-email">@ViewBag.Email</span></p>
+        <form asp-controller="Auth" asp-action="VerifyOtp" method="post" id="otp-form">
+            @Html.AntiForgeryToken()
+            <label class="verify-label" for="otp">Mã xác thực OTP</label>
+            <input class="verify-input" id="otp" name="otp" placeholder="••••••" required maxlength="6" minlength="6" pattern="[0-9]{6}" inputmode="numeric" type="text" autocomplete="one-time-code" title="Vui lòng nhập đủ 6 chữ số OTP" />
+            <p class="verify-demo">Mã OTP demo: <strong>123456</strong></p>
+            <button class="verify-submit" type="submit"><span>Hoàn tất đăng ký</span><span class="material-symbols-outlined">verified</span></button>
+        </form>
+        <div class="verify-actions"><p>Không nhận được mã? <button type="button" onclick="resendOtp()">Gửi lại mã OTP</button></p><a href="/Auth/Register">Sửa lại thông tin đăng ký</a></div>
+        <p class="verify-security"><span class="material-symbols-outlined">verified_user</span>Thông tin xác thực được bảo vệ</p>
+    </section>
+</main>
 
-                <!-- Submit Button -->
-                <button class="w-full bg-primary text-on-primary font-body-lg font-semibold py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] flex items-center justify-center gap-unit-sm shadow-md" type="submit">
-                    <span>Xác nhận tài khoản</span>
-                    <span class="material-symbols-outlined">verified</span>
-                </button>
-            </form>
-
-            <div class="mt-unit-lg pt-unit-md border-t border-outline-variant text-center space-y-unit-sm">
-                <p class="text-caption text-on-surface-variant">
-                    Không nhận được mã? 
-                    <button type="button" class="text-primary font-bold hover:underline" onclick="resendOtp()">Gửi lại mã OTP</button>
-                </p>
-                <a href="/Auth/Register" class="text-caption text-outline hover:text-primary hover:underline transition-colors block">
-                    Sửa thông tin liên hệ đăng ký
-                </a>
-            </div>
-        </div>
-    </main>
-
-    <script>
-        const otpInput = document.getElementById('otp');
-        otpInput.addEventListener('input', () => {
-            otpInput.value = otpInput.value.replace(/\D/g, '').slice(0, 6);
-            otpInput.setCustomValidity('');
-        });
-
-        document.getElementById('otp-form').addEventListener('submit', event => {
-            if (!/^\d{6}$/.test(otpInput.value)) {
-                event.preventDefault();
-                otpInput.setCustomValidity('Vui lòng nhập đủ 6 chữ số OTP.');
-                otpInput.reportValidity();
-                otpInput.focus();
-            }
-        });
-
-        function resendOtp() {
-            showGlobalToast('Gửi lại thành công', 'Mã xác thực mới (123456) đã được gửi lại.', 'success');
-        }
-    </script>
-</section>
+@section Scripts {
+<script>
+    function resendOtp(){showGlobalToast('Gửi lại thành công','Mã OTP demo 123456 đã được gửi lại.','success');}
+    const otpInput=document.getElementById('otp');
+    otpInput.addEventListener('input',()=>{otpInput.value=otpInput.value.replace(/\D/g,'').slice(0,6);otpInput.setCustomValidity('');});
+    document.getElementById('otp-form').addEventListener('submit',event=>{if(!/^\d{6}$/.test(otpInput.value)){event.preventDefault();otpInput.setCustomValidity('Vui lòng nhập đủ 6 chữ số OTP.');otpInput.reportValidity();otpInput.focus();}});
+</script>
+}

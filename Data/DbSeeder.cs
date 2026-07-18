@@ -10,7 +10,9 @@ namespace QuanLyBenhVien.Data
     {
         public static void Seed(ApplicationDbContext context)
         {
-            context.Database.Migrate();
+            // Schema creation/migrations are handled once by Program.cs before
+            // seeding. Keeping this method data-only avoids a second exclusive
+            // migration lock when more than one development process starts.
             SynchronizeDemoAccountCredentials(context);
             SynchronizePatientCccd(context);
             SynchronizeCompletedAppointmentStates(context);

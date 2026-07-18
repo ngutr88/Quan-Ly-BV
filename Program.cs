@@ -46,7 +46,18 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 // Register Database Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var provider = builder.Configuration["Database:Provider"]
+        ?? (connectionString?.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase) == true
+            ? "Sqlite"
+            : "SqlServer");
+
+    if (provider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
+        options.UseSqlServer(connectionString);
+    else if (provider.Equals("MySql", StringComparison.OrdinalIgnoreCase))
+        options.UseMySQL(connectionString);
+    else
+        options.UseSqlite(connectionString);
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 
@@ -79,6 +90,45 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
+        // The legacy migrations in this project were generated for SQLite
+        // (they contain SQLite-specific column annotations). For SQL Server
+        // and MySQL, build the schema from the current model instead of
+        // replaying those migrations against an existing database.
+        var providerName = context.Database.ProviderName ?? string.Empty;
+        var usesModelCreation = context.Database.IsSqlServer() ||
+                                providerName.Contains("MySql", StringComparison.OrdinalIgnoreCase);
+        if (usesModelCreation)
+        {
+            context.Database.EnsureCreated();
+        }
+        else
+        {
+            // Keep the runtime database schema in sync before the seeder or any
+            // controller queries newly introduced tables (for example patient
+            // documents on /Patient/Record).
+            context.Database.Migrate();
+        }
+
+        // The patient-document entity was added to the model in an earlier
+        // SQLite migration that only altered existing columns. Repair SQLite
+        // databases created from that migration where the table is missing.
+        if (context.Database.IsSqlite())
+        {
+            context.Database.ExecuteSqlRaw(@"
+            CREATE TABLE IF NOT EXISTS TaiLieuBenhNhan (
+                Id INTEGER NOT NULL CONSTRAINT PK_TaiLieuBenhNhan PRIMARY KEY AUTOINCREMENT,
+                BenhNhanId INTEGER NOT NULL,
+                TenTaiLieu TEXT NOT NULL,
+                LoaiTaiLieu TEXT NOT NULL,
+                TenLuuTru TEXT NOT NULL,
+                ContentType TEXT NOT NULL,
+                KichThuoc INTEGER NOT NULL,
+                GhiChu TEXT NULL,
+                NgayTaiLen TEXT NOT NULL,
+                CONSTRAINT FK_TaiLieuBenhNhan_BenhNhan_BenhNhanId
+                    FOREIGN KEY (BenhNhanId) REFERENCES BenhNhan (Id) ON DELETE CASCADE
+            );");
+        }
         DbSeeder.Seed(context);
     }
     catch (Exception ex)

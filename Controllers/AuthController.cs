@@ -145,10 +145,8 @@ namespace QuanLyBenhVien.Controllers
             HttpContext.Session.SetString("Reg_BHYT", bhyt ?? string.Empty);
             HttpContext.Session.SetString("Reg_CCCD", cccd ?? string.Empty);
 
-            // Seed a mock OTP (123456)
             HttpContext.Session.SetString("Reg_OTP", "123456");
-
-            TempData["SuccessMessage"] = "Mã xác thực OTP (123456) đã được gửi đến thiết bị của bạn.";
+            TempData["SuccessMessage"] = "Mã xác thực OTP demo là 123456.";
             return RedirectToAction("VerifyOtp");
         }
 
@@ -174,7 +172,7 @@ namespace QuanLyBenhVien.Controllers
             var sessionOtp = HttpContext.Session.GetString("Reg_OTP");
             if (otp.Length != 6 || !otp.All(char.IsDigit) || sessionOtp != otp)
             {
-                TempData["ErrorMessage"] = "Mã OTP không chính xác. Thử lại với mã '123456'.";
+                TempData["ErrorMessage"] = "Mã OTP không chính xác. Hãy nhập mã demo 123456.";
                 ViewBag.Email = HttpContext.Session.GetString("Reg_Email");
                 return View();
             }

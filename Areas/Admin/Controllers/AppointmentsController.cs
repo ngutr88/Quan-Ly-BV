@@ -65,10 +65,23 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
 
         // POST: Admin/Appointments/Confirm/5
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Confirm(int id)
         {
             var app = await _context.Appointments.Include(a => a.Patient.User).FirstOrDefaultAsync(a => a.Id == id);
             if (app == null) return NotFound();
+
+            if (app.TrangThai == "DaHuy" || app.TrangThai == "VangMat" || app.TrangThai == "HoanThanh")
+            {
+                TempData["ErrorMessage"] = "Lịch khám này không còn ở trạng thái có thể xác nhận.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (app.TrangThai == "DaXacNhan" || app.TrangThai == "DangKham")
+            {
+                TempData["SuccessMessage"] = $"Lịch hẹn #{id} đã được xác nhận trước đó.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             app.TrangThai = "DaXacNhan";
             _context.Entry(app).State = EntityState.Modified;
@@ -96,10 +109,23 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
 
         // POST: Admin/Appointments/Cancel/5
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string lyDoHuy)
         {
             var app = await _context.Appointments.Include(a => a.Patient.User).FirstOrDefaultAsync(a => a.Id == id);
             if (app == null) return NotFound();
+
+            if (string.IsNullOrWhiteSpace(lyDoHuy))
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập lý do hủy lịch.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (app.TrangThai == "HoanThanh" || app.TrangThai == "DaHuy")
+            {
+                TempData["ErrorMessage"] = "Lịch khám đã hoàn tất hoặc đã hủy trước đó.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             app.TrangThai = "DaHuy";
             app.LyDoKham = $"[ĐÃ HỦY - Lý do: {lyDoHuy}] " + app.LyDoKham;

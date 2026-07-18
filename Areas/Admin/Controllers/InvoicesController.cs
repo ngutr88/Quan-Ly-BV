@@ -64,6 +64,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
 
         // POST: Admin/Invoices/PayCounter/5
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> PayCounter(int id, string phuongThuc)
         {
             var invoice = await _context.Invoices
@@ -71,6 +72,18 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 .FirstOrDefaultAsync(i => i.Id == id);
 
             if (invoice == null) return NotFound();
+
+            if (invoice.TrangThaiThanhToan == "DaThanhToan")
+            {
+                TempData["SuccessMessage"] = $"Hóa đơn HD-{id.ToString("D5")} đã được thanh toán trước đó.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (phuongThuc != "TienMat" && phuongThuc != "ChuyenKhoan")
+            {
+                TempData["ErrorMessage"] = "Phương thức thanh toán không hợp lệ.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
 
             invoice.TrangThaiThanhToan = "DaThanhToan";
             invoice.PhuongThuc = phuongThuc; // "TienMat" or "ChuyenKhoan"

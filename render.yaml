@@ -7,10 +7,18 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
+      - key: Database__Provider
+        value: Sqlite
       - key: ConnectionStrings__DefaultConnection
         value: Data Source=/app/data/hms.db
       - key: DataProtectionKeysPath
         value: /app/data/data-protection-keys
+    # The free plan uses SQLite for the demo configuration above. Its local
+    # filesystem is ephemeral, so data can be lost after a restart/redeploy.
+    # For production, use a managed MySQL instance and set these two values
+    # in the Render Dashboard (do not commit the password):
+    #   Database__Provider=MySql
+    #   ConnectionStrings__DefaultConnection=Server=<host>;Port=3306;Database=<db>;User ID=<user>;Password=<secret>;SslMode=Required;
     # SQLite needs persistent storage in production. Uncomment and use a paid plan.
     # disk:
     #   name: hospital-data

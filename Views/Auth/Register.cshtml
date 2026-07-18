@@ -1,108 +1,51 @@
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Đăng ký bệnh nhân mới";
+    ViewData["Title"] = "Tạo hồ sơ bệnh nhân";
 }
 
-<div class="min-h-screen flex flex-col items-center justify-center p-margin-mobile bg-surface">
-    <main class="w-full max-w-2xl flex flex-col items-center py-unit-xl">
-        <!-- Header -->
-        <header class="text-center mb-unit-lg">
-            <div class="inline-flex items-center justify-center bg-primary rounded-full w-14 h-14 mb-unit-md text-white">
-                <span class="material-symbols-outlined text-headline-lg">person_add</span>
-            </div>
-            <h1 class="font-headline-md text-primary font-bold tracking-tight">Đăng ký tài khoản Bệnh nhân</h1>
-            <p class="font-body-md text-on-surface-variant mt-unit-sm">
-                Đăng ký tài khoản để dễ dàng đặt lịch trực tuyến, theo dõi đơn thuốc và thanh toán nhanh chóng.
-            </p>
-        </header>
+@section Styles {
+<style>
+    .register-shell{min-height:100svh;display:grid;grid-template-columns:minmax(300px,.72fr) minmax(560px,1.28fr);background:#f5f8fb;color:#102a43}.register-aside{position:relative;overflow:hidden;padding:clamp(2rem,4vw,4rem);display:flex;flex-direction:column;justify-content:space-between;background:linear-gradient(145deg,#063b67,#075985 52%,#087f8c);color:#fff}.register-aside:before{content:"";position:absolute;width:36rem;height:36rem;border:1px solid rgba(255,255,255,.12);border-radius:50%;right:-17rem;top:-13rem;box-shadow:0 0 0 4rem rgba(255,255,255,.025),0 0 0 9rem rgba(255,255,255,.018)}.register-aside>*{position:relative;z-index:1}.register-lockup{display:flex;align-items:center;gap:.75rem;font-weight:700}.register-mark{display:grid;place-items:center;width:2.8rem;height:2.8rem;border-radius:.85rem;background:#fff;color:#08738a}.register-aside-copy{max-width:28rem}.register-kicker{display:inline-flex;align-items:center;gap:.45rem;font-size:.73rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#a8f0de}.register-aside h1{font-size:clamp(2rem,3.6vw,3.5rem);line-height:1.07;letter-spacing:-.045em;margin:1.1rem 0 1rem}.register-aside p{color:rgba(255,255,255,.78);line-height:1.7}.register-steps{display:grid;gap:1rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.16)}.register-step{display:flex;align-items:center;gap:.75rem;font-size:.84rem;color:rgba(255,255,255,.82)}.register-step span:first-child{display:grid;place-items:center;width:1.85rem;height:1.85rem;border-radius:50%;background:rgba(255,255,255,.14);color:#a8f0de;font-weight:700}.register-panel{padding:clamp(1.5rem,4vw,4rem);display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 10% 10%,rgba(118,228,207,.1),transparent 26%),#f7fafc}.register-inner{width:100%;max-width:48rem}.register-mobile-brand{display:none}.register-eyebrow{font-size:.76rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#087f8c}.register-heading{margin:.45rem 0 .4rem;font-size:clamp(1.8rem,3vw,2.45rem);line-height:1.2;letter-spacing:-.035em}.register-subtitle{color:#627d98;line-height:1.6;margin-bottom:1.6rem}.register-form{background:#fff;border:1px solid #d9e5ec;border-radius:1rem;padding:clamp(1.25rem,3vw,2rem);box-shadow:0 12px 30px rgba(14,47,83,.07)}.register-section{margin:0 0 1.4rem;padding:0;border:0}.register-section legend{display:flex;align-items:center;gap:.55rem;width:100%;padding:0 0 .75rem;margin-bottom:1rem;border-bottom:1px solid #e6eef2;color:#36566c;font-size:.85rem;font-weight:700}.register-section legend .material-symbols-outlined{font-size:1.1rem;color:#087f8c}.register-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.register-field label{display:block;margin-bottom:.45rem;color:#334e68;font-size:.8rem;font-weight:700}.required{color:#ba1a1a}.register-input{width:100%;height:3rem;border:1px solid #cbd8e3;border-radius:.7rem;padding:0 .85rem;background:#fff;color:#102a43;transition:border-color .18s,box-shadow .18s}.register-input::placeholder{color:#9aabba}.register-input:focus{border-color:#087f8c;box-shadow:0 0 0 4px rgba(8,127,140,.1);outline:none}.register-password{position:relative}.register-password .register-input{padding-right:3rem}.register-password button{position:absolute;right:.35rem;top:50%;transform:translateY(-50%);width:2.3rem;height:2.3rem;border-radius:.5rem;display:grid;place-items:center;color:#627d98}.register-password button:hover{background:#edf2f7;color:#086477}.register-help{margin-top:.4rem;color:#829ab1;font-size:.72rem}.register-consent{display:flex;align-items:flex-start;gap:.65rem;margin:0 0 1.25rem;color:#627d98;font-size:.78rem;line-height:1.5}.register-consent input{width:1rem;height:1rem;flex:none;margin-top:.15rem;color:#087f8c}.register-consent a,.register-login a{color:#087083;font-weight:700}.register-submit{width:100%;height:3.25rem;border:0;border-radius:.72rem;background:#086b7d;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;gap:.5rem;box-shadow:0 10px 22px rgba(8,107,125,.2);transition:transform .18s,background .18s,box-shadow .18s}.register-submit:hover{background:#075b6b;transform:translateY(-1px);box-shadow:0 14px 28px rgba(8,107,125,.24)}.register-login{text-align:center;margin:1.15rem 0 0;color:#627d98;font-size:.86rem}.register-security{display:flex;justify-content:center;align-items:center;gap:.35rem;margin-top:1rem;color:#829ab1;font-size:.72rem}.register-security .material-symbols-outlined{font-size:1rem}@@media(max-width:900px){.register-shell{grid-template-columns:1fr}.register-aside{display:none}.register-mobile-brand{display:flex;align-items:center;gap:.65rem;color:#086477;font-weight:700;margin-bottom:2rem}.register-mobile-brand .register-mark{background:#086b7d;color:#fff}.register-panel{align-items:flex-start;padding-top:clamp(2rem,8vh,4rem)}}@@media(max-width:560px){.register-panel{padding:1.15rem}.register-grid{grid-template-columns:1fr;gap:.85rem}.register-form{padding:1.1rem;border-radius:.85rem}.register-heading{font-size:1.75rem}}@@media(prefers-reduced-motion:reduce){.register-submit{transition:none}.register-submit:hover{transform:none}}
+    /* Keep registration aligned with the blue hospital palette. */
+    .register-aside{background:linear-gradient(145deg,#063b67,#0b5cab 52%,#2a76c5)}.register-mark{color:#0b5cab}.register-kicker,.register-step span:first-child{color:#a9d4ff}.register-panel{background:radial-gradient(circle at 10% 10%,rgba(169,212,255,.18),transparent 26%),#f7faff}.register-eyebrow,.register-section legend .material-symbols-outlined,.register-consent a,.register-login a{color:#0b5cab}.register-input:focus{border-color:#70a9e8;box-shadow:0 0 0 4px rgba(11,92,171,.1)}.register-password button:hover{color:#0b5cab}.register-submit{background:#0b5cab;box-shadow:0 10px 22px rgba(11,92,171,.2)}.register-submit:hover{background:#08457f;box-shadow:0 14px 28px rgba(11,92,171,.24)}.register-mobile-brand{color:#0b5cab}.register-mobile-brand .register-mark{background:#0b5cab}
+</style>
+}
 
-        <!-- Register Card -->
-        <div class="glass-card w-full rounded-xl p-unit-lg shadow-sm">
-            <form class="space-y-unit-md" action="/Auth/Register" method="POST">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
-                    <!-- Full Name -->
-                    <div class="space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant" for="fullName">Họ và tên bệnh nhân <span class="text-error">*</span></label>
-                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                               id="fullName" name="fullName" placeholder="Nhập đầy đủ họ tên" required type="text" />
-                    </div>
+<div class="register-shell">
+    <aside class="register-aside" aria-label="Quy trình đăng ký">
+        <a href="/" class="register-lockup" aria-label="MediFlow HMS - Trang chủ"><span class="register-mark"><span class="material-symbols-outlined">medical_services</span></span><span>MediFlow <span style="font-weight:400;opacity:.72">HMS</span></span></a>
+        <div class="register-aside-copy"><span class="register-kicker"><span class="material-symbols-outlined" style="font-size:1rem">person_add</span> Patient onboarding</span><h1>Bắt đầu hành trình chăm sóc chủ động.</h1><p>Tạo hồ sơ bệnh nhân để đặt lịch, theo dõi đơn thuốc và nhận thông báo chăm sóc sức khỏe trong một không gian an toàn.</p></div>
+        <div class="register-steps" aria-label="Các bước đăng ký"><div class="register-step"><span>1</span><span>Điền thông tin cá nhân</span></div><div class="register-step"><span>2</span><span>Xác thực email bằng mã OTP</span></div><div class="register-step"><span>3</span><span>Bắt đầu sử dụng hồ sơ số</span></div></div>
+    </aside>
 
-                    <!-- Phone Number -->
-                    <div class="space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant" for="phone">Số điện thoại liên hệ <span class="text-error">*</span></label>
-                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                               id="phone" name="phone" placeholder="Ví dụ: 0901234567" required type="tel" />
-                    </div>
-
-                    <!-- Email -->
-                    <div class="space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant" for="email">Địa chỉ Email <span class="text-error">*</span></label>
-                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                               id="email" name="email" placeholder="example@mail.com" required type="email" />
-                    </div>
-
-                    <!-- Password -->
-                    <div class="space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant" for="password">Mật khẩu đăng nhập <span class="text-error">*</span></label>
-                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                               id="password" name="password" placeholder="Tối thiểu 6 ký tự" required minlength="6" type="password" />
-                    </div>
-
-                    <!-- Date of Birth -->
-                    <div class="space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant" for="dob">Ngày sinh <span class="text-error">*</span></label>
-                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                               id="dob" name="dob" required type="date" />
-                    </div>
-
-                    <!-- Gender -->
-                    <div class="space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant" for="gender">Giới tính <span class="text-error">*</span></label>
-                        <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                                id="gender" name="gender" required>
-                            <option value="">Chọn giới tính</option>
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
-                            <option value="Khác">Khác</option>
-                        </select>
-                    </div>
-
-                    <!-- CCCD -->
-                    <div class="space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant" for="cccd">Số CCCD (Tùy chọn)</label>
-                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                               id="cccd" name="cccd" placeholder="Nhập 12 chữ số số CCCD" type="text" />
-                    </div>
-
-                    <!-- Health Insurance Card (BHYT) -->
-                    <div class="space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant" for="bhyt">Mã số thẻ Bảo hiểm Y tế (BHYT)</label>
-                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                               id="bhyt" name="bhyt" placeholder="Không bắt buộc" type="text" />
-                    </div>
-                </div>
-
-                <div class="flex items-start gap-unit-sm pt-2">
-                    <input class="mt-1 w-4 h-4 text-primary border-outline-variant rounded focus:ring-primary" required id="agree" type="checkbox" />
-                    <label class="text-caption text-on-surface-variant" for="agree">
-                        Tôi cam kết thông tin y khoa và thông tin cá nhân khai báo ở trên là hoàn toàn chính xác và chịu trách nhiệm trước pháp luật.
-                    </label>
-                </div>
-
-                <!-- Submit Button -->
-                <button class="w-full bg-primary text-on-primary font-body-lg font-semibold py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] flex items-center justify-center gap-unit-sm shadow-md" type="submit">
-                    <span>Đăng ký &amp; Nhận mã OTP</span>
-                    <span class="material-symbols-outlined">send</span>
-                </button>
+    <main class="register-panel">
+        <div class="register-inner">
+            <a href="/" class="register-mobile-brand"><span class="register-mark"><span class="material-symbols-outlined">medical_services</span></span><span>MediFlow HMS</span></a>
+            <p class="register-eyebrow">Hồ sơ bệnh nhân mới</p>
+            <h1 class="register-heading">Tạo tài khoản an toàn</h1>
+            <p class="register-subtitle">Thông tin của bạn được dùng để xác thực và kết nối các lần khám trong hồ sơ y tế liên tục.</p>
+            <form class="register-form" action="/Auth/Register" method="post">
+                @Html.AntiForgeryToken()
+                <fieldset class="register-section"><legend><span class="material-symbols-outlined">badge</span>Thông tin cơ bản</legend><div class="register-grid">
+                    <div class="register-field"><label for="fullName">Họ và tên <span class="required">*</span></label><input class="register-input" id="fullName" name="fullName" placeholder="Nguyễn Văn A" autocomplete="name" required /></div>
+                    <div class="register-field"><label for="phone">Số điện thoại <span class="required">*</span></label><input class="register-input" id="phone" name="phone" placeholder="090 123 4567" autocomplete="tel" inputmode="tel" required /></div>
+                    <div class="register-field"><label for="email">Email <span class="required">*</span></label><input class="register-input" id="email" name="email" placeholder="you@example.com" autocomplete="email" inputmode="email" type="email" required /></div>
+                    <div class="register-field"><label for="dob">Ngày sinh <span class="required">*</span></label><input class="register-input" id="dob" name="dob" autocomplete="bday" type="date" required /></div>
+                    <div class="register-field"><label for="gender">Giới tính <span class="required">*</span></label><select class="register-input" id="gender" name="gender" required><option value="">Chọn giới tính</option><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select></div>
+                </div></fieldset>
+                <fieldset class="register-section"><legend><span class="material-symbols-outlined">health_and_safety</span>Thông tin bảo hiểm <span style="font-weight:400;color:#829ab1">(không bắt buộc)</span></legend><div class="register-grid"><div class="register-field"><label for="cccd">Số CCCD</label><input class="register-input" id="cccd" name="cccd" placeholder="12 chữ số" inputmode="numeric" autocomplete="off" /></div><div class="register-field"><label for="bhyt">Mã thẻ BHYT</label><input class="register-input" id="bhyt" name="bhyt" placeholder="Nhập mã thẻ nếu có" autocomplete="off" /></div></div></fieldset>
+                <fieldset class="register-section"><legend><span class="material-symbols-outlined">lock</span>Bảo mật tài khoản</legend><div class="register-field"><label for="password">Mật khẩu <span class="required">*</span></label><div class="register-password"><input class="register-input" id="password" name="password" placeholder="Tối thiểu 6 ký tự" minlength="6" autocomplete="new-password" type="password" required /><button type="button" aria-label="Hiện mật khẩu" aria-controls="password" onclick="toggleRegisterPassword()"><span class="material-symbols-outlined" id="register-password-icon">visibility</span></button></div><p class="register-help">Dùng mật khẩu bạn chưa sử dụng ở nơi khác.</p></div></fieldset>
+                <label class="register-consent"><input id="agree" type="checkbox" required /><span>Tôi xác nhận thông tin cung cấp là chính xác và đồng ý với <a href="/Home/Privacy">chính sách bảo mật y tế</a> của bệnh viện.</span></label>
+                <button class="register-submit" type="submit"><span>Tiếp tục xác thực OTP</span><span class="material-symbols-outlined">arrow_forward</span></button>
             </form>
-
-            <div class="mt-unit-lg pt-unit-md border-t border-outline-variant text-center">
-                <p class="text-body-md text-on-surface-variant">
-                    Đã có tài khoản? 
-                    <a class="text-primary font-bold hover:underline" href="/Auth/Login">Đăng nhập ngay</a>
-                </p>
-            </div>
+            <p class="register-login">Đã có tài khoản? <a href="/Auth/Login">Đăng nhập ngay</a></p>
+            <p class="register-security"><span class="material-symbols-outlined">verified_user</span>Thông tin được bảo vệ trong suốt quá trình đăng ký</p>
         </div>
     </main>
 </div>
+
+@section Scripts {
+<script>
+    function toggleRegisterPassword(){const input=document.getElementById('password');const icon=document.getElementById('register-password-icon');const button=icon.closest('button');const show=input.type==='password';input.type=show?'text':'password';icon.textContent=show?'visibility_off':'visibility';button.setAttribute('aria-label',show?'Ẩn mật khẩu':'Hiện mật khẩu');}
+</script>
+}
