@@ -98,6 +98,7 @@ body {
   max-width: 100%;
 }
 
+
 .patient-content img,
 .patient-content video,
 .patient-content canvas,
@@ -212,6 +213,18 @@ body {
 .home-content {
   min-height: 0;
   overscroll-behavior: contain;
+}
+
+/* These canvases are column flex containers with a capped height, so every
+   direct child is a shrinkable flex item. A child normally refuses to shrink
+   past its own content thanks to the automatic minimum size, but that guard is
+   disabled for any box whose overflow is not visible — so a card that crops a
+   decoration with overflow:hidden silently collapses and eats its own content.
+   The canvas scrolls; nothing stacked on it should ever be squeezed to fit. */
+.staff-content > *,
+.patient-content > *,
+.home-content > * {
+  flex-shrink: 0;
 }
 
 .staff-content .grid > *,
