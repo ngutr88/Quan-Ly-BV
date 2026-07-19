@@ -20,7 +20,7 @@
 <!-- html2pdf dependency for client-side PDF download -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-<div class="flex flex-col gap-unit-lg w-full animate-fade-in">
+<div class="flex flex-col gap-unit-lg w-full min-w-0 max-w-full animate-fade-in">
     @Html.AntiForgeryToken()
     @if (hasOverdue)
     {
@@ -223,8 +223,8 @@
                     </h3>
                 </div>
 
-                <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Lịch sử giao dịch trực tuyến" tabindex="0">
-                    <table class="w-full text-left border-collapse" id="transactions-table">
+                <div class="hms-table-scroll w-full min-w-0 max-w-full overflow-auto custom-scrollbar" role="region" aria-label="Lịch sử giao dịch trực tuyến" tabindex="0">
+                    <table class="w-full min-w-[700px] text-left border-collapse" id="transactions-table">
                         <thead>
                             <tr class="bg-surface-container-low border-b border-outline-variant">
                                 <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Ngày giao dịch</th>

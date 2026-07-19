@@ -1,0 +1,15 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Areas",
+    "\\Areas\\Admin\\Views",
+    "\\Areas\\Doctor",
+    "\\Areas\\Doctor\\Views",
+    "\\docs",
+    "\\docs\\stitch-gen-prompts",
+    "\\timelines",
+    "\\Views",
+    "\\Views\\Auth"
+  ],
+  "PreviewInSolutionExplorer": false
+}
