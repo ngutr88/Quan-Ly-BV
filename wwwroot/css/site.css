@@ -352,8 +352,12 @@ body {
   min-width: 0;
   max-height: min(65vh, 680px);
   overflow: auto;
-  overscroll-behavior: contain;
-  overscroll-behavior-x: contain;
+  /* No overscroll-behavior: contain here. A box with overflow:auto is a scroll
+     container even when its rows fit, and `contain` then swallows the wheel
+     instead of letting the page move — pointing at a short table froze the
+     whole screen. Default chaining is what we want: the table scrolls while it
+     has somewhere to go, then the page takes over. Either way a table never
+     moves the blocks beside it. */
   isolation: isolate;
   touch-action: pan-x pan-y;
   scrollbar-gutter: stable;
@@ -429,7 +433,8 @@ body {
      selector; without it the list would inherit the looser 65vh ceiling. */
   max-height: min(52vh, 460px) !important;
   overflow: auto;
-  overscroll-behavior: contain;
+  /* See the generic rule above: no overscroll-behavior here either, or a short
+     invoice list locks the page whenever the pointer rests on it. */
   scrollbar-gutter: stable;
 }
 
