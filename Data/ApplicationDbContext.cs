@@ -28,6 +28,7 @@ namespace QuanLyBenhVien.Data
         public DbSet<Dependent> Dependents { get; set; } = null!;
         public DbSet<DoctorWorkSchedule> DoctorWorkSchedules { get; set; } = null!;
         public DbSet<PatientDocument> PatientDocuments { get; set; } = null!;
+        public DbSet<Article> Articles { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

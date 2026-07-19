@@ -23,7 +23,8 @@
                 <a href="/" class="@(action == "Index" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Trang chủ</a>
                 <a href="/Home/About" class="@(action == "About" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Giới thiệu</a>
                 <a href="/Home/Specialities" class="@(action == "Specialities" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Chuyên khoa</a>
-                <a href="/Home/Features" class="@(action == "Features" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Tính năng nổi bật</a>
+                <a href="/Home/News" class="@(action == "News" || action == "NewsDetail" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Tin tức</a>
+                <a href="/Home/Features" class="@(action == "Features" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Tính năng</a>
                 <a href="/Home/Testimonials" class="@(action == "Testimonials" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Ý kiến khách hàng</a>
                 <a href="/Home/Contact" class="@(action == "Contact" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Liên hệ</a>
             </nav>
@@ -49,6 +50,7 @@
                 <a href="/" class="rounded-xl px-3 py-3 @(action == "Index" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Trang chủ</a>
                 <a href="/Home/About" class="rounded-xl px-3 py-3 @(action == "About" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Giới thiệu</a>
                 <a href="/Home/Specialities" class="rounded-xl px-3 py-3 @(action == "Specialities" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Chuyên khoa</a>
+                <a href="/Home/News" class="rounded-xl px-3 py-3 @(action == "News" || action == "NewsDetail" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Tin tức</a>
                 <a href="/Home/Features" class="rounded-xl px-3 py-3 @(action == "Features" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Tính năng</a>
                 <a href="/Home/Testimonials" class="rounded-xl px-3 py-3 @(action == "Testimonials" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Ý kiến khách hàng</a>
                 <a href="/Home/Contact" class="rounded-xl px-3 py-3 @(action == "Contact" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Liên hệ</a>
@@ -96,6 +98,7 @@
                         <li><a href="/" class="hover:text-white transition-colors">Trang chủ</a></li>
                         <li><a href="/Home/About" class="hover:text-white transition-colors">Giới thiệu</a></li>
                         <li><a href="/Home/Specialities" class="hover:text-white transition-colors">Danh mục khoa</a></li>
+                        <li><a href="/Home/News" class="hover:text-white transition-colors">Tin tức &amp; thông báo</a></li>
                         <li><a href="/Home/Features" class="hover:text-white transition-colors">Quy trình y tế số</a></li>
                         <li><a href="/Auth/Login" class="hover:text-white transition-colors">Đăng nhập tài khoản</a></li>
                     </ul>

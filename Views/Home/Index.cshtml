@@ -1,6 +1,38 @@
+@using QuanLyBenhVien.Models
 @{
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
     ViewData["Title"] = "MediFlow HMS - Chăm sóc sức khỏe toàn diện";
+
+    var departments = ViewBag.Departments as List<Department> ?? new List<Department>();
+    var doctors = ViewBag.FeaturedDoctors as List<Doctor> ?? new List<Doctor>();
+    var services = ViewBag.Services as List<Service> ?? new List<Service>();
+    var articles = ViewBag.LatestArticles as List<Article> ?? new List<Article>();
+    var reviews = ViewBag.Reviews as List<Review> ?? new List<Review>();
+
+    int departmentCount = ViewBag.DepartmentCount ?? 0;
+    int doctorCount = ViewBag.DoctorCount ?? 0;
+    int completedVisits = ViewBag.CompletedVisits ?? 0;
+    int serviceCount = ViewBag.ServiceCount ?? 0;
+    double avgRating = ViewBag.AverageRating ?? 0d;
+    int reviewCount = ViewBag.ReviewCount ?? 0;
+
+    string DeptIcon(string name)
+    {
+        var n = name.ToLowerInvariant();
+        if (n.Contains("tim")) return "cardiology";
+        if (n.Contains("nhi")) return "child_care";
+        if (n.Contains("sản")) return "pregnant_woman";
+        if (n.Contains("thần kinh")) return "neurology";
+        if (n.Contains("mắt")) return "visibility";
+        if (n.Contains("tai") || n.Contains("mũi")) return "hearing";
+        if (n.Contains("da")) return "dermatology";
+        if (n.Contains("răng")) return "dentistry";
+        if (n.Contains("xét nghiệm")) return "biotech";
+        if (n.Contains("chẩn đoán") || n.Contains("hình ảnh")) return "radiology";
+        if (n.Contains("ngoại") || n.Contains("chỉnh hình")) return "orthopedics";
+        if (n.Contains("cấp cứu")) return "emergency";
+        return "stethoscope";
+    }
 }
 
 @section Styles {
@@ -16,10 +48,6 @@
                         0 14px 32px -18px rgba(0, 86, 179, .35);
         }
 
-        .hero-float-card {
-            box-shadow: 0 18px 45px -24px rgba(15, 45, 85, .55);
-        }
-
         .home-stat {
             border: 1px solid rgba(199, 205, 216, .65);
             box-shadow: 0 12px 30px -24px rgba(15, 45, 85, .55);
@@ -31,51 +59,89 @@
             box-shadow: 0 22px 42px -25px rgba(0, 86, 179, .42);
         }
 
+        .home-card {
+            background: #fff;
+            border: 1px solid var(--clinical-line);
+            border-radius: 1rem;
+            box-shadow: var(--clinical-shadow-sm);
+            transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+        }
+
+        .home-card:hover {
+            transform: translateY(-4px);
+            border-color: #70a9e8;
+            box-shadow: var(--clinical-shadow-md);
+        }
+
+        .home-section-label {
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--clinical-teal);
+        }
+
+        .home-section-title {
+            font-size: clamp(1.5rem, 2.4vw, 2rem);
+            font-weight: 800;
+            letter-spacing: -.02em;
+            color: var(--clinical-ink);
+        }
+
         .home-cta {
             box-shadow: 0 28px 70px -35px rgba(0, 50, 112, .75);
+        }
+
+        .home-step-num {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 999px;
+            background: var(--clinical-teal);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
         }
     </style>
 }
 
-<section class="home-hero overflow-hidden border-b border-outline-variant/40">
-    <div class="max-w-[1440px] mx-auto px-4 md:px-unit-lg py-14 lg:py-24 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<!-- Hero -->
+<section class="home-hero border-b border-outline-variant/40">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-unit-lg py-14 lg:py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div class="space-y-7">
             <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider">
                 <span class="text-primary">•</span>
-                Công ty y tế số hiện đại
+                Bệnh viện đa khoa · Y tế số
             </div>
-            <h2 class="text-[40px] lg:text-[58px] font-black text-on-surface leading-[1.08] tracking-tight">
+            <h2 class="text-[40px] lg:text-[54px] font-black text-on-surface leading-[1.08] tracking-tight">
                 Chăm sóc sức khỏe
                 <span class="block"><span class="text-primary">thông minh</span> &amp; toàn diện</span>
             </h2>
             <p class="text-body-lg text-on-surface-variant leading-relaxed max-w-2xl">
-                Đặt lịch khám nhanh chóng, theo dõi hồ sơ sức khỏe an toàn và kết nối với đội ngũ bác sĩ chuyên khoa tại MediFlow.
+                Đặt lịch khám nhanh chóng, theo dõi hồ sơ sức khỏe an toàn và kết nối với đội ngũ
+                @doctorCount bác sĩ thuộc @departmentCount chuyên khoa tại MediFlow.
             </p>
             <div class="flex flex-col sm:flex-row gap-4">
                 <a href="/Auth/Register" class="px-7 py-3.5 rounded-xl bg-primary text-white font-bold hover:bg-primary-container transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/15">
                     <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">event_available</span>
                     Đăng ký khám trực tuyến
                 </a>
-                <a href="/Home/About" class="px-7 py-3.5 rounded-xl border border-outline-variant bg-white text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
-                    Khám phá MediFlow
+                <a href="/Home/Specialities" class="px-7 py-3.5 rounded-xl border border-outline-variant bg-white text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
+                    Xem chuyên khoa
                     <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
                 </a>
             </div>
         </div>
 
-        <div class="relative mx-auto w-full max-w-[620px] pb-10 lg:pb-0">
-            <!-- Glow effect behind image -->
-            <div class="absolute -inset-6 bg-primary/15 rounded-[2.25rem] blur-3xl"></div>
-
-            <!-- Doctor Consultation Image -->
+        <div class="relative mx-auto w-full max-w-[620px]">
             <div class="relative rounded-3xl overflow-hidden shadow-2xl border border-white/80 bg-white/60 p-2 backdrop-blur-sm hero-visual">
                 <img src="~/images/hospital_hero_consultation.png" alt="Bác sĩ MediFlow tư vấn sức khỏe cho bệnh nhân"
                      class="w-full aspect-[16/10] object-cover object-center rounded-2xl" />
             </div>
 
-            <!-- Floating Combined Stats & Features Card -->
-            <div class="relative mt-8 lg:mt-0 lg:absolute lg:-bottom-10 lg:right-0 lg:left-0 lg:-left-12 bg-white/95 backdrop-blur-md p-5 rounded-[20px] border border-outline-variant/50 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] flex flex-col sm:flex-row items-stretch justify-between gap-5 z-10">
-                <!-- Protection Feature -->
+            <!-- Kept in normal flow so it is never clipped by the hero bounds. -->
+            <div class="mt-5 bg-white/95 backdrop-blur-md p-5 rounded-[20px] border border-outline-variant/50 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.12)] flex flex-col sm:flex-row items-stretch justify-between gap-5">
                 <div class="flex items-center gap-3.5 flex-1">
                     <span class="material-symbols-outlined text-primary text-[32px] shrink-0">verified_user</span>
                     <div>
@@ -83,11 +149,7 @@
                         <span class="block text-on-surface-variant text-[13px] font-medium mt-0.5">An toàn tuyệt đối</span>
                     </div>
                 </div>
-
-                <!-- Divider -->
                 <div class="hidden sm:block w-px bg-outline-variant/50 self-stretch my-1"></div>
-
-                <!-- Booking Feature -->
                 <div class="flex items-center gap-3.5 flex-1">
                     <span class="material-symbols-outlined text-primary text-[32px] shrink-0">schedule</span>
                     <div>
@@ -95,16 +157,12 @@
                         <span class="block text-on-surface-variant text-[13px] font-medium mt-0.5">Linh hoạt, tiện lợi</span>
                     </div>
                 </div>
-
-                <!-- Divider -->
                 <div class="hidden sm:block w-px bg-outline-variant/50 self-stretch my-1"></div>
-
-                <!-- Doctors Count Feature -->
                 <div class="flex items-center gap-3.5 flex-1">
                     <span class="material-symbols-outlined text-primary text-[32px] shrink-0">groups</span>
                     <div>
-                        <strong class="block text-on-surface font-bold text-[15px] leading-tight">150+ Bác sĩ</strong>
-                        <span class="block text-on-surface-variant text-[13px] font-medium mt-0.5">Nhiều chuyên khoa</span>
+                        <strong class="block text-on-surface font-bold text-[15px] leading-tight">@doctorCount bác sĩ</strong>
+                        <span class="block text-on-surface-variant text-[13px] font-medium mt-0.5">@departmentCount chuyên khoa</span>
                     </div>
                 </div>
             </div>
@@ -112,20 +170,268 @@
     </div>
 </section>
 
+<!-- Real figures -->
 <section class="bg-white border-b border-outline-variant/40">
     <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg py-10 grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center"><strong class="block text-3xl text-primary font-black">20+</strong><span class="text-caption text-on-surface-variant font-semibold">Khoa chuyên môn</span></div>
-        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center"><strong class="block text-3xl text-primary font-black">150+</strong><span class="text-caption text-on-surface-variant font-semibold">Bác sĩ &amp; chuyên gia</span></div>
-        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center"><strong class="block text-3xl text-primary font-black">25.000+</strong><span class="text-caption text-on-surface-variant font-semibold">Lượt khám thành công</span></div>
-        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center"><strong class="block text-3xl text-primary font-black">99,5%</strong><span class="text-caption text-on-surface-variant font-semibold">Khách hàng hài lòng</span></div>
+        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center">
+            <strong class="block text-3xl text-primary font-black">@departmentCount</strong>
+            <span class="text-caption text-on-surface-variant font-semibold">Khoa chuyên môn</span>
+        </div>
+        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center">
+            <strong class="block text-3xl text-primary font-black">@doctorCount</strong>
+            <span class="text-caption text-on-surface-variant font-semibold">Bác sĩ đang công tác</span>
+        </div>
+        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center">
+            <strong class="block text-3xl text-primary font-black">@completedVisits.ToString("N0")</strong>
+            <span class="text-caption text-on-surface-variant font-semibold">Lượt khám hoàn thành</span>
+        </div>
+        <div class="home-stat rounded-2xl bg-white px-4 py-6 text-center">
+            <strong class="block text-3xl text-primary font-black">
+                @(reviewCount > 0 ? avgRating.ToString("0.0") + "/5" : "—")
+            </strong>
+            <span class="text-caption text-on-surface-variant font-semibold">
+                @(reviewCount > 0 ? $"Từ {reviewCount} đánh giá" : "Chưa có đánh giá")
+            </span>
+        </div>
     </div>
 </section>
 
+<!-- Departments -->
+@if (departments.Count > 0)
+{
+    <section class="bg-surface py-14">
+        <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg">
+            <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+                <div>
+                    <p class="home-section-label mb-1">Chuyên khoa</p>
+                    <h3 class="home-section-title">Các khoa đang tiếp nhận khám</h3>
+                    <p class="text-body-md text-on-surface-variant mt-1">Danh sách khoa và vị trí phòng khám tại bệnh viện.</p>
+                </div>
+                <a href="/Home/Specialities" class="hms-btn hms-btn-secondary">
+                    Xem tất cả @departmentCount khoa <span class="material-symbols-outlined">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                @foreach (var dept in departments)
+                {
+                    <div class="home-card p-5">
+                        <div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
+                            <span class="material-symbols-outlined">@DeptIcon(dept.TenKhoa)</span>
+                        </div>
+                        <h4 class="font-bold text-on-surface">@dept.TenKhoa</h4>
+                        @if (!string.IsNullOrWhiteSpace(dept.MoTa))
+                        {
+                            <p class="text-caption text-on-surface-variant mt-1 line-clamp-2">@dept.MoTa</p>
+                        }
+                        <p class="text-caption text-primary font-semibold mt-2 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[16px]">location_on</span> @dept.ViTri
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<!-- News -->
+@if (articles.Count > 0)
+{
+    <section class="bg-white py-14 border-y border-outline-variant/40">
+        <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg">
+            <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+                <div>
+                    <p class="home-section-label mb-1">Tin tức &amp; thông báo</p>
+                    <h3 class="home-section-title">Thông tin mới nhất từ bệnh viện</h3>
+                    <p class="text-body-md text-on-surface-variant mt-1">Thông báo vận hành, chương trình khám và kiến thức sức khỏe.</p>
+                </div>
+                <a href="/Home/News" class="hms-btn hms-btn-secondary">
+                    Xem tất cả tin <span class="material-symbols-outlined">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                @foreach (var article in articles)
+                {
+                    <a href="/Home/NewsDetail/@article.Id" class="home-card p-5 flex flex-col">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="hms-badge hms-badge-info">@article.ChuyenMuc</span>
+                            @if (article.NoiBat)
+                            {
+                                <span class="hms-badge hms-badge-warn">
+                                    <span class="material-symbols-outlined">star</span> Nổi bật
+                                </span>
+                            }
+                        </div>
+                        <h4 class="font-bold text-on-surface leading-snug">@article.TieuDe</h4>
+                        <p class="text-body-md text-on-surface-variant mt-2 line-clamp-3 flex-1">@article.TomTat</p>
+                        <div class="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/50">
+                            <span class="text-caption text-on-surface-variant">@article.NgayDang.ToString("dd/MM/yyyy")</span>
+                            <span class="text-caption text-primary font-bold flex items-center gap-1">
+                                Đọc tiếp <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                            </span>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<!-- Doctors -->
+@if (doctors.Count > 0)
+{
+    <section class="bg-surface py-14">
+        <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg">
+            <div class="mb-8">
+                <p class="home-section-label mb-1">Đội ngũ</p>
+                <h3 class="home-section-title">Bác sĩ nhiều kinh nghiệm</h3>
+                <p class="text-body-md text-on-surface-variant mt-1">Đội ngũ bác sĩ đang trực tiếp thăm khám tại MediFlow.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                @foreach (var doc in doctors)
+                {
+                    <div class="home-card p-5 text-center">
+                        <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3 text-xl font-black">
+                            @(string.IsNullOrEmpty(doc.User.HoTen) ? "?" : doc.User.HoTen.Trim().Split(' ').Last()[0].ToString().ToUpper())
+                        </div>
+                        <h4 class="font-bold text-on-surface">@doc.HocVi. @doc.User.HoTen</h4>
+                        <p class="text-caption text-primary font-semibold mt-0.5">@doc.ChuyenKhoa</p>
+                        <p class="text-caption text-on-surface-variant mt-1">@doc.Department.TenKhoa</p>
+                        <div class="mt-3 pt-3 border-t border-outline-variant/50 flex items-center justify-center gap-1 text-caption text-on-surface-variant">
+                            <span class="material-symbols-outlined text-[16px] text-primary">workspace_premium</span>
+                            @doc.SoNamKinhNghiem năm kinh nghiệm
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<!-- How it works -->
+<section class="bg-white py-14 border-y border-outline-variant/40">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg">
+        <div class="mb-8">
+            <p class="home-section-label mb-1">Quy trình</p>
+            <h3 class="home-section-title">Khám bệnh tại MediFlow chỉ với 4 bước</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div class="home-card p-5">
+                <div class="home-step-num mb-3">1</div>
+                <h4 class="font-bold text-on-surface">Tạo tài khoản</h4>
+                <p class="text-body-md text-on-surface-variant mt-1">Đăng ký bằng số điện thoại hoặc email, xác thực OTP trong vài giây.</p>
+            </div>
+            <div class="home-card p-5">
+                <div class="home-step-num mb-3">2</div>
+                <h4 class="font-bold text-on-surface">Chọn khoa &amp; bác sĩ</h4>
+                <p class="text-body-md text-on-surface-variant mt-1">Xem lịch trống thực tế của từng bác sĩ và chọn khung giờ phù hợp.</p>
+            </div>
+            <div class="home-card p-5">
+                <div class="home-step-num mb-3">3</div>
+                <h4 class="font-bold text-on-surface">Đến khám đúng hẹn</h4>
+                <p class="text-body-md text-on-surface-variant mt-1">Có mặt trước 15 phút để làm thủ tục tiếp đón và đo sinh hiệu.</p>
+            </div>
+            <div class="home-card p-5">
+                <div class="home-step-num mb-3">4</div>
+                <h4 class="font-bold text-on-surface">Nhận kết quả &amp; đơn thuốc</h4>
+                <p class="text-body-md text-on-surface-variant mt-1">Bệnh án, đơn thuốc và hóa đơn được lưu điện tử trong tài khoản.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services -->
+@if (services.Count > 0)
+{
+    <section class="bg-surface py-14">
+        <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg">
+            <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+                <div>
+                    <p class="home-section-label mb-1">Bảng giá</p>
+                    <h3 class="home-section-title">Dịch vụ &amp; chi phí tham khảo</h3>
+                    <p class="text-body-md text-on-surface-variant mt-1">
+                        Bệnh viện đang cung cấp @serviceCount dịch vụ. Giá có thể thay đổi theo chỉ định của bác sĩ.
+                    </p>
+                </div>
+                <a href="/Home/Specialities" class="hms-btn hms-btn-secondary">
+                    Xem đầy đủ bảng giá <span class="material-symbols-outlined">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                                <th class="px-unit-md py-3">Dịch vụ</th>
+                                <th class="px-unit-md py-3">Khoa phụ trách</th>
+                                <th class="px-unit-md py-3 text-right">Chi phí</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant">
+                            @foreach (var svc in services)
+                            {
+                                <tr class="hover:bg-surface-container-low transition-colors">
+                                    <td class="px-unit-md py-3.5 font-semibold text-on-surface">@svc.TenDichVu</td>
+                                    <td class="px-unit-md py-3.5 text-on-surface-variant">@svc.Department.TenKhoa</td>
+                                    <td class="px-unit-md py-3.5 text-right font-bold text-primary">@svc.Gia.ToString("N0") ₫</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+<!-- Reviews -->
+@if (reviews.Count > 0)
+{
+    <section class="bg-white py-14 border-y border-outline-variant/40">
+        <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg">
+            <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+                <div>
+                    <p class="home-section-label mb-1">Ý kiến người bệnh</p>
+                    <h3 class="home-section-title">Người bệnh nói gì về MediFlow</h3>
+                </div>
+                <a href="/Home/Testimonials" class="hms-btn hms-btn-secondary">
+                    Xem thêm đánh giá <span class="material-symbols-outlined">arrow_forward</span>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                @foreach (var rev in reviews)
+                {
+                    <div class="home-card p-5">
+                        <div class="flex items-center gap-1 mb-2 text-[#e8a33d]">
+                            @for (var i = 0; i < 5; i++)
+                            {
+                                <span class="material-symbols-outlined text-[18px]"
+                                      style="font-variation-settings: 'FILL' @(i < rev.SoSao ? 1 : 0);">star</span>
+                            }
+                        </div>
+                        <p class="text-body-md text-on-surface leading-relaxed">“@rev.NhanXet”</p>
+                        <div class="mt-4 pt-3 border-t border-outline-variant/50 text-caption text-on-surface-variant">
+                            <strong class="text-on-surface">@rev.Patient.User.HoTen</strong>
+                            <span> • khám với BS @rev.Doctor.User.HoTen</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<!-- CTA -->
 <section class="bg-surface py-14">
     <div class="home-cta max-w-[1100px] mx-auto px-4 md:px-unit-lg rounded-3xl bg-primary text-white p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-7">
         <div>
             <p class="text-primary-fixed font-bold uppercase tracking-wider text-caption mb-2">Bắt đầu hành trình chăm sóc sức khỏe</p>
             <h3 class="text-2xl md:text-3xl font-black">Đặt lịch với bác sĩ phù hợp ngay hôm nay</h3>
+            <p class="text-body-md opacity-90 mt-2">Hotline hỗ trợ: 1900 6868 · Cấp cứu 24/7: 028.115</p>
         </div>
         <a href="/Auth/Register" class="shrink-0 px-7 py-3.5 rounded-xl bg-white text-primary font-bold hover:bg-primary-fixed transition-colors">Tạo tài khoản bệnh nhân</a>
     </div>

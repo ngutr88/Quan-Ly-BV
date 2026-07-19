@@ -1,0 +1,101 @@
+@using QuanLyBenhVien.Models
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "Tin tức & Thông báo";
+
+    var articles = ViewBag.Articles as List<Article> ?? new List<Article>();
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+    var active = ViewBag.ActiveCategory as string;
+    int page = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalArticles = ViewBag.TotalArticles ?? 0;
+
+    string PageLink(int p) => string.IsNullOrEmpty(active)
+        ? $"/Home/News?page={p}"
+        : $"/Home/News?category={Uri.EscapeDataString(active)}&page={p}";
+}
+
+<section class="bg-white border-b border-outline-variant/40">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg py-12">
+        <nav class="hms-breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span class="hms-breadcrumb-sep">/</span>
+            <span class="hms-breadcrumb-current">Tin tức</span>
+        </nav>
+        <h1 class="hms-page-title">Tin tức &amp; thông báo</h1>
+        <p class="hms-page-subtitle">
+            Thông báo vận hành, chương trình khám sàng lọc và kiến thức chăm sóc sức khỏe từ MediFlow.
+        </p>
+    </div>
+</section>
+
+<section class="bg-surface py-10">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg">
+        <!-- Category filter -->
+        <div class="flex flex-wrap gap-2 mb-8">
+            <a href="/Home/News" class="hms-btn @(string.IsNullOrEmpty(active) ? "hms-btn-primary" : "hms-btn-secondary") hms-btn-sm">
+                Tất cả (@totalArticles)
+            </a>
+            @foreach (var cat in categories)
+            {
+                <a href="/Home/News?category=@Uri.EscapeDataString(cat)"
+                   class="hms-btn @(active == cat ? "hms-btn-primary" : "hms-btn-secondary") hms-btn-sm">@cat</a>
+            }
+        </div>
+
+        @if (articles.Count == 0)
+        {
+            <div class="bg-white border border-outline-variant rounded-xl shadow-sm">
+                <div class="hms-empty">
+                    <div class="hms-empty-icon"><span class="material-symbols-outlined">newspaper</span></div>
+                    <p class="hms-empty-title">Chưa có bài viết nào</p>
+                    <p class="hms-empty-text">Chuyên mục này hiện chưa có nội dung. Vui lòng quay lại sau.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                @foreach (var article in articles)
+                {
+                    <a href="/Home/NewsDetail/@article.Id"
+                       class="bg-white border border-outline-variant rounded-xl shadow-sm p-5 flex flex-col hover:border-primary hover:shadow-md transition-all">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="hms-badge hms-badge-info">@article.ChuyenMuc</span>
+                            @if (article.NoiBat)
+                            {
+                                <span class="hms-badge hms-badge-warn">
+                                    <span class="material-symbols-outlined">star</span> Nổi bật
+                                </span>
+                            }
+                        </div>
+                        <h2 class="font-bold text-on-surface leading-snug">@article.TieuDe</h2>
+                        <p class="text-body-md text-on-surface-variant mt-2 line-clamp-3 flex-1">@article.TomTat</p>
+                        <div class="flex items-center justify-between mt-4 pt-3 border-t border-outline-variant/50 text-caption text-on-surface-variant">
+                            <span>@article.NgayDang.ToString("dd/MM/yyyy")</span>
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[15px]">visibility</span> @article.LuotXem
+                            </span>
+                        </div>
+                    </a>
+                }
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <nav class="hms-pagination justify-center mt-8" aria-label="Phân trang tin tức">
+                    <a class="hms-page-link @(page > 1 ? "" : "hms-page-link-disabled")" href="@PageLink(page - 1)">
+                        <span class="material-symbols-outlined" style="font-size:18px;">chevron_left</span>
+                    </a>
+                    @for (var p = 1; p <= totalPages; p++)
+                    {
+                        <a class="hms-page-link @(p == page ? "hms-page-link-active" : "")" href="@PageLink(p)">@p</a>
+                    }
+                    <a class="hms-page-link @(page < totalPages ? "" : "hms-page-link-disabled")" href="@PageLink(page + 1)">
+                        <span class="material-symbols-outlined" style="font-size:18px;">chevron_right</span>
+                    </a>
+                </nav>
+            }
+        }
+    </div>
+</section>

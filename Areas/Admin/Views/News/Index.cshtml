@@ -1,0 +1,223 @@
+@model QuanLyBenhVien.Helpers.PagedList<QuanLyBenhVien.Models.Article>
+@using QuanLyBenhVien.Models.ViewModels
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Quản lý Tin tức";
+
+    var articles = Model.Items;
+    var categories = ViewBag.Categories as string[] ?? Array.Empty<string>();
+    var searchString = ViewBag.SearchString as string;
+    var category = ViewBag.Category as string;
+
+    var totalMatching = (int)(ViewBag.TotalMatching ?? 0);
+    var publishedCount = (int)(ViewBag.PublishedCount ?? 0);
+    var draftCount = (int)(ViewBag.DraftCount ?? 0);
+    var totalViews = (int)(ViewBag.TotalViews ?? 0);
+
+    var filters = new Dictionary<string, string>
+    {
+        ["searchString"] = searchString,
+        ["category"] = category
+    };
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Tin tức & thông báo",
+        Subtitle = "Soạn và xuất bản nội dung hiển thị trên website công khai của bệnh viện.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Quản trị", "/Admin/Dashboard") },
+        CurrentCrumb = "Tin tức"
+    };
+
+    Func<object, IHtmlContent> pageActions = @<text>
+        <a href="/Home/News" target="_blank" class="hms-btn hms-btn-secondary">
+            <span class="material-symbols-outlined">open_in_new</span> Xem trang công khai
+        </a>
+        <a href="/Admin/News/Create" class="hms-btn hms-btn-primary">
+            <span class="material-symbols-outlined">post_add</span> Viết bài mới
+        </a>
+    </text>;
+
+    ViewData["PageActions"] = pageActions;
+}
+
+<partial name="_PageHeader" model="header" />
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-label-md">@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+<div class="hms-stat-grid">
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">newspaper</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Bài viết khớp lọc</p>
+            <p class="hms-stat-value">@totalMatching</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-success"><span class="material-symbols-outlined">public</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Đã xuất bản</p>
+            <p class="hms-stat-value">@publishedCount</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-warn"><span class="material-symbols-outlined">edit_note</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Bản nháp</p>
+            <p class="hms-stat-value">@draftCount</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">visibility</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Tổng lượt xem</p>
+            <p class="hms-stat-value">@totalViews.ToString("N0")</p>
+        </div>
+    </div>
+</div>
+
+<div class="hms-toolbar">
+    <form method="GET" action="/Admin/News" class="hms-toolbar-grid">
+        <div style="grid-column: span 2 / span 2;">
+            <label class="hms-field-label" for="news-search">Tìm kiếm</label>
+            <div class="hms-search">
+                <span class="material-symbols-outlined">search</span>
+                <input id="news-search" name="searchString" value="@searchString" type="text"
+                       class="w-full py-2 pr-4 border border-outline-variant rounded-lg font-body-md"
+                       placeholder="Tiêu đề hoặc mô tả ngắn..." />
+            </div>
+        </div>
+        <div>
+            <label class="hms-field-label" for="news-category">Chuyên mục</label>
+            <select id="news-category" name="category" class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md">
+                <option value="">Tất cả chuyên mục</option>
+                @foreach (var cat in categories)
+                {
+                    <option value="@cat" selected="@(category == cat)">@cat</option>
+                }
+            </select>
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="hms-btn hms-btn-primary">
+                <span class="material-symbols-outlined">filter_list</span> Lọc
+            </button>
+            <a href="/Admin/News" class="hms-btn hms-btn-secondary">
+                <span class="material-symbols-outlined">refresh</span> Đặt lại
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Tiêu đề</th>
+                    <th class="px-unit-md py-3">Chuyên mục</th>
+                    <th class="px-unit-md py-3">Ngày đăng</th>
+                    <th class="px-unit-md py-3 text-right">Lượt xem</th>
+                    <th class="px-unit-md py-3">Trạng thái</th>
+                    <th class="px-unit-md py-3 text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (articles.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6">
+                            <div class="hms-empty">
+                                <div class="hms-empty-icon"><span class="material-symbols-outlined">newspaper</span></div>
+                                <p class="hms-empty-title">Chưa có bài viết nào</p>
+                                <p class="hms-empty-text">Viết bài đầu tiên để hiển thị tin tức trên website công khai.</p>
+                                <a href="/Admin/News/Create" class="hms-btn hms-btn-primary mt-2">
+                                    <span class="material-symbols-outlined">post_add</span> Viết bài mới
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var article in articles)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="px-unit-md py-4 max-w-[420px]">
+                                <div class="font-semibold text-on-surface flex items-center gap-2">
+                                    @article.TieuDe
+                                    @if (article.NoiBat)
+                                    {
+                                        <span class="material-symbols-outlined text-[16px] text-tertiary" title="Nổi bật">star</span>
+                                    }
+                                </div>
+                                <div class="text-caption text-on-surface-variant line-clamp-2">@article.TomTat</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <span class="hms-badge hms-badge-neutral">@article.ChuyenMuc</span>
+                            </td>
+                            <td class="px-unit-md py-4 whitespace-nowrap">
+                                <div class="font-body-md">@article.NgayDang.ToString("dd/MM/yyyy")</div>
+                                @if (!string.IsNullOrWhiteSpace(article.TacGia))
+                                {
+                                    <div class="text-caption text-on-surface-variant">@article.TacGia</div>
+                                }
+                            </td>
+                            <td class="px-unit-md py-4 text-right font-semibold">@article.LuotXem</td>
+                            <td class="px-unit-md py-4">
+                                @if (article.DaXuatBan)
+                                {
+                                    <span class="hms-badge hms-badge-ok">
+                                        <span class="material-symbols-outlined">public</span> Đã xuất bản
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="hms-badge hms-badge-warn">
+                                        <span class="material-symbols-outlined">edit_note</span> Bản nháp
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-unit-md py-4 text-right">
+                                <div class="flex items-center justify-end gap-1">
+                                    @if (article.DaXuatBan)
+                                    {
+                                        <a href="/Home/NewsDetail/@article.Id" target="_blank" class="hms-icon-btn" title="Xem bài viết">
+                                            <span class="material-symbols-outlined">open_in_new</span>
+                                        </a>
+                                    }
+                                    <a href="/Admin/News/Edit/@article.Id" class="hms-icon-btn" title="Chỉnh sửa">
+                                        <span class="material-symbols-outlined">edit</span>
+                                    </a>
+                                    <form method="POST" action="/Admin/News/TogglePublish/@article.Id" class="inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="hms-icon-btn" title="@(article.DaXuatBan ? "Chuyển về bản nháp" : "Xuất bản")">
+                                            <span class="material-symbols-outlined">@(article.DaXuatBan ? "visibility_off" : "publish")</span>
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="/Admin/News/Delete/@article.Id" class="inline"
+                                          onsubmit="return confirm('Xóa vĩnh viễn bài viết này?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="hms-icon-btn hms-icon-btn-danger" title="Xóa">
+                                            <span class="material-symbols-outlined">delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (articles.Count > 0)
+    {
+        <partial name="_Pagination" model='PaginationViewModel.From(Model, "/Admin/News", "bài viết", filters)' />
+    }
+</div>

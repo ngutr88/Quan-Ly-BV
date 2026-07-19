@@ -1,0 +1,99 @@
+@model QuanLyBenhVien.Models.Article
+@using QuanLyBenhVien.Models
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = Model.TieuDe;
+
+    var related = ViewBag.Related as List<Article> ?? new List<Article>();
+
+    // Bodies are stored as plain text with blank-line paragraph breaks.
+    var paragraphs = Model.NoiDung
+        .Replace("\r\n", "\n")
+        .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+        .Select(p => p.Trim())
+        .Where(p => p.Length > 0)
+        .ToList();
+}
+
+<section class="bg-white border-b border-outline-variant/40">
+    <div class="max-w-[900px] mx-auto px-4 md:px-unit-lg py-12">
+        <nav class="hms-breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span class="hms-breadcrumb-sep">/</span>
+            <a href="/Home/News">Tin tức</a>
+            <span class="hms-breadcrumb-sep">/</span>
+            <span class="hms-breadcrumb-current">@Model.ChuyenMuc</span>
+        </nav>
+
+        <div class="flex items-center gap-2 mb-3">
+            <span class="hms-badge hms-badge-info">@Model.ChuyenMuc</span>
+            @if (Model.NoiBat)
+            {
+                <span class="hms-badge hms-badge-warn">
+                    <span class="material-symbols-outlined">star</span> Nổi bật
+                </span>
+            }
+        </div>
+
+        <h1 class="text-[28px] md:text-[36px] font-black text-on-surface leading-tight tracking-tight">@Model.TieuDe</h1>
+
+        <div class="flex flex-wrap items-center gap-4 mt-4 text-caption text-on-surface-variant">
+            @if (!string.IsNullOrWhiteSpace(Model.TacGia))
+            {
+                <span class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">person</span> @Model.TacGia
+                </span>
+            }
+            <span class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                @Model.NgayDang.ToString("dd/MM/yyyy")
+            </span>
+            <span class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">visibility</span> @Model.LuotXem lượt xem
+            </span>
+        </div>
+    </div>
+</section>
+
+<section class="bg-surface py-10">
+    <div class="max-w-[900px] mx-auto px-4 md:px-unit-lg">
+        <article class="bg-white border border-outline-variant rounded-xl shadow-sm p-6 md:p-9">
+            <p class="text-body-lg text-on-surface font-medium leading-relaxed pb-5 mb-5 border-b border-outline-variant/60">
+                @Model.TomTat
+            </p>
+
+            @foreach (var para in paragraphs)
+            {
+                <p class="text-body-lg text-on-surface-variant leading-[1.85] mb-4">@para</p>
+            }
+
+            <div class="mt-8 pt-5 border-t border-outline-variant/60 flex flex-wrap items-center justify-between gap-4">
+                <a href="/Home/News" class="hms-btn hms-btn-secondary">
+                    <span class="material-symbols-outlined">arrow_back</span> Quay lại danh sách tin
+                </a>
+                <a href="/Auth/Register" class="hms-btn hms-btn-primary">
+                    <span class="material-symbols-outlined">event_available</span> Đặt lịch khám
+                </a>
+            </div>
+        </article>
+
+        @if (related.Count > 0)
+        {
+            <div class="mt-10">
+                <h2 class="home-section-title mb-5" style="font-size:1.25rem;">Bài viết liên quan</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    @foreach (var item in related)
+                    {
+                        <a href="/Home/NewsDetail/@item.Id"
+                           class="bg-white border border-outline-variant rounded-xl shadow-sm p-5 hover:border-primary hover:shadow-md transition-all">
+                            <span class="hms-badge hms-badge-neutral mb-2">@item.ChuyenMuc</span>
+                            <h3 class="font-bold text-on-surface leading-snug">@item.TieuDe</h3>
+                            <p class="text-caption text-on-surface-variant mt-2 line-clamp-2">@item.TomTat</p>
+                            <p class="text-caption text-outline mt-3">@item.NgayDang.ToString("dd/MM/yyyy")</p>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>

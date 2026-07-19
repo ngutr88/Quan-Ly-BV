@@ -1,0 +1,111 @@
+@model QuanLyBenhVien.Models.Article
+@using QuanLyBenhVien.Models.ViewModels
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Viết bài mới";
+
+    var categories = ViewBag.Categories as string[] ?? Array.Empty<string>();
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Viết bài mới",
+        Subtitle = "Nội dung sẽ hiển thị trên trang tin tức công khai sau khi xuất bản.",
+        Breadcrumbs = new[]
+        {
+            new BreadcrumbItem("Quản trị", "/Admin/Dashboard"),
+            new BreadcrumbItem("Tin tức", "/Admin/News")
+        },
+        CurrentCrumb = "Viết bài"
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+
+<form method="POST" action="/Admin/News/Create" class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    @Html.AntiForgeryToken()
+
+    <div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md">
+        <div asp-validation-summary="ModelOnly" class="text-error text-body-md"></div>
+
+        <div>
+            <label class="hms-field-label" for="TieuDe">Tiêu đề <span class="text-error">*</span></label>
+            <input id="TieuDe" name="TieuDe" value="@Model?.TieuDe" required maxlength="200"
+                   class="w-full py-2.5 px-3 border border-outline-variant rounded-lg font-body-md"
+                   placeholder="Ví dụ: Tầm soát tim mạch miễn phí trong tháng 8" />
+            <span asp-validation-for="TieuDe" class="text-error text-caption"></span>
+        </div>
+
+        <div>
+            <label class="hms-field-label" for="TomTat">Mô tả ngắn <span class="text-error">*</span></label>
+            <textarea id="TomTat" name="TomTat" required maxlength="400" rows="3"
+                      class="w-full py-2.5 px-3 border border-outline-variant rounded-lg font-body-md"
+                      placeholder="Tóm tắt 1-2 câu, hiển thị trên thẻ tin ở trang chủ.">@Model?.TomTat</textarea>
+            <span asp-validation-for="TomTat" class="text-error text-caption"></span>
+        </div>
+
+        <div>
+            <label class="hms-field-label" for="NoiDung">Nội dung <span class="text-error">*</span></label>
+            <textarea id="NoiDung" name="NoiDung" required rows="16"
+                      class="w-full py-2.5 px-3 border border-outline-variant rounded-lg font-body-md leading-relaxed"
+                      placeholder="Nội dung bài viết. Để xuống dòng tạo đoạn mới, hãy nhấn Enter.">@Model?.NoiDung</textarea>
+            <p class="text-caption text-on-surface-variant mt-1">Mỗi dòng sẽ được hiển thị thành một đoạn văn riêng.</p>
+            <span asp-validation-for="NoiDung" class="text-error text-caption"></span>
+        </div>
+    </div>
+
+    <div class="space-y-unit-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md">
+            <h2 class="hms-section-title">
+                <span class="material-symbols-outlined">settings</span> Thiết lập
+            </h2>
+
+            <div>
+                <label class="hms-field-label" for="ChuyenMuc">Chuyên mục</label>
+                <select id="ChuyenMuc" name="ChuyenMuc" class="w-full py-2.5 px-3 border border-outline-variant rounded-lg font-body-md">
+                    @foreach (var cat in categories)
+                    {
+                        <option value="@cat" selected="@(Model?.ChuyenMuc == cat)">@cat</option>
+                    }
+                </select>
+            </div>
+
+            <div>
+                <label class="hms-field-label" for="TacGia">Tác giả / phòng ban</label>
+                <input id="TacGia" name="TacGia" value="@Model?.TacGia" maxlength="100"
+                       class="w-full py-2.5 px-3 border border-outline-variant rounded-lg font-body-md"
+                       placeholder="Ví dụ: Khoa Tim mạch" />
+            </div>
+
+            <div>
+                <label class="hms-field-label" for="NgayDang">Ngày đăng</label>
+                <input id="NgayDang" name="NgayDang" type="date"
+                       value="@(Model?.NgayDang.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))"
+                       class="w-full py-2.5 px-3 border border-outline-variant rounded-lg font-body-md" />
+            </div>
+
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="DaXuatBan" value="true" checked="@(Model?.DaXuatBan ?? true)"
+                       class="rounded text-primary focus:ring-primary h-4 w-4" />
+                <span class="font-body-md text-on-surface">Xuất bản ngay</span>
+            </label>
+
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="NoiBat" value="true" checked="@(Model?.NoiBat ?? false)"
+                       class="rounded text-primary focus:ring-primary h-4 w-4" />
+                <span class="font-body-md text-on-surface">Ghim làm tin nổi bật</span>
+            </label>
+        </div>
+
+        <div class="flex flex-col gap-2">
+            <button type="submit" class="hms-btn hms-btn-primary w-full">
+                <span class="material-symbols-outlined">save</span> Lưu bài viết
+            </button>
+            <a href="/Admin/News" class="hms-btn hms-btn-secondary w-full">Hủy</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

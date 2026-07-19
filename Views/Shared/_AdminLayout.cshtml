@@ -69,6 +69,12 @@
                 <span class="font-body-md text-body-md">Hóa đơn</span>
             </a>
 
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "News" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
+               href="/Admin/News">
+                <span class="material-symbols-outlined">newspaper</span>
+                <span class="font-body-md text-body-md">Tin tức &amp; Thông báo</span>
+            </a>
+
             <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Staff" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
                href="/Admin/Staff">
                 <span class="material-symbols-outlined">admin_panel_settings</span>

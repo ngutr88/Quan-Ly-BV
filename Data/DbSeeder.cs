@@ -19,6 +19,10 @@ namespace QuanLyBenhVien.Data
             SeedAdditionalRoleAccounts(context);
             SeedRoleOverviewDemoData(context);
 
+            // Runs before the "complete dataset" shortcut below so existing
+            // databases also pick up the public-site articles.
+            ArticleSeeder.Seed(context);
+
             // Production and long-lived local databases already contain the complete
             // demo dataset. Avoid replaying all legacy patch blocks on every startup;
             // with hundreds of doctors this can delay Render's health check for minutes.
