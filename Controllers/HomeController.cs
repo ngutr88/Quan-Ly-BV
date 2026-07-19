@@ -26,10 +26,13 @@ public class HomeController : Controller
 
         await PopulateHospitalFactsAsync();
 
-        ViewBag.Departments = await _context.Departments
+        var allDepartments = await _context.Departments
             .OrderBy(d => d.TenKhoa)
-            .Take(8)
             .ToListAsync();
+
+        // The grid previews a handful; the booking picker needs every option.
+        ViewBag.AllDepartments = allDepartments;
+        ViewBag.Departments = allDepartments.Take(8).ToList();
 
         // Lead with the most senior doctors so the public page shows real staff.
         ViewBag.FeaturedDoctors = await _context.Doctors
@@ -152,6 +155,90 @@ public class HomeController : Controller
     }
 
     public IActionResult Features() => View();
+
+    // GET: /Home/Doctors — public directory so visitors can choose a doctor
+    // before creating an account.
+    public async Task<IActionResult> Doctors(string searchString, int? departmentId, int page = 1)
+    {
+        var query = _context.Doctors
+            .Include(d => d.User)
+            .Include(d => d.Department)
+            .Where(d => d.User.TrangThai == "Active");
+
+        if (!string.IsNullOrEmpty(searchString))
+        {
+            query = query.Where(d => d.User.HoTen.Contains(searchString)
+                                     || d.ChuyenKhoa.Contains(searchString)
+                                     || d.Department.TenKhoa.Contains(searchString));
+        }
+
+        if (departmentId.HasValue)
+        {
+            query = query.Where(d => d.KhoaId == departmentId.Value);
+        }
+
+        const int pageSize = 12;
+        var total = await query.CountAsync();
+        var totalPages = total == 0 ? 1 : (int)Math.Ceiling(total / (double)pageSize);
+        var safePage = Math.Clamp(page < 1 ? 1 : page, 1, totalPages);
+
+        ViewBag.Doctors = await query
+            .OrderByDescending(d => d.SoNamKinhNghiem)
+            .ThenBy(d => d.User.HoTen)
+            .Skip((safePage - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        ViewBag.Departments = await _context.Departments.OrderBy(d => d.TenKhoa).ToListAsync();
+        ViewBag.SearchString = searchString;
+        ViewBag.DepartmentId = departmentId;
+        ViewBag.Page = safePage;
+        ViewBag.TotalPages = totalPages;
+        ViewBag.TotalDoctors = total;
+
+        return View();
+    }
+
+    // GET: /Home/Pricing — published service price list.
+    public async Task<IActionResult> Pricing(string searchString, int? departmentId)
+    {
+        var query = _context.Services
+            .Include(s => s.Department)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(searchString))
+        {
+            query = query.Where(s => s.TenDichVu.Contains(searchString)
+                                     || s.Department.TenKhoa.Contains(searchString));
+        }
+
+        if (departmentId.HasValue)
+        {
+            query = query.Where(s => s.KhoaId == departmentId.Value);
+        }
+
+        var services = await query
+            .OrderBy(s => s.Department.TenKhoa)
+            .ThenBy(s => s.Gia)
+            .ToListAsync();
+
+        ViewBag.Services = services;
+        ViewBag.Departments = await _context.Departments.OrderBy(d => d.TenKhoa).ToListAsync();
+        ViewBag.SearchString = searchString;
+        ViewBag.DepartmentId = departmentId;
+        ViewBag.TotalServices = services.Count;
+        ViewBag.MinPrice = services.Count > 0 ? services.Min(s => s.Gia) : 0m;
+        ViewBag.MaxPrice = services.Count > 0 ? services.Max(s => s.Gia) : 0m;
+
+        return View();
+    }
+
+    // GET: /Home/Guide — how to prepare for a visit, paperwork and FAQ.
+    public async Task<IActionResult> Guide()
+    {
+        ViewBag.Departments = await _context.Departments.OrderBy(d => d.TenKhoa).ToListAsync();
+        return View();
+    }
 
     public async Task<IActionResult> Testimonials()
     {

@@ -1,0 +1,166 @@
+@using QuanLyBenhVien.Models
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "Bảng giá dịch vụ";
+
+    var services = ViewBag.Services as List<Service> ?? new List<Service>();
+    var departments = ViewBag.Departments as List<Department> ?? new List<Department>();
+    var searchString = ViewBag.SearchString as string;
+    var departmentId = ViewBag.DepartmentId as int?;
+    int totalServices = ViewBag.TotalServices ?? 0;
+    decimal minPrice = ViewBag.MinPrice ?? 0m;
+    decimal maxPrice = ViewBag.MaxPrice ?? 0m;
+
+    var grouped = services.GroupBy(s => s.Department.TenKhoa).OrderBy(g => g.Key).ToList();
+}
+
+<section class="bg-white border-b border-outline-variant/40">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg py-12">
+        <nav class="hms-breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span class="hms-breadcrumb-sep">/</span>
+            <span class="hms-breadcrumb-current">Bảng giá</span>
+        </nav>
+        <h1 class="hms-page-title">Bảng giá dịch vụ</h1>
+        <p class="hms-page-subtitle">
+            Giá dịch vụ khám chữa bệnh đang áp dụng tại MediFlow, cập nhật theo danh mục của bệnh viện.
+        </p>
+    </div>
+</section>
+
+<section class="bg-surface py-10">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg">
+        <!-- The single most misunderstood point about published prices. -->
+        <div class="flex items-start gap-3 p-4 mb-6 bg-[#fff4e0] border border-[#f6dcb0] border-l-4 border-l-[#8a5300] rounded-xl">
+            <span class="material-symbols-outlined text-[#8a5300] shrink-0">info</span>
+            <div>
+                <p class="font-bold text-on-surface">Đây là giá niêm yết, không phải số tiền bạn phải trả</p>
+                <p class="text-body-md text-on-surface-variant mt-0.5">
+                    Nếu bạn khám bằng thẻ BHYT, quỹ bảo hiểm sẽ chi trả 80%, 95% hoặc 100% tùy mức hưởng ghi trên thẻ
+                    và việc khám có đúng tuyến hay không. Chi phí thực tế còn phụ thuộc chỉ định của bác sĩ sau khi thăm khám.
+                </p>
+            </div>
+        </div>
+
+        <div class="hms-stat-grid">
+            <div class="hms-stat">
+                <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">list_alt</span></div>
+                <div class="hms-stat-body">
+                    <p class="hms-stat-label">Dịch vụ hiển thị</p>
+                    <p class="hms-stat-value">@totalServices</p>
+                </div>
+            </div>
+            <div class="hms-stat">
+                <div class="hms-stat-icon hms-stat-icon-success"><span class="material-symbols-outlined">trending_down</span></div>
+                <div class="hms-stat-body">
+                    <p class="hms-stat-label">Mức giá thấp nhất</p>
+                    <p class="hms-stat-value">@minPrice.ToString("N0") ₫</p>
+                </div>
+            </div>
+            <div class="hms-stat">
+                <div class="hms-stat-icon hms-stat-icon-warn"><span class="material-symbols-outlined">trending_up</span></div>
+                <div class="hms-stat-body">
+                    <p class="hms-stat-label">Mức giá cao nhất</p>
+                    <p class="hms-stat-value">@maxPrice.ToString("N0") ₫</p>
+                </div>
+            </div>
+            <div class="hms-stat">
+                <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">account_tree</span></div>
+                <div class="hms-stat-body">
+                    <p class="hms-stat-label">Khoa có dịch vụ</p>
+                    <p class="hms-stat-value">@grouped.Count</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="hms-toolbar">
+            <form method="GET" action="/Home/Pricing" class="hms-toolbar-grid">
+                <div style="grid-column: span 2 / span 2;">
+                    <label class="hms-field-label" for="svc-search">Tìm dịch vụ</label>
+                    <div class="hms-search">
+                        <span class="material-symbols-outlined">search</span>
+                        <input id="svc-search" name="searchString" value="@searchString" type="text"
+                               class="w-full py-2 pr-4 border border-outline-variant rounded-lg font-body-md"
+                               placeholder="Tên dịch vụ hoặc khoa..." />
+                    </div>
+                </div>
+                <div>
+                    <label class="hms-field-label" for="svc-dept">Khoa</label>
+                    <select id="svc-dept" name="departmentId" class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md">
+                        <option value="">Tất cả khoa</option>
+                        @foreach (var d in departments)
+                        {
+                            <option value="@d.Id" selected="@(departmentId == d.Id)">@d.TenKhoa</option>
+                        }
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="hms-btn hms-btn-primary">
+                        <span class="material-symbols-outlined">filter_list</span> Lọc
+                    </button>
+                    <button type="button" onclick="window.print()" class="hms-btn hms-btn-secondary">
+                        <span class="material-symbols-outlined">print</span> In
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        @if (services.Count == 0)
+        {
+            <div class="bg-white border border-outline-variant rounded-xl shadow-sm">
+                <div class="hms-empty">
+                    <div class="hms-empty-icon"><span class="material-symbols-outlined">receipt_long</span></div>
+                    <p class="hms-empty-title">Không tìm thấy dịch vụ nào</p>
+                    <p class="hms-empty-text">Thử đổi từ khóa tìm kiếm hoặc chọn "Tất cả khoa".</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="space-y-6">
+                @foreach (var group in grouped)
+                {
+                    <div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                        <div class="px-unit-md py-3.5 border-b border-outline-variant bg-surface-container-low">
+                            <h2 class="hms-section-title">
+                                <span class="material-symbols-outlined">account_tree</span> @group.Key
+                                <span class="text-caption font-normal text-on-surface-variant">— @group.Count() dịch vụ</span>
+                            </h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                                        <th class="px-unit-md py-3">Tên dịch vụ</th>
+                                        <th class="px-unit-md py-3 text-right">Giá niêm yết</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-outline-variant">
+                                    @foreach (var svc in group.OrderBy(s => s.Gia))
+                                    {
+                                        <tr class="hover:bg-surface-container-low transition-colors">
+                                            <td class="px-unit-md py-3.5 font-medium text-on-surface">@svc.TenDichVu</td>
+                                            <td class="px-unit-md py-3.5 text-right font-bold text-primary whitespace-nowrap">
+                                                @svc.Gia.ToString("N0") ₫
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="mt-8 bg-white border border-outline-variant rounded-xl shadow-sm p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+                <p class="font-bold text-on-surface">Cần tư vấn về chi phí?</p>
+                <p class="text-body-md text-on-surface-variant">Gọi hotline 1900 6868 hoặc đặt lịch để được bác sĩ tư vấn trực tiếp.</p>
+            </div>
+            <a href="/Home/Guide" class="hms-btn hms-btn-secondary shrink-0">
+                <span class="material-symbols-outlined">menu_book</span> Xem hướng dẫn khám
+            </a>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,152 @@
+@using QuanLyBenhVien.Models
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "Đội ngũ bác sĩ";
+
+    var doctors = ViewBag.Doctors as List<Doctor> ?? new List<Doctor>();
+    var departments = ViewBag.Departments as List<Department> ?? new List<Department>();
+    var searchString = ViewBag.SearchString as string;
+    var departmentId = ViewBag.DepartmentId as int?;
+    int page = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalDoctors = ViewBag.TotalDoctors ?? 0;
+
+    string PageLink(int p)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrEmpty(searchString)) parts.Add($"searchString={Uri.EscapeDataString(searchString)}");
+        if (departmentId.HasValue) parts.Add($"departmentId={departmentId.Value}");
+        parts.Add($"page={p}");
+        return "/Home/Doctors?" + string.Join("&", parts);
+    }
+}
+
+<section class="bg-white border-b border-outline-variant/40">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg py-12">
+        <nav class="hms-breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span class="hms-breadcrumb-sep">/</span>
+            <span class="hms-breadcrumb-current">Đội ngũ bác sĩ</span>
+        </nav>
+        <h1 class="hms-page-title">Đội ngũ bác sĩ</h1>
+        <p class="hms-page-subtitle">
+            Tra cứu bác sĩ theo tên hoặc chuyên khoa để chọn người phù hợp trước khi đặt lịch khám.
+        </p>
+    </div>
+</section>
+
+<section class="bg-surface py-10">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg">
+        <div class="hms-toolbar">
+            <form method="GET" action="/Home/Doctors" class="hms-toolbar-grid">
+                <div style="grid-column: span 2 / span 2;">
+                    <label class="hms-field-label" for="doctor-search">Tìm bác sĩ</label>
+                    <div class="hms-search">
+                        <span class="material-symbols-outlined">search</span>
+                        <input id="doctor-search" name="searchString" value="@searchString" type="text"
+                               class="w-full py-2 pr-4 border border-outline-variant rounded-lg font-body-md"
+                               placeholder="Tên bác sĩ hoặc chuyên khoa..." />
+                    </div>
+                </div>
+                <div>
+                    <label class="hms-field-label" for="dept">Chuyên khoa</label>
+                    <select id="dept" name="departmentId" class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md">
+                        <option value="">Tất cả chuyên khoa</option>
+                        @foreach (var d in departments)
+                        {
+                            <option value="@d.Id" selected="@(departmentId == d.Id)">@d.TenKhoa</option>
+                        }
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="hms-btn hms-btn-primary">
+                        <span class="material-symbols-outlined">filter_list</span> Tìm
+                    </button>
+                    @if (!string.IsNullOrEmpty(searchString) || departmentId.HasValue)
+                    {
+                        <a href="/Home/Doctors" class="hms-btn hms-btn-secondary">
+                            <span class="material-symbols-outlined">refresh</span> Xóa lọc
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+
+        <p class="text-body-md text-on-surface-variant mb-5">
+            Tìm thấy <strong class="text-on-surface">@totalDoctors</strong> bác sĩ đang công tác.
+        </p>
+
+        @if (doctors.Count == 0)
+        {
+            <div class="bg-white border border-outline-variant rounded-xl shadow-sm">
+                <div class="hms-empty">
+                    <div class="hms-empty-icon"><span class="material-symbols-outlined">person_search</span></div>
+                    <p class="hms-empty-title">Không tìm thấy bác sĩ phù hợp</p>
+                    <p class="hms-empty-text">Thử đổi từ khóa hoặc chọn "Tất cả chuyên khoa" để xem toàn bộ đội ngũ.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                @foreach (var doc in doctors)
+                {
+                    var initial = string.IsNullOrWhiteSpace(doc.User.HoTen)
+                        ? "?"
+                        : doc.User.HoTen.Trim().Split(' ').Last()[0].ToString().ToUpper();
+
+                    <div class="bg-white border border-outline-variant rounded-xl shadow-sm p-5 flex flex-col hover:border-primary hover:shadow-md transition-all">
+                        <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3 text-xl font-black">
+                            @initial
+                        </div>
+                        <h2 class="font-bold text-on-surface text-center">@doc.HocVi. @doc.User.HoTen</h2>
+                        <p class="text-caption text-primary font-semibold text-center mt-0.5">@doc.ChuyenKhoa</p>
+
+                        <div class="mt-3 pt-3 border-t border-outline-variant/50 space-y-1.5 text-caption text-on-surface-variant flex-1">
+                            <p class="flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[16px] text-primary">account_tree</span>
+                                @doc.Department.TenKhoa
+                            </p>
+                            <p class="flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[16px] text-primary">location_on</span>
+                                @doc.Department.ViTri
+                            </p>
+                            <p class="flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[16px] text-primary">workspace_premium</span>
+                                @doc.SoNamKinhNghiem năm kinh nghiệm
+                            </p>
+                            @if (doc.ChucVu != "Bác sĩ")
+                            {
+                                <p><span class="hms-badge hms-badge-info">@doc.ChucVu</span></p>
+                            }
+                        </div>
+
+                        <a href="/Patient/Book?deptId=@doc.KhoaId" class="hms-btn hms-btn-primary hms-btn-sm mt-4 w-full">
+                            <span class="material-symbols-outlined">event_available</span> Đặt lịch khoa này
+                        </a>
+                    </div>
+                }
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <nav class="hms-pagination justify-center mt-8" aria-label="Phân trang bác sĩ">
+                    <a class="hms-page-link @(page > 1 ? "" : "hms-page-link-disabled")" href="@PageLink(page - 1)">
+                        <span class="material-symbols-outlined" style="font-size:18px;">chevron_left</span>
+                    </a>
+                    @{
+                        var from = Math.Max(1, page - 2);
+                        var to = Math.Min(totalPages, from + 4);
+                    }
+                    @for (var p = from; p <= to; p++)
+                    {
+                        <a class="hms-page-link @(p == page ? "hms-page-link-active" : "")" href="@PageLink(p)">@p</a>
+                    }
+                    <a class="hms-page-link @(page < totalPages ? "" : "hms-page-link-disabled")" href="@PageLink(page + 1)">
+                        <span class="material-symbols-outlined" style="font-size:18px;">chevron_right</span>
+                    </a>
+                </nav>
+            }
+        }
+    </div>
+</section>

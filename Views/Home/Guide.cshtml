@@ -1,0 +1,372 @@
+@using QuanLyBenhVien.Models
+@{
+    Layout = "~/Views/Shared/_HomeLayout.cshtml";
+    ViewData["Title"] = "Hướng dẫn khám bệnh";
+
+    var departments = ViewBag.Departments as List<Department> ?? new List<Department>();
+}
+
+@section Styles {
+    <style>
+        .guide-step {
+            display: flex;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: #fff;
+            border: 1px solid var(--clinical-line);
+            border-radius: 1rem;
+            box-shadow: var(--clinical-shadow-sm);
+        }
+
+        .guide-step-num {
+            width: 2.5rem;
+            height: 2.5rem;
+            flex-shrink: 0;
+            border-radius: 999px;
+            background: var(--clinical-teal);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .guide-faq {
+            background: #fff;
+            border: 1px solid var(--clinical-line);
+            border-radius: .875rem;
+            overflow: hidden;
+        }
+
+        .guide-faq + .guide-faq { margin-top: .625rem; }
+
+        .guide-faq summary {
+            cursor: pointer;
+            padding: 1rem 1.125rem;
+            font-weight: 700;
+            color: var(--clinical-ink);
+            list-style: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .guide-faq summary::-webkit-details-marker { display: none; }
+
+        .guide-faq summary::after {
+            content: "expand_more";
+            font-family: 'Material Symbols Outlined';
+            font-size: 22px;
+            color: var(--clinical-teal);
+            transition: transform .2s ease;
+        }
+
+        .guide-faq[open] summary::after { transform: rotate(180deg); }
+
+        .guide-faq .faq-body {
+            padding: 0 1.125rem 1.125rem;
+            color: var(--clinical-muted);
+            line-height: 1.75;
+        }
+    </style>
+}
+
+<section class="bg-white border-b border-outline-variant/40">
+    <div class="max-w-[1100px] mx-auto px-4 md:px-unit-lg py-12">
+        <nav class="hms-breadcrumb">
+            <a href="/">Trang chủ</a>
+            <span class="hms-breadcrumb-sep">/</span>
+            <span class="hms-breadcrumb-current">Hướng dẫn khám bệnh</span>
+        </nav>
+        <h1 class="hms-page-title">Hướng dẫn khám bệnh</h1>
+        <p class="hms-page-subtitle">
+            Quy trình khám, giấy tờ cần mang theo và những lưu ý về bảo hiểm y tế để bạn chuẩn bị trước khi đến bệnh viện.
+        </p>
+    </div>
+</section>
+
+<!-- Hours and emergency, the two things people look for first -->
+<section class="bg-surface pt-10">
+    <div class="max-w-[1100px] mx-auto px-4 md:px-unit-lg grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white border border-outline-variant rounded-xl shadow-sm p-5">
+            <div class="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
+                <span class="material-symbols-outlined">schedule</span>
+            </div>
+            <h2 class="font-bold text-on-surface">Giờ làm việc</h2>
+            <ul class="text-body-md text-on-surface-variant mt-2 space-y-1">
+                <li>Thứ Hai – Chủ Nhật: <strong class="text-on-surface">07:30 – 21:00</strong></li>
+                <li>Phòng khám theo yêu cầu: 08:00 – 18:00</li>
+            </ul>
+        </div>
+
+        <div class="bg-white border border-[#f6c8c4] border-l-4 border-l-[#ba1a1a] rounded-xl shadow-sm p-5">
+            <div class="w-11 h-11 rounded-xl bg-[#ffecea] text-[#ba1a1a] flex items-center justify-center mb-3">
+                <span class="material-symbols-outlined">emergency</span>
+            </div>
+            <h2 class="font-bold text-on-surface">Cấp cứu 24/7</h2>
+            <p class="text-body-md text-on-surface-variant mt-2">
+                Khu cấp cứu tiếp nhận liên tục, không cần đặt lịch.
+            </p>
+            <p class="text-[19px] font-black text-[#ba1a1a] mt-1">028.115</p>
+        </div>
+
+        <div class="bg-white border border-outline-variant rounded-xl shadow-sm p-5">
+            <div class="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3">
+                <span class="material-symbols-outlined">support_agent</span>
+            </div>
+            <h2 class="font-bold text-on-surface">Tổng đài hỗ trợ</h2>
+            <p class="text-[19px] font-black text-primary mt-2">1900 6868</p>
+            <p class="text-caption text-on-surface-variant mt-1">support@mediflow.vn</p>
+        </div>
+    </div>
+</section>
+
+<!-- Steps -->
+<section class="bg-surface py-10">
+    <div class="max-w-[1100px] mx-auto px-4 md:px-unit-lg">
+        <div class="mb-6">
+            <p class="text-caption font-bold uppercase tracking-wider text-primary mb-1">Quy trình</p>
+            <h2 class="text-2xl font-black text-on-surface">Các bước khám bệnh tại MediFlow</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="guide-step">
+                <div class="guide-step-num">1</div>
+                <div>
+                    <h3 class="font-bold text-on-surface">Đặt lịch trước trên website</h3>
+                    <p class="text-body-md text-on-surface-variant mt-1">
+                        Đăng ký tài khoản, chọn chuyên khoa, bác sĩ và khung giờ còn trống. Bạn sẽ nhận thông báo
+                        xác nhận trong tài khoản. Nếu không đặt trước, bạn vẫn có thể lấy số trực tiếp tại quầy tiếp đón.
+                    </p>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <div class="guide-step-num">2</div>
+                <div>
+                    <h3 class="font-bold text-on-surface">Đến quầy tiếp đón trước 15 phút</h3>
+                    <p class="text-body-md text-on-surface-variant mt-1">
+                        Xuất trình giấy tờ để nhân viên đối chiếu hồ sơ. Với người khám BHYT, quầy sẽ kiểm tra
+                        thẻ và giấy chuyển tuyến trước khi phát số thứ tự.
+                    </p>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <div class="guide-step-num">3</div>
+                <div>
+                    <h3 class="font-bold text-on-surface">Đo sinh hiệu và vào phòng khám</h3>
+                    <p class="text-body-md text-on-surface-variant mt-1">
+                        Điều dưỡng đo mạch, huyết áp, cân nặng, chiều cao. Sau đó bạn vào phòng khám theo số thứ tự;
+                        bác sĩ hỏi bệnh, thăm khám và chỉ định cận lâm sàng nếu cần.
+                    </p>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <div class="guide-step-num">4</div>
+                <div>
+                    <h3 class="font-bold text-on-surface">Làm xét nghiệm, chẩn đoán hình ảnh</h3>
+                    <p class="text-body-md text-on-surface-variant mt-1">
+                        Nếu có chỉ định, bạn thực hiện tại khu cận lâm sàng rồi quay lại phòng khám ban đầu
+                        để bác sĩ đọc kết quả và kết luận.
+                    </p>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <div class="guide-step-num">5</div>
+                <div>
+                    <h3 class="font-bold text-on-surface">Thanh toán và nhận thuốc</h3>
+                    <p class="text-body-md text-on-surface-variant mt-1">
+                        Thanh toán tại quầy hoặc trực tuyến trong tài khoản. Sau đó nhận thuốc tại nhà thuốc bệnh viện
+                        theo đơn bác sĩ đã kê.
+                    </p>
+                </div>
+            </div>
+
+            <div class="guide-step">
+                <div class="guide-step-num">6</div>
+                <div>
+                    <h3 class="font-bold text-on-surface">Tra cứu lại hồ sơ bất cứ lúc nào</h3>
+                    <p class="text-body-md text-on-surface-variant mt-1">
+                        Bệnh án, đơn thuốc và hóa đơn được lưu điện tử trong tài khoản của bạn, xem lại được
+                        ở mục <em>Đơn thuốc &amp; bệnh án</em>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Paperwork -->
+<section class="bg-white py-12 border-y border-outline-variant/40">
+    <div class="max-w-[1100px] mx-auto px-4 md:px-unit-lg grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+            <p class="text-caption font-bold uppercase tracking-wider text-primary mb-1">Chuẩn bị</p>
+            <h2 class="text-2xl font-black text-on-surface mb-4">Giấy tờ cần mang theo</h2>
+
+            <div class="bg-surface border border-outline-variant rounded-xl p-5 space-y-3">
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-primary">badge</span>
+                    <div>
+                        <p class="font-semibold text-on-surface">CCCD gắn chip</p>
+                        <p class="text-body-md text-on-surface-variant">Hoặc ứng dụng VNeID mức 2.</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-primary">health_and_safety</span>
+                    <div>
+                        <p class="font-semibold text-on-surface">Thẻ BHYT còn hạn</p>
+                        <p class="text-body-md text-on-surface-variant">
+                            Có thể dùng thẻ giấy hoặc ứng dụng VssID / VNeID thay thế.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-primary">description</span>
+                    <div>
+                        <p class="font-semibold text-on-surface">Giấy chuyển tuyến</p>
+                        <p class="text-body-md text-on-surface-variant">
+                            Nếu bạn khám đúng tuyến theo diện chuyển từ cơ sở khác.
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-primary">folder_shared</span>
+                    <div>
+                        <p class="font-semibold text-on-surface">Hồ sơ khám trước đó</p>
+                        <p class="text-body-md text-on-surface-variant">
+                            Đơn thuốc, kết quả xét nghiệm cũ giúp bác sĩ theo dõi diễn tiến bệnh.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <p class="text-caption font-bold uppercase tracking-wider text-primary mb-1">Bảo hiểm y tế</p>
+            <h2 class="text-2xl font-black text-on-surface mb-4">Những điều cần biết về BHYT</h2>
+
+            <div class="bg-surface border border-outline-variant rounded-xl p-5 space-y-4">
+                <div>
+                    <p class="font-semibold text-on-surface">Mức hưởng phụ thuộc loại thẻ</p>
+                    <p class="text-body-md text-on-surface-variant mt-0.5">
+                        Quỹ BHYT chi trả <strong>80%, 95% hoặc 100%</strong> chi phí trong danh mục, tùy mã quyền lợi
+                        ghi trên thẻ của bạn. Phần còn lại người bệnh tự chi trả.
+                    </p>
+                </div>
+                <div>
+                    <p class="font-semibold text-on-surface">Đúng tuyến và trái tuyến</p>
+                    <p class="text-body-md text-on-surface-variant mt-0.5">
+                        Khám đúng nơi đăng ký ban đầu hoặc có giấy chuyển tuyến hợp lệ sẽ được hưởng đầy đủ mức trên.
+                        Khám trái tuyến, mức hưởng sẽ thấp hơn theo quy định.
+                    </p>
+                </div>
+                <div>
+                    <p class="font-semibold text-on-surface">Kiểm tra hạn thẻ trước khi đi</p>
+                    <p class="text-body-md text-on-surface-variant mt-0.5">
+                        Thẻ hết hạn sẽ không được thanh toán BHYT. Bạn có thể tra cứu giá trị sử dụng thẻ trên
+                        ứng dụng VssID hoặc cổng thông tin của cơ quan Bảo hiểm xã hội.
+                    </p>
+                </div>
+                <div>
+                    <p class="font-semibold text-on-surface">Dịch vụ ngoài danh mục</p>
+                    <p class="text-body-md text-on-surface-variant mt-0.5">
+                        Một số kỹ thuật, thuốc và dịch vụ theo yêu cầu không nằm trong danh mục BHYT chi trả.
+                        Bác sĩ sẽ thông báo trước khi chỉ định.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section class="bg-surface py-12">
+    <div class="max-w-[900px] mx-auto px-4 md:px-unit-lg">
+        <div class="mb-6">
+            <p class="text-caption font-bold uppercase tracking-wider text-primary mb-1">Giải đáp</p>
+            <h2 class="text-2xl font-black text-on-surface">Câu hỏi thường gặp</h2>
+        </div>
+
+        <details class="guide-faq" open>
+            <summary>Tôi có bắt buộc phải đặt lịch trước không?</summary>
+            <div class="faq-body">
+                Không bắt buộc. Bạn vẫn có thể đến lấy số trực tiếp tại quầy tiếp đón. Tuy nhiên đặt lịch trước
+                giúp bạn chọn được bác sĩ mong muốn và giảm đáng kể thời gian chờ.
+            </div>
+        </details>
+
+        <details class="guide-faq">
+            <summary>Đặt lịch xong có được xác nhận ngay không?</summary>
+            <div class="faq-body">
+                Lịch của bạn ban đầu ở trạng thái <em>Chờ xác nhận</em>. Nhân viên bệnh viện sẽ kiểm tra và xác nhận;
+                bạn nhận được thông báo trong tài khoản khi lịch chuyển sang <em>Đã xác nhận</em>.
+            </div>
+        </details>
+
+        <details class="guide-faq">
+            <summary>Tôi muốn đặt lịch khám hộ người thân thì làm thế nào?</summary>
+            <div class="faq-body">
+                Trong tài khoản, bạn vào mục <em>Hồ sơ người thân</em> để thêm thông tin người cần khám, sau đó
+                chọn đúng người đó ở bước đầu tiên khi đặt lịch.
+            </div>
+        </details>
+
+        <details class="guide-faq">
+            <summary>Cần nhịn ăn trước khi xét nghiệm máu không?</summary>
+            <div class="faq-body">
+                Với xét nghiệm đường huyết và mỡ máu, bạn cần nhịn ăn 8–12 giờ trước khi lấy máu; vẫn uống được nước lọc
+                nhưng không dùng cà phê, nước ngọt, sữa hay rượu bia. Hãy báo bác sĩ các thuốc bạn đang dùng.
+            </div>
+        </details>
+
+        <details class="guide-faq">
+            <summary>Tôi xem lại đơn thuốc và kết quả khám ở đâu?</summary>
+            <div class="faq-body">
+                Đăng nhập tài khoản bệnh nhân và vào mục <em>Đơn thuốc &amp; bệnh án</em>. Toàn bộ bệnh án, đơn thuốc
+                và hóa đơn của các lần khám đều được lưu tại đó.
+            </div>
+        </details>
+
+        <details class="guide-faq">
+            <summary>Thanh toán bằng những hình thức nào?</summary>
+            <div class="faq-body">
+                Bạn có thể thanh toán tiền mặt hoặc chuyển khoản tại quầy, hoặc thanh toán trực tuyến ngay trong
+                tài khoản ở mục <em>Hóa đơn &amp; thanh toán</em>.
+            </div>
+        </details>
+
+        <details class="guide-faq">
+            <summary>Tôi muốn hủy hoặc đổi lịch đã đặt?</summary>
+            <div class="faq-body">
+                Vào mục lịch khám trong tài khoản để xem trạng thái lịch hẹn. Nếu cần đổi hoặc hủy, vui lòng liên hệ
+                tổng đài <strong>1900 6868</strong> để được hỗ trợ sớm nhất.
+            </div>
+        </details>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="bg-white py-12 border-t border-outline-variant/40">
+    <div class="max-w-[1100px] mx-auto px-4 md:px-unit-lg">
+        <div class="rounded-3xl bg-primary text-white p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div>
+                <h2 class="text-2xl font-black">Sẵn sàng đặt lịch khám?</h2>
+                <p class="text-body-md opacity-90 mt-1">
+                    Bệnh viện đang tiếp nhận khám tại @departments.Count chuyên khoa.
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-3 shrink-0">
+                <a href="/Home/Pricing" class="px-6 py-3 rounded-xl bg-white/15 border border-white/35 text-white font-bold hover:bg-white/25 transition-colors">
+                    Xem bảng giá
+                </a>
+                <a href="/Auth/Register" class="px-6 py-3 rounded-xl bg-white text-primary font-bold hover:bg-primary-fixed transition-colors">
+                    Đăng ký &amp; đặt lịch
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

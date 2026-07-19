@@ -26,7 +26,7 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
 
         // GET: /Patient/Book
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int? deptId)
         {
             var patientUserId = GetCurrentUserId();
             var patient = await _context.Patients
@@ -36,6 +36,10 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
 
             ViewBag.Patient = patient;
             ViewBag.Departments = await _context.Departments.ToListAsync();
+
+            // Carries the department chosen on the public site through the login
+            // redirect, so the visitor does not have to pick it a second time.
+            ViewBag.PreselectedDeptId = deptId;
             ViewBag.Dependents = await _context.Dependents
                 .Where(d => d.BenhNhanId == patient.Id)
                 .ToListAsync();

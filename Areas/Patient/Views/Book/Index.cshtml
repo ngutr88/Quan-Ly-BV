@@ -12,6 +12,8 @@
 
     var dependentsList = ViewBag.Dependents as List<QuanLyBenhVien.Models.Dependent> ?? new
     List<QuanLyBenhVien.Models.Dependent>();
+
+    var preselectedDeptId = ViewBag.PreselectedDeptId as int?;
 }
 
 @section Styles {
@@ -90,7 +92,8 @@
                         @foreach (var dept in depts)
 
                         {
-                            <option value="@dept.Id" data-location="@dept.ViTri">@dept.TenKhoa</option>
+                            <option value="@dept.Id" data-location="@dept.ViTri"
+                                    selected="@(preselectedDeptId.HasValue && preselectedDeptId.Value == dept.Id)">@dept.TenKhoa</option>
                         }
                     </select>
                 </div>
@@ -251,6 +254,13 @@
                     }
                 }
             }
+            // A department carried over from the public site is already selected
+            // server-side; run the change handler so its doctors load straight away.
+            const deptSelector = document.getElementById('deptSelector');
+            if (deptSelector && deptSelector.value) {
+                onDepartmentChanged();
+            }
+
             updateSummary();
         });
 

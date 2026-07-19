@@ -4,6 +4,7 @@
     ViewData["Title"] = "MediFlow HMS - Chăm sóc sức khỏe toàn diện";
 
     var departments = ViewBag.Departments as List<Department> ?? new List<Department>();
+    var allDepartments = ViewBag.AllDepartments as List<Department> ?? departments;
     var doctors = ViewBag.FeaturedDoctors as List<Doctor> ?? new List<Doctor>();
     var services = ViewBag.Services as List<Service> ?? new List<Service>();
     var articles = ViewBag.LatestArticles as List<Article> ?? new List<Article>();
@@ -122,14 +123,45 @@
                 Đặt lịch khám nhanh chóng, theo dõi hồ sơ sức khỏe an toàn và kết nối với đội ngũ
                 @doctorCount bác sĩ thuộc @departmentCount chuyên khoa tại MediFlow.
             </p>
+            <!-- Booking entry point sits in the first screen, as on every
+                 hospital site. Anonymous visitors are sent through login and
+                 land back on the booking form with this department selected. -->
+            <div class="bg-white border border-outline-variant rounded-2xl p-5 shadow-lg shadow-primary/5">
+                <p class="text-caption font-bold uppercase tracking-wider text-primary mb-3 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">event_available</span> Đặt lịch khám nhanh
+                </p>
+                <form method="GET" action="/Patient/Book" class="flex flex-col sm:flex-row gap-3">
+                    <div class="flex-1">
+                        <label class="sr-only" for="hero-dept">Chọn chuyên khoa</label>
+                        <select id="hero-dept" name="deptId" required
+                                class="w-full px-4 py-3 border border-outline-variant rounded-xl font-body-md">
+                            <option value="">-- Chọn chuyên khoa --</option>
+                            @foreach (var dept in allDepartments)
+                            {
+                                <option value="@dept.Id">@dept.TenKhoa</option>
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="px-6 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-container transition-all flex items-center justify-center gap-2 shadow-md shadow-primary/15 whitespace-nowrap">
+                        Đặt lịch ngay
+                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                    </button>
+                </form>
+                <p class="text-caption text-on-surface-variant mt-2.5">
+                    Chưa có tài khoản? Bạn sẽ được hướng dẫn đăng nhập hoặc
+                    <a href="/Auth/Register" class="text-primary font-semibold hover:underline">đăng ký</a>
+                    rồi quay lại đúng bước đặt lịch.
+                </p>
+            </div>
+
             <div class="flex flex-col sm:flex-row gap-4">
-                <a href="/Auth/Register" class="px-7 py-3.5 rounded-xl bg-primary text-white font-bold hover:bg-primary-container transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/15">
-                    <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">event_available</span>
-                    Đăng ký khám trực tuyến
+                <a href="/Home/Doctors" class="px-7 py-3.5 rounded-xl border border-outline-variant bg-white text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">stethoscope</span>
+                    Tìm bác sĩ
                 </a>
-                <a href="/Home/Specialities" class="px-7 py-3.5 rounded-xl border border-outline-variant bg-white text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
-                    Xem chuyên khoa
-                    <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                <a href="/Home/Guide" class="px-7 py-3.5 rounded-xl border border-outline-variant bg-white text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">menu_book</span>
+                    Hướng dẫn khám
                 </a>
             </div>
         </div>

@@ -25,18 +25,20 @@ namespace QuanLyBenhVien.Controllers
 
         // GET: /Auth/Login
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string returnUrl)
         {
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                return RedirectByUserRole();
+                return SafeRedirect(returnUrl) ?? RedirectByUserRole();
             }
+
+            ViewBag.ReturnUrl = SanitizeReturnUrl(returnUrl);
             return View();
         }
 
         // POST: /Auth/Login
         [HttpPost]
-        public async Task<IActionResult> Login(string identifier, string password, bool rememberMe, string role)
+        public async Task<IActionResult> Login(string identifier, string password, bool rememberMe, string role, string returnUrl)
         {
             identifier = identifier?.Trim() ?? string.Empty;
             User? user = null;
@@ -110,10 +112,31 @@ namespace QuanLyBenhVien.Controllers
 
             TempData["SuccessMessage"] = $"Đăng nhập thành công! Chào mừng {user.HoTen}.";
 
+            // Honour where the visitor was heading (e.g. the booking page they
+            // picked a department on) before falling back to their role home.
+            var intended = SafeRedirect(returnUrl);
+            if (intended != null) return intended;
+
             // Redirect based on role
             if (user.VaiTro == "Admin") return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
             if (user.VaiTro == "Doctor") return RedirectToAction("Index", "Dashboard", new { area = "Doctor" });
             return RedirectToAction("Index", "Dashboard", new { area = "Patient" });
+        }
+
+        /// <summary>
+        /// Accepts only same-site relative paths so a crafted "returnUrl" cannot
+        /// bounce a freshly authenticated user to an external site.
+        /// </summary>
+        private string? SanitizeReturnUrl(string? returnUrl)
+        {
+            if (string.IsNullOrWhiteSpace(returnUrl)) return null;
+            return Url.IsLocalUrl(returnUrl) ? returnUrl : null;
+        }
+
+        private IActionResult? SafeRedirect(string? returnUrl)
+        {
+            var safe = SanitizeReturnUrl(returnUrl);
+            return safe == null ? null : Redirect(safe);
         }
 
         // GET: /Auth/Register

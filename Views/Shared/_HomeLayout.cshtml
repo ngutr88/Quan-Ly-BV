@@ -19,13 +19,13 @@
             </a>
 
             <!-- Mid Navigation Links -->
-            <nav class="hidden lg:flex items-center gap-8 text-body-md font-medium text-on-surface-variant">
+            <nav class="hidden lg:flex items-center gap-5 xl:gap-7 text-[15px] font-medium text-on-surface-variant whitespace-nowrap">
                 <a href="/" class="@(action == "Index" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Trang chủ</a>
-                <a href="/Home/About" class="@(action == "About" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Giới thiệu</a>
                 <a href="/Home/Specialities" class="@(action == "Specialities" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Chuyên khoa</a>
+                <a href="/Home/Doctors" class="@(action == "Doctors" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Bác sĩ</a>
+                <a href="/Home/Pricing" class="@(action == "Pricing" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Bảng giá</a>
+                <a href="/Home/Guide" class="@(action == "Guide" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Hướng dẫn khám</a>
                 <a href="/Home/News" class="@(action == "News" || action == "NewsDetail" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Tin tức</a>
-                <a href="/Home/Features" class="@(action == "Features" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Tính năng</a>
-                <a href="/Home/Testimonials" class="@(action == "Testimonials" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Ý kiến khách hàng</a>
                 <a href="/Home/Contact" class="@(action == "Contact" ? "text-primary font-bold" : "hover:text-primary transition-colors")">Liên hệ</a>
             </nav>
 
@@ -50,6 +50,9 @@
                 <a href="/" class="rounded-xl px-3 py-3 @(action == "Index" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Trang chủ</a>
                 <a href="/Home/About" class="rounded-xl px-3 py-3 @(action == "About" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Giới thiệu</a>
                 <a href="/Home/Specialities" class="rounded-xl px-3 py-3 @(action == "Specialities" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Chuyên khoa</a>
+                <a href="/Home/Doctors" class="rounded-xl px-3 py-3 @(action == "Doctors" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Bác sĩ</a>
+                <a href="/Home/Pricing" class="rounded-xl px-3 py-3 @(action == "Pricing" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Bảng giá</a>
+                <a href="/Home/Guide" class="rounded-xl px-3 py-3 @(action == "Guide" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Hướng dẫn khám</a>
                 <a href="/Home/News" class="rounded-xl px-3 py-3 @(action == "News" || action == "NewsDetail" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Tin tức</a>
                 <a href="/Home/Features" class="rounded-xl px-3 py-3 @(action == "Features" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Tính năng</a>
                 <a href="/Home/Testimonials" class="rounded-xl px-3 py-3 @(action == "Testimonials" ? "bg-primary/10 text-primary" : "text-on-surface hover:bg-surface-container")">Ý kiến khách hàng</a>
@@ -97,7 +100,12 @@
                     <ul class="text-caption text-outline-variant space-y-2">
                         <li><a href="/" class="hover:text-white transition-colors">Trang chủ</a></li>
                         <li><a href="/Home/About" class="hover:text-white transition-colors">Giới thiệu</a></li>
+                        <li><a href="/Home/Features" class="hover:text-white transition-colors">Tính năng nổi bật</a></li>
+                        <li><a href="/Home/Testimonials" class="hover:text-white transition-colors">Ý kiến khách hàng</a></li>
                         <li><a href="/Home/Specialities" class="hover:text-white transition-colors">Danh mục khoa</a></li>
+                        <li><a href="/Home/Doctors" class="hover:text-white transition-colors">Đội ngũ bác sĩ</a></li>
+                        <li><a href="/Home/Pricing" class="hover:text-white transition-colors">Bảng giá dịch vụ</a></li>
+                        <li><a href="/Home/Guide" class="hover:text-white transition-colors">Hướng dẫn khám bệnh</a></li>
                         <li><a href="/Home/News" class="hover:text-white transition-colors">Tin tức &amp; thông báo</a></li>
                         <li><a href="/Home/Features" class="hover:text-white transition-colors">Quy trình y tế số</a></li>
                         <li><a href="/Auth/Login" class="hover:text-white transition-colors">Đăng nhập tài khoản</a></li>

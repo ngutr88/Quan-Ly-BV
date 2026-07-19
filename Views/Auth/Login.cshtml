@@ -56,6 +56,10 @@
             <p class="auth-subtitle">Đăng nhập bằng tài khoản đã được bệnh viện cấp để tiếp tục công việc.</p>
 
             <form action="/Auth/Login" method="post">
+                @if (ViewBag.ReturnUrl != null)
+                {
+                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+                }
                 @Html.AntiForgeryToken()
                 <fieldset class="role-fieldset">
                     <legend>Đăng nhập với vai trò</legend>
