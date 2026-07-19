@@ -171,8 +171,32 @@ Khi codebase đã hình thành, luôn đi theo framework, convention, formatter 
 5. Sau khi sửa, chạy formatter, typecheck, lint hoặc test phù hợp nếu repo có script.
 6. Nếu chưa có code, khi scaffold hãy tạo cấu trúc hỗ trợ module hóa theo domain: auth, users, doctors, patients, departments, appointments, examinations, prescriptions, medicines, invoices, notifications, reports.
 7. Cập nhật tài liệu khi thêm quyết định kiến trúc hoặc thay đổi nghiệp vụ khác PRD.
-8. Sau khi thực hiện xong một task, cập nhật vào folder `timelines` với file được tạo theo định dạng `DD-MM-YYYY.md` (ví dụ: `21-06-2026.md`).
+8. Sau khi thực hiện xong một task, cập nhật vào folder `timelines` với file được tạo theo định dạng `DD-MM-YYYY.md` (ví dụ: `21-06-2026.md`). Xem chi tiết ở mục [Nhật ký công việc và changelog](#nhật-ký-công-việc-và-changelog).
 9. Sau khi kết thúc một ngày hoặc khi được yêu cầu update version, cập nhật thông tin vào file `CHANGELOG.md`.
+
+## Nhật ký công việc và changelog
+
+Đây là bước bắt buộc để khép lại một task, không phải việc tùy chọn làm khi còn thời gian.
+
+### `timelines/DD-MM-YYYY.md` — ghi ngay sau mỗi task
+
+- Tên file theo ngày làm việc, ví dụ `19-07-2026.md`. Nếu file của ngày hôm đó đã tồn tại thì ghi thêm vào, không tạo file mới.
+- Ghi ngay sau khi hoàn tất task, trước khi chuyển sang việc khác. Cuối ngày mới ngồi nhớ lại là đã mất chi tiết.
+- Mỗi task một mục, kèm mã commit nếu đã commit.
+- Nội dung cần có:
+  - Đã thay đổi những gì, ở đâu.
+  - **Nguyên nhân gốc** nếu là sửa lỗi, không chỉ ghi triệu chứng.
+  - Cách đã kiểm chứng, kèm số liệu thật nếu có (route trả về mã gì, đo được bao nhiêu, test nào chạy).
+  - Việc còn dang dở hoặc đã cố ý không làm, kèm lý do.
+- Ghi trung thực: nếu báo lỗi hóa ra không phải lỗi, hoặc chính mình gây ra regression rồi tự sửa, thì ghi đúng như vậy. Nhật ký sai lệch còn tệ hơn không có nhật ký.
+
+### `CHANGELOG.md` — khi kết thúc ngày hoặc khi được yêu cầu update version
+
+- Giữ định dạng [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) và [Semantic Versioning](https://semver.org/spec/v2.0.0.html) đang dùng trong file.
+- Phiên bản mới đặt trên cùng, theo mẫu `## [X.Y.Z] - YYYY-MM-DD`, nhóm theo `### Added` / `### Changed` / `### Fixed` / `### Removed`.
+- Chọn số phiên bản theo tác động: sửa lỗi tăng PATCH, thêm tính năng tương thích ngược tăng MINOR, thay đổi phá vỡ tương thích tăng MAJOR.
+- Viết cho người đọc muốn biết sản phẩm đổi gì, không phải nhật ký commit. Gộp nhiều commit nhỏ thành một mục có nghĩa.
+- Không tự ý tăng version khi chưa kết thúc ngày và người dùng chưa yêu cầu.
 
 ## Điều không nên làm
 
