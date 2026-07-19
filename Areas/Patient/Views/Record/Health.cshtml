@@ -7,13 +7,18 @@
     var hasLogs = rawLogsStr != "[]" && rawLogsStr != "null";
 }
 
-<div class="mb-unit-lg">
-    <a href="/Patient/Dashboard" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
-        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại trang chủ
-    </a>
-    <h2 class="font-headline-lg text-headline-lg text-on-surface">Sổ sức khỏe cá nhân</h2>
-    <p class="text-body-md text-on-surface-variant">Theo dõi biểu đồ thay đổi các chỉ số sinh tồn qua từng ca khám bệnh.</p>
-</div>
+@{
+    var pageHeader = new PageHeaderViewModel
+    {
+        Title = "Sổ sức khỏe cá nhân",
+        Subtitle = "Theo dõi biểu đồ thay đổi các chỉ số sinh tồn qua từng ca khám bệnh.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Trang chủ", "/Patient/Dashboard") },
+        CurrentCrumb = "Sổ sức khỏe"
+    };
+}
+
+<partial name="_PageHeader" model="pageHeader" />
+
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
     <!-- Profile summary (1 col) -->

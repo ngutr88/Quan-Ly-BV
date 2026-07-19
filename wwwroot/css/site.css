@@ -645,6 +645,86 @@ a, button, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 }
 
 /* ==========================================================================
+   Patient portal home
+   A calmer, more personal surface than the staff list screens: the patient
+   sees their next visit, what they owe, and their own health facts first.
+   ========================================================================== */
+.patient-hero {
+  background: linear-gradient(135deg, #0b5cab 0%, #0f74c8 55%, #1189c4 100%);
+  box-shadow: 0 18px 42px rgba(11, 92, 171, .26);
+  position: relative;
+  overflow: hidden;
+}
+.patient-hero::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  top: -70px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .09);
+  pointer-events: none;
+}
+.patient-hero-empty { background: linear-gradient(135deg, #33566f 0%, #46708c 60%, #5b87a4 100%); box-shadow: 0 14px 34px rgba(51, 86, 111, .22); }
+.patient-hero-chip { background: rgba(255, 255, 255, .22); border-radius: 999px; padding: .125rem .625rem; font-size: .75rem; font-weight: 700; }
+.patient-hero-status { display: inline-flex; align-items: center; gap: .375rem; background: rgba(255, 255, 255, .2); border: 1px solid rgba(255, 255, 255, .35); border-radius: 999px; padding: .3125rem .875rem; font-size: .8125rem; font-weight: 700; }
+.patient-hero-status .material-symbols-outlined { font-size: 18px; }
+.patient-hero-btn { display: inline-flex; align-items: center; justify-content: center; gap: .375rem; background: #fff; color: #0b5cab; border-radius: .7rem; padding: .5rem 1rem; font-size: .875rem; font-weight: 700; white-space: nowrap; transition: background-color 160ms ease, transform 160ms ease; }
+.patient-hero-btn:hover { background: #eaf3ff; color: #08457f; transform: translateY(-1px); }
+.patient-hero-btn .material-symbols-outlined { font-size: 20px; }
+
+/* Outstanding-balance banner */
+.patient-alert { display: flex; align-items: center; gap: .875rem; padding: 1rem; background: #fff6f5; border: 1px solid #f6c8c4; border-left: 4px solid #ba1a1a; border-radius: 1rem; box-shadow: var(--clinical-shadow-sm); transition: box-shadow 170ms ease, border-color 170ms ease; }
+.patient-alert:hover { box-shadow: var(--clinical-shadow-md); border-color: #ba1a1a; }
+.patient-alert-icon { color: #ba1a1a; font-size: 28px; flex-shrink: 0; }
+
+/* Quick-action tiles */
+.patient-action { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .25rem; padding: 1rem .75rem; background: #fff; border: 1px solid var(--clinical-line); border-radius: 1rem; box-shadow: var(--clinical-shadow-sm); transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
+.patient-action:hover { transform: translateY(-3px); border-color: #70a9e8; box-shadow: var(--clinical-shadow-md); }
+.patient-action-icon { font-size: 34px; color: var(--clinical-teal); transition: transform 180ms ease; }
+.patient-action:hover .patient-action-icon { transform: scale(1.12); }
+.patient-action-title { font-size: .875rem; font-weight: 700; color: var(--clinical-ink); }
+.patient-action-sub { font-size: .75rem; color: var(--clinical-muted); }
+
+/* Appointment row with a calendar chip */
+.patient-appt { display: flex; align-items: center; gap: .875rem; padding: .875rem; border: 1px solid var(--clinical-line); border-radius: .875rem; background: #fff; transition: border-color 170ms ease, box-shadow 170ms ease; }
+.patient-appt:hover { border-color: #70a9e8; box-shadow: var(--clinical-shadow-sm); }
+.patient-appt-date { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 3.25rem; height: 3.25rem; border-radius: .75rem; background: #e8f1ff; color: var(--clinical-teal); flex-shrink: 0; }
+.patient-appt-day { font-size: 1.125rem; font-weight: 800; line-height: 1.25rem; }
+.patient-appt-month { font-size: .6875rem; font-weight: 600; text-transform: uppercase; }
+
+/* Prescription row */
+.patient-pres { display: flex; align-items: center; gap: .75rem; padding: .75rem; border: 1px solid var(--clinical-line); border-radius: .875rem; background: #fff; transition: border-color 170ms ease, box-shadow 170ms ease, transform 170ms ease; }
+.patient-pres:hover { border-color: #70a9e8; box-shadow: var(--clinical-shadow-sm); transform: translateX(2px); }
+.patient-pres-icon { display: flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: .625rem; background: #e3f7ee; color: #0a6b48; font-size: 20px; flex-shrink: 0; }
+
+/* Health-profile definition rows */
+.patient-field { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; padding-bottom: .625rem; border-bottom: 1px solid #eef2f7; }
+.patient-field:last-child { border-bottom: 0; padding-bottom: 0; }
+.patient-field dt { font-size: .75rem; font-weight: 600; color: var(--clinical-muted); flex-shrink: 0; }
+.patient-field dd { font-size: .875rem; color: var(--clinical-ink); text-align: right; margin: 0; overflow-wrap: anywhere; }
+
+/* Vital tiles */
+.patient-vital { display: flex; flex-direction: column; gap: .125rem; padding: .5rem .625rem; background: #f4f8ff; border: 1px solid #dbe7f7; border-radius: .625rem; }
+.patient-vital-label { font-size: .6875rem; font-weight: 600; color: var(--clinical-muted); }
+.patient-vital-value { font-size: .9375rem; font-weight: 700; color: var(--clinical-ink); }
+
+/* Notification rows */
+.patient-note { display: block; padding: .625rem .75rem; border-radius: .75rem; border: 1px solid transparent; transition: background-color 150ms ease, border-color 150ms ease; }
+.patient-note:hover { background: #f4f8ff; border-color: #dbe7f7; }
+.patient-note-unread { background: #eef5ff; border-color: #cfe0f8; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+@media (max-width: 640px) {
+  .patient-hero { padding: 1rem !important; }
+  .patient-hero-btn { width: 100%; }
+  .patient-alert { flex-wrap: wrap; }
+  .patient-field { flex-direction: column; gap: .125rem; }
+  .patient-field dd { text-align: left; }
+}
+
+/* ==========================================================================
    Print / PDF
    "Xuất PDF" prints the current report through the browser, so the printed
    sheet must drop the app chrome and lay the content out on plain paper.

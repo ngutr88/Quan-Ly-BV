@@ -55,11 +55,45 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
                 .Take(5)
                 .ToListAsync();
 
-            // 3. Unpaid Invoices count
-            ViewBag.UnpaidCount = await _context.Invoices
-                .Where(i => i.ExaminationRecord.Appointment.BenhNhanId == patient.Id && i.TrangThaiThanhToan == "ChuaThanhToan")
-                .CountAsync();
+            // 3. Outstanding balance drives the payment call-to-action.
+            var unpaidInvoices = await _context.Invoices
+                .Include(i => i.ExaminationRecord.Appointment.Doctor.User)
+                .Where(i => i.ExaminationRecord.Appointment.BenhNhanId == patient.Id
+                            && i.TrangThaiThanhToan == "ChuaThanhToan")
+                .OrderByDescending(i => i.NgayTao)
+                .ToListAsync();
 
+            ViewBag.UnpaidCount = unpaidInvoices.Count;
+            ViewBag.UnpaidAmount = unpaidInvoices.Sum(i => i.TongTien);
+            ViewBag.UnpaidInvoices = unpaidInvoices.Take(3).ToList();
+
+            // 4. Treatment history summary shown on the health profile card.
+            var examRecords = await _context.ExaminationRecords
+                .Include(e => e.Appointment.Doctor.User)
+                .Where(e => e.Appointment.BenhNhanId == patient.Id)
+                .OrderByDescending(e => e.NgayKham)
+                .ToListAsync();
+
+            ViewBag.TotalVisits = examRecords.Count;
+            ViewBag.LastVisit = examRecords.FirstOrDefault()?.NgayKham;
+
+            // Most recent record that actually carries vital signs — an empty
+            // follow-up visit should not blank out the patient's last readings.
+            ViewBag.LatestVitals = examRecords
+                .FirstOrDefault(e => e.CanNang.HasValue || e.ChieuCao.HasValue
+                                     || e.NhietDo.HasValue || e.BMI.HasValue);
+
+            // 5. Notifications
+            ViewBag.RecentNotifications = await _context.Notifications
+                .Where(n => n.NguoiDungId == patient.NguoiDungId)
+                .OrderByDescending(n => n.NgayGui)
+                .Take(4)
+                .ToListAsync();
+
+            ViewBag.UnreadNotifications = await _context.Notifications
+                .CountAsync(n => n.NguoiDungId == patient.NguoiDungId && !n.DaDoc);
+
+            ViewBag.NextAppointment = upcomingApps.FirstOrDefault();
             ViewBag.Patient = patient;
             ViewBag.RecentPres = recentPrescriptions;
 
