@@ -160,9 +160,40 @@
                 <span class="material-symbols-outlined text-primary">pie_chart</span>
                 Phân bổ lịch khám hôm nay
             </h3>
+            @{
+                var todayTotal = (int)(ViewBag.TotalAppointmentsToday ?? 0);
+            }
+            @* Chart.js paints nothing when every slice is zero, so on a day with
+               no appointments the card looked like a chart had failed to load.
+               Say so explicitly instead of leaving an empty box. *@
             <div class="relative w-full flex-grow flex items-center justify-center h-64">
-                <canvas id="statusChart"></canvas>
+                <canvas id="statusChart" class="@(todayTotal == 0 ? "hidden" : "")"></canvas>
+                @if (todayTotal == 0)
+                {
+                    <div class="flex flex-col items-center justify-center text-center px-4">
+                        <span class="material-symbols-outlined text-[44px] text-outline mb-1">event_busy</span>
+                        <p class="text-body-md font-semibold text-on-surface-variant">Hôm nay chưa có lịch khám nào</p>
+                        <p class="text-caption text-outline mt-0.5">Biểu đồ sẽ hiển thị khi có lịch khám trong ngày.</p>
+                    </div>
+                }
             </div>
+            @if (todayTotal > 0)
+            {
+                <div class="grid grid-cols-2 gap-2 mt-unit-sm pt-unit-sm border-t border-outline-variant/60">
+                    <p class="text-caption text-on-surface-variant flex items-center justify-between">
+                        <span>Chờ duyệt</span><strong class="text-on-surface">@ViewBag.PendingAppCount</strong>
+                    </p>
+                    <p class="text-caption text-on-surface-variant flex items-center justify-between">
+                        <span>Đã hẹn</span><strong class="text-on-surface">@ViewBag.ConfirmedAppCount</strong>
+                    </p>
+                    <p class="text-caption text-on-surface-variant flex items-center justify-between">
+                        <span>Hoàn thành</span><strong class="text-on-surface">@ViewBag.CompletedAppCount</strong>
+                    </p>
+                    <p class="text-caption text-on-surface-variant flex items-center justify-between">
+                        <span>Đã hủy</span><strong class="text-on-surface">@ViewBag.CancelledAppCount</strong>
+                    </p>
+                </div>
+            }
         </div>
     </div>
 
@@ -491,8 +522,12 @@
                 }
             });
 
-            // 2. Status Chart (Doughnut)
-            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            // 2. Status Chart (Doughnut) — skipped on days with no appointments,
+            // where the card shows an empty state instead of a blank canvas.
+            const statusCanvas = document.getElementById('statusChart');
+            const statusTotal = pending + confirmed + completed + cancelled;
+            if (statusCanvas && statusTotal > 0) {
+            const ctxStatus = statusCanvas.getContext('2d');
             new Chart(ctxStatus, {
                 type: 'doughnut',
                 data: {
@@ -528,6 +563,7 @@
                     cutout: '65%'
                 }
             });
+            }
 
             // 3. Monthly Revenue Chart (Line)
             const ctxMonthly = document.getElementById('monthlyRevenueChart').getContext('2d');

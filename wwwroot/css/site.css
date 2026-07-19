@@ -419,10 +419,14 @@ body {
   min-width: 960px !important;
 }
 
-/* The invoice list is intentionally bounded so its own scrollbar remains
-   inside the card instead of moving the transaction/details panels. */
+/* The invoice list is bounded so its own scrollbar stays inside the card
+   instead of moving the transaction/details panels. Only the ceiling is fixed:
+   a fixed height also held the box open when there were just a few rows, which
+   left a band of empty white inside the card and dragged the panel beside it
+   out of proportion. */
 .patient-content .invoice-table-scroll {
-  height: min(52vh, 460px);
+  /* !important because the generic scrollable-table rule above outranks this
+     selector; without it the list would inherit the looser 65vh ceiling. */
   max-height: min(52vh, 460px) !important;
   overflow: auto;
   overscroll-behavior: contain;
@@ -435,7 +439,6 @@ body {
 
 @media (max-width: 767px) {
   .patient-content .invoice-table-scroll {
-    height: 360px;
     max-height: 360px !important;
   }
 }
