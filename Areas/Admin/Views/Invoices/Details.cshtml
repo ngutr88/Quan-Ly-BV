@@ -139,7 +139,7 @@
                 <h3 class="font-semibold text-on-surface">Chi tiết các hạng mục phí</h3>
                 <span class="text-xs text-on-surface-variant uppercase tracking-widest font-bold">@Model.InvoiceDetails.Count Hạng mục</span>
             </div>
-            <div class="overflow-x-auto">
+            <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Chi tiết các hạng mục phí" tabindex="0">
                 <table class="w-full text-left border-collapse min-w-[600px]">
                     <thead class="bg-surface-container-low text-xs text-on-surface-variant uppercase">
                         <tr>
@@ -274,8 +274,8 @@
 <!-- Modal: Confirm Payment -->
 @if (Model.TrangThaiThanhToan == "ChuaThanhToan")
 {
-    <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden" id="modal-confirm">
-        <form method="POST" action="/Admin/Invoices/PayCounter/@Model.Id" class="bg-surface-container-lowest w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-outline-variant transform transition-all duration-300 scale-100">
+    <div class="hms-modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden" id="modal-confirm">
+        <form method="POST" action="/Admin/Invoices/PayCounter/@Model.Id" class="hms-modal-panel bg-surface-container-lowest w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-outline-variant transform transition-all duration-300 scale-100">
             @Html.AntiForgeryToken()
             <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
                 <h3 class="font-bold text-on-surface">Xác nhận thanh toán</h3>
@@ -308,8 +308,8 @@
 }
 
 <!-- Modal: Cancel Invoice -->
-<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden" id="modal-cancel">
-    <div class="bg-surface-container-lowest w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-outline-variant transform transition-all duration-300 scale-100">
+<div class="hms-modal-overlay fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm hidden" id="modal-cancel">
+    <div class="hms-modal-panel bg-surface-container-lowest w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-outline-variant transform transition-all duration-300 scale-100">
         <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center">
             <div class="flex items-center gap-2 text-error">
                 <span class="material-symbols-outlined">warning</span>

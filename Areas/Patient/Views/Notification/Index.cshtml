@@ -15,13 +15,6 @@
             border-radius: 50%;
             transition: opacity 0.3s ease;
         }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
     </style>
 }
 
@@ -71,12 +64,13 @@
     </div>
 
     <!-- Filters -->
-    <div class="flex items-center gap-2 mb-unit-lg overflow-x-auto pb-2 scroll-smooth no-scrollbar">
-        <a href="?type=All" class="px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "All" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Tất cả</a>
-        <a href="?type=LichKham" class="px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "LichKham" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Lịch khám</a>
-        <a href="?type=ThanhToan" class="px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "ThanhToan" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Thanh toán</a>
-        <a href="?type=DonThuoc" class="px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "DonThuoc" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Đơn thuốc</a>
-        <a href="?type=HeThong" class="px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "HeThong" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Hệ thống</a>
+    <div class="hms-horizontal-scroll custom-scrollbar flex items-center gap-2 mb-unit-lg pb-2 scroll-smooth"
+         role="region" aria-label="Bộ lọc loại thông báo" tabindex="0">
+        <a href="?type=All" class="flex-none whitespace-nowrap px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "All" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Tất cả</a>
+        <a href="?type=LichKham" class="flex-none whitespace-nowrap px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "LichKham" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Lịch khám</a>
+        <a href="?type=ThanhToan" class="flex-none whitespace-nowrap px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "ThanhToan" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Thanh toán</a>
+        <a href="?type=DonThuoc" class="flex-none whitespace-nowrap px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "DonThuoc" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Đơn thuốc</a>
+        <a href="?type=HeThong" class="flex-none whitespace-nowrap px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "HeThong" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Hệ thống</a>
     </div>
 
     <!-- Notification List -->

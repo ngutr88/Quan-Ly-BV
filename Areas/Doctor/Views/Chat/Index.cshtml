@@ -6,9 +6,10 @@
 }
 
 <!-- 3-Column Message Layout -->
-<div class="flex overflow-hidden h-[calc(100vh-160px)] bg-white border border-outline-variant rounded-2xl shadow-sm -m-unit-sm">
+<div class="doctor-chat-workspace flex h-[calc(100vh-160px)] bg-white border border-outline-variant rounded-2xl shadow-sm -m-unit-sm custom-scrollbar"
+     role="region" aria-label="Không gian tư vấn ba cột" tabindex="0">
     <!-- Left Column: Conversation List -->
-    <section class="w-80 flex flex-col bg-surface border-r border-outline-variant shrink-0">
+    <section class="chat-conversation-pane w-80 flex flex-col bg-surface border-r border-outline-variant shrink-0">
         <div class="p-4 border-b border-outline-variant space-y-3 bg-surface-container-low/35">
             <div class="flex items-center justify-between">
                 <h2 class="font-title-lg text-title-lg font-bold text-on-surface">Tin nhắn tư vấn</h2>
@@ -59,7 +60,7 @@
     </section>
 
     <!-- Center Column: Chat Window -->
-    <section class="flex-1 flex flex-col bg-white min-w-0">
+    <section class="chat-message-pane flex-1 flex flex-col bg-white min-w-0">
         @if (contacts.Any())
         {
             var activeContact = contacts.First();
@@ -146,7 +147,7 @@
     </section>
 
     <!-- Right Column: Patient Panel -->
-    <section class="w-80 bg-surface border-l border-outline-variant overflow-y-auto custom-scrollbar shrink-0 flex flex-col">
+    <section class="chat-patient-pane w-80 bg-surface border-l border-outline-variant overflow-y-auto custom-scrollbar shrink-0 flex flex-col">
         @if (contacts.Any())
         {
             var activeContact = contacts.First();

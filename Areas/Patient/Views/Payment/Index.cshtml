@@ -167,13 +167,13 @@
     </div>
 
     <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-unit-lg items-start">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-unit-lg items-start min-w-0 max-w-full">
         
         <!-- Left Column: Invoices & Transactions -->
-        <div class="lg:col-span-8 flex flex-col gap-unit-lg">
+        <div class="lg:col-span-8 flex flex-col gap-unit-lg min-w-0 max-w-full">
             
             <!-- Invoices Table Section -->
-            <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+            <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm min-w-0 max-w-full">
                 <div class="p-unit-md border-b border-outline-variant/60 bg-surface-container-lowest flex justify-between items-center">
                     <h3 class="font-title-lg font-bold text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-primary">receipt_long</span>
@@ -181,8 +181,9 @@
                     </h3>
                 </div>
 
-                <div class="invoice-table-scroll overflow-x-auto" aria-label="Vùng cuộn danh sách hóa đơn">
-                    <table class="w-full text-left border-collapse" id="invoices-table">
+                <div class="hms-table-scroll invoice-table-scroll w-full min-w-0 max-w-full overflow-auto custom-scrollbar"
+                     role="region" aria-label="Danh sách hóa đơn viện phí" tabindex="0">
+                    <table class="w-full min-w-[760px] text-left border-collapse" id="invoices-table">
                         <thead>
                             <tr class="bg-surface-container-low border-b border-outline-variant">
                                 <th class="px-6 py-4 text-caption font-bold text-on-surface-variant uppercase tracking-wider">Mã hóa đơn</th>
@@ -214,7 +215,7 @@
             </div>
 
             <!-- Transaction History Section -->
-            <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+            <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm min-w-0 max-w-full">
                 <div class="p-unit-md border-b border-outline-variant/60 bg-surface-container-lowest">
                     <h3 class="font-title-lg font-bold text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-secondary">history</span>
@@ -222,7 +223,7 @@
                     </h3>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Lịch sử giao dịch trực tuyến" tabindex="0">
                     <table class="w-full text-left border-collapse" id="transactions-table">
                         <thead>
                             <tr class="bg-surface-container-low border-b border-outline-variant">
@@ -248,7 +249,7 @@
         </div>
 
         <!-- Right Column: Details & Operations -->
-        <div class="lg:col-span-4 flex flex-col gap-unit-lg sticky top-20" id="detail-pane">
+        <div class="lg:col-span-4 flex flex-col gap-unit-lg min-w-0 max-w-full sticky top-20" id="detail-pane">
             <!-- Details Section -->
             <section class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm relative transition-all" id="detail-section">
                 <!-- Watermark for Status -->

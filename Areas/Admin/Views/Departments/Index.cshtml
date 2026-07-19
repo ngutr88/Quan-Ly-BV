@@ -182,7 +182,7 @@
                 }
                 else
                 {
-                    <div class="departments-services-scroll overflow-auto">
+                    <div class="hms-table-scroll departments-services-scroll overflow-auto" role="region" aria-label="Danh mục dịch vụ y tế" tabindex="0">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-surface-bright">
@@ -245,8 +245,8 @@
 <!-- ================= MODALS ================= -->
 
 <!-- Add Department Modal -->
-<div id="addDeptModal" class="fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+<div id="addDeptModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
         <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
             <h3 class="font-bold text-title-lg text-on-surface">Thêm Khoa Mới</h3>
             <button onclick="closeModal('addDeptModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
@@ -278,8 +278,8 @@
 </div>
 
 <!-- Edit Department Modal -->
-<div id="editDeptModal" class="fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+<div id="editDeptModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
         <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
             <h3 class="font-bold text-title-lg text-on-surface">Chỉnh Sửa Khoa</h3>
             <button onclick="closeModal('editDeptModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
@@ -312,8 +312,8 @@
 </div>
 
 <!-- Add Service Modal -->
-<div id="addServiceModal" class="fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+<div id="addServiceModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
         <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
             <h3 class="font-bold text-title-lg text-on-surface">Thêm Dịch Vụ Mới</h3>
             <button onclick="closeModal('addServiceModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
@@ -346,8 +346,8 @@
 </div>
 
 <!-- Edit Service Modal -->
-<div id="editServiceModal" class="fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+<div id="editServiceModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
         <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
             <h3 class="font-bold text-title-lg text-on-surface">Chỉnh Sửa Dịch Vụ</h3>
             <button onclick="closeModal('editServiceModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
@@ -433,12 +433,13 @@
 
         .departments-pane {
             min-height: 0;
+            min-width: 0;
+            max-width: 100%;
         }
 
         .departments-list-card {
             max-height: calc(100vh - 330px);
             overflow-y: auto;
-            overscroll-behavior: contain;
             scrollbar-gutter: stable;
         }
 
@@ -452,7 +453,6 @@
         .departments-services-scroll {
             min-height: 0;
             flex: 1 1 auto;
-            overscroll-behavior: contain;
             scrollbar-gutter: stable;
         }
 
@@ -481,10 +481,6 @@
             .departments-list-card,
             .departments-services-card {
                 max-height: none;
-            }
-
-            .departments-services-scroll {
-                overflow: visible;
             }
         }
     </style>

@@ -36,7 +36,7 @@
 
     @if (totalPages > 1)
     {
-        <nav class="hms-pagination" aria-label="Phân trang">
+        <nav class="hms-pagination custom-scrollbar" aria-label="Phân trang" tabindex="0">
             <a class="hms-page-link @(Model.HasPrevious ? "" : "hms-page-link-disabled")"
                href="@(Model.HasPrevious ? LinkFor(page - 1) : "#")"
                aria-label="Trang trước" @(Model.HasPrevious ? "" : "aria-disabled=true")>
