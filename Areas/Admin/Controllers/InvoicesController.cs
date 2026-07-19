@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBenhVien.Data;
+using QuanLyBenhVien.Helpers;
 using QuanLyBenhVien.Models;
 using System.Security.Claims;
 
@@ -15,14 +16,65 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
     public class InvoicesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly QuanLyBenhVien.Services.ExcelExportService _excel;
 
-        public InvoicesController(ApplicationDbContext context)
+        public InvoicesController(ApplicationDbContext context, QuanLyBenhVien.Services.ExcelExportService excel)
         {
             _context = context;
+            _excel = excel;
         }
 
         // GET: Admin/Invoices
-        public async Task<IActionResult> Index(string statusFilter, string searchString)
+        public async Task<IActionResult> Index(string statusFilter, string searchString, int page = 1, int? pageSize = null)
+        {
+            var query = BuildQuery(statusFilter, searchString);
+
+            var paged = await query.ToPagedListAsync(page, QuanLyBenhVien.Helpers.PagedList<Invoice>.NormalisePageSize(pageSize));
+
+            ViewBag.StatusFilter = statusFilter;
+            ViewBag.SearchString = searchString;
+
+            // Revenue tiles must total the filtered set, not the visible page.
+            ViewBag.TotalMatching = paged.TotalCount;
+            ViewBag.PaidCount = await query.CountAsync(i => i.TrangThaiThanhToan == "DaThanhToan");
+            ViewBag.PaidAmount = await query.Where(i => i.TrangThaiThanhToan == "DaThanhToan").SumAsync(i => (decimal?)i.TongTien) ?? 0m;
+            ViewBag.UnpaidCount = await query.CountAsync(i => i.TrangThaiThanhToan == "ChuaThanhToan");
+            ViewBag.UnpaidAmount = await query.Where(i => i.TrangThaiThanhToan == "ChuaThanhToan").SumAsync(i => (decimal?)i.TongTien) ?? 0m;
+            ViewBag.CancelledCount = await query.CountAsync(i => i.TrangThaiThanhToan == "DaHuy");
+
+            return View(paged);
+        }
+
+        // GET: Admin/Invoices/Export
+        public async Task<IActionResult> Export(string statusFilter, string searchString)
+        {
+            var invoices = await BuildQuery(statusFilter, searchString).ToListAsync();
+
+            var columns = new List<QuanLyBenhVien.Services.ExcelColumn<Invoice>>
+            {
+                new("Mã hóa đơn", i => $"HD-{i.Id:D5}"),
+                new("Ngày tạo", i => i.NgayTao.ToString("dd/MM/yyyy HH:mm")),
+                new("Bệnh nhân", i => i.ExaminationRecord.Appointment.Patient.User.HoTen),
+                new("Tổng tiền (VNĐ)", i => i.TongTien, "#,##0"),
+                new("Trạng thái", i => PaymentLabel(i.TrangThaiThanhToan)),
+                new("Phương thức", i => MethodLabel(i.PhuongThuc)),
+                new("Mã giao dịch", i => i.MaGiaoDich ?? ""),
+                new("Ngày thanh toán", i => i.NgayThanhToan.HasValue ? i.NgayThanhToan.Value.ToString("dd/MM/yyyy HH:mm") : "")
+            };
+
+            var content = _excel.Build(
+                "Hoa don",
+                "DANH SÁCH HÓA ĐƠN",
+                columns,
+                invoices,
+                string.IsNullOrEmpty(statusFilter) ? "Toàn bộ hóa đơn" : $"Trạng thái: {PaymentLabel(statusFilter)}");
+
+            return File(content,
+                QuanLyBenhVien.Services.ExcelExportService.ContentType,
+                QuanLyBenhVien.Services.ExcelExportService.FileName("danh-sach-hoa-don"));
+        }
+
+        private IQueryable<Invoice> BuildQuery(string statusFilter, string searchString)
         {
             var query = _context.Invoices
                 .Include(i => i.ExaminationRecord.Appointment.Patient.User)
@@ -38,12 +90,24 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 query = query.Where(i => i.ExaminationRecord.Appointment.Patient.User.HoTen.Contains(searchString));
             }
 
-            var invoices = await query.OrderByDescending(i => i.NgayTao).ToListAsync();
-            ViewBag.StatusFilter = statusFilter;
-            ViewBag.SearchString = searchString;
-
-            return View(invoices);
+            return query.OrderByDescending(i => i.NgayTao);
         }
+
+        private static string PaymentLabel(string status) => status switch
+        {
+            "DaThanhToan" => "Đã thanh toán",
+            "ChuaThanhToan" => "Chưa thanh toán",
+            "DaHuy" => "Đã hủy",
+            _ => status
+        };
+
+        private static string MethodLabel(string method) => method switch
+        {
+            "TienMat" => "Tiền mặt",
+            "ChuyenKhoan" => "Chuyển khoản",
+            "Online" => "Thanh toán online",
+            _ => method
+        };
 
         // GET: Admin/Invoices/Details/5
         public async Task<IActionResult> Details(int? id)

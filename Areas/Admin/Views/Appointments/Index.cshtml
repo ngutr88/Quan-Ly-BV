@@ -1,27 +1,85 @@
-@model IEnumerable<QuanLyBenhVien.Models.Appointment>
+@model QuanLyBenhVien.Helpers.PagedList<QuanLyBenhVien.Models.Appointment>
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Quản lý Lịch khám";
+
+    var appointments = Model.Items;
+    var pendingCount = (int)(ViewBag.PendingCount ?? 0);
+    var confirmedCount = (int)(ViewBag.ConfirmedCount ?? 0);
+    var inProgressCount = (int)(ViewBag.InProgressCount ?? 0);
+    var doneCount = (int)(ViewBag.DoneCount ?? 0);
+
+    var filters = new Dictionary<string, string>
+    {
+        ["filterDate"] = ViewBag.FilterDate as string,
+        ["statusFilter"] = ViewBag.StatusFilter as string
+    };
+    var exportQuery = string.Join("&", filters
+        .Where(kv => !string.IsNullOrEmpty(kv.Value))
+        .Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}"));
+
+    Func<object, IHtmlContent> pageActions = @<text>
+        <a href="/Admin/Appointments/Export@(string.IsNullOrEmpty(exportQuery) ? "" : "?" + exportQuery)" class="hms-btn hms-btn-secondary">
+            <span class="material-symbols-outlined">download</span> Xuất Excel
+        </a>
+    </text>;
+
+    ViewData["PageActions"] = pageActions;
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Điều phối lịch khám",
+        Subtitle = "Phê duyệt lịch khám trực tuyến, sắp xếp ca khám và kiểm tra xung đột lịch trình của bác sĩ.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Quản trị", "/Admin/Dashboard") },
+        CurrentCrumb = "Lịch khám"
+    };
 }
 
-<div class="mb-unit-lg">
-    <h2 class="font-headline-lg text-headline-lg text-on-surface">Điều phối Lịch khám</h2>
-    <p class="text-body-md text-on-surface-variant">Phê duyệt lịch khám trực tuyến, sắp xếp ca khám và kiểm tra xung đột lịch trình của bác sĩ.</p>
+<partial name="_PageHeader" model="header" />
+
+<div class="hms-stat-grid">
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-warn"><span class="material-symbols-outlined">pending_actions</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Chờ xác nhận</p>
+            <p class="hms-stat-value">@pendingCount</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">event_available</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Đã xác nhận</p>
+            <p class="hms-stat-value">@confirmedCount</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">clinical_notes</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Đang khám</p>
+            <p class="hms-stat-value">@inProgressCount</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-success"><span class="material-symbols-outlined">task_alt</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Hoàn thành</p>
+            <p class="hms-stat-value">@doneCount</p>
+        </div>
+    </div>
 </div>
 
-<!-- Filters Bar -->
-<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl mb-unit-lg shadow-sm">
-    <form method="GET" action="/Admin/Appointments" class="flex flex-col md:flex-row gap-unit-md items-end">
-        <div class="w-full md:w-64">
-            <label class="block text-caption font-semibold text-on-surface-variant mb-1" for="filterDate">Lọc theo ngày khám</label>
-            <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+<!-- Filters -->
+<div class="hms-toolbar">
+    <form method="GET" action="/Admin/Appointments" class="hms-toolbar-grid">
+        <div>
+            <label class="hms-field-label" for="filterDate">Ngày khám</label>
+            <input class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md"
                    id="filterDate" name="filterDate" value="@ViewBag.FilterDate" type="date" />
         </div>
-        
-        <div class="w-full md:w-64">
-            <label class="block text-caption font-semibold text-on-surface-variant mb-1" for="statusFilter">Trạng thái lịch</label>
-            <select class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+        <div>
+            <label class="hms-field-label" for="statusFilter">Trạng thái lịch</label>
+            <select class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md"
                     id="statusFilter" name="statusFilter">
                 <option value="">Tất cả trạng thái</option>
                 <option value="ChoXacNhan" selected="@(ViewBag.StatusFilter == "ChoXacNhan")">Chờ xác nhận</option>
@@ -31,10 +89,14 @@
                 <option value="DaHuy" selected="@(ViewBag.StatusFilter == "DaHuy")">Đã hủy</option>
             </select>
         </div>
-
-        <button type="submit" class="bg-primary hover:bg-primary-container text-white px-unit-lg py-2.5 rounded-lg font-label-md transition-colors font-semibold shadow-sm w-full md:w-auto">
-            Lọc kết quả
-        </button>
+        <div class="flex gap-2">
+            <button type="submit" class="hms-btn hms-btn-primary">
+                <span class="material-symbols-outlined">filter_list</span> Lọc kết quả
+            </button>
+            <a href="/Admin/Appointments" class="hms-btn hms-btn-secondary">
+                <span class="material-symbols-outlined">refresh</span> Đặt lại
+            </a>
+        </div>
     </form>
 </div>
 
@@ -53,15 +115,21 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant text-body-md">
-                @if (!Model.Any())
+                @if (appointments.Count == 0)
                 {
                     <tr>
-                        <td colspan="6" class="px-unit-md py-8 text-center text-on-surface-variant">Không tìm thấy lịch khám nào.</td>
+                        <td colspan="6">
+                            <div class="hms-empty">
+                                <div class="hms-empty-icon"><span class="material-symbols-outlined">event_busy</span></div>
+                                <p class="hms-empty-title">Không có lịch khám nào</p>
+                                <p class="hms-empty-text">Không tìm thấy lịch khám khớp với ngày và trạng thái đang chọn. Hãy đặt lại bộ lọc để xem toàn bộ.</p>
+                            </div>
+                        </td>
                     </tr>
                 }
                 else
                 {
-                    @foreach (var app in Model)
+                    @foreach (var app in appointments)
                     {
                         <tr class="hover:bg-surface-container-low transition-colors">
                             <td class="px-unit-md py-4 font-mono font-bold text-primary">#LK-@app.Id.ToString("D4")</td>
@@ -87,28 +155,28 @@
                             <td class="px-unit-md py-4">
                                 @if (app.TrangThai == "ChoXacNhan")
                                 {
-                                    <span class="px-2.5 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed-dim text-[11px] font-bold">Chờ duyệt</span>
+                                    <span class="hms-badge hms-badge-warn"><span class="material-symbols-outlined">schedule</span> Chờ duyệt</span>
                                 }
                                 else if (app.TrangThai == "DaXacNhan")
                                 {
-                                    <span class="px-2.5 py-0.5 rounded-full bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[11px] font-bold">Đã hẹn</span>
+                                    <span class="hms-badge hms-badge-info"><span class="material-symbols-outlined">event_available</span> Đã hẹn</span>
                                 }
                                 else if (app.TrangThai == "DangKham")
                                 {
-                                    <span class="px-2.5 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Đang khám</span>
+                                    <span class="hms-badge hms-badge-info"><span class="material-symbols-outlined">clinical_notes</span> Đang khám</span>
                                 }
                                 else if (app.TrangThai == "HoanThanh")
                                 {
-                                    <span class="px-2.5 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">Đã xong</span>
+                                    <span class="hms-badge hms-badge-ok"><span class="material-symbols-outlined">task_alt</span> Đã xong</span>
                                 }
                                 else
                                 {
-                                    <span class="px-2.5 py-0.5 rounded-full bg-error-container text-error text-[11px] font-bold">Đã hủy</span>
+                                    <span class="hms-badge hms-badge-danger"><span class="material-symbols-outlined">cancel</span> Đã hủy</span>
                                 }
                             </td>
                             <td class="px-unit-md py-4 text-right">
-                                <a href="/Admin/Appointments/Details/@app.Id" class="inline-flex items-center gap-0.5 bg-surface-container hover:bg-surface-container-high px-3 py-1.5 rounded-lg text-label-md transition-colors text-primary font-semibold border border-outline-variant/30">
-                                    Chi tiết <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                                <a href="/Admin/Appointments/Details/@app.Id" class="hms-btn hms-btn-secondary hms-btn-sm">
+                                    Chi tiết <span class="material-symbols-outlined">chevron_right</span>
                                 </a>
                             </td>
                         </tr>
@@ -117,4 +185,9 @@
             </tbody>
         </table>
     </div>
+
+    @if (appointments.Count > 0)
+    {
+        <partial name="_Pagination" model='PaginationViewModel.From(Model, "/Admin/Appointments", "lịch khám", filters)' />
+    }
 </div>

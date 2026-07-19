@@ -1,0 +1,67 @@
+@using QuanLyBenhVien.Helpers
+@model QuanLyBenhVien.Models.ViewModels.PaginationViewModel
+@{
+    var page = Model.PageNumber;
+    var totalPages = Model.TotalPages;
+
+    // Build a compact window of page links: first, last, and neighbours of the
+    // current page, with ellipses standing in for the gaps.
+    var pages = new List<int>();
+    for (var i = 1; i <= totalPages; i++)
+    {
+        if (i == 1 || i == totalPages || (i >= page - 1 && i <= page + 1))
+        {
+            pages.Add(i);
+        }
+    }
+
+    string LinkFor(int target)
+    {
+        var query = new Dictionary<string, string>(Model.RouteValues)
+        {
+            ["page"] = target.ToString()
+        };
+        var parts = query
+            .Where(kv => !string.IsNullOrEmpty(kv.Value))
+            .Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}");
+        return $"{Model.Path}?{string.Join("&", parts)}";
+    }
+}
+
+<div class="hms-table-footer">
+    <span>
+        Hiển thị <strong>@Model.FirstItemIndex–@Model.LastItemIndex</strong>
+        trong tổng số <strong>@Model.TotalCount.ToString("N0")</strong> @Model.ItemLabel
+    </span>
+
+    @if (totalPages > 1)
+    {
+        <nav class="hms-pagination" aria-label="Phân trang">
+            <a class="hms-page-link @(Model.HasPrevious ? "" : "hms-page-link-disabled")"
+               href="@(Model.HasPrevious ? LinkFor(page - 1) : "#")"
+               aria-label="Trang trước" @(Model.HasPrevious ? "" : "aria-disabled=true")>
+                <span class="material-symbols-outlined" style="font-size:18px;">chevron_left</span>
+            </a>
+
+            @{ var previous = 0; }
+            @foreach (var p in pages)
+            {
+                if (previous > 0 && p - previous > 1)
+                {
+                    <span class="px-1 self-center" aria-hidden="true">…</span>
+                }
+
+                <a class="hms-page-link @(p == page ? "hms-page-link-active" : "")"
+                   href="@LinkFor(p)" @(p == page ? "aria-current=page" : "")>@p</a>
+
+                previous = p;
+            }
+
+            <a class="hms-page-link @(Model.HasNext ? "" : "hms-page-link-disabled")"
+               href="@(Model.HasNext ? LinkFor(page + 1) : "#")"
+               aria-label="Trang sau" @(Model.HasNext ? "" : "aria-disabled=true")>
+                <span class="material-symbols-outlined" style="font-size:18px;">chevron_right</span>
+            </a>
+        </nav>
+    }
+</div>

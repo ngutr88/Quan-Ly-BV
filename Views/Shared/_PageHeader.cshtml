@@ -1,0 +1,43 @@
+@model QuanLyBenhVien.Models.ViewModels.PageHeaderViewModel
+@using Microsoft.AspNetCore.Html
+@{
+    // Views pass their action buttons as a templated delegate so the header
+    // keeps one layout while each screen supplies its own controls.
+    var actions = ViewData["PageActions"] as Func<object, IHtmlContent>;
+    var currentCrumb = Model.CurrentCrumb ?? Model.Title;
+}
+
+<div class="hms-page-header">
+    @if (Model.Breadcrumbs.Count > 0)
+    {
+        <nav class="hms-breadcrumb" aria-label="Đường dẫn">
+            @foreach (var crumb in Model.Breadcrumbs)
+            {
+                if (!string.IsNullOrEmpty(crumb.Url))
+                {
+                    <a href="@crumb.Url">@crumb.Label</a>
+                }
+                else
+                {
+                    <span>@crumb.Label</span>
+                }
+                <span class="hms-breadcrumb-sep" aria-hidden="true">/</span>
+            }
+            <span class="hms-breadcrumb-current" aria-current="page">@currentCrumb</span>
+        </nav>
+    }
+
+    <div class="hms-page-header-row">
+        <div class="min-w-0">
+            <h1 class="hms-page-title">@Model.Title</h1>
+            @if (!string.IsNullOrEmpty(Model.Subtitle))
+            {
+                <p class="hms-page-subtitle">@Model.Subtitle</p>
+            }
+        </div>
+        @if (actions != null)
+        {
+            <div class="hms-page-actions">@actions(null!)</div>
+        }
+    </div>
+</div>

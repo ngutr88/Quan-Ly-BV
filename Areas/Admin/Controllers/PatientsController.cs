@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBenhVien.Data;
+using QuanLyBenhVien.Helpers;
 using QuanLyBenhVien.Models;
+using QuanLyBenhVien.Services;
 
 namespace QuanLyBenhVien.Areas.Admin.Controllers
 {
@@ -14,14 +16,64 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
     public class PatientsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ExcelExportService _excel;
 
-        public PatientsController(ApplicationDbContext context)
+        public PatientsController(ApplicationDbContext context, ExcelExportService excel)
         {
             _context = context;
+            _excel = excel;
         }
 
         // GET: Admin/Patients
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, string status, int page = 1, int? pageSize = null)
+        {
+            var query = BuildQuery(searchString, status);
+
+            var paged = await query.ToPagedListAsync(page, PagedList<QuanLyBenhVien.Models.Patient>.NormalisePageSize(pageSize));
+
+            ViewBag.SearchString = searchString;
+            ViewBag.StatusFilter = status;
+
+            // Cohort tiles describe the whole filtered set, not just this page.
+            ViewBag.TotalMatching = paged.TotalCount;
+            ViewBag.ActiveCount = await query.CountAsync(p => p.User.TrangThai == "Active");
+            ViewBag.BlockedCount = await query.CountAsync(p => p.User.TrangThai != "Active");
+            ViewBag.InsuredCount = await query.CountAsync(p => p.SoBHYT != null && p.SoBHYT != "");
+
+            return View(paged);
+        }
+
+        // GET: Admin/Patients/Export
+        public async Task<IActionResult> Export(string searchString, string status)
+        {
+            var patients = await BuildQuery(searchString, status).ToListAsync();
+
+            var columns = new List<ExcelColumn<QuanLyBenhVien.Models.Patient>>
+            {
+                new("Mã BN", p => $"BN-{p.Id:D4}"),
+                new("Họ và tên", p => p.User.HoTen),
+                new("Ngày sinh", p => p.NgaySinh.ToString("dd/MM/yyyy")),
+                new("Giới tính", p => p.GioiTinh),
+                new("Nhóm máu", p => p.NhomMau),
+                new("Số CCCD", p => p.SoCCCD),
+                new("Số BHYT", p => p.SoBHYT),
+                new("Số điện thoại", p => p.User.Sdt),
+                new("Email", p => p.User.Email),
+                new("Trạng thái", p => p.User.TrangThai == "Active" ? "Hoạt động" : "Bị khóa"),
+                new("Ngày tạo hồ sơ", p => p.User.NgayTao.ToString("dd/MM/yyyy"))
+            };
+
+            var content = _excel.Build(
+                "Benh nhan",
+                "DANH SÁCH BỆNH NHÂN",
+                columns,
+                patients,
+                BuildFilterSummary(searchString, status));
+
+            return File(content, ExcelExportService.ContentType, ExcelExportService.FileName("danh-sach-benh-nhan"));
+        }
+
+        private IQueryable<QuanLyBenhVien.Models.Patient> BuildQuery(string searchString, string status)
         {
             var query = _context.Patients
                 .Include(p => p.User)
@@ -29,15 +81,31 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                query = query.Where(p => p.User.HoTen.Contains(searchString) || 
-                                         p.User.Sdt.Contains(searchString) || 
+                query = query.Where(p => p.User.HoTen.Contains(searchString) ||
+                                         p.User.Sdt.Contains(searchString) ||
                                          p.SoBHYT.Contains(searchString));
             }
 
-            var patients = await query.ToListAsync();
-            ViewBag.SearchString = searchString;
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(p => p.User.TrangThai == status);
+            }
 
-            return View(patients);
+            return query.OrderBy(p => p.User.HoTen);
+        }
+
+        private static string BuildFilterSummary(string searchString, string status)
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                parts.Add($"Từ khóa: {searchString}");
+            }
+            if (!string.IsNullOrEmpty(status))
+            {
+                parts.Add($"Trạng thái: {(status == "Active" ? "Hoạt động" : "Bị khóa")}");
+            }
+            return parts.Count == 0 ? "Toàn bộ hồ sơ" : string.Join(" • ", parts);
         }
 
         // GET: Admin/Patients/Details/5

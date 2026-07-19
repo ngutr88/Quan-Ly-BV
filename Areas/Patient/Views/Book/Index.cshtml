@@ -5,6 +5,13 @@
 
     var depts = ViewBag.Departments as List<QuanLyBenhVien.Models.Department> ?? new
     List<QuanLyBenhVien.Models.Department>();
+
+    // Declared at view scope: the booking summary panel further down the page
+    // reads the same patient as the selector inside the form.
+    var patientInfo = ViewBag.Patient as QuanLyBenhVien.Models.Patient;
+
+    var dependentsList = ViewBag.Dependents as List<QuanLyBenhVien.Models.Dependent> ?? new
+    List<QuanLyBenhVien.Models.Dependent>();
 }
 
 @section Styles {
@@ -49,12 +56,6 @@
                 @Html.AntiForgeryToken()
 
                 <!-- Choose Patient (Self or Dependent) -->
-                @{
-                    var patientInfo = ViewBag.Patient as QuanLyBenhVien.Models.Patient;
-
-                    var dependentsList = ViewBag.Dependents as List<QuanLyBenhVien.Models.Dependent> ?? new
-                    List<QuanLyBenhVien.Models.Dependent>();
-                }
                 <div class="space-y-2">
                     <label
                         class="block text-caption font-bold text-on-surface-variant uppercase tracking-wider text-[11px]"

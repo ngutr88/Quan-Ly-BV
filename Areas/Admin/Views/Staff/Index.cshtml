@@ -1,20 +1,45 @@
-@model IEnumerable<QuanLyBenhVien.Models.User>
+@model QuanLyBenhVien.Helpers.PagedList<QuanLyBenhVien.Models.User>
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Quản lý Nhân sự & Phân quyền";
+
+    var staffList = Model.Items;
+    var totalMatching = (int)(ViewBag.TotalMatching ?? 0);
+    var adminCount = (int)(ViewBag.AdminCount ?? 0);
+    var doctorCount = (int)(ViewBag.DoctorCount ?? 0);
+    var activeStaff = (int)(ViewBag.ActiveStaff ?? 0);
+
+    var filters = new Dictionary<string, string>
+    {
+        ["searchString"] = ViewBag.SearchString as string,
+        ["roleFilter"] = ViewBag.RoleFilter as string
+    };
+    var exportQuery = string.Join("&", filters
+        .Where(kv => !string.IsNullOrEmpty(kv.Value))
+        .Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}"));
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Nhân sự & phân quyền",
+        Subtitle = "Quản lý tài khoản quản trị viên và đội ngũ bác sĩ, phân quyền truy cập hệ thống.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Quản trị", "/Admin/Dashboard") },
+        CurrentCrumb = "Nhân sự"
+    };
+
+    Func<object, IHtmlContent> pageActions = @<text>
+        <a href="/Admin/Staff/Export@(string.IsNullOrEmpty(exportQuery) ? "" : "?" + exportQuery)" class="hms-btn hms-btn-secondary">
+            <span class="material-symbols-outlined">download</span> Xuất Excel
+        </a>
+        <a href="/Admin/Staff/Create" class="hms-btn hms-btn-primary">
+            <span class="material-symbols-outlined">person_add</span> Thêm nhân sự mới
+        </a>
+    </text>;
+
+    ViewData["PageActions"] = pageActions;
 }
 
-<div class="flex items-center justify-between mb-unit-lg">
-    <div>
-        <h2 class="font-headline-lg text-headline-lg text-on-surface">Nhân sự &amp; Phân quyền</h2>
-        <p class="text-body-md text-on-surface-variant">Quản lý tài khoản quản trị viên và đội ngũ bác sĩ trong hệ thống.</p>
-    </div>
-    <a href="/Admin/Staff/Create" class="flex items-center gap-unit-sm bg-primary text-white px-unit-md py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-semibold">
-        <span class="material-symbols-outlined text-[20px]">add</span>
-        Thêm nhân sự mới
-    </a>
-</div>
+<partial name="_PageHeader" model="header" />
 
 @if (TempData["SuccessMessage"] != null)
 {
@@ -31,28 +56,60 @@
     </div>
 }
 
-<!-- Filters Bar -->
-<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl mb-unit-lg shadow-sm">
-    <form method="GET" action="/Admin/Staff" class="flex flex-col md:flex-row gap-unit-md">
-        <div class="flex-grow relative">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
-                <span class="material-symbols-outlined text-[20px]">search</span>
-            </span>
-            <input class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                   name="searchString" value="@ViewBag.SearchString" placeholder="Tìm kiếm tên, email hoặc SĐT nhân viên..." type="text" />
+<div class="hms-stat-grid">
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">badge</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Tài khoản khớp lọc</p>
+            <p class="hms-stat-value">@totalMatching.ToString("N0")</p>
         </div>
-        
-        <div class="w-full md:w-64">
-            <select class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                    name="roleFilter">
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">admin_panel_settings</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Quản trị viên</p>
+            <p class="hms-stat-value">@adminCount</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">stethoscope</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Bác sĩ</p>
+            <p class="hms-stat-value">@doctorCount</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-success"><span class="material-symbols-outlined">verified_user</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Đang hoạt động</p>
+            <p class="hms-stat-value">@activeStaff</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="hms-toolbar">
+    <form method="GET" action="/Admin/Staff" class="hms-toolbar-grid">
+        <div style="grid-column: span 2 / span 2;">
+            <label class="hms-field-label" for="staff-search">Tìm kiếm</label>
+            <div class="hms-search">
+                <span class="material-symbols-outlined">search</span>
+                <input id="staff-search" class="w-full py-2 pr-4 border border-outline-variant rounded-lg font-body-md"
+                       name="searchString" value="@ViewBag.SearchString" placeholder="Tên, email hoặc SĐT nhân viên..." type="text" />
+            </div>
+        </div>
+
+        <div>
+            <label class="hms-field-label" for="roleFilter">Vai trò</label>
+            <select id="roleFilter" class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md" name="roleFilter">
                 <option value="">Tất cả vai trò</option>
                 <option value="Admin" selected="@(ViewBag.RoleFilter == "Admin")">Quản trị viên</option>
                 <option value="Doctor" selected="@(ViewBag.RoleFilter == "Doctor")">Bác sĩ</option>
             </select>
         </div>
 
-        <button type="submit" class="bg-surface-container-high hover:bg-surface-container-highest px-unit-lg py-2 rounded-lg font-label-md transition-colors text-on-surface-variant font-semibold">
-            Áp dụng lọc
+        <button type="submit" class="hms-btn hms-btn-primary">
+            <span class="material-symbols-outlined">filter_list</span> Áp dụng lọc
         </button>
     </form>
 </div>
@@ -73,15 +130,21 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant">
-                @if (!Model.Any())
+                @if (staffList.Count == 0)
                 {
                     <tr>
-                        <td colspan="7" class="px-unit-md py-8 text-center text-on-surface-variant">Không tìm thấy nhân sự nào phù hợp.</td>
+                        <td colspan="7">
+                            <div class="hms-empty">
+                                <div class="hms-empty-icon"><span class="material-symbols-outlined">badge</span></div>
+                                <p class="hms-empty-title">Không tìm thấy nhân sự nào phù hợp</p>
+                                <p class="hms-empty-text">Thử đổi từ khóa tìm kiếm hoặc chọn "Tất cả vai trò" để xem toàn bộ tài khoản.</p>
+                            </div>
+                        </td>
                     </tr>
                 }
                 else
                 {
-                    @foreach (var staff in Model)
+                    @foreach (var staff in staffList)
                     {
                         <tr class="hover:bg-surface-container-low transition-colors group">
                             <td class="px-unit-md py-4 font-bold text-primary">STAFF-@staff.Id.ToString("D3")</td>
@@ -159,4 +222,9 @@
             </tbody>
         </table>
     </div>
+
+    @if (staffList.Count > 0)
+    {
+        <partial name="_Pagination" model='PaginationViewModel.From(Model, "/Admin/Staff", "nhân sự", filters)' />
+    }
 </div>

@@ -1,36 +1,241 @@
+@using QuanLyBenhVien.Areas.Admin.Controllers
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Báo cáo - Thống kê";
+
+    var departmentRows = ViewBag.DepartmentBreakdown as List<DepartmentReportRow> ?? new List<DepartmentReportRow>();
+    var paymentRows = ViewBag.PaymentMethods as List<PaymentMethodRow> ?? new List<PaymentMethodRow>();
+
+    decimal revenue = ViewBag.Revenue ?? 0m;
+    decimal outstanding = ViewBag.OutstandingRevenue ?? 0m;
+    int totalAppointments = ViewBag.TotalAppointments ?? 0;
+    int completedAppointments = ViewBag.CompletedAppointments ?? 0;
+    int cancelledAppointments = ViewBag.CancelledAppointments ?? 0;
+    int pendingAppointments = ViewBag.PendingAppointments ?? 0;
+    int newPatients = ViewBag.NewPatients ?? 0;
+    int invoiceCount = ViewBag.InvoiceCount ?? 0;
+    int paidInvoiceCount = ViewBag.PaidInvoiceCount ?? 0;
+
+    var completionRate = totalAppointments > 0 ? completedAppointments * 100.0 / totalAppointments : 0;
+    var cancelRate = totalAppointments > 0 ? cancelledAppointments * 100.0 / totalAppointments : 0;
+    var maxDeptTotal = departmentRows.Count > 0 ? departmentRows.Max(r => r.Total) : 0;
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Báo cáo & thống kê",
+        Subtitle = "Tổng hợp hoạt động khám chữa bệnh, doanh thu và tải công việc theo khoa trong kỳ báo cáo.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Quản trị", "/Admin/Dashboard") },
+        CurrentCrumb = "Báo cáo"
+    };
+
+    string MethodLabel(string method) => method switch
+    {
+        "TienMat" => "Tiền mặt",
+        "ChuyenKhoan" => "Chuyển khoản",
+        "Online" => "Thanh toán online",
+        _ => method
+    };
 }
 
-<div class="mb-unit-lg">
-    <h2 class="font-headline-lg text-headline-lg text-on-surface">Báo cáo &amp; Thống kê</h2>
-    <p class="text-body-md text-on-surface-variant">Tổng hợp hoạt động khám chữa bệnh, doanh thu và vận hành bệnh viện.</p>
-</div>
+<partial name="_PageHeader" model="header" />
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-unit-md mb-unit-lg">
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-        <p class="text-caption text-on-surface-variant font-semibold uppercase">Lịch khám hôm nay</p>
-        <p class="mt-2 text-headline-lg font-bold text-primary">Xem trên Dashboard</p>
-        <a class="mt-4 inline-flex items-center gap-1 text-label-md text-primary font-semibold" href="/Admin/Dashboard#reports-section">Mở tổng quan <span class="material-symbols-outlined text-[18px]">arrow_forward</span></a>
-    </div>
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-        <p class="text-caption text-on-surface-variant font-semibold uppercase">Doanh thu</p>
-        <p class="mt-2 text-body-md text-on-surface-variant">Dữ liệu được tổng hợp từ module hóa đơn.</p>
-        <a class="mt-4 inline-flex items-center gap-1 text-label-md text-primary font-semibold" href="/Admin/Invoices">Xem hóa đơn <span class="material-symbols-outlined text-[18px]">arrow_forward</span></a>
-    </div>
-    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-        <p class="text-caption text-on-surface-variant font-semibold uppercase">Báo cáo chi tiết</p>
-        <p class="mt-2 text-body-md text-on-surface-variant">Bộ lọc, biểu đồ và xuất PDF/Excel sẽ được bổ sung theo PRD.</p>
-    </div>
-</div>
-
-<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-    <div class="flex items-start gap-unit-md">
-        <span class="material-symbols-outlined text-primary">info</span>
+<!-- Reporting period -->
+<div class="hms-toolbar">
+    <form method="GET" action="/Admin/Reports" class="hms-toolbar-grid">
         <div>
-            <h3 class="font-headline-sm text-headline-sm text-on-surface">Phạm vi hiện tại</h3>
-            <p class="mt-1 text-body-md text-on-surface-variant">Trang báo cáo đã có route và giao diện riêng. Số liệu chi tiết cần được nối vào query/service báo cáo trước khi coi là hoàn thiện nghiệp vụ.</p>
+            <label class="hms-field-label" for="fromDate">Từ ngày</label>
+            <input class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md"
+                   id="fromDate" name="fromDate" value="@ViewBag.FromDate" type="date" />
+        </div>
+        <div>
+            <label class="hms-field-label" for="toDate">Đến ngày</label>
+            <input class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md"
+                   id="toDate" name="toDate" value="@ViewBag.ToDate" type="date" />
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="hms-btn hms-btn-primary">
+                <span class="material-symbols-outlined">query_stats</span> Xem báo cáo
+            </button>
+            <a href="/Admin/Reports/Export?fromDate=@ViewBag.FromDate&amp;toDate=@ViewBag.ToDate" class="hms-btn hms-btn-secondary">
+                <span class="material-symbols-outlined">download</span> Xuất Excel
+            </a>
+            <button type="button" onclick="window.print()" class="hms-btn hms-btn-secondary"
+                    title="Mở hộp thoại in — chọn &quot;Save as PDF&quot; để lưu báo cáo thành file PDF">
+                <span class="material-symbols-outlined">picture_as_pdf</span> In / Xuất PDF
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Headline figures -->
+<div class="hms-stat-grid">
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">calendar_month</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Lượt khám trong kỳ</p>
+            <p class="hms-stat-value">@totalAppointments</p>
+            <p class="hms-stat-hint">@pendingAppointments lịch chờ xác nhận</p>
         </div>
     </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-success"><span class="material-symbols-outlined">payments</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Doanh thu đã thu</p>
+            <p class="hms-stat-value">@revenue.ToString("N0") ₫</p>
+            <p class="hms-stat-hint">@paidInvoiceCount / @invoiceCount hóa đơn đã thanh toán</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-warn"><span class="material-symbols-outlined">receipt_long</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Công nợ chưa thu</p>
+            <p class="hms-stat-value">@outstanding.ToString("N0") ₫</p>
+            <p class="hms-stat-hint">Hóa đơn còn ở trạng thái chưa thanh toán</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">person_add</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Bệnh nhân mới</p>
+            <p class="hms-stat-value">@newPatients</p>
+            <p class="hms-stat-hint">Hồ sơ tạo trong kỳ báo cáo</p>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-md mb-unit-lg">
+    <!-- Outcome quality -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+        <h3 class="hms-section-title mb-4">
+            <span class="material-symbols-outlined">insights</span> Chất lượng vận hành
+        </h3>
+        <div class="space-y-4">
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-body-md text-on-surface-variant">Tỉ lệ hoàn thành</span>
+                    <span class="font-bold text-on-surface">@completionRate.ToString("0.0")%</span>
+                </div>
+                <div class="h-2 rounded-full bg-surface-container-high overflow-hidden">
+                    <div class="h-full rounded-full" style="width:@completionRate.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%; background:#0a6b48;"></div>
+                </div>
+                <p class="text-caption text-on-surface-variant mt-1">@completedAppointments ca đã hoàn thành</p>
+            </div>
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-body-md text-on-surface-variant">Tỉ lệ hủy lịch</span>
+                    <span class="font-bold text-on-surface">@cancelRate.ToString("0.0")%</span>
+                </div>
+                <div class="h-2 rounded-full bg-surface-container-high overflow-hidden">
+                    <div class="h-full rounded-full" style="width:@cancelRate.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%; background:#a01414;"></div>
+                </div>
+                <p class="text-caption text-on-surface-variant mt-1">@cancelledAppointments ca bị hủy</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment mix -->
+    <div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+        <h3 class="hms-section-title mb-4">
+            <span class="material-symbols-outlined">account_balance_wallet</span> Cơ cấu phương thức thanh toán
+        </h3>
+        @if (paymentRows.Count == 0)
+        {
+            <div class="hms-empty">
+                <div class="hms-empty-icon"><span class="material-symbols-outlined">savings</span></div>
+                <p class="hms-empty-title">Chưa có giao dịch đã thanh toán</p>
+                <p class="hms-empty-text">Không có hóa đơn nào được thanh toán trong khoảng thời gian đã chọn.</p>
+            </div>
+        }
+        else
+        {
+            <div class="space-y-3">
+                @foreach (var row in paymentRows)
+                {
+                    var share = revenue > 0 ? (double)(row.Amount / revenue) * 100 : 0;
+                    <div>
+                        <div class="flex items-center justify-between mb-1 gap-2">
+                            <span class="text-body-md font-semibold text-on-surface">@MethodLabel(row.Method)</span>
+                            <span class="text-body-md text-on-surface-variant">
+                                @row.Amount.ToString("N0") ₫ • @row.Count giao dịch
+                            </span>
+                        </div>
+                        <div class="h-2 rounded-full bg-surface-container-high overflow-hidden">
+                            <div class="h-full rounded-full" style="width:@share.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%; background:#0b5cab;"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Department workload -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="p-unit-lg pb-0">
+        <h3 class="hms-section-title">
+            <span class="material-symbols-outlined">account_tree</span> Tải công việc theo khoa
+        </h3>
+    </div>
+    <div class="overflow-x-auto mt-4">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Khoa</th>
+                    <th class="px-unit-md py-3">Phân bổ lượt khám</th>
+                    <th class="px-unit-md py-3 text-right">Tổng lượt</th>
+                    <th class="px-unit-md py-3 text-right">Hoàn thành</th>
+                    <th class="px-unit-md py-3 text-right">Hủy</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (departmentRows.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5">
+                            <div class="hms-empty">
+                                <div class="hms-empty-icon"><span class="material-symbols-outlined">bar_chart</span></div>
+                                <p class="hms-empty-title">Chưa có dữ liệu trong kỳ</p>
+                                <p class="hms-empty-text">Không có lượt khám nào được ghi nhận trong khoảng thời gian đã chọn.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var row in departmentRows)
+                    {
+                        var width = maxDeptTotal > 0 ? row.Total * 100.0 / maxDeptTotal : 0;
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="px-unit-md py-4 font-semibold text-on-surface">@row.Department</td>
+                            <td class="px-unit-md py-4 min-w-[200px]">
+                                <div class="h-2 rounded-full bg-surface-container-high overflow-hidden">
+                                    <div class="h-full rounded-full" style="width:@width.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%; background:#0b5cab;"></div>
+                                </div>
+                            </td>
+                            <td class="px-unit-md py-4 text-right font-bold text-primary">@row.Total</td>
+                            <td class="px-unit-md py-4 text-right">
+                                <span class="hms-badge hms-badge-ok">@row.Completed</span>
+                            </td>
+                            <td class="px-unit-md py-4 text-right">
+                                @if (row.Cancelled > 0)
+                                {
+                                    <span class="hms-badge hms-badge-danger">@row.Cancelled</span>
+                                }
+                                else
+                                {
+                                    <span class="hms-badge hms-badge-neutral">0</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (departmentRows.Count > 0)
+    {
+        <div class="hms-table-footer">
+            <span>Kỳ báo cáo <strong>@ViewBag.FromDate</strong> → <strong>@ViewBag.ToDate</strong> • @departmentRows.Count khoa có phát sinh</span>
+        </div>
+    }
 </div>

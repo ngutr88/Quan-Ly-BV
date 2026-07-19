@@ -1,33 +1,115 @@
-@model IEnumerable<QuanLyBenhVien.Models.Patient>
+@model QuanLyBenhVien.Helpers.PagedList<QuanLyBenhVien.Models.Patient>
+@using QuanLyBenhVien.Models.ViewModels
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Quản lý Bệnh nhân";
+
+    var searchString = ViewBag.SearchString as string;
+    var statusFilter = ViewBag.StatusFilter as string;
+
+    var patients = Model.Items;
+    var activeCount = (int)(ViewBag.ActiveCount ?? 0);
+    var blockedCount = (int)(ViewBag.BlockedCount ?? 0);
+    var insuredCount = (int)(ViewBag.InsuredCount ?? 0);
+    var totalMatching = (int)(ViewBag.TotalMatching ?? 0);
+
+    var filters = new Dictionary<string, string>
+    {
+        ["searchString"] = searchString,
+        ["status"] = statusFilter
+    };
+    var exportQuery = string.Join("&", filters
+        .Where(kv => !string.IsNullOrEmpty(kv.Value))
+        .Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}"));
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Quản lý bệnh nhân",
+        Subtitle = "Tra cứu hồ sơ hành chính, thẻ bảo hiểm y tế và lịch sử khám chữa bệnh của người bệnh.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Quản trị", "/Admin/Dashboard") },
+        CurrentCrumb = "Bệnh nhân"
+    };
+
+    Func<object, IHtmlContent> pageActions = @<text>
+        <a href="/Admin/Patients/Export@(string.IsNullOrEmpty(exportQuery) ? "" : "?" + exportQuery)"
+           class="hms-btn hms-btn-secondary">
+            <span class="material-symbols-outlined">download</span> Xuất Excel
+        </a>
+    </text>;
+
+    ViewData["PageActions"] = pageActions;
 }
 
-<div class="mb-unit-lg">
-    <h2 class="font-headline-lg text-headline-lg text-on-surface">Danh sách Bệnh nhân</h2>
-    <p class="text-body-md text-on-surface-variant">Tra cứu thông tin liên hệ, mã thẻ bảo hiểm y tế và lịch sử khám chữa bệnh của bệnh nhân.</p>
+<partial name="_PageHeader" model="header" />
+
+<!-- Cohort summary -->
+<div class="hms-stat-grid">
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">group</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Bệnh nhân khớp lọc</p>
+            <p class="hms-stat-value">@totalMatching.ToString("N0")</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-success"><span class="material-symbols-outlined">how_to_reg</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Đang hoạt động</p>
+            <p class="hms-stat-value">@activeCount</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-warn"><span class="material-symbols-outlined">health_and_safety</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Có thẻ BHYT</p>
+            <p class="hms-stat-value">@insuredCount</p>
+        </div>
+    </div>
+    <div class="hms-stat">
+        <div class="hms-stat-icon hms-stat-icon-danger"><span class="material-symbols-outlined">block</span></div>
+        <div class="hms-stat-body">
+            <p class="hms-stat-label">Tài khoản bị khóa</p>
+            <p class="hms-stat-value">@blockedCount</p>
+        </div>
+    </div>
 </div>
 
-<!-- Filters Bar -->
-<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl mb-unit-lg shadow-sm">
-    <form method="GET" action="/Admin/Patients" class="flex flex-col md:flex-row gap-unit-md">
-        <div class="flex-grow relative">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
-                <span class="material-symbols-outlined text-[20px]">search</span>
-            </span>
-            <input class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                   name="searchString" value="@ViewBag.SearchString" placeholder="Tìm kiếm tên bệnh nhân, số điện thoại, số thẻ BHYT..." type="text" />
+<!-- Filters -->
+<div class="hms-toolbar">
+    <form method="GET" action="/Admin/Patients" class="hms-toolbar-grid">
+        <div style="grid-column: span 2 / span 2;">
+            <label class="hms-field-label" for="patient-search">Tìm kiếm</label>
+            <div class="hms-search">
+                <span class="material-symbols-outlined">search</span>
+                <input id="patient-search" name="searchString" value="@searchString" type="text"
+                       class="w-full py-2 pr-4 border border-outline-variant rounded-lg font-body-md"
+                       placeholder="Họ tên, số điện thoại hoặc số thẻ BHYT..." />
+            </div>
         </div>
-        
-        <button type="submit" class="bg-primary hover:bg-primary-container text-white px-unit-lg py-2 rounded-lg font-label-md transition-colors font-semibold shadow-sm">
-            Tìm kiếm
-        </button>
+        <div>
+            <label class="hms-field-label" for="patient-status">Trạng thái</label>
+            <select id="patient-status" name="status" class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md">
+                <option value="" selected="@(string.IsNullOrEmpty(statusFilter))">Tất cả</option>
+                <option value="Active" selected="@(statusFilter == "Active")">Đang hoạt động</option>
+                <option value="Blocked" selected="@(statusFilter == "Blocked")">Bị khóa</option>
+            </select>
+        </div>
+        <div class="flex gap-2">
+            <button type="submit" class="hms-btn hms-btn-primary">
+                <span class="material-symbols-outlined">filter_list</span> Lọc
+            </button>
+            @if (!string.IsNullOrEmpty(searchString) || !string.IsNullOrEmpty(statusFilter))
+            {
+                <a href="/Admin/Patients" class="hms-btn hms-btn-secondary">
+                    <span class="material-symbols-outlined">refresh</span> Xóa lọc
+                </a>
+            }
+        </div>
     </form>
 </div>
 
-<!-- Patients Table -->
+<!-- Patient register -->
 <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
         <table class="w-full text-left">
@@ -35,43 +117,83 @@
                 <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
                     <th class="px-unit-md py-3">Mã BN</th>
                     <th class="px-unit-md py-3">Họ và tên</th>
-                    <th class="px-unit-md py-3">Ngày sinh / Giới tính</th>
+                    <th class="px-unit-md py-3">Ngày sinh / Tuổi</th>
+                    <th class="px-unit-md py-3">Giới tính</th>
                     <th class="px-unit-md py-3">Mã số BHYT</th>
                     <th class="px-unit-md py-3">Thông tin liên hệ</th>
+                    <th class="px-unit-md py-3">Trạng thái</th>
                     <th class="px-unit-md py-3 text-right">Hồ sơ y tế</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant">
-                @if (!Model.Any())
+                @if (patients.Count == 0)
                 {
                     <tr>
-                        <td colspan="6" class="px-unit-md py-8 text-center text-on-surface-variant">Không tìm thấy bệnh nhân nào phù hợp.</td>
+                        <td colspan="8">
+                            <div class="hms-empty">
+                                <div class="hms-empty-icon"><span class="material-symbols-outlined">person_search</span></div>
+                                <p class="hms-empty-title">Không tìm thấy bệnh nhân nào</p>
+                                <p class="hms-empty-text">Thử nới rộng từ khóa tìm kiếm hoặc bỏ bộ lọc trạng thái để xem toàn bộ danh sách.</p>
+                            </div>
+                        </td>
                     </tr>
                 }
                 else
                 {
-                    @foreach (var pat in Model)
+                    @foreach (var pat in patients)
                     {
+                        var age = DateTime.Today.Year - pat.NgaySinh.Year;
+                        if (pat.NgaySinh.Date > DateTime.Today.AddYears(-age)) { age--; }
+                        var isActive = pat.User.TrangThai == "Active";
+
                         <tr class="hover:bg-surface-container-low transition-colors group">
-                            <td class="px-unit-md py-4 font-bold text-primary">BN-@pat.Id.ToString("D4")</td>
+                            <td class="px-unit-md py-4 font-bold text-primary whitespace-nowrap">BN-@pat.Id.ToString("D4")</td>
                             <td class="px-unit-md py-4">
                                 <div class="font-body-md font-semibold text-on-surface">@pat.User.HoTen</div>
-                                <div class="text-caption text-secondary font-medium">Nhóm máu: @pat.NhomMau</div>
+                                <div class="text-caption text-on-surface-variant">
+                                    Nhóm máu @pat.NhomMau
+                                    @if (!string.IsNullOrWhiteSpace(pat.SoCCCD))
+                                    {
+                                        <span> • CCCD @pat.SoCCCD</span>
+                                    }
+                                </div>
                             </td>
-                            <td class="px-unit-md py-4">
+                            <td class="px-unit-md py-4 whitespace-nowrap">
                                 <div class="font-body-md">@pat.NgaySinh.ToString("dd/MM/yyyy")</div>
-                                <div class="text-caption text-on-surface-variant">@pat.GioiTinh</div>
+                                <div class="text-caption text-on-surface-variant">@age tuổi</div>
                             </td>
+                            <td class="px-unit-md py-4 font-body-md">@pat.GioiTinh</td>
                             <td class="px-unit-md py-4">
-                                <span class="font-body-md text-on-surface font-mono">@(string.IsNullOrEmpty(pat.SoBHYT) ? "Không có" : pat.SoBHYT)</span>
+                                @if (string.IsNullOrWhiteSpace(pat.SoBHYT))
+                                {
+                                    <span class="hms-badge hms-badge-neutral">Chưa có thẻ</span>
+                                }
+                                else
+                                {
+                                    <span class="font-body-md text-on-surface font-mono">@pat.SoBHYT</span>
+                                }
                             </td>
                             <td class="px-unit-md py-4">
                                 <div class="font-body-md">@pat.User.Sdt</div>
                                 <div class="text-caption text-on-surface-variant">@pat.User.Email</div>
                             </td>
+                            <td class="px-unit-md py-4">
+                                @if (isActive)
+                                {
+                                    <span class="hms-badge hms-badge-ok">
+                                        <span class="material-symbols-outlined">check_circle</span> Hoạt động
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="hms-badge hms-badge-danger">
+                                        <span class="material-symbols-outlined">block</span> Bị khóa
+                                    </span>
+                                }
+                            </td>
                             <td class="px-unit-md py-4 text-right">
-                                <a href="/Admin/Patients/Details/@pat.Id" class="inline-flex items-center gap-1 bg-surface-container hover:bg-surface-container-high px-3 py-1.5 rounded-lg text-label-md transition-colors text-primary font-semibold border border-outline-variant/30">
-                                    <span class="material-symbols-outlined text-[16px]">clinical_notes</span> EMR bệnh án
+                                <a href="/Admin/Patients/Details/@pat.Id" class="hms-btn hms-btn-secondary hms-btn-sm">
+                                    <span class="material-symbols-outlined">clinical_notes</span> EMR bệnh án
                                 </a>
                             </td>
                         </tr>
@@ -80,4 +202,9 @@
             </tbody>
         </table>
     </div>
+
+    @if (patients.Count > 0)
+    {
+        <partial name="_Pagination" model='PaginationViewModel.From(Model, "/Admin/Patients", "bệnh nhân", filters)' />
+    }
 </div>

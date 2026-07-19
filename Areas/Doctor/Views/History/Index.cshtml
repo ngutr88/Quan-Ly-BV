@@ -4,27 +4,42 @@
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
     ViewData["Title"] = "Lịch sử điều trị";
     var searchString = ViewBag.SearchString as string;
+    var records = Model.ToList();
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Lịch sử điều trị đã khám",
+        Subtitle = "Tra cứu và xem lại các hồ sơ bệnh án, đơn thuốc và hóa đơn bạn đã hoàn thành.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bác sĩ", "/Doctor/Dashboard") },
+        CurrentCrumb = "Lịch sử điều trị"
+    };
 }
 
-<div class="flex items-center justify-between mb-unit-lg">
-    <div>
-        <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Lịch sử điều trị đã khám</h2>
-        <p class="text-body-md text-on-surface-variant">Tra cứu và xem lại các hồ sơ bệnh án, đơn thuốc và hóa đơn bạn đã hoàn thành.</p>
-    </div>
-</div>
+<partial name="_PageHeader" model="header" />
 
-<!-- Filters Panel -->
-<div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl mb-unit-lg shadow-sm">
-    <form method="GET" action="/Doctor/History" class="flex flex-col md:flex-row gap-unit-md">
-        <div class="flex-grow relative">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-outline">
-                <span class="material-symbols-outlined text-[20px]">search</span>
-            </span>
-            <input name="searchString" value="@searchString" class="w-full pl-10 pr-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md focus:border-primary focus:ring-0" placeholder="Tìm kiếm theo tên bệnh nhân, số điện thoại..." type="text" />
+<!-- Filters -->
+<div class="hms-toolbar">
+    <form method="GET" action="/Doctor/History" class="hms-toolbar-grid">
+        <div style="grid-column: span 2 / span 2;">
+            <label class="hms-field-label" for="history-search">Tìm kiếm bệnh nhân</label>
+            <div class="hms-search">
+                <span class="material-symbols-outlined">search</span>
+                <input id="history-search" name="searchString" value="@searchString" type="text"
+                       class="w-full py-2 pr-4 border border-outline-variant rounded-lg font-body-md"
+                       placeholder="Tên bệnh nhân, số điện thoại..." />
+            </div>
         </div>
-        <button type="submit" class="bg-primary hover:bg-primary-container text-white px-unit-lg py-2 rounded-lg font-semibold transition-colors shadow-sm cursor-pointer">
-            Tìm kiếm
-        </button>
+        <div class="flex gap-2">
+            <button type="submit" class="hms-btn hms-btn-primary">
+                <span class="material-symbols-outlined">search</span> Tìm kiếm
+            </button>
+            @if (!string.IsNullOrEmpty(searchString))
+            {
+                <a href="/Doctor/History" class="hms-btn hms-btn-secondary">
+                    <span class="material-symbols-outlined">refresh</span> Xóa lọc
+                </a>
+            }
+        </div>
     </form>
 </div>
 
@@ -42,15 +57,21 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant">
-                @if (!Model.Any())
+                @if (records.Count == 0)
                 {
                     <tr>
-                        <td colspan="5" class="px-unit-md py-8 text-center text-on-surface-variant">Không tìm thấy ca khám nào.</td>
+                        <td colspan="5">
+                            <div class="hms-empty">
+                                <div class="hms-empty-icon"><span class="material-symbols-outlined">history</span></div>
+                                <p class="hms-empty-title">Chưa có ca khám nào</p>
+                                <p class="hms-empty-text">Không tìm thấy ca khám khớp với từ khóa. Các ca bạn hoàn thành sẽ được lưu tại đây.</p>
+                            </div>
+                        </td>
                     </tr>
                 }
                 else
                 {
-                    @foreach (var rec in Model)
+                    @foreach (var rec in records)
                     {
                         <tr class="hover:bg-surface-container-low transition-colors group">
                             <td class="px-unit-md py-4">

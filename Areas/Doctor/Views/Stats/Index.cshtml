@@ -10,16 +10,26 @@
     int totalReviews = (int)(ViewBag.TotalReviews ?? 0);
 }
 
-<!-- Page Header -->
-<div class="flex items-center justify-between mb-unit-lg">
-    <div>
-        <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Thống kê cá nhân</h2>
-        <p class="text-body-md text-on-surface-variant">Tổng quan hiệu suất khám bệnh của <strong>@doctor?.HocVi. @doctor?.User.HoTen</strong> — @doctor?.Department?.TenKhoa</p>
-    </div>
-    <div class="text-caption text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant">
-        Cập nhật: @DateTime.Now.ToString("HH:mm dd/MM/yyyy")
-    </div>
-</div>
+@{
+    var statsHeader = new PageHeaderViewModel
+    {
+        Title = "Thống kê cá nhân",
+        Subtitle = $"Tổng quan hiệu suất khám bệnh của {doctor?.HocVi}. {doctor?.User.HoTen} — {doctor?.Department?.TenKhoa}",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bác sĩ", "/Doctor/Dashboard") },
+        CurrentCrumb = "Thống kê"
+    };
+
+    Func<object, IHtmlContent> statsActions = @<text>
+        <span class="hms-badge hms-badge-neutral">
+            <span class="material-symbols-outlined">update</span>
+            Cập nhật @DateTime.Now.ToString("HH:mm dd/MM/yyyy")
+        </span>
+    </text>;
+
+    ViewData["PageActions"] = statsActions;
+}
+
+<partial name="_PageHeader" model="statsHeader" />
 
 <!-- KPI Summary Cards -->
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-unit-md mb-unit-lg">

@@ -18,14 +18,66 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
     public class DoctorsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly QuanLyBenhVien.Services.ExcelExportService _excel;
 
-        public DoctorsController(ApplicationDbContext context)
+        public DoctorsController(ApplicationDbContext context, QuanLyBenhVien.Services.ExcelExportService excel)
         {
             _context = context;
+            _excel = excel;
         }
 
         // GET: Admin/Doctors
-        public async Task<IActionResult> Index(string searchString, int? departmentId)
+        public async Task<IActionResult> Index(string searchString, int? departmentId, int page = 1, int? pageSize = null)
+        {
+            var query = BuildQuery(searchString, departmentId);
+
+            var paged = await query.ToPagedListAsync(page, PagedList<QuanLyBenhVien.Models.Doctor>.NormalisePageSize(pageSize));
+
+            ViewBag.Departments = new SelectList(await _context.Departments.ToListAsync(), "Id", "TenKhoa", departmentId);
+            ViewBag.SearchString = searchString;
+            ViewBag.DepartmentId = departmentId;
+
+            // Summary tiles reflect every doctor matching the filter, not just this page.
+            ViewBag.TotalMatching = paged.TotalCount;
+            ViewBag.ActiveDoctors = await query.CountAsync(d => d.User.TrangThai == "Active");
+            ViewBag.DepartmentCount = await query.Select(d => d.KhoaId).Distinct().CountAsync();
+            ViewBag.LeadCount = await query.CountAsync(d => d.ChucVu == "Trưởng khoa" || d.ChucVu == "Phó trưởng khoa");
+
+            return View(paged);
+        }
+
+        // GET: Admin/Doctors/Export
+        public async Task<IActionResult> Export(string searchString, int? departmentId)
+        {
+            var doctors = await BuildQuery(searchString, departmentId).ToListAsync();
+
+            var columns = new List<QuanLyBenhVien.Services.ExcelColumn<QuanLyBenhVien.Models.Doctor>>
+            {
+                new("Mã BS", d => $"BS-{d.Id:D3}"),
+                new("Họ và tên", d => d.User.HoTen),
+                new("Học vị", d => d.HocVi),
+                new("Chức vụ", d => d.ChucVu),
+                new("Khoa công tác", d => d.Department.TenKhoa),
+                new("Chuyên khoa", d => d.ChuyenKhoa),
+                new("Số năm kinh nghiệm", d => d.SoNamKinhNghiem),
+                new("Số điện thoại", d => d.User.Sdt),
+                new("Email", d => d.User.Email),
+                new("Trạng thái", d => d.User.TrangThai == "Active" ? "Hoạt động" : "Đã khóa")
+            };
+
+            var content = _excel.Build(
+                "Bac si",
+                "DANH SÁCH BÁC SĨ",
+                columns,
+                doctors,
+                string.IsNullOrEmpty(searchString) ? "Toàn bộ đội ngũ" : $"Từ khóa: {searchString}");
+
+            return File(content,
+                QuanLyBenhVien.Services.ExcelExportService.ContentType,
+                QuanLyBenhVien.Services.ExcelExportService.FileName("danh-sach-bac-si"));
+        }
+
+        private IQueryable<QuanLyBenhVien.Models.Doctor> BuildQuery(string searchString, int? departmentId)
         {
             var query = _context.Doctors
                 .Include(d => d.User)
@@ -42,12 +94,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 query = query.Where(d => d.KhoaId == departmentId.Value);
             }
 
-            var doctors = await query.ToListAsync();
-
-            ViewBag.Departments = new SelectList(await _context.Departments.ToListAsync(), "Id", "TenKhoa", departmentId);
-            ViewBag.SearchString = searchString;
-
-            return View(doctors);
+            return query.OrderBy(d => d.User.HoTen);
         }
 
         // GET: Admin/Doctors/Details/5

@@ -539,10 +539,183 @@ a, button, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 .home-shell header a.bg-primary:hover { background: var(--clinical-teal-dark) !important; color: #fff !important; }
 .home-content section > [class*="rounded"], .home-content article[class*="rounded"] { border-color: var(--clinical-line) !important; }
 
+/* ==========================================================================
+   HMS component layer
+   Page-composition primitives shared by every portal so that admin, doctor
+   and patient screens read as one hospital information system rather than a
+   set of separately styled pages.
+   ========================================================================== */
+
+/* --- Page header: breadcrumb + title + supporting copy + action cluster --- */
+.hms-page-header { margin-bottom: 1.5rem; }
+.hms-breadcrumb { display: flex; align-items: center; flex-wrap: wrap; gap: .375rem; margin-bottom: .5rem; font-size: .75rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--clinical-muted); }
+.hms-breadcrumb a { color: inherit; text-decoration: none; transition: color 150ms ease; }
+.hms-breadcrumb a:hover { color: var(--clinical-teal); }
+.hms-breadcrumb-sep { opacity: .5; }
+.hms-breadcrumb-current { color: var(--clinical-teal); }
+.hms-page-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.hms-page-title { font-size: 1.5rem; line-height: 2rem; font-weight: 700; letter-spacing: -.025em; color: var(--clinical-ink); }
+.hms-page-subtitle { margin-top: .25rem; font-size: .875rem; line-height: 1.25rem; color: var(--clinical-muted); max-width: 68ch; }
+.hms-page-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+/* --- Buttons ------------------------------------------------------------- */
+.hms-btn { display: inline-flex; align-items: center; justify-content: center; gap: .375rem; padding: .5rem 1rem; border-radius: .7rem; border: 1px solid transparent; font-size: .875rem; font-weight: 600; line-height: 1.25rem; white-space: nowrap; cursor: pointer; transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.hms-btn:active { transform: scale(.97); }
+.hms-btn .material-symbols-outlined { font-size: 20px; }
+.hms-btn-primary { background: var(--clinical-teal); color: #fff; box-shadow: var(--clinical-shadow-sm); }
+.hms-btn-primary:hover { background: var(--clinical-teal-dark); color: #fff; box-shadow: var(--clinical-shadow-md); }
+.hms-btn-secondary { background: #fff; color: var(--clinical-teal); border-color: #cbd8e3; }
+.hms-btn-secondary:hover { background: #eef5ff; border-color: #70a9e8; color: var(--clinical-teal-dark); }
+.hms-btn-danger { background: #fff; color: #ba1a1a; border-color: #f0c9c6; }
+.hms-btn-danger:hover { background: #fff1f0; border-color: #ba1a1a; }
+.hms-btn-sm { padding: .3125rem .625rem; font-size: .8125rem; border-radius: .55rem; }
+.hms-btn-sm .material-symbols-outlined { font-size: 16px; }
+
+/* Icon-only row actions used in data tables. */
+.hms-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: .55rem; border: 1px solid transparent; color: var(--clinical-teal); background: transparent; cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
+.hms-icon-btn:hover { background: #e8f1ff; }
+.hms-icon-btn .material-symbols-outlined { font-size: 20px; }
+.hms-icon-btn-danger { color: #ba1a1a; }
+.hms-icon-btn-danger:hover { background: #ffeceb; }
+
+/* --- Status badges ------------------------------------------------------- */
+.hms-badge { display: inline-flex; align-items: center; gap: .25rem; padding: .1875rem .625rem; border-radius: 999px; border: 1px solid transparent; font-size: .75rem; font-weight: 700; line-height: 1rem; white-space: nowrap; }
+.hms-badge .material-symbols-outlined { font-size: 14px; }
+.hms-badge-ok { background: #e3f7ee; color: #0a6b48; border-color: #b6e6d1; }
+.hms-badge-info { background: #e8f1ff; color: #08457f; border-color: #bcd8fb; }
+.hms-badge-warn { background: #fff4e0; color: #8a5300; border-color: #f6dcb0; }
+.hms-badge-danger { background: #ffecea; color: #a01414; border-color: #f6c8c4; }
+.hms-badge-neutral { background: #eef2f7; color: #52667a; border-color: #d9e2ec; }
+
+/* --- KPI / stat tiles ---------------------------------------------------- */
+.hms-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.hms-stat { display: flex; align-items: center; gap: .875rem; padding: 1rem; background: #fff; border: 1px solid var(--clinical-line); border-radius: 1rem; box-shadow: var(--clinical-shadow-sm); transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease; }
+.hms-stat:hover { box-shadow: var(--clinical-shadow-md); border-color: #9acfcf; transform: translateY(-2px); }
+.hms-stat-icon { display: flex; align-items: center; justify-content: center; width: 3rem; height: 3rem; border-radius: .75rem; flex-shrink: 0; }
+.hms-stat-icon .material-symbols-outlined { font-size: 24px; }
+.hms-stat-icon-primary { background: #e8f1ff; color: var(--clinical-teal); }
+.hms-stat-icon-success { background: #e3f7ee; color: #0a6b48; }
+.hms-stat-icon-warn { background: #fff4e0; color: #8a5300; }
+.hms-stat-icon-danger { background: #ffecea; color: #a01414; }
+.hms-stat-body { min-width: 0; }
+.hms-stat-label { font-size: .75rem; font-weight: 600; color: var(--clinical-muted); }
+.hms-stat-value { font-size: 1.375rem; line-height: 1.75rem; font-weight: 700; color: var(--clinical-ink); }
+.hms-stat-hint { font-size: .75rem; color: var(--clinical-muted); }
+
+/* --- Filter toolbar ------------------------------------------------------ */
+.hms-toolbar { background: #fff; border: 1px solid var(--clinical-line); border-radius: 1rem; padding: 1rem; margin-bottom: 1.5rem; box-shadow: var(--clinical-shadow-sm); }
+.hms-toolbar-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .875rem; align-items: end; }
+.hms-field-label { display: block; margin-bottom: .25rem; font-size: .6875rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--clinical-muted); }
+.hms-search { position: relative; }
+.hms-search > .material-symbols-outlined { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); font-size: 20px; color: var(--clinical-muted); pointer-events: none; }
+.hms-search > input { padding-left: 2.5rem !important; }
+
+/* --- Empty states -------------------------------------------------------- */
+.hms-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .5rem; padding: 3rem 1.5rem; text-align: center; }
+.hms-empty-icon { display: flex; align-items: center; justify-content: center; width: 3.5rem; height: 3.5rem; border-radius: 999px; background: #eef4ff; color: var(--clinical-teal); margin-bottom: .25rem; }
+.hms-empty-icon .material-symbols-outlined { font-size: 28px; }
+.hms-empty-title { font-size: 1rem; font-weight: 600; color: var(--clinical-ink); }
+.hms-empty-text { font-size: .875rem; color: var(--clinical-muted); max-width: 46ch; }
+
+/* --- Table footer / pagination ------------------------------------------- */
+.hms-table-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding: .875rem 1rem; border-top: 1px solid var(--clinical-line); background: #fbfdff; font-size: .875rem; color: var(--clinical-muted); }
+.hms-pagination { display: flex; align-items: center; gap: .25rem; }
+.hms-page-link { display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem; padding: 0 .375rem; border-radius: .5rem; border: 1px solid transparent; font-size: .8125rem; font-weight: 600; color: var(--clinical-ink); text-decoration: none; transition: background-color 150ms ease, border-color 150ms ease; }
+.hms-page-link:hover { background: #fff; border-color: var(--clinical-line); }
+.hms-page-link-active { background: var(--clinical-teal); color: #fff; }
+.hms-page-link-active:hover { background: var(--clinical-teal-dark); border-color: transparent; }
+.hms-page-link-disabled { opacity: .4; pointer-events: none; }
+
+/* --- Section heading inside a card --------------------------------------- */
+.hms-section-title { display: flex; align-items: center; gap: .5rem; font-size: 1rem; font-weight: 700; color: var(--clinical-ink); }
+.hms-section-title .material-symbols-outlined { font-size: 20px; color: var(--clinical-teal); }
+
 @media (max-width: 767px) {
   .staff-content, .patient-content { background: linear-gradient(180deg, rgba(255, 255, 255, .38), rgba(235, 243, 255, .62)); }
   .staff-content .grid, .patient-content .grid { row-gap: 1rem; }
+  .hms-page-actions { width: 100%; }
+  .hms-page-actions .hms-btn { flex: 1 1 auto; }
+  .hms-stat-grid { grid-template-columns: 1fr 1fr; gap: .75rem; }
+  .hms-stat { padding: .75rem; gap: .625rem; }
+  .hms-stat-icon { width: 2.5rem; height: 2.5rem; }
+  .hms-stat-value { font-size: 1.125rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* ==========================================================================
+   Print / PDF
+   "Xuất PDF" prints the current report through the browser, so the printed
+   sheet must drop the app chrome and lay the content out on plain paper.
+   ========================================================================== */
+@media print {
+  @page { size: A4; margin: 14mm 12mm; }
+
+  /* Navigation, controls and anything explicitly marked as screen-only. */
+  .staff-sidebar,
+  .patient-sidebar,
+  .staff-topbar,
+  .patient-topbar,
+  .home-shell header,
+  .hms-toolbar,
+  .hms-page-actions,
+  .hms-pagination,
+  #toast-container,
+  footer,
+  .no-print { display: none !important; }
+
+  html, body { background: #fff !important; }
+
+  /* The app scrolls inside a fixed shell; printing needs normal flow. */
+  .staff-portal,
+  .patient-shell,
+  .staff-portal main,
+  .patient-shell main,
+  .staff-content,
+  .patient-content {
+    display: block !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Bounded table viewports must expand so no rows are clipped off the page. */
+  .staff-content :is(.overflow-x-auto, .overflow-auto),
+  .patient-content :is(.overflow-x-auto, .overflow-auto) {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  .staff-content :is(.overflow-x-auto, .overflow-auto) > table,
+  .patient-content :is(.overflow-x-auto, .overflow-auto) > table {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Flat, ink-friendly cards. */
+  .hms-stat,
+  .staff-content [class*="rounded"],
+  .patient-content [class*="rounded"] {
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+    break-inside: avoid;
+  }
+
+  .hms-stat-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+  .hms-page-title { font-size: 18pt !important; }
+  .hms-page-header { border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; }
+
+  table { break-inside: auto; }
+  tr { break-inside: avoid; break-after: auto; }
+  thead { display: table-header-group; }
+
+  /* Keep the bar-chart fills visible in print. */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  a[href]::after { content: ""; }
 }

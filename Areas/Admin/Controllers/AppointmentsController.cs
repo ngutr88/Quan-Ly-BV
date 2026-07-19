@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBenhVien.Data;
+using QuanLyBenhVien.Helpers;
 using QuanLyBenhVien.Models;
 using System.Security.Claims;
 
@@ -15,14 +16,64 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
     public class AppointmentsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly QuanLyBenhVien.Services.ExcelExportService _excel;
 
-        public AppointmentsController(ApplicationDbContext context)
+        public AppointmentsController(ApplicationDbContext context, QuanLyBenhVien.Services.ExcelExportService excel)
         {
             _context = context;
+            _excel = excel;
         }
 
         // GET: Admin/Appointments
-        public async Task<IActionResult> Index(DateTime? filterDate, string statusFilter)
+        public async Task<IActionResult> Index(DateTime? filterDate, string statusFilter, int page = 1, int? pageSize = null)
+        {
+            var query = BuildQuery(filterDate, statusFilter);
+
+            var paged = await query.ToPagedListAsync(page, QuanLyBenhVien.Helpers.PagedList<Appointment>.NormalisePageSize(pageSize));
+
+            ViewBag.FilterDate = filterDate?.ToString("yyyy-MM-dd");
+            ViewBag.StatusFilter = statusFilter;
+
+            // Status tiles count the whole filtered set so paging does not skew them.
+            ViewBag.TotalMatching = paged.TotalCount;
+            ViewBag.PendingCount = await query.CountAsync(a => a.TrangThai == "ChoXacNhan");
+            ViewBag.ConfirmedCount = await query.CountAsync(a => a.TrangThai == "DaXacNhan");
+            ViewBag.InProgressCount = await query.CountAsync(a => a.TrangThai == "DangKham");
+            ViewBag.DoneCount = await query.CountAsync(a => a.TrangThai == "HoanThanh");
+
+            return View(paged);
+        }
+
+        // GET: Admin/Appointments/Export
+        public async Task<IActionResult> Export(DateTime? filterDate, string statusFilter)
+        {
+            var appointments = await BuildQuery(filterDate, statusFilter).ToListAsync();
+
+            var columns = new List<QuanLyBenhVien.Services.ExcelColumn<Appointment>>
+            {
+                new("Mã lịch", a => $"LK-{a.Id:D4}"),
+                new("Ngày khám", a => a.ThoiGian.ToString("dd/MM/yyyy")),
+                new("Giờ khám", a => a.ThoiGian.ToString("HH:mm")),
+                new("Bệnh nhân", a => a.Patient.User.HoTen),
+                new("SĐT bệnh nhân", a => a.Patient.User.Sdt),
+                new("Bác sĩ phụ trách", a => a.Doctor == null ? "Chưa phân công" : a.Doctor.User.HoTen),
+                new("Khoa", a => a.Doctor == null ? "" : a.Doctor.Department.TenKhoa),
+                new("Trạng thái", a => StatusLabel(a.TrangThai))
+            };
+
+            var content = _excel.Build(
+                "Lich kham",
+                "DANH SÁCH LỊCH KHÁM",
+                columns,
+                appointments,
+                filterDate.HasValue ? $"Ngày {filterDate.Value:dd/MM/yyyy}" : "Toàn bộ lịch khám");
+
+            return File(content,
+                QuanLyBenhVien.Services.ExcelExportService.ContentType,
+                QuanLyBenhVien.Services.ExcelExportService.FileName("danh-sach-lich-kham"));
+        }
+
+        private IQueryable<Appointment> BuildQuery(DateTime? filterDate, string statusFilter)
         {
             var query = _context.Appointments
                 .Include(a => a.Patient.User)
@@ -40,12 +91,18 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 query = query.Where(a => a.TrangThai == statusFilter);
             }
 
-            var appointments = await query.OrderByDescending(a => a.ThoiGian).ToListAsync();
-            ViewBag.FilterDate = filterDate?.ToString("yyyy-MM-dd");
-            ViewBag.StatusFilter = statusFilter;
-
-            return View(appointments);
+            return query.OrderByDescending(a => a.ThoiGian);
         }
+
+        private static string StatusLabel(string status) => status switch
+        {
+            "ChoXacNhan" => "Chờ xác nhận",
+            "DaXacNhan" => "Đã xác nhận",
+            "DangKham" => "Đang khám",
+            "HoanThanh" => "Hoàn thành",
+            "DaHuy" => "Đã hủy",
+            _ => status
+        };
 
         // GET: Admin/Appointments/Details/5
         public async Task<IActionResult> Details(int? id)

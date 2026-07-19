@@ -18,14 +18,65 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
     public class StaffController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly QuanLyBenhVien.Services.ExcelExportService _excel;
 
-        public StaffController(ApplicationDbContext context)
+        public StaffController(ApplicationDbContext context, QuanLyBenhVien.Services.ExcelExportService excel)
         {
             _context = context;
+            _excel = excel;
         }
 
         // GET: Admin/Staff
-        public async Task<IActionResult> Index(string searchString, string roleFilter)
+        public async Task<IActionResult> Index(string searchString, string roleFilter, int page = 1, int? pageSize = null)
+        {
+            var query = BuildQuery(searchString, roleFilter);
+
+            var paged = await query.ToPagedListAsync(page, PagedList<User>.NormalisePageSize(pageSize));
+
+            ViewBag.SearchString = searchString;
+            ViewBag.RoleFilter = roleFilter;
+
+            ViewBag.TotalMatching = paged.TotalCount;
+            ViewBag.AdminCount = await query.CountAsync(u => u.VaiTro == "Admin");
+            ViewBag.DoctorCount = await query.CountAsync(u => u.VaiTro == "Doctor");
+            ViewBag.ActiveStaff = await query.CountAsync(u => u.TrangThai == "Active");
+
+            return View(paged);
+        }
+
+        // GET: Admin/Staff/Export
+        public async Task<IActionResult> Export(string searchString, string roleFilter)
+        {
+            var staff = await BuildQuery(searchString, roleFilter).ToListAsync();
+
+            var columns = new List<QuanLyBenhVien.Services.ExcelColumn<User>>
+            {
+                new("Mã NV", u => $"STAFF-{u.Id:D3}"),
+                new("Họ và tên", u => u.HoTen),
+                new("Vai trò", u => u.VaiTro == "Admin" ? "Quản trị viên" : "Bác sĩ"),
+                new("Chức vụ", u => u.DoctorProfile?.ChucVu ?? ""),
+                new("Khoa", u => u.DoctorProfile?.Department?.TenKhoa ?? ""),
+                new("Email", u => u.Email),
+                new("Số điện thoại", u => u.Sdt),
+                new("Trạng thái", u => u.TrangThai == "Active" ? "Hoạt động" : "Đã khóa"),
+                new("Ngày tham gia", u => u.NgayTao.ToString("dd/MM/yyyy"))
+            };
+
+            var content = _excel.Build(
+                "Nhan su",
+                "DANH SÁCH NHÂN SỰ",
+                columns,
+                staff,
+                string.IsNullOrEmpty(roleFilter)
+                    ? "Toàn bộ nhân sự"
+                    : $"Vai trò: {(roleFilter == "Admin" ? "Quản trị viên" : "Bác sĩ")}");
+
+            return File(content,
+                QuanLyBenhVien.Services.ExcelExportService.ContentType,
+                QuanLyBenhVien.Services.ExcelExportService.FileName("danh-sach-nhan-su"));
+        }
+
+        private IQueryable<User> BuildQuery(string searchString, string roleFilter)
         {
             var query = _context.Users
                 .Where(u => u.VaiTro == "Admin" || u.VaiTro == "Doctor")
@@ -43,11 +94,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 query = query.Where(u => u.VaiTro == roleFilter);
             }
 
-            var staffList = await query.OrderByDescending(u => u.NgayTao).ToListAsync();
-            ViewBag.SearchString = searchString;
-            ViewBag.RoleFilter = roleFilter;
-
-            return View(staffList);
+            return query.OrderByDescending(u => u.NgayTao);
         }
 
         // GET: Admin/Staff/Details/5
