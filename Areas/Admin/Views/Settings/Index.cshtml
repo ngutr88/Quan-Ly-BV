@@ -24,7 +24,9 @@
     </div>
 }
 
-<form method="POST" action="/Admin/Settings" class="space-y-unit-lg max-w-4xl">
+@* max-w-4xl left roughly 700px of a wide canvas empty. max-w-6xl fills more
+   without stretching single fields like phone numbers across the screen. *@
+<form method="POST" action="/Admin/Settings" class="space-y-unit-lg max-w-6xl">
     @Html.AntiForgeryToken()
 
     <!-- Card 1: Hospital Info -->

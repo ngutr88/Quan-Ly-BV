@@ -39,11 +39,14 @@
 </style>
 }
 
-<div class="w-full max-w-5xl mx-auto animate-fadein pb-12">
+@* A list of record cards, like the notification list — full width keeps it
+   consistent with the other patient screens instead of leaving ~580px empty. *@
+<div class="w-full animate-fadein pb-12">
 @{
     var pageHeader = new PageHeaderViewModel
     {
-        Title = "Lịch sử điều trị &amp; đơn thuốc",
+        // Razor encodes this when it renders, so the entity would show verbatim.
+        Title = "Lịch sử điều trị & đơn thuốc",
         Subtitle = "Tra cứu chẩn đoán y khoa, lời dặn của bác sĩ điều trị và xem đơn thuốc điện tử.",
         Breadcrumbs = new[] { new BreadcrumbItem("Trang chủ", "/Patient/Dashboard") },
         CurrentCrumb = "Bệnh án"

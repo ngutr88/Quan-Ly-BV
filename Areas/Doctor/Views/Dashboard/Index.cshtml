@@ -48,7 +48,9 @@
 </div>
 
 <!-- Today's Queue Section -->
-<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+@* Given a minimum height so a short or empty queue does not leave the lower
+   third of the dashboard blank; the space then sits inside the card. *@
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm min-h-[360px]">
     <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30 flex justify-between items-center">
         <h3 class="font-title-lg text-title-lg font-bold text-primary flex items-center gap-1">
             <span class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></span>

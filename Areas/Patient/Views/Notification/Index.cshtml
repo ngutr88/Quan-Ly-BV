@@ -37,7 +37,9 @@
     }
 }
 
-<div class="max-w-4xl mx-auto w-full">
+@* Full width, like the dashboard, payment and dependants pages. The old
+   max-w-4xl left roughly 700px of the canvas empty on a wide screen. *@
+<div class="w-full">
     <!-- Page Header -->
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-unit-lg border-b border-outline-variant pb-unit-md">
         <div>
@@ -81,7 +83,7 @@
     <div class="space-y-unit-sm">
         @if (!Model.Any())
         {
-            <div class="bg-white border border-outline-variant p-unit-xl rounded-xl text-center shadow-sm">
+            <div class="bg-white border border-outline-variant p-unit-xl rounded-xl text-center shadow-sm flex flex-col items-center justify-center min-h-[420px]">
                 <span class="material-symbols-outlined text-[48px] text-outline mb-2">notifications_off</span>
                 <p class="text-body-lg font-semibold text-on-surface-variant">Không có thông báo nào</p>
                 <p class="text-caption text-outline">Bạn sẽ nhận được thông báo khi có thông tin cập nhật về lịch hẹn, đơn thuốc hoặc hóa đơn.</p>
