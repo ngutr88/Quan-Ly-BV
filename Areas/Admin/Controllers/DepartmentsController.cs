@@ -37,6 +37,13 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 .Where(s => s.KhoaId == selectedDept.Id)
                 .ToListAsync();
 
+            // Doctors belonging to the selected department
+            var doctors = await _context.Doctors
+                .Include(d => d.User)
+                .Where(d => d.KhoaId == selectedDept.Id)
+                .OrderBy(d => d.User.HoTen)
+                .ToListAsync();
+
             // Count doctors in each department
             var doctorCounts = await _context.Doctors
                 .GroupBy(d => d.KhoaId)
@@ -61,6 +68,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
             ViewBag.Departments = depts;
             ViewBag.SelectedDept = selectedDept;
             ViewBag.Services = services;
+            ViewBag.Doctors = doctors;
             ViewBag.DoctorCounts = doctorCounts;
             ViewBag.TruongKhoa = truongKhoa;
             ViewBag.ActiveDocsCount = activeDocsCount;

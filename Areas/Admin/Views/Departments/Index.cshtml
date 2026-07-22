@@ -4,6 +4,7 @@
     var depts = ViewBag.Departments as List<QuanLyBenhVien.Models.Department> ?? new List<QuanLyBenhVien.Models.Department>();
     var selectedDept = ViewBag.SelectedDept as QuanLyBenhVien.Models.Department;
     var services = ViewBag.Services as List<QuanLyBenhVien.Models.Service> ?? new List<QuanLyBenhVien.Models.Service>();
+    var doctors = ViewBag.Doctors as List<QuanLyBenhVien.Models.Doctor> ?? new List<QuanLyBenhVien.Models.Doctor>();
     var doctorCounts = ViewBag.DoctorCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
     string truongKhoa = ViewBag.TruongKhoa as string ?? "Chưa bổ nhiệm";
     int activeDocsCount = ViewBag.ActiveDocsCount is int count ? count : 0;
@@ -156,6 +157,61 @@
                         </p>
                     </div>
                 </div>
+            </section>
+
+            <!-- Doctors in Department Section -->
+            <section class="departments-doctors-card bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                <div class="p-unit-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low/20">
+                    <h3 class="text-title-lg font-title-lg font-bold text-on-surface">Bác sĩ thuộc khoa</h3>
+                    <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-caption font-bold">@doctors.Count Bác sĩ</span>
+                </div>
+
+                @if (!doctors.Any())
+                {
+                    <div class="flex flex-col items-center justify-center py-unit-xl px-unit-md text-center">
+                        <span class="material-symbols-outlined text-[80px] text-outline opacity-30 mb-2">group_off</span>
+                        <h4 class="text-title-lg font-title-lg text-on-surface mb-2 font-bold">Chưa có bác sĩ nào</h4>
+                        <p class="text-body-md text-on-surface-variant max-w-md">
+                            Khoa này hiện chưa có bác sĩ nào được phân công công tác.
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <div class="hms-table-scroll departments-doctors-scroll overflow-auto" role="region" aria-label="Bác sĩ thuộc khoa" tabindex="0">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-surface-bright">
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Mã BS</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Họ tên</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Chức vụ</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Chuyên khoa</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-center">Kinh nghiệm</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant">
+                                @foreach (var doc in doctors)
+                                {
+                                    <tr class="hover:bg-surface-container-low transition-colors group">
+                                        <td class="px-unit-md py-4 font-mono font-bold text-on-surface">BS-@doc.Id.ToString("D3")</td>
+                                        <td class="px-unit-md py-4">
+                                            <span class="font-bold text-on-surface text-body-md">@doc.HocVi. @doc.User.HoTen</span>
+                                        </td>
+                                        <td class="px-unit-md py-4 text-body-md text-on-surface-variant">@doc.ChucVu</td>
+                                        <td class="px-unit-md py-4 text-body-md text-on-surface-variant">@doc.ChuyenKhoa</td>
+                                        <td class="px-unit-md py-4 text-center text-body-md text-on-surface-variant">@doc.SoNamKinhNghiem năm</td>
+                                        <td class="px-unit-md py-4 text-right">
+                                            <a href="/Admin/Doctors/Details/@doc.Id" class="p-2 inline-flex text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-lg transition-all cursor-pointer" title="Xem chi tiết bác sĩ">
+                                                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </section>
 
             <!-- Services Management Section -->
@@ -450,30 +506,39 @@
             flex-direction: column;
         }
 
-        .departments-services-scroll {
+        .departments-services-scroll,
+        .departments-doctors-scroll {
             min-height: 0;
             flex: 1 1 auto;
             scrollbar-gutter: stable;
         }
 
+        .departments-doctors-scroll {
+            max-height: 360px;
+        }
+
         .departments-list-card::-webkit-scrollbar,
-        .departments-services-scroll::-webkit-scrollbar {
+        .departments-services-scroll::-webkit-scrollbar,
+        .departments-doctors-scroll::-webkit-scrollbar {
             width: 8px;
         }
 
         .departments-list-card::-webkit-scrollbar-track,
-        .departments-services-scroll::-webkit-scrollbar-track {
+        .departments-services-scroll::-webkit-scrollbar-track,
+        .departments-doctors-scroll::-webkit-scrollbar-track {
             background: transparent;
         }
 
         .departments-list-card::-webkit-scrollbar-thumb,
-        .departments-services-scroll::-webkit-scrollbar-thumb {
+        .departments-services-scroll::-webkit-scrollbar-thumb,
+        .departments-doctors-scroll::-webkit-scrollbar-thumb {
             background: rgb(148 163 184 / 45%);
             border-radius: 999px;
         }
 
         .departments-list-card::-webkit-scrollbar-thumb:hover,
-        .departments-services-scroll::-webkit-scrollbar-thumb:hover {
+        .departments-services-scroll::-webkit-scrollbar-thumb:hover,
+        .departments-doctors-scroll::-webkit-scrollbar-thumb:hover {
             background: rgb(100 116 139 / 65%);
         }
 
