@@ -4,6 +4,7 @@
     var depts = ViewBag.Departments as List<QuanLyBenhVien.Models.Department> ?? new List<QuanLyBenhVien.Models.Department>();
     var selectedDept = ViewBag.SelectedDept as QuanLyBenhVien.Models.Department;
     var services = ViewBag.Services as List<QuanLyBenhVien.Models.Service> ?? new List<QuanLyBenhVien.Models.Service>();
+    var deptDoctors = ViewBag.DeptDoctors as List<QuanLyBenhVien.Models.Doctor> ?? new List<QuanLyBenhVien.Models.Doctor>();
     var doctorCounts = ViewBag.DoctorCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
     string truongKhoa = ViewBag.TruongKhoa as string ?? "Chưa bổ nhiệm";
     int activeDocsCount = ViewBag.ActiveDocsCount is int count ? count : 0;
@@ -156,6 +157,89 @@
                         </p>
                     </div>
                 </div>
+            </section>
+
+            <!-- Doctors List Section -->
+            <section class="departments-doctors-card bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                <div class="p-unit-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low/20">
+                    <h3 class="text-title-lg font-title-lg font-bold text-on-surface">Danh sách bác sĩ thuộc khoa</h3>
+                    <span class="bg-primary/10 text-primary px-2 py-0.5 rounded text-caption font-bold">@deptDoctors.Count Bác sĩ</span>
+                </div>
+
+                @if (!deptDoctors.Any())
+                {
+                    <div class="flex flex-col items-center justify-center py-unit-xl px-unit-md text-center">
+                        <span class="material-symbols-outlined text-[80px] text-outline opacity-30 mb-2">stethoscope</span>
+                        <h4 class="text-title-lg font-title-lg text-on-surface mb-2 font-bold">Chưa có bác sĩ nào</h4>
+                        <p class="text-body-md text-on-surface-variant max-w-md mb-unit-lg">
+                            Khoa này hiện chưa có bác sĩ nào được phân công công tác.
+                        </p>
+                        <a href="/Admin/Doctors/Create" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-container shadow-md flex items-center gap-2 transition-transform active:scale-95 cursor-pointer">
+                            <span class="material-symbols-outlined">person_add</span> Thêm bác sĩ mới
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="hms-table-scroll departments-doctors-scroll overflow-auto" role="region" aria-label="Danh sách bác sĩ thuộc khoa" tabindex="0">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-surface-bright">
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Mã BS</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Bác sĩ</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase">Chuyên môn</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-center">Kinh nghiệm</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-center">Trạng thái</th>
+                                    <th class="px-unit-md py-4 text-label-md font-bold text-on-surface-variant border-b border-outline-variant uppercase text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant">
+                                @foreach (var doc in deptDoctors)
+                                {
+                                    <tr class="hover:bg-surface-container-low transition-colors group">
+                                        <td class="px-unit-md py-4 font-mono font-bold text-on-surface">BS-@doc.Id.ToString("D3")</td>
+                                        <td class="px-unit-md py-4">
+                                            <div class="font-bold text-on-surface text-body-md flex items-center gap-2">
+                                                @doc.HocVi. @doc.User.HoTen
+                                                @if (doc.ChucVu == "Trưởng khoa")
+                                                {
+                                                    <span class="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded">Trưởng khoa</span>
+                                                }
+                                                else if (doc.ChucVu == "Phó trưởng khoa")
+                                                {
+                                                    <span class="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded">Phó khoa</span>
+                                                }
+                                            </div>
+                                            <div class="text-caption text-on-surface-variant">@doc.User.Email • @doc.User.Sdt</div>
+                                        </td>
+                                        <td class="px-unit-md py-4 text-body-md text-on-surface-variant">@doc.ChuyenKhoa</td>
+                                        <td class="px-unit-md py-4 text-center text-body-md text-on-surface-variant">@doc.SoNamKinhNghiem năm</td>
+                                        <td class="px-unit-md py-4 text-center">
+                                            @if (doc.User.TrangThai == "Active")
+                                            {
+                                                <span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold uppercase rounded">Hoạt động</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="px-2 py-0.5 bg-error-container/40 text-error text-[11px] font-bold uppercase rounded">Đã khóa</span>
+                                            }
+                                        </td>
+                                        <td class="px-unit-md py-4 text-right">
+                                            <div class="flex items-center justify-end gap-1">
+                                                <a href="/Admin/Doctors/Details/@doc.Id" class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-lg transition-all cursor-pointer inline-flex" title="Xem chi tiết">
+                                                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                                </a>
+                                                <a href="/Admin/Doctors/Edit/@doc.Id" class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-lg transition-all cursor-pointer inline-flex" title="Chỉnh sửa">
+                                                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </section>
 
             <!-- Services Management Section -->
