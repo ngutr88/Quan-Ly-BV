@@ -148,10 +148,35 @@ namespace QuanLyBenhVien.Controllers
 
         // POST: /Auth/Register
         [HttpPost]
-        public async Task<IActionResult> Register(string fullName, string email, string phone, string password, DateTime dob, string gender, string bhyt, string cccd)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(string fullName, string? email, string phone, string password, DateTime dob, string gender, string bhyt, string cccd, bool agree = false)
         {
+            fullName = (fullName ?? string.Empty).Trim();
+            email = (email ?? string.Empty).Trim();
+            phone = (phone ?? string.Empty).Trim();
+            gender = (gender ?? string.Empty).Trim();
+            bhyt = (bhyt ?? string.Empty).Trim();
+            cccd = (cccd ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(phone) ||
+                string.IsNullOrWhiteSpace(password) || password.Length < 6 ||
+                dob == default || dob.Date >= DateTime.Today || string.IsNullOrWhiteSpace(gender) ||
+                !cccd.All(char.IsDigit) || cccd.Length != 12 || string.IsNullOrWhiteSpace(bhyt) || !agree)
+            {
+                TempData["ErrorMessage"] = "Vui lòng nhập đầy đủ tất cả thông tin bắt buộc và xác nhận chính sách. Email là trường duy nhất không bắt buộc.";
+                return View();
+            }
+
+            if (!string.IsNullOrWhiteSpace(email) &&
+                !System.Net.Mail.MailAddress.TryCreate(email, out _))
+            {
+                TempData["ErrorMessage"] = "Địa chỉ email không đúng định dạng.";
+                return View();
+            }
+
             // Check duplicates
-            var existingUser = await _context.Users.AnyAsync(u => u.Email == email || u.Sdt == phone);
+            var existingUser = await _context.Users.AnyAsync(u => u.Sdt == phone ||
+                (!string.IsNullOrEmpty(email) && u.Email == email));
             if (existingUser)
             {
                 TempData["ErrorMessage"] = "Email hoặc Số điện thoại đã được sử dụng.";
@@ -178,11 +203,12 @@ namespace QuanLyBenhVien.Controllers
         public IActionResult VerifyOtp()
         {
             var email = HttpContext.Session.GetString("Reg_Email");
-            if (string.IsNullOrEmpty(email))
+            var phone = HttpContext.Session.GetString("Reg_Phone");
+            if (string.IsNullOrEmpty(phone))
             {
                 return RedirectToAction("Register");
             }
-            ViewBag.Email = email;
+            ViewBag.Email = string.IsNullOrEmpty(email) ? phone : email;
             return View();
         }
 
@@ -196,7 +222,8 @@ namespace QuanLyBenhVien.Controllers
             if (otp.Length != 6 || !otp.All(char.IsDigit) || sessionOtp != otp)
             {
                 TempData["ErrorMessage"] = "Mã OTP không chính xác. Hãy nhập mã demo 123456.";
-                ViewBag.Email = HttpContext.Session.GetString("Reg_Email");
+                var email = HttpContext.Session.GetString("Reg_Email");
+                ViewBag.Email = string.IsNullOrEmpty(email) ? HttpContext.Session.GetString("Reg_Phone") : email;
                 return View();
             }
 
