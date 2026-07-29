@@ -89,9 +89,12 @@
                                 @rec.ChanDoan
                             </td>
                             <td class="px-unit-md py-4 text-right">
-                                <a href="/Doctor/History/RecordDetails/@rec.LichKhamId" class="inline-flex items-center gap-0.5 bg-primary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-primary-container transition-all active:scale-95 font-semibold cursor-pointer shadow-sm">
-                                    <span class="material-symbols-outlined text-[16px]">visibility</span> Xem chi tiết
-                                </a>
+                                <div class="hms-action-wrap">
+                                    <button type="button" class="hms-action-trigger" aria-label="Mở menu thao tác" aria-haspopup="menu" aria-expanded="false"><span class="material-symbols-outlined">more_vert</span></button>
+                                    <div class="hms-action-menu" role="menu">
+                                        <a href="/Doctor/History/RecordDetails/@rec.LichKhamId" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">visibility</span>Xem chi tiết</a>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     }

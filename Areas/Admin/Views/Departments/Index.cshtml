@@ -225,13 +225,12 @@
                                             }
                                         </td>
                                         <td class="px-unit-md py-4 text-right">
-                                            <div class="flex items-center justify-end gap-1">
-                                                <a href="/Admin/Doctors/Details/@doc.Id" class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-lg transition-all cursor-pointer inline-flex" title="Xem chi tiết">
-                                                    <span class="material-symbols-outlined text-[18px]">visibility</span>
-                                                </a>
-                                                <a href="/Admin/Doctors/Edit/@doc.Id" class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-lg transition-all cursor-pointer inline-flex" title="Chỉnh sửa">
-                                                    <span class="material-symbols-outlined text-[18px]">edit</span>
-                                                </a>
+                                            <div class="hms-action-wrap">
+                                                <button type="button" class="hms-action-trigger" aria-label="Mở menu thao tác" aria-haspopup="menu" aria-expanded="false"><span class="material-symbols-outlined">more_vert</span></button>
+                                                <div class="hms-action-menu" role="menu">
+                                                    <a href="/Admin/Doctors/Details/@doc.Id" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">visibility</span>Xem chi tiết</a>
+                                                    <a href="/Admin/Doctors/Edit/@doc.Id" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">edit</span>Chỉnh sửa</a>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
@@ -292,16 +291,15 @@
                                             <span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold uppercase rounded">Hoạt động</span>
                                         </td>
                                         <td class="px-unit-md py-4 text-right">
-                                            <div class="flex items-center justify-end gap-1">
-                                                <button onclick="openEditServiceModal(@svc.Id, '@svc.TenDichVu', @svc.Gia)" class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary/5 rounded-lg transition-all cursor-pointer" title="Sửa dịch vụ">
-                                                    <span class="material-symbols-outlined text-[18px]">edit</span>
-                                                </button>
-                                                <form method="POST" action="/Admin/Departments/DeleteService/@svc.Id" class="inline" onsubmit="return confirm('Bạn có chắc muốn xóa dịch vụ này?')">
+                                            <div class="hms-action-wrap">
+                                                <button type="button" class="hms-action-trigger" aria-label="Mở menu thao tác" aria-haspopup="menu" aria-expanded="false"><span class="material-symbols-outlined">more_vert</span></button>
+                                                <div class="hms-action-menu" role="menu">
+                                                <button type="button" onclick="openEditServiceModal(@svc.Id, '@svc.TenDichVu', @svc.Gia)" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">edit</span>Sửa dịch vụ</button>
+                                                <form method="POST" action="/Admin/Departments/DeleteService/@svc.Id" class="hms-action-form" onsubmit="return confirm('Bạn có chắc muốn xóa dịch vụ này?')">
                                                     @Html.AntiForgeryToken()
-                                                    <button type="submit" class="p-2 text-on-surface-variant hover:text-error hover:bg-error/5 rounded-lg transition-all cursor-pointer" title="Xóa dịch vụ">
-                                                        <span class="material-symbols-outlined text-[18px]">delete</span>
-                                                    </button>
+                                                    <button type="submit" class="hms-action-item hms-action-item-danger" role="menuitem"><span class="material-symbols-outlined">delete</span>Xóa dịch vụ</button>
                                                 </form>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>

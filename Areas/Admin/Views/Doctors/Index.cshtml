@@ -171,19 +171,18 @@
                                 }
                             </td>
                             <td class="px-unit-md py-4 text-right">
-                                <div class="flex items-center justify-end gap-1">
-                                    <a href="/Admin/Doctors/Details/@doc.Id" class="hms-icon-btn" title="Xem chi tiết">
-                                        <span class="material-symbols-outlined">visibility</span>
-                                    </a>
-                                    <a href="/Admin/Doctors/Edit/@doc.Id" class="hms-icon-btn" title="Chỉnh sửa">
-                                        <span class="material-symbols-outlined">edit</span>
-                                    </a>
-                                    <form method="POST" action="/Admin/Doctors/ToggleStatus/@doc.Id" class="inline" onsubmit="return confirm('Bạn có chắc muốn thay đổi trạng thái của bác sĩ này?')">
+                                <div class="hms-action-wrap">
+                                    <button type="button" class="hms-action-trigger" aria-label="Mở menu thao tác" aria-haspopup="menu" aria-expanded="false"><span class="material-symbols-outlined">more_vert</span></button>
+                                    <div class="hms-action-menu" role="menu">
+                                        <a href="/Admin/Doctors/Details/@doc.Id" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">visibility</span>Xem chi tiết</a>
+                                        <a href="/Admin/Doctors/Edit/@doc.Id" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">edit</span>Chỉnh sửa</a>
+                                        <form method="POST" action="/Admin/Doctors/ToggleStatus/@doc.Id" class="hms-action-form" onsubmit="return confirm('Bạn có chắc muốn thay đổi trạng thái của bác sĩ này?')">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="hms-icon-btn @(doc.User.TrangThai == "Active" ? "hms-icon-btn-danger" : "")" title="@(doc.User.TrangThai == "Active" ? "Khóa tài khoản" : "Mở khóa tài khoản")">
-                                            <span class="material-symbols-outlined">@(doc.User.TrangThai == "Active" ? "lock" : "lock_open")</span>
+                                        <button type="submit" class="hms-action-item @(doc.User.TrangThai == "Active" ? "hms-action-item-danger" : "")" role="menuitem">
+                                            <span class="material-symbols-outlined">@(doc.User.TrangThai == "Active" ? "lock" : "lock_open")</span>@(doc.User.TrangThai == "Active" ? "Khóa tài khoản" : "Mở khóa tài khoản")
                                         </button>
-                                    </form>
+                                        </form>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

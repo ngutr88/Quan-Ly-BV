@@ -297,7 +297,12 @@
                     <td class="py-3 font-bold">${item.qty} ${item.unit}</td>
                     <td class="py-3 text-on-surface-variant text-caption">${item.instructions}</td>
                     <td class="py-3 text-right">
-                        <button type="button" class="text-error font-semibold hover:underline" onclick="removeMedicineRow(${index})">Xóa</button>
+                        <div class="hms-action-wrap">
+                            <button type="button" class="hms-action-trigger" aria-label="Mở menu thao tác" aria-haspopup="menu" aria-expanded="false"><span class="material-symbols-outlined">more_vert</span></button>
+                            <div class="hms-action-menu" role="menu">
+                                <button type="button" class="hms-action-item hms-action-item-danger" role="menuitem" onclick="removeMedicineRow(${index})"><span class="material-symbols-outlined">delete</span>Xóa thuốc</button>
+                            </div>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);

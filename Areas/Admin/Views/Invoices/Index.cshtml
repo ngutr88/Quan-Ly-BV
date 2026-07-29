@@ -170,9 +170,12 @@
                                 }
                             </td>
                             <td class="px-unit-md py-4 text-right">
-                                <a href="/Admin/Invoices/Details/@inv.Id" class="inline-flex items-center gap-0.5 bg-surface-container hover:bg-surface-container-high px-3 py-1.5 rounded-lg text-label-md transition-colors text-primary font-semibold border border-outline-variant/30">
-                                    Biên lai <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                                </a>
+                                <div class="hms-action-wrap">
+                                    <button type="button" class="hms-action-trigger" aria-label="Mở menu thao tác" aria-haspopup="menu" aria-expanded="false"><span class="material-symbols-outlined">more_vert</span></button>
+                                    <div class="hms-action-menu" role="menu">
+                                        <a href="/Admin/Invoices/Details/@inv.Id" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">receipt_long</span>Xem biên lai</a>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     }

@@ -654,6 +654,16 @@ a, button, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 .staff-topbar .text-primary, .patient-topbar .text-primary { color: var(--clinical-teal) !important; }
 .staff-sidebar .text-on-surface-variant, .patient-sidebar .text-on-surface-variant { color: var(--sidebar-muted) !important; }
 .staff-sidebar > div:last-child, .patient-sidebar > div:last-child { border-color: rgba(255, 255, 255, .14) !important; }
+.staff-sidebar nav, .patient-sidebar nav {
+  min-height: 0;
+  padding-bottom: .75rem;
+  scroll-padding-bottom: .75rem;
+}
+.staff-sidebar > div:last-child, .patient-sidebar > div:last-child {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
 .staff-sidebar nav a, .patient-sidebar nav a, .staff-sidebar > div:last-child a, .patient-sidebar > div:last-child a {
   border-radius: .75rem;
   color: var(--sidebar-muted);
@@ -872,6 +882,58 @@ a, button, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 .patient-note:hover { background: #f4f8ff; border-color: #dbe7f7; }
 .patient-note-unread { background: #eef5ff; border-color: #cfe0f8; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Compact row actions used by data tables. */
+.hms-action-wrap { display: inline-flex; position: relative; }
+.hms-action-trigger {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: .5rem;
+  background: transparent;
+  color: var(--clinical-teal);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.hms-action-trigger:hover, .hms-action-trigger[aria-expanded="true"] { background: #e8f1ff; color: #08457f; }
+.hms-action-trigger .material-symbols-outlined { font-size: 1.35rem; }
+.hms-action-menu {
+  position: fixed;
+  z-index: 120;
+  display: none;
+  width: max-content;
+  min-width: 11rem;
+  padding: .35rem;
+  border: 1px solid var(--clinical-line);
+  border-radius: .75rem;
+  background: #fff;
+  box-shadow: var(--clinical-shadow-md);
+  text-align: left;
+}
+.hms-action-menu.is-open { display: block; }
+.hms-action-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .55rem .7rem;
+  border: 0;
+  border-radius: .5rem;
+  background: transparent;
+  color: var(--clinical-ink);
+  font-size: .82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.hms-action-item:hover { background: #edf4ff; color: var(--clinical-teal); }
+.hms-action-item .material-symbols-outlined { font-size: 1.1rem; }
+.hms-action-item-danger { color: #ba1a1a; }
+.hms-action-item-danger:hover { background: #ffedea; color: #93000a; }
+.hms-action-form { display: block; margin: 0; }
 
 @media (max-width: 640px) {
   .patient-hero { padding: 1rem !important; }

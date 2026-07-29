@@ -201,19 +201,18 @@
                                 @staff.NgayTao.ToString("dd/MM/yyyy")
                             </td>
                             <td class="px-unit-md py-4 text-right">
-                                <div class="flex items-center justify-end gap-unit-sm">
-                                    <a href="/Admin/Staff/Details/@staff.Id" class="p-1 text-on-surface-variant hover:text-primary transition-colors" title="Chi tiết & Đổi MK">
-                                        <span class="material-symbols-outlined">visibility</span>
-                                    </a>
-                                    <a href="/Admin/Staff/Edit/@staff.Id" class="p-1 text-on-surface-variant hover:text-tertiary transition-colors" title="Chỉnh sửa">
-                                        <span class="material-symbols-outlined">edit</span>
-                                    </a>
-                                    <form method="POST" action="/Admin/Staff/ToggleStatus/@staff.Id" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của nhân viên này?')">
+                                <div class="hms-action-wrap">
+                                    <button type="button" class="hms-action-trigger" aria-label="Mở menu thao tác" aria-haspopup="menu" aria-expanded="false"><span class="material-symbols-outlined">more_vert</span></button>
+                                    <div class="hms-action-menu" role="menu">
+                                        <a href="/Admin/Staff/Details/@staff.Id" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">visibility</span>Chi tiết &amp; đổi mật khẩu</a>
+                                        <a href="/Admin/Staff/Edit/@staff.Id" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">edit</span>Chỉnh sửa</a>
+                                        <form method="POST" action="/Admin/Staff/ToggleStatus/@staff.Id" class="hms-action-form" onsubmit="return confirm('Bạn có chắc chắn muốn thay đổi trạng thái hoạt động của nhân viên này?')">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="p-1 @(staff.TrangThai == "Active" ? "text-error hover:text-red-700" : "text-secondary hover:text-green-700") transition-colors" title="@(staff.TrangThai == "Active" ? "Khóa tài khoản" : "Mở khóa tài khoản")">
-                                            <span class="material-symbols-outlined">@(staff.TrangThai == "Active" ? "lock" : "lock_open")</span>
+                                        <button type="submit" class="hms-action-item @(staff.TrangThai == "Active" ? "hms-action-item-danger" : "")" role="menuitem">
+                                            <span class="material-symbols-outlined">@(staff.TrangThai == "Active" ? "lock" : "lock_open")</span>@(staff.TrangThai == "Active" ? "Khóa tài khoản" : "Mở khóa tài khoản")
                                         </button>
-                                    </form>
+                                        </form>
+                                    </div>
                                 </div>
                             </td>
                         </tr>

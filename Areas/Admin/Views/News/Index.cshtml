@@ -184,29 +184,26 @@
                                 }
                             </td>
                             <td class="px-unit-md py-4 text-right">
-                                <div class="flex items-center justify-end gap-1">
+                                <div class="hms-action-wrap">
+                                    <button type="button" class="hms-action-trigger" aria-label="Mở menu thao tác" aria-haspopup="menu" aria-expanded="false"><span class="material-symbols-outlined">more_vert</span></button>
+                                    <div class="hms-action-menu" role="menu">
                                     @if (article.DaXuatBan)
                                     {
-                                        <a href="/Home/NewsDetail/@article.Id" target="_blank" class="hms-icon-btn" title="Xem bài viết">
-                                            <span class="material-symbols-outlined">open_in_new</span>
-                                        </a>
+                                        <a href="/Home/NewsDetail/@article.Id" target="_blank" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">open_in_new</span>Xem bài viết</a>
                                     }
-                                    <a href="/Admin/News/Edit/@article.Id" class="hms-icon-btn" title="Chỉnh sửa">
-                                        <span class="material-symbols-outlined">edit</span>
-                                    </a>
-                                    <form method="POST" action="/Admin/News/TogglePublish/@article.Id" class="inline">
+                                    <a href="/Admin/News/Edit/@article.Id" class="hms-action-item" role="menuitem"><span class="material-symbols-outlined">edit</span>Chỉnh sửa</a>
+                                    <form method="POST" action="/Admin/News/TogglePublish/@article.Id" class="hms-action-form">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="hms-icon-btn" title="@(article.DaXuatBan ? "Chuyển về bản nháp" : "Xuất bản")">
-                                            <span class="material-symbols-outlined">@(article.DaXuatBan ? "visibility_off" : "publish")</span>
+                                        <button type="submit" class="hms-action-item" role="menuitem">
+                                            <span class="material-symbols-outlined">@(article.DaXuatBan ? "visibility_off" : "publish")</span>@(article.DaXuatBan ? "Chuyển về bản nháp" : "Xuất bản")
                                         </button>
                                     </form>
-                                    <form method="POST" action="/Admin/News/Delete/@article.Id" class="inline"
+                                    <form method="POST" action="/Admin/News/Delete/@article.Id" class="hms-action-form"
                                           onsubmit="return confirm('Xóa vĩnh viễn bài viết này?')">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="hms-icon-btn hms-icon-btn-danger" title="Xóa">
-                                            <span class="material-symbols-outlined">delete</span>
-                                        </button>
+                                        <button type="submit" class="hms-action-item hms-action-item-danger" role="menuitem"><span class="material-symbols-outlined">delete</span>Xóa</button>
                                     </form>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
