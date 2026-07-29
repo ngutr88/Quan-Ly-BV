@@ -6,9 +6,83 @@
     var appointments = ViewBag.Appointments as List<QuanLyBenhVien.Models.Appointment> ?? new List<QuanLyBenhVien.Models.Appointment>();
     var examRecords = ViewBag.ExaminationRecords as List<QuanLyBenhVien.Models.ExaminationRecord> ?? new List<QuanLyBenhVien.Models.ExaminationRecord>();
     var invoices = ViewBag.Invoices as List<QuanLyBenhVien.Models.Invoice> ?? new List<QuanLyBenhVien.Models.Invoice>();
+    var dependents = Model.Dependents?.ToList() ?? new List<QuanLyBenhVien.Models.Dependent>();
+    var documents = ViewBag.Documents as List<QuanLyBenhVien.Models.PatientDocument> ?? new List<QuanLyBenhVien.Models.PatientDocument>();
+    var prescriptions = ViewBag.Prescriptions as List<QuanLyBenhVien.Models.Prescription> ?? new List<QuanLyBenhVien.Models.Prescription>();
+    var prescriptionByExam = prescriptions.ToLookup(p => p.PhieuKhamId);
+    var familyHistories = ViewBag.FamilyHistories as List<QuanLyBenhVien.Models.FamilyHistory> ?? new List<QuanLyBenhVien.Models.FamilyHistory>();
+    var immunizations = ViewBag.Immunizations as List<QuanLyBenhVien.Models.Immunization> ?? new List<QuanLyBenhVien.Models.Immunization>();
+    var lastAudit = ViewBag.LastAudit as QuanLyBenhVien.Models.AuditLog;
+    var departments = ViewBag.Departments as List<QuanLyBenhVien.Models.Department> ?? new List<QuanLyBenhVien.Models.Department>();
+    var allDoctors = ViewBag.AllDoctors as List<QuanLyBenhVien.Models.Doctor> ?? new List<QuanLyBenhVien.Models.Doctor>();
+
+    // 3-state allergy classification to avoid "alert fatigue": an empty field is not
+    // the same as a clinician having confirmed no known drug allergies (NKDA).
+    var diUngRaw = (Model.DiUng ?? string.Empty).Trim();
+    var nkdaPhrases = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "không", "khong", "không ghi nhận", "khong ghi nhan", "không có", "khong co",
+        "nkda", "không có dị ứng", "khong co di ung", "không dị ứng", "khong di ung"
+    };
+    var allergyState = string.IsNullOrEmpty(diUngRaw)
+        ? "unknown"
+        : (nkdaPhrases.Contains(diUngRaw) ? "nkda" : "confirmed");
+
+    // CCCD/phone are masked by default; revealing them client-side calls an endpoint
+    // that logs an audit entry, so viewing sensitive fields stays traceable.
+    Func<string, string> Mask = val =>
+        string.IsNullOrEmpty(val) || val.Length <= 6
+            ? val ?? string.Empty
+            : val.Substring(0, 3) + "•••••" + val.Substring(val.Length - 3);
+
+    // BHYT validity, derived from the new nullable expiry field.
+    string bhytState;
+    if (string.IsNullOrWhiteSpace(Model.SoBHYT))
+    {
+        bhytState = "none";
+    }
+    else if (Model.NgayHetHanBHYT == null)
+    {
+        bhytState = "unknown";
+    }
+    else if (Model.NgayHetHanBHYT.Value.Date < DateTime.Today)
+    {
+        bhytState = "expired";
+    }
+    else
+    {
+        bhytState = "valid";
+    }
+
+    // Latest vitals come straight from the newest exam record's existing fields —
+    // no schema change needed, they were simply never rendered before.
+    var latestExam = examRecords.OrderByDescending(e => e.NgayKham).FirstOrDefault();
+
+    // "Latest medication" reflects the most recent prescription only — the schema
+    // has no day-supply field, so we can't claim this is a maintained ongoing list.
+    var latestPrescription = prescriptions.OrderByDescending(p => p.NgayKe).FirstOrDefault();
+
+    // Precomputed as a plain variable (rather than inline .ToString(...) inside an
+    // HTML attribute) to avoid nested same-quote-character parsing ambiguity.
+    var todayIso = DateTime.Today.ToString("yyyy-MM-dd");
 }
 
-<div class="mb-unit-lg">
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-xl flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-body-md font-semibold">@TempData["SuccessMessage"]</span>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-error-container text-on-error-container border border-error/20 rounded-xl flex items-center gap-2">
+        <span class="material-symbols-outlined text-error">error</span>
+        <span class="font-body-md font-semibold">@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="mb-unit-lg no-print">
     <a href="/Admin/Patients" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
         <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách bệnh nhân
     </a>
@@ -16,178 +90,984 @@
     <p class="text-body-md text-on-surface-variant">Thông tin cá nhân, tiền sử dị ứng, và nhật ký điều trị chi tiết.</p>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
-    <!-- Patient info card (1 col) -->
-    <div class="space-y-unit-lg">
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-            <div class="flex items-center gap-unit-md mb-unit-lg">
-                <div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-[24px]">
-                    @(string.IsNullOrWhiteSpace(Model.User.HoTen) ? "BN" : Model.User.HoTen.Trim().Split(' ').Last().Substring(0, 1).ToUpper())
-                </div>
-                <div>
-                    <h3 class="font-title-lg text-on-surface font-bold">@Model.User.HoTen</h3>
-                    <span class="text-caption text-primary font-bold bg-primary-container/10 px-2 py-0.5 rounded">BN-@Model.Id.ToString("D4")</span>
-                </div>
-            </div>
-
-            <!-- Allergy warnings (Vô cùng quan trọng trong y tế) -->
-            @if (!string.IsNullOrEmpty(Model.DiUng) && Model.DiUng != "Không")
-            {
-                <div class="p-unit-sm bg-error-container/20 border-l-4 border-error text-error text-caption rounded-r mb-unit-md flex gap-2">
-                    <span class="material-symbols-outlined text-[18px] shrink-0">warning</span>
-                    <div>
-                        <strong class="font-bold">Cảnh báo dị ứng:</strong> @Model.DiUng
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-unit-lg">
+    <!-- Sticky left column: identity + allergy status only, per review feedback -->
+    <div class="lg:col-span-1">
+        <div class="lg:sticky lg:top-4 space-y-unit-md">
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <div class="flex items-center gap-unit-md mb-unit-lg">
+                    @if (!string.IsNullOrEmpty(Model.User.AnhDaiDien))
+                    {
+                        <img src="/uploads/avatars/@Model.User.AnhDaiDien" alt="Ảnh đại diện" class="w-16 h-16 rounded-full object-cover shrink-0" />
+                    }
+                    else
+                    {
+                        <div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-[24px] shrink-0">
+                            @(string.IsNullOrWhiteSpace(Model.User.HoTen) ? "BN" : Model.User.HoTen.Trim().Split(' ').Last().Substring(0, 1).ToUpper())
+                        </div>
+                    }
+                    <div class="min-w-0">
+                        <h3 class="font-title-lg text-on-surface font-bold truncate">@Model.User.HoTen</h3>
+                        <span class="text-caption text-primary font-bold bg-primary-container/10 px-2 py-0.5 rounded">BN-@Model.Id.ToString("D4")</span>
+                        <button type="button" onclick="openModal('avatarModal')" class="block text-caption text-primary hover:underline mt-1 no-print cursor-pointer">Đổi ảnh đại diện</button>
                     </div>
                 </div>
-            }
 
-            <div class="space-y-unit-sm text-body-md border-t border-outline-variant pt-unit-md">
-                <div>
-                    <span class="text-caption text-on-surface-variant block">Ngày sinh (Tuổi)</span>
-                    <span class="font-medium text-on-surface">@Model.NgaySinh.ToString("dd/MM/yyyy") (@(DateTime.Today.Year - Model.NgaySinh.Year) tuổi)</span>
-                </div>
-                <div>
-                    <span class="text-caption text-on-surface-variant block">Giới tính</span>
-                    <span class="font-medium text-on-surface">@Model.GioiTinh</span>
-                </div>
-                <div>
-                    <span class="text-caption text-on-surface-variant block">Nhóm máu</span>
-                    <span class="font-semibold text-secondary">@Model.NhomMau</span>
-                </div>
-                <div>
-                    <span class="text-caption text-on-surface-variant block">Mã số thẻ BHYT</span>
-                    <span class="font-medium font-mono text-on-surface">@(string.IsNullOrEmpty(Model.SoBHYT) ? "Chưa cung cấp" : Model.SoBHYT)</span>
-                </div>
-                <div>
-                    <span class="text-caption text-on-surface-variant block">Số CCCD</span>
-                    <span class="font-medium font-mono text-on-surface">@(string.IsNullOrWhiteSpace(Model.SoCCCD) ? "Chưa cung cấp" : Model.SoCCCD)</span>
-                </div>
-                <div>
-                    <span class="text-caption text-on-surface-variant block">Số điện thoại</span>
-                    <span class="font-medium text-on-surface">@Model.User.Sdt</span>
-                </div>
-                <div>
-                    <span class="text-caption text-on-surface-variant block">Tiền sử bệnh án</span>
-                    <span class="font-medium text-on-surface">@Model.TienSuBenh</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Right Content area tabs (2 cols) -->
-    <div class="lg:col-span-2 space-y-unit-lg">
-        <!-- Tab: Consultations logs -->
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-            <h3 class="font-title-lg text-title-lg mb-unit-md">Nhật ký khám chữa bệnh</h3>
-            
-            <div class="space-y-unit-lg">
-                @if (!examRecords.Any())
+                <!-- Allergy status: 3 states, so a "no known allergy" patient never wears
+                     the same red banner as an unconfirmed one (alert fatigue risk). -->
+                @if (allergyState == "unknown")
                 {
-                    <p class="text-on-surface-variant py-4 text-center">Bệnh nhân chưa có lượt khám nào.</p>
+                    <div class="p-unit-sm bg-surface-container-high border-l-4 border-outline text-on-surface-variant text-caption rounded-r flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px] shrink-0">help</span>
+                            <strong class="font-bold">Chưa khai thác tiền sử dị ứng</strong>
+                        </div>
+                        <button type="button" onclick="openModal('allergyModal')" class="text-primary font-bold text-caption hover:underline shrink-0 cursor-pointer no-print">+ Bổ sung</button>
+                    </div>
+                }
+                else if (allergyState == "nkda")
+                {
+                    <div class="p-unit-sm bg-secondary-container/20 border-l-4 border-secondary text-on-secondary-container text-caption rounded-r flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px] shrink-0">verified</span>
+                            <strong class="font-bold">Không ghi nhận dị ứng (NKDA)</strong>
+                        </div>
+                        <button type="button" onclick="openModal('allergyModal')" class="text-on-secondary-container font-semibold text-caption hover:underline shrink-0 cursor-pointer no-print">Cập nhật</button>
+                    </div>
                 }
                 else
                 {
-                    @foreach (var record in examRecords)
-                    {
-                        <div class="border border-outline-variant rounded-lg p-unit-md bg-surface-container-low/20 space-y-unit-sm">
-                            <div class="flex items-center justify-between border-b border-outline-variant pb-unit-sm">
-                                <div>
-                                    <span class="text-caption text-on-surface-variant">Ngày khám:</span>
-                                    <strong class="font-body-md text-primary">@record.NgayKham.ToString("dd/MM/yyyy HH:mm")</strong>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-caption text-on-surface-variant">Bác sĩ khám:</span>
-                                    <span class="font-body-md font-semibold">@record.Appointment.Doctor?.User.HoTen</span>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-sm text-body-md pt-unit-xs">
-                                <div>
-                                    <strong class="text-caption text-on-surface-variant block">Triệu chứng lâm sàng:</strong>
-                                    <p class="text-on-surface">@record.TrieuChung</p>
-                                </div>
-                                <div>
-                                    <strong class="text-caption text-on-surface-variant block">Chẩn đoán y khoa:</strong>
-                                    <p class="text-on-surface font-semibold text-primary">@record.ChanDoan</p>
-                                </div>
-                                
-                                <div class="md:col-span-2 mt-unit-xs border-t border-outline-variant/30 pt-unit-xs">
-                                    <strong class="text-caption text-on-surface-variant block">Chỉ định / Kết quả Cận lâm sàng:</strong>
-                                    <p class="text-on-surface">
-                                        @if (string.IsNullOrEmpty(record.ChiDinhCLS))
-                                        {
-                                            <span>Không có</span>
-                                        }
-                                        else
-                                        {
-                                            <strong>@record.ChiDinhCLS</strong> @(string.IsNullOrEmpty(record.KetQuaCLS) ? "" : $" - Kết quả: {record.KetQuaCLS}")
-                                        }
-                                    </p>
-                                </div>
-
-                                <div class="md:col-span-2 mt-unit-xs border-t border-outline-variant/30 pt-unit-xs">
-                                    <strong class="text-caption text-on-surface-variant block">Lời dặn bác sĩ:</strong>
-                                    <p class="text-on-surface italic text-on-surface-variant">@record.LoiDan</p>
-                                </div>
+                    <div class="p-unit-sm bg-error-container/20 border-l-4 border-error text-error text-caption rounded-r flex items-start justify-between gap-2">
+                        <div class="flex gap-2">
+                            <span class="material-symbols-outlined text-[18px] shrink-0">warning</span>
+                            <div>
+                                <strong class="font-bold block">Cảnh báo dị ứng:</strong>
+                                <span>@Model.DiUng</span>
                             </div>
                         </div>
-                    }
+                        <button type="button" onclick="openModal('allergyModal')" class="text-error font-semibold text-caption hover:underline shrink-0 cursor-pointer no-print">Sửa</button>
+                    </div>
                 }
             </div>
-        </div>
 
-        <!-- Tab: Invoices -->
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
-            <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30">
-                <h3 class="font-title-lg text-title-lg">Lịch sử hóa đơn thanh toán</h3>
-            </div>
-            <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Lịch sử hóa đơn của bệnh nhân" tabindex="0">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
-                            <th class="px-unit-md py-3">Mã HD</th>
-                            <th class="px-unit-md py-3">Ngày phát sinh</th>
-                            <th class="px-unit-md py-3">Tổng cộng</th>
-                            <th class="px-unit-md py-3">Phương thức</th>
-                            <th class="px-unit-md py-3">Trạng thái</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-outline-variant text-body-md">
-                        @if (!invoices.Any())
-                        {
-                            <tr>
-                                <td colspan="5" class="px-unit-md py-6 text-center text-on-surface-variant">Không có lịch sử hóa đơn tài chính.</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var invoice in invoices)
-                            {
-                                <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="location.href='/Admin/Invoices/Details/@invoice.Id'">
-                                    <td class="px-unit-md py-4 font-mono font-bold text-primary">HD-@invoice.Id.ToString("D5")</td>
-                                    <td class="px-unit-md py-4">@invoice.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
-                                    <td class="px-unit-md py-4 font-bold">@invoice.TongTien.ToString("N0") đ</td>
-                                    <td class="px-unit-md py-4">@invoice.PhuongThuc</td>
-                                    <td class="px-unit-md py-4">
-                                        @if (invoice.TrangThaiThanhToan == "DaThanhToan")
-                                        {
-                                            <span class="px-2.5 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">Đã thanh toán</span>
-                                        }
-                                        else if (invoice.TrangThaiThanhToan == "ChuaThanhToan")
-                                        {
-                                            <span class="px-2.5 py-0.5 rounded-full bg-error-container text-error text-[11px] font-bold">Chưa trả</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[11px] font-bold">Đã hủy</span>
-                                        }
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md shadow-sm flex flex-col gap-2 no-print">
+                <a href="/Admin/Patients/Edit/@Model.Id" class="hms-btn hms-btn-secondary w-full justify-center">
+                    <span class="material-symbols-outlined">edit</span> Sửa thông tin
+                </a>
+                <button type="button" onclick="window.print()" class="hms-btn hms-btn-secondary w-full justify-center">
+                    <span class="material-symbols-outlined">print</span> In tóm tắt
+                </button>
             </div>
         </div>
     </div>
+
+    <!-- Tabbed content -->
+    <div class="lg:col-span-3">
+        <div class="flex gap-1 border-b border-outline-variant mb-unit-md overflow-x-auto no-print" role="tablist">
+            <button type="button" class="patient-tab-btn active" data-tab="overview">Tổng quan</button>
+            <button type="button" class="patient-tab-btn" data-tab="visits">Lượt khám</button>
+            <button type="button" class="patient-tab-btn" data-tab="labs">Cận lâm sàng</button>
+            <button type="button" class="patient-tab-btn" data-tab="prescriptions">Đơn thuốc</button>
+            <button type="button" class="patient-tab-btn" data-tab="invoices">Hóa đơn</button>
+            <button type="button" class="patient-tab-btn" data-tab="documents">Tài liệu</button>
+        </div>
+
+        <!-- ================= TỔNG QUAN ================= -->
+        <div data-tab-panel="overview" class="patient-tab-panel space-y-unit-lg">
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                @if (lastAudit != null)
+                {
+                    <div class="text-caption text-on-surface-variant mb-unit-md pb-unit-sm border-b border-outline-variant">
+                        Cập nhật lần cuối bởi <strong class="text-on-surface">@(lastAudit.User?.HoTen ?? "Hệ thống")</strong> lúc <strong class="text-on-surface">@lastAudit.ThoiGian.ToString("HH:mm dd/MM/yyyy")</strong> (@lastAudit.HanhDong)
+                    </div>
+                }
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Ngày sinh (Tuổi)</span>
+                        <span class="font-medium text-on-surface">@Model.NgaySinh.ToString("dd/MM/yyyy") (@(DateTime.Today.Year - Model.NgaySinh.Year) tuổi)</span>
+                    </div>
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Giới tính</span>
+                        <span class="font-medium text-on-surface">@Model.GioiTinh</span>
+                    </div>
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Nhóm máu</span>
+                        <span class="font-medium text-on-surface">@Model.NhomMau</span>
+                    </div>
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Mã số thẻ BHYT</span>
+                        @if (bhytState == "none")
+                        {
+                            <span class="font-medium text-on-surface">Chưa cung cấp</span>
+                        }
+                        else
+                        {
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-medium font-mono text-on-surface">@Model.SoBHYT</span>
+                                @if (bhytState == "valid")
+                                {
+                                    <span class="px-2 py-0.5 bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold uppercase rounded">Còn hiệu lực đến @Model.NgayHetHanBHYT!.Value.ToString("dd/MM/yyyy")</span>
+                                }
+                                else if (bhytState == "expired")
+                                {
+                                    <span class="px-2 py-0.5 bg-error-container/40 text-error text-[11px] font-bold uppercase rounded">Hết hạn @Model.NgayHetHanBHYT!.Value.ToString("dd/MM/yyyy")</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2 py-0.5 bg-surface-container-high text-on-surface-variant text-[11px] font-bold uppercase rounded">Chưa rõ hạn thẻ</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Số CCCD</span>
+                        @if (string.IsNullOrWhiteSpace(Model.SoCCCD))
+                        {
+                            <span class="font-medium font-mono text-on-surface">Chưa cung cấp</span>
+                        }
+                        else
+                        {
+                            <span class="font-medium font-mono text-on-surface reveal-field" data-field="cccd" data-patient-id="@Model.Id">
+                                <span class="reveal-value">@Mask(Model.SoCCCD)</span>
+                                <button type="button" class="reveal-btn text-primary align-middle no-print" title="Hiện số đầy đủ (sẽ được ghi vào nhật ký hệ thống)">
+                                    <span class="material-symbols-outlined text-[16px] align-middle">visibility</span>
+                                </button>
+                            </span>
+                        }
+                    </div>
+                    <div>
+                        <span class="text-caption text-on-surface-variant block">Số điện thoại</span>
+                        <span class="font-medium text-on-surface reveal-field" data-field="phone" data-patient-id="@Model.Id">
+                            <span class="reveal-value">@Mask(Model.User.Sdt)</span>
+                            <button type="button" class="reveal-btn text-primary align-middle no-print" title="Hiện số đầy đủ (sẽ được ghi vào nhật ký hệ thống)">
+                                <span class="material-symbols-outlined text-[16px] align-middle">visibility</span>
+                            </button>
+                        </span>
+                    </div>
+                    <div class="md:col-span-2">
+                        <span class="text-caption text-on-surface-variant block">Tiền sử bệnh án</span>
+                        <span class="font-medium text-on-surface">@Model.TienSuBenh</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <div class="flex items-center justify-between mb-unit-md">
+                    <h3 class="font-title-lg text-title-lg">Người thân / Người giám hộ</h3>
+                    <button type="button" onclick="openModal('dependentModal')" class="hms-btn hms-btn-secondary hms-btn-sm no-print">+ Thêm người thân</button>
+                </div>
+                @if (!dependents.Any())
+                {
+                    <p class="text-on-surface-variant text-body-md text-center py-2">Chưa có thông tin người thân.</p>
+                }
+                else
+                {
+                    <div class="space-y-unit-sm">
+                        @foreach (var dep in dependents)
+                        {
+                            <div class="border border-outline-variant rounded-lg p-unit-sm">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-on-surface">@dep.HoTen</span>
+                                    <span class="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded uppercase">@dep.QuanHe</span>
+                                </div>
+                                <div class="text-caption text-on-surface-variant mt-1">
+                                    @dep.GioiTinh • Sinh năm @dep.NamSinh • Nhóm máu @dep.NhomMau
+                                    @if (!string.IsNullOrEmpty(dep.SoBHYT))
+                                    {
+                                        <text> • BHYT @dep.SoBHYT</text>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(dep.TienSuBenhLy))
+                                {
+                                    <div class="text-caption text-on-surface mt-1"><strong class="text-on-surface-variant">Tiền sử:</strong> @dep.TienSuBenhLy</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <div class="flex items-center justify-between mb-unit-md">
+                    <h3 class="font-title-lg text-title-lg">Tiền sử gia đình</h3>
+                    <button type="button" onclick="openModal('familyHistoryModal')" class="hms-btn hms-btn-secondary hms-btn-sm no-print">+ Thêm</button>
+                </div>
+                @if (!familyHistories.Any())
+                {
+                    <p class="text-on-surface-variant text-body-md text-center py-2">Chưa ghi nhận tiền sử bệnh lý gia đình.</p>
+                }
+                else
+                {
+                    <div class="space-y-unit-sm">
+                        @foreach (var fh in familyHistories)
+                        {
+                            <div class="border border-outline-variant rounded-lg p-unit-sm">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-on-surface">@fh.TenBenh</span>
+                                    <span class="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded uppercase">@fh.QuanHe</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(fh.GhiChu))
+                                {
+                                    <div class="text-caption text-on-surface-variant mt-1">@fh.GhiChu</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <div class="flex items-center justify-between mb-unit-md">
+                    <h3 class="font-title-lg text-title-lg">Tiêm chủng</h3>
+                    <button type="button" onclick="openModal('immunizationModal')" class="hms-btn hms-btn-secondary hms-btn-sm no-print">+ Thêm</button>
+                </div>
+                @if (!immunizations.Any())
+                {
+                    <p class="text-on-surface-variant text-body-md text-center py-2">Chưa ghi nhận thông tin tiêm chủng.</p>
+                }
+                else
+                {
+                    <div class="space-y-unit-sm">
+                        @foreach (var im in immunizations)
+                        {
+                            <div class="border border-outline-variant rounded-lg p-unit-sm flex items-center justify-between">
+                                <div>
+                                    <span class="font-semibold text-on-surface">@im.TenVaccine</span>
+                                    @if (!string.IsNullOrEmpty(im.MuiSo))
+                                    {
+                                        <span class="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded uppercase ml-2">@im.MuiSo</span>
+                                    }
+                                </div>
+                                <span class="text-caption text-on-surface-variant">@im.NgayTiem.ToString("dd/MM/yyyy")</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+
+        <!-- ================= LƯỢT KHÁM ================= -->
+        <div data-tab-panel="visits" class="patient-tab-panel space-y-unit-lg hidden">
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg mb-unit-md">Sinh hiệu gần nhất</h3>
+                @if (latestExam == null)
+                {
+                    <p class="text-on-surface-variant text-body-md text-center py-2">Chưa có dữ liệu sinh hiệu.</p>
+                }
+                else
+                {
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-unit-md">
+                        <div class="p-3 bg-surface-container-low rounded-lg">
+                            <p class="text-label-md text-on-surface-variant uppercase mb-1">Huyết áp</p>
+                            <p class="font-bold text-on-surface">@(string.IsNullOrEmpty(latestExam.HuyetAp) ? "-" : latestExam.HuyetAp)</p>
+                        </div>
+                        <div class="p-3 bg-surface-container-low rounded-lg">
+                            <p class="text-label-md text-on-surface-variant uppercase mb-1">Nhịp tim</p>
+                            <p class="font-bold text-on-surface">@(latestExam.NhipTim?.ToString() ?? "-") bpm</p>
+                        </div>
+                        <div class="p-3 bg-surface-container-low rounded-lg">
+                            <p class="text-label-md text-on-surface-variant uppercase mb-1">Nhiệt độ</p>
+                            <p class="font-bold text-on-surface">@(latestExam.NhietDo?.ToString("0.0") ?? "-") °C</p>
+                        </div>
+                        <div class="p-3 bg-surface-container-low rounded-lg">
+                            <p class="text-label-md text-on-surface-variant uppercase mb-1">Cân nặng / BMI</p>
+                            <p class="font-bold text-on-surface">@(latestExam.CanNang?.ToString("0.0") ?? "-") kg • BMI @(latestExam.BMI?.ToString("0.0") ?? "-")</p>
+                        </div>
+                    </div>
+                    <p class="text-caption text-on-surface-variant mt-unit-sm">Đo lúc @latestExam.NgayKham.ToString("HH:mm dd/MM/yyyy"). Hệ thống chưa theo dõi chỉ số SpO2.</p>
+                }
+            </section>
+
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30 flex items-center justify-between">
+                    <h3 class="font-title-lg text-title-lg">Lịch hẹn / Lịch khám</h3>
+                    <button type="button" onclick="openModal('appointmentModal')" class="hms-btn hms-btn-secondary hms-btn-sm no-print">+ Đặt lịch hẹn</button>
+                </div>
+                <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Lịch hẹn của bệnh nhân" tabindex="0">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                                <th class="px-unit-md py-3">Thời gian</th>
+                                <th class="px-unit-md py-3">Bác sĩ</th>
+                                <th class="px-unit-md py-3">Khoa</th>
+                                <th class="px-unit-md py-3">Lý do khám</th>
+                                <th class="px-unit-md py-3">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant text-body-md">
+                            @if (!appointments.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="px-unit-md py-6 text-center text-on-surface-variant">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <span>Bệnh nhân chưa có lịch hẹn nào.</span>
+                                            <button type="button" onclick="openModal('appointmentModal')" class="hms-btn hms-btn-primary hms-btn-sm no-print">+ Đặt lịch hẹn ngay</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var app in appointments)
+                                {
+                                    <tr class="hover:bg-surface-container-low transition-colors">
+                                        <td class="px-unit-md py-4">
+                                            <div class="font-semibold text-on-surface">@app.ThoiGian.ToString("dd/MM/yyyy")</div>
+                                            <div class="text-caption text-primary">@app.ThoiGian.ToString("HH:mm")</div>
+                                        </td>
+                                        <td class="px-unit-md py-4">@(app.Doctor != null ? app.Doctor.User.HoTen : "Chưa phân công")</td>
+                                        <td class="px-unit-md py-4 text-on-surface-variant">@(app.Doctor?.Department?.TenKhoa ?? "-")</td>
+                                        <td class="px-unit-md py-4 text-on-surface-variant">@app.LyDoKham</td>
+                                        <td class="px-unit-md py-4">
+                                            @if (app.TrangThai == "ChoXacNhan")
+                                            {
+                                                <span class="hms-badge hms-badge-warn"><span class="material-symbols-outlined">schedule</span> Chờ duyệt</span>
+                                            }
+                                            else if (app.TrangThai == "DaXacNhan")
+                                            {
+                                                <span class="hms-badge hms-badge-info"><span class="material-symbols-outlined">event_available</span> Đã hẹn</span>
+                                            }
+                                            else if (app.TrangThai == "DangKham")
+                                            {
+                                                <span class="hms-badge hms-badge-info"><span class="material-symbols-outlined">clinical_notes</span> Đang khám</span>
+                                            }
+                                            else if (app.TrangThai == "HoanThanh")
+                                            {
+                                                <span class="hms-badge hms-badge-ok"><span class="material-symbols-outlined">task_alt</span> Đã xong</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="hms-badge hms-badge-danger"><span class="material-symbols-outlined">cancel</span> Đã hủy</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg mb-unit-md">Nhật ký khám chữa bệnh</h3>
+                <div class="space-y-unit-lg">
+                    @if (!examRecords.Any())
+                    {
+                        <p class="text-on-surface-variant py-4 text-center">Bệnh nhân chưa có lượt khám nào.</p>
+                    }
+                    else
+                    {
+                        @foreach (var record in examRecords)
+                        {
+                            <div class="border border-outline-variant rounded-lg p-unit-md bg-surface-container-low/20 space-y-unit-sm">
+                                <div class="flex items-center justify-between border-b border-outline-variant pb-unit-sm">
+                                    <div>
+                                        <span class="text-caption text-on-surface-variant">Ngày khám:</span>
+                                        <strong class="font-body-md text-primary">@record.NgayKham.ToString("dd/MM/yyyy HH:mm")</strong>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-caption text-on-surface-variant">Bác sĩ khám:</span>
+                                        <span class="font-body-md font-semibold">@record.Appointment.Doctor?.User.HoTen</span>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-sm text-body-md pt-unit-xs">
+                                    <div>
+                                        <strong class="text-caption text-on-surface-variant block">Triệu chứng lâm sàng:</strong>
+                                        <p class="text-on-surface">@record.TrieuChung</p>
+                                    </div>
+                                    <div>
+                                        <strong class="text-caption text-on-surface-variant block">Chẩn đoán y khoa:</strong>
+                                        <p class="text-on-surface font-semibold text-primary">@record.ChanDoan</p>
+                                    </div>
+                                    <div class="md:col-span-2 mt-unit-xs border-t border-outline-variant/30 pt-unit-xs">
+                                        <strong class="text-caption text-on-surface-variant block">Lời dặn bác sĩ:</strong>
+                                        <p class="text-on-surface italic text-on-surface-variant">@record.LoiDan</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= CẬN LÂM SÀNG ================= -->
+        <div data-tab-panel="labs" class="patient-tab-panel hidden">
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg mb-unit-md">Chỉ định &amp; kết quả cận lâm sàng</h3>
+                <div class="space-y-unit-md">
+                    @if (!examRecords.Any())
+                    {
+                        <p class="text-on-surface-variant py-4 text-center">Chưa có chỉ định cận lâm sàng nào.</p>
+                    }
+                    else
+                    {
+                        @foreach (var record in examRecords)
+                        {
+                            <div class="border border-outline-variant rounded-lg p-unit-md">
+                                <div class="text-caption text-on-surface-variant mb-1">@record.NgayKham.ToString("dd/MM/yyyy HH:mm")</div>
+                                @if (string.IsNullOrEmpty(record.ChiDinhCLS))
+                                {
+                                    <p class="text-on-surface-variant">Không có chỉ định cận lâm sàng.</p>
+                                }
+                                else
+                                {
+                                    <p class="text-on-surface"><strong>@record.ChiDinhCLS</strong>@(string.IsNullOrEmpty(record.KetQuaCLS) ? "" : $" — Kết quả: {record.KetQuaCLS}")</p>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= ĐƠN THUỐC ================= -->
+        <div data-tab-panel="prescriptions" class="patient-tab-panel space-y-unit-lg hidden">
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg mb-unit-md">Thuốc gần nhất</h3>
+                @{
+                    var latestDetails = latestPrescription?.PrescriptionDetails?.ToList() ?? new List<QuanLyBenhVien.Models.PrescriptionDetail>();
+                }
+                @if (latestPrescription == null || !latestDetails.Any())
+                {
+                    <p class="text-on-surface-variant text-body-md text-center py-2">Chưa có đơn thuốc nào được kê.</p>
+                }
+                else
+                {
+                    <p class="text-caption text-on-surface-variant mb-unit-sm">Từ lần kê đơn gần nhất, ngày @latestPrescription.NgayKe.ToString("dd/MM/yyyy") — không phải danh sách thuốc duy trì liên tục.</p>
+                    <ul class="space-y-1">
+                        @foreach (var detail in latestDetails)
+                        {
+                            <li class="flex items-center justify-between bg-surface-container-low/40 rounded px-2 py-1">
+                                <span class="text-on-surface font-medium">@detail.Medicine.TenThuoc</span>
+                                <span class="text-on-surface-variant text-caption">@detail.LieuDung • SL: @detail.SoLuong @detail.Medicine.DonViTinh</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg mb-unit-md">Đơn thuốc theo lượt khám</h3>
+                <div class="space-y-unit-md">
+                    @if (!examRecords.Any())
+                    {
+                        <p class="text-on-surface-variant py-4 text-center">Chưa có đơn thuốc nào.</p>
+                    }
+                    else
+                    {
+                        @foreach (var record in examRecords)
+                        {
+                            var recordDetails = prescriptionByExam[record.Id].SelectMany(p => p.PrescriptionDetails).ToList();
+                            <div class="border border-outline-variant rounded-lg p-unit-md">
+                                <div class="text-caption text-on-surface-variant mb-1">@record.NgayKham.ToString("dd/MM/yyyy HH:mm")</div>
+                                @if (!recordDetails.Any())
+                                {
+                                    <span class="text-on-surface-variant">Không kê đơn</span>
+                                }
+                                else
+                                {
+                                    <ul class="space-y-1">
+                                        @foreach (var detail in recordDetails)
+                                        {
+                                            <li class="flex items-center justify-between bg-surface-container-low/40 rounded px-2 py-1">
+                                                <span class="text-on-surface font-medium">@detail.Medicine.TenThuoc</span>
+                                                <span class="text-on-surface-variant text-caption">@detail.LieuDung • SL: @detail.SoLuong @detail.Medicine.DonViTinh</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= HÓA ĐƠN ================= -->
+        <div data-tab-panel="invoices" class="patient-tab-panel hidden">
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30">
+                    <h3 class="font-title-lg text-title-lg">Lịch sử hóa đơn thanh toán</h3>
+                </div>
+                <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Lịch sử hóa đơn của bệnh nhân" tabindex="0">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                                <th class="px-unit-md py-3">Mã HD</th>
+                                <th class="px-unit-md py-3">Ngày phát sinh</th>
+                                <th class="px-unit-md py-3">Tổng cộng</th>
+                                <th class="px-unit-md py-3">Phương thức</th>
+                                <th class="px-unit-md py-3">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant text-body-md">
+                            @if (!invoices.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="px-unit-md py-6 text-center text-on-surface-variant">Không có lịch sử hóa đơn tài chính.</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var invoice in invoices)
+                                {
+                                    <tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="location.href='/Admin/Invoices/Details/@invoice.Id'">
+                                        <td class="px-unit-md py-4 font-mono font-bold text-primary">HD-@invoice.Id.ToString("D5")</td>
+                                        <td class="px-unit-md py-4">@invoice.NgayTao.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="px-unit-md py-4 font-bold">@invoice.TongTien.ToString("N0") đ</td>
+                                        <td class="px-unit-md py-4">@invoice.PhuongThuc</td>
+                                        <td class="px-unit-md py-4">
+                                            @if (invoice.TrangThaiThanhToan == "DaThanhToan")
+                                            {
+                                                <span class="px-2.5 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">Đã thanh toán</span>
+                                            }
+                                            else if (invoice.TrangThaiThanhToan == "ChuaThanhToan")
+                                            {
+                                                <span class="px-2.5 py-0.5 rounded-full bg-error-container text-error text-[11px] font-bold">Chưa trả</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[11px] font-bold">Đã hủy</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= TÀI LIỆU ================= -->
+        <div data-tab-panel="documents" class="patient-tab-panel hidden">
+            <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <div class="flex items-center justify-between mb-unit-md">
+                    <h3 class="font-title-lg text-title-lg">Tài liệu đính kèm</h3>
+                    <button type="button" onclick="openModal('documentModal')" class="hms-btn hms-btn-secondary hms-btn-sm no-print">+ Tải tài liệu</button>
+                </div>
+                @if (!documents.Any())
+                {
+                    <div class="flex flex-col items-center gap-2 py-4">
+                        <p class="text-on-surface-variant text-body-md text-center">Chưa có tài liệu nào được tải lên.</p>
+                        <button type="button" onclick="openModal('documentModal')" class="hms-btn hms-btn-primary hms-btn-sm no-print">+ Tải tài liệu ngay</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-unit-sm">
+                        @foreach (var doc in documents)
+                        {
+                            <a href="/Admin/Patients/DownloadDocument/@doc.Id" class="flex items-center gap-2 border border-outline-variant rounded-lg p-unit-sm hover:bg-surface-container-low transition-colors">
+                                <span class="material-symbols-outlined text-primary shrink-0">description</span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-semibold text-on-surface text-body-md truncate">@doc.TenTaiLieu</div>
+                                    <div class="text-caption text-on-surface-variant">@doc.LoaiTaiLieu • @doc.NgayTaiLen.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                                <span class="material-symbols-outlined text-on-surface-variant shrink-0">download</span>
+                            </a>
+                        }
+                    </div>
+                }
+            </section>
+        </div>
+    </div>
 </div>
+
+<!-- ================= MODALS ================= -->
+
+<div id="allergyModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Cập nhật tiền sử dị ứng</h3>
+            <button type="button" onclick="closeModal('allergyModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Patients/UpdateAllergy">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div class="p-6 space-y-4">
+                <p class="text-caption text-on-surface-variant">
+                    Ghi rõ dị nguyên — mức độ — phản ứng nếu có, ví dụ: "Penicillin — Nặng — Sốc phản vệ".
+                    Nếu đã xác nhận bệnh nhân không có dị ứng nào, hãy ghi "Không ghi nhận".
+                </p>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tiền sử dị ứng</label>
+                    <textarea name="diUng" rows="3" class="w-full border-outline-variant rounded-lg text-body-md focus:border-primary focus:ring-0 px-3 py-2 bg-surface" placeholder="Ví dụ: Penicillin — Nặng — Sốc phản vệ">@Model.DiUng</textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('allergyModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="avatarModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Đổi ảnh đại diện</h3>
+            <button type="button" onclick="closeModal('avatarModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Patients/UploadAvatar" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="patientId" value="@Model.Id" />
+            <div class="p-6 space-y-4">
+                <p class="text-caption text-on-surface-variant">Ảnh JPG/PNG, tối đa 5MB. Dùng để nhận diện bệnh nhân, tránh nhầm lẫn khi thăm khám.</p>
+                <input type="file" name="file" accept=".jpg,.jpeg,.png" required class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('avatarModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Tải lên</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="dependentModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Thêm người thân</h3>
+            <button type="button" onclick="closeModal('dependentModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Patients/AddDependent">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="patientId" value="@Model.Id" />
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Họ tên <span class="text-error">*</span></label>
+                    <input type="text" name="hoTen" required class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Quan hệ <span class="text-error">*</span></label>
+                        <input type="text" name="quanHe" required placeholder="Con, Vợ/Chồng..." class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                    </div>
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Giới tính</label>
+                        <select name="gioiTinh" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface">
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Năm sinh <span class="text-error">*</span></label>
+                        <input type="number" name="namSinh" required min="1900" max="@DateTime.Today.Year" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                    </div>
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Nhóm máu</label>
+                        <select name="nhomMau" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface">
+                            <option>O+</option><option>O-</option><option>A+</option><option>A-</option>
+                            <option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Số BHYT</label>
+                    <input type="text" name="soBHYT" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tiền sử bệnh lý</label>
+                    <textarea name="tienSuBenhLy" rows="2" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('dependentModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="familyHistoryModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Thêm tiền sử gia đình</h3>
+            <button type="button" onclick="closeModal('familyHistoryModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Patients/AddFamilyHistory">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="patientId" value="@Model.Id" />
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Quan hệ <span class="text-error">*</span></label>
+                    <input type="text" name="quanHe" required placeholder="Cha, Mẹ, Anh/Chị/Em..." class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tên bệnh <span class="text-error">*</span></label>
+                    <input type="text" name="tenBenh" required class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Ghi chú</label>
+                    <textarea name="ghiChu" rows="2" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('familyHistoryModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="immunizationModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Thêm mũi tiêm chủng</h3>
+            <button type="button" onclick="closeModal('immunizationModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Patients/AddImmunization">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="patientId" value="@Model.Id" />
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tên vắc-xin <span class="text-error">*</span></label>
+                    <input type="text" name="tenVaccine" required class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Ngày tiêm <span class="text-error">*</span></label>
+                        <input type="date" name="ngayTiem" required class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                    </div>
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Mũi số</label>
+                        <input type="text" name="muiSo" placeholder="Mũi 1, Nhắc lại..." class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Ghi chú</label>
+                    <textarea name="ghiChu" rows="2" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('immunizationModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="documentModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Tải tài liệu</h3>
+            <button type="button" onclick="closeModal('documentModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Patients/UploadDocument" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="patientId" value="@Model.Id" />
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tên tài liệu</label>
+                    <input type="text" name="tenTaiLieu" placeholder="Để trống sẽ dùng tên tệp gốc" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Tệp (PDF/JPG/PNG, tối đa 10MB) <span class="text-error">*</span></label>
+                    <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Ghi chú</label>
+                    <textarea name="ghiChu" rows="2" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('documentModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Tải lên</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="appointmentModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-outline-variant bg-surface flex justify-between items-center">
+            <h3 class="font-bold text-title-lg text-on-surface">Đặt lịch hẹn</h3>
+            <button type="button" onclick="closeModal('appointmentModal')" class="p-2 hover:bg-surface-container-high rounded-full cursor-pointer text-on-surface-variant">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="POST" action="/Admin/Patients/CreateAppointment">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="patientId" value="@Model.Id" />
+            <div class="p-6 space-y-4">
+                <p class="text-caption text-on-surface-variant">Đặt lịch nhanh theo khoa/bác sĩ. Hệ thống chỉ kiểm tra trùng khung giờ chính xác với bác sĩ, không hiển thị lịch làm việc chi tiết như trang tự đặt lịch của bệnh nhân.</p>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Khoa khám <span class="text-error">*</span></label>
+                    <select id="apptKhoaSelect" name="khoaId" required class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface">
+                        <option value="">-- Chọn khoa --</option>
+                        @foreach (var dept in departments)
+                        {
+                            <option value="@dept.Id">@dept.TenKhoa</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Bác sĩ <span class="text-error">*</span></label>
+                    <select id="apptDoctorSelect" name="bacSiId" required class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface">
+                        <option value="">-- Chọn khoa trước --</option>
+                        @foreach (var doc in allDoctors)
+                        {
+                            <option value="@doc.Id" data-khoa="@doc.KhoaId" class="hidden">@doc.HocVi @doc.User.HoTen (@doc.ChuyenKhoa)</option>
+                        }
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Ngày hẹn <span class="text-error">*</span></label>
+                        <input type="date" name="ngayHen" required min="@todayIso" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                    </div>
+                    <div>
+                        <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Giờ hẹn <span class="text-error">*</span></label>
+                        <input type="time" name="gioHen" required class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-label-md text-label-md text-on-surface-variant mb-1">Lý do khám</label>
+                    <textarea name="lyDoKham" rows="2" class="w-full border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface"></textarea>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-surface-container-low border-t border-outline-variant flex gap-unit-md justify-end">
+                <button type="button" onclick="closeModal('appointmentModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container-high cursor-pointer">Hủy</button>
+                <button type="submit" class="px-6 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-container shadow-md cursor-pointer">Đặt lịch</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.firstElementChild.classList.remove('scale-100');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 150);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.hms-modal-overlay').forEach((m) => {
+                    if (!m.classList.contains('hidden')) closeModal(m.id);
+                });
+            }
+        });
+
+        // Sensitive fields (CCCD/phone) stay masked until explicitly revealed; the
+        // real value is only fetched (and audit-logged server-side) on click, never
+        // shipped in the initial page HTML.
+        document.querySelectorAll('.reveal-field').forEach(function (el) {
+            var btn = el.querySelector('.reveal-btn');
+            var valueEl = el.querySelector('.reveal-value');
+            if (!btn || !valueEl) return;
+
+            btn.addEventListener('click', function () {
+                var patientId = el.getAttribute('data-patient-id');
+                var field = el.getAttribute('data-field');
+                btn.disabled = true;
+
+                fetch('/Admin/Patients/RevealSensitive?id=' + encodeURIComponent(patientId) + '&field=' + encodeURIComponent(field))
+                    .then(function (res) { return res.ok ? res.json() : Promise.reject(); })
+                    .then(function (data) {
+                        valueEl.textContent = data.value;
+                        btn.remove();
+                    })
+                    .catch(function () {
+                        btn.disabled = false;
+                    });
+            });
+        });
+
+        // Plain vanilla tab switching — no tab component exists elsewhere in the app yet.
+        var tabButtons = document.querySelectorAll('.patient-tab-btn');
+        var tabPanels = document.querySelectorAll('.patient-tab-panel');
+        tabButtons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                tabButtons.forEach(function (b) { b.classList.remove('active'); });
+                btn.classList.add('active');
+                var target = btn.getAttribute('data-tab');
+                tabPanels.forEach(function (panel) {
+                    if (panel.getAttribute('data-tab-panel') === target) {
+                        panel.classList.remove('hidden');
+                    } else {
+                        panel.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // Filter the doctor select by chosen department in the "create appointment" modal.
+        var khoaSelect = document.getElementById('apptKhoaSelect');
+        var doctorSelect = document.getElementById('apptDoctorSelect');
+        if (khoaSelect && doctorSelect) {
+            khoaSelect.addEventListener('change', function () {
+                var khoaId = khoaSelect.value;
+                var firstVisible = null;
+                Array.from(doctorSelect.options).forEach(function (opt) {
+                    if (!opt.value) return;
+                    var matches = opt.getAttribute('data-khoa') === khoaId;
+                    opt.classList.toggle('hidden', !matches);
+                    opt.disabled = !matches;
+                    if (matches && !firstVisible) firstVisible = opt;
+                });
+                doctorSelect.value = firstVisible ? firstVisible.value : '';
+            });
+        }
+    </script>
+}
+
+@section Styles {
+    <style>
+        .patient-tab-btn {
+            padding: 0.625rem 1rem;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: var(--clinical-muted, #6b7280);
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .patient-tab-btn.active {
+            color: var(--clinical-teal, #0b5cab);
+            border-bottom-color: var(--clinical-teal, #0b5cab);
+        }
+
+        @@media print {
+            /* .no-print is already hidden globally (site.css); only the JS-driven
+               tab panels here need forcing back to visible for the printed summary. */
+            .patient-tab-panel {
+                display: block !important;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+}

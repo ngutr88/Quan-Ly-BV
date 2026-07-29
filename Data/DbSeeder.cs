@@ -2342,19 +2342,33 @@ namespace QuanLyBenhVien.Data
 
             var patientSeeds = new[]
             {
-                ("Nguyen Ha My", "patient.demo01@hms.com", "0903000001", new DateTime(1992, 4, 18), "Nu", "A+", "Tang huyet ap nhe", "Dị ung hai san"),
-                ("Tran Gia Huy", "patient.demo02@hms.com", "0903000002", new DateTime(1988, 9, 7), "Nam", "O+", "Viem da day", "Khong ghi nhan"),
-                ("Le Bao Chau", "patient.demo03@hms.com", "0903000003", new DateTime(2015, 2, 21), "Nu", "B+", "Viem mui di ung theo mua", "Dị ung Penicillin"),
-                ("Pham Duc Anh", "patient.demo04@hms.com", "0903000004", new DateTime(1975, 11, 30), "Nam", "AB+", "Roi loan lipid mau", "Khong ghi nhan"),
-                ("Vo Khanh Linh", "patient.demo05@hms.com", "0903000005", new DateTime(1998, 6, 12), "Nu", "O-", "Khong", "Dị ung Ibuprofen"),
-                ("Doan Minh Kiet", "patient.demo06@hms.com", "0903000006", new DateTime(1969, 1, 9), "Nam", "B-", "Dai thao duong type 2", "Dị ung thuoc can quang"),
-                ("Bui Thanh Tam", "patient.demo07@hms.com", "0903000007", new DateTime(1983, 7, 26), "Nu", "A-", "Migraine", "Khong ghi nhan"),
-                ("Hoang Anh Tuan", "patient.demo08@hms.com", "0903000008", new DateTime(2001, 12, 4), "Nam", "O+", "Hen phe quan nhe", "Dị ung Aspirin")
+                ("Nguyễn Hà My", "patient.demo01@hms.com", "0903000001", new DateTime(1992, 4, 18), "Nữ", "A+", "Tăng huyết áp nhẹ", "Dị ứng hải sản"),
+                ("Trần Gia Huy", "patient.demo02@hms.com", "0903000002", new DateTime(1988, 9, 7), "Nam", "O+", "Viêm dạ dày", "Không ghi nhận"),
+                ("Lê Bảo Châu", "patient.demo03@hms.com", "0903000003", new DateTime(2015, 2, 21), "Nữ", "B+", "Viêm mũi dị ứng theo mùa", "Dị ứng Penicillin"),
+                ("Phạm Đức Anh", "patient.demo04@hms.com", "0903000004", new DateTime(1975, 11, 30), "Nam", "AB+", "Rối loạn lipid máu", "Không ghi nhận"),
+                ("Võ Khánh Linh", "patient.demo05@hms.com", "0903000005", new DateTime(1998, 6, 12), "Nữ", "O-", "Không", "Dị ứng Ibuprofen"),
+                ("Đoàn Minh Kiệt", "patient.demo06@hms.com", "0903000006", new DateTime(1969, 1, 9), "Nam", "B-", "Đái tháo đường type 2", "Dị ứng thuốc cản quang"),
+                ("Bùi Thanh Tâm", "patient.demo07@hms.com", "0903000007", new DateTime(1983, 7, 26), "Nữ", "A-", "Đau nửa đầu (Migraine)", "Không ghi nhận"),
+                ("Hoàng Anh Tuấn", "patient.demo08@hms.com", "0903000008", new DateTime(2001, 12, 4), "Nam", "O+", "Hen phế quản nhẹ", "Dị ứng Aspirin")
             };
 
             foreach (var seed in patientSeeds)
             {
-                if (context.Users.Any(u => u.Email == seed.Item2)) continue;
+                var existingUser = context.Users.FirstOrDefault(u => u.Email == seed.Item2);
+                if (existingUser != null)
+                {
+                    // Repair demo data seeded previously without Vietnamese diacritics.
+                    existingUser.HoTen = seed.Item1;
+                    var existingPatient = context.Patients.FirstOrDefault(p => p.NguoiDungId == existingUser.Id);
+                    if (existingPatient != null)
+                    {
+                        existingPatient.GioiTinh = seed.Item5;
+                        existingPatient.TienSuBenh = seed.Item7;
+                        existingPatient.DiUng = seed.Item8;
+                    }
+                    changed = true;
+                    continue;
+                }
 
                 var user = new User
                 {

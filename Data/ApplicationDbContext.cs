@@ -29,6 +29,8 @@ namespace QuanLyBenhVien.Data
         public DbSet<DoctorWorkSchedule> DoctorWorkSchedules { get; set; } = null!;
         public DbSet<PatientDocument> PatientDocuments { get; set; } = null!;
         public DbSet<Article> Articles { get; set; } = null!;
+        public DbSet<FamilyHistory> FamilyHistories { get; set; } = null!;
+        public DbSet<Immunization> Immunizations { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -154,6 +156,18 @@ namespace QuanLyBenhVien.Data
                 .HasOne(d => d.Patient)
                 .WithMany()
                 .HasForeignKey(d => d.BenhNhanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FamilyHistory>()
+                .HasOne(f => f.Patient)
+                .WithMany()
+                .HasForeignKey(f => f.BenhNhanId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Immunization>()
+                .HasOne(i => i.Patient)
+                .WithMany()
+                .HasForeignKey(i => i.BenhNhanId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Review - Doctor (Many-to-One)

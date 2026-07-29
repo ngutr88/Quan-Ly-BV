@@ -41,7 +41,7 @@
         </div>
 
         <div class="flex items-center gap-unit-sm">
-            <input type="checkbox" id="lowStock" name="lowStock" value="true" class="rounded text-primary focus:ring-primary h-4 w-4" checked="@ViewBag.LowStockOnly" />
+            <input type="checkbox" id="lowStock" name="lowStock" value="true" class="rounded-full text-primary focus:ring-primary h-4 w-4 checked:bg-none" checked="@((bool)ViewBag.LowStockOnly)" />
             <label for="lowStock" class="font-label-md text-on-surface cursor-pointer select-none">Chỉ hiện thuốc sắp hết kho</label>
         </div>
 

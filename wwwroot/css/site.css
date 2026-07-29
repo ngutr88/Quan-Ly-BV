@@ -630,6 +630,11 @@ body {
   --clinical-line: #d9e5ec;
   --clinical-shadow-sm: 0 5px 16px rgba(14, 47, 83, .07), 0 1px 3px rgba(14, 47, 83, .05);
   --clinical-shadow-md: 0 15px 34px rgba(14, 47, 83, .10), 0 3px 9px rgba(14, 47, 83, .06);
+  --sidebar-blue: #083f75;
+  --sidebar-blue-deep: #063561;
+  --sidebar-blue-active: #1976ed;
+  --sidebar-foreground: #f5f9ff;
+  --sidebar-muted: #c6d9ec;
 }
 
 body { color: var(--clinical-ink); font-family: 'Inter', system-ui, sans-serif; text-rendering: optimizeLegibility; }
@@ -640,11 +645,35 @@ a, button, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 .staff-portal, .patient-shell {
   background: radial-gradient(circle at 92% 0%, rgba(169, 212, 255, .2), transparent 24rem), linear-gradient(145deg, #f7faff 0%, #f1f6fd 52%, #f8fbff 100%);
 }
-.staff-sidebar, .patient-sidebar { background: rgba(255, 255, 255, .94) !important; border-color: var(--clinical-line) !important; box-shadow: 10px 0 36px rgba(14, 47, 83, .06) !important; }
-.staff-sidebar .text-primary, .patient-sidebar .text-primary, .staff-topbar .text-primary, .patient-topbar .text-primary { color: var(--clinical-teal) !important; }
-.staff-sidebar nav a, .patient-sidebar nav a, .staff-sidebar > div:last-child a, .patient-sidebar > div:last-child a { border-radius: .75rem; color: #526d82; font-weight: 600; }
-.staff-sidebar nav a:hover, .patient-sidebar nav a:hover, .staff-sidebar > div:last-child a:hover, .patient-sidebar > div:last-child a:hover { background: #edf4ff !important; color: var(--clinical-teal) !important; transform: translateX(3px); }
-.staff-sidebar nav a[class*="bg-primary-container/10"], .patient-sidebar nav a[class*="bg-primary-container/10"], .staff-sidebar > div:last-child a[class*="bg-primary-container/10"], .patient-sidebar > div:last-child a[class*="bg-primary-container/10"] { background: #e8f1ff !important; color: var(--clinical-teal) !important; box-shadow: inset 3px 0 0 var(--clinical-teal), var(--clinical-shadow-sm); }
+.staff-sidebar, .patient-sidebar {
+  background: linear-gradient(180deg, var(--sidebar-blue) 0%, var(--sidebar-blue-deep) 100%) !important;
+  border-color: rgba(255, 255, 255, .12) !important;
+  box-shadow: 10px 0 36px rgba(3, 35, 66, .18) !important;
+}
+.staff-sidebar .text-primary, .patient-sidebar .text-primary { color: var(--sidebar-foreground) !important; }
+.staff-topbar .text-primary, .patient-topbar .text-primary { color: var(--clinical-teal) !important; }
+.staff-sidebar .text-on-surface-variant, .patient-sidebar .text-on-surface-variant { color: var(--sidebar-muted) !important; }
+.staff-sidebar > div:last-child, .patient-sidebar > div:last-child { border-color: rgba(255, 255, 255, .14) !important; }
+.staff-sidebar nav a, .patient-sidebar nav a, .staff-sidebar > div:last-child a, .patient-sidebar > div:last-child a {
+  border-radius: .75rem;
+  color: var(--sidebar-muted);
+  font-weight: 600;
+}
+.staff-sidebar nav a:hover, .patient-sidebar nav a:hover, .staff-sidebar > div:last-child a:hover, .patient-sidebar > div:last-child a:hover {
+  background: rgba(255, 255, 255, .11) !important;
+  color: var(--sidebar-foreground) !important;
+  transform: translateX(3px);
+}
+.staff-sidebar nav a[class*="bg-primary-container/10"], .patient-sidebar nav a[class*="bg-primary-container/10"], .staff-sidebar > div:last-child a[class*="bg-primary-container/10"], .patient-sidebar > div:last-child a[class*="bg-primary-container/10"] {
+  background: var(--sidebar-blue-active) !important;
+  color: #fff !important;
+  box-shadow: 0 7px 18px rgba(0, 31, 72, .28);
+}
+.staff-sidebar nav a .material-symbols-outlined, .patient-sidebar nav a .material-symbols-outlined,
+.staff-sidebar > div:last-child a .material-symbols-outlined, .patient-sidebar > div:last-child a .material-symbols-outlined {
+  color: currentColor !important;
+}
+.staff-sidebar > button, .patient-sidebar > button { color: var(--sidebar-foreground) !important; }
 .staff-topbar, .patient-topbar { background: rgba(255, 255, 255, .84) !important; border-color: var(--clinical-line) !important; box-shadow: 0 8px 24px rgba(14, 47, 83, .06) !important; }
 .staff-topbar input, .patient-topbar input { background: #f2f7f9 !important; border: 1px solid transparent !important; border-radius: .7rem !important; }
 .staff-topbar input:focus, .patient-topbar input:focus { border-color: #70a9e8 !important; box-shadow: 0 0 0 4px rgba(11, 92, 171, .10) !important; }

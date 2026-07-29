@@ -48,5 +48,13 @@ namespace QuanLyBenhVien.Models
 
         [StringLength(50)]
         public string IpAddress { get; set; } = "127.0.0.1";
+
+        // Structured target reference so callers can reliably query "latest log
+        // for record X" instead of substring-matching ChiTiet. Nullable/additive:
+        // existing rows predate this and simply have no target.
+        [StringLength(50)]
+        public string? DoiTuongLoai { get; set; }
+
+        public int? DoiTuongId { get; set; }
     }
 }

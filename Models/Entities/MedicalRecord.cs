@@ -128,4 +128,56 @@ namespace QuanLyBenhVien.Models
         [Required]
         public int SoLuong { get; set; }
     }
+
+    [Table("TienSuGiaDinh")]
+    public class FamilyHistory
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int BenhNhanId { get; set; }
+
+        [ForeignKey("BenhNhanId")]
+        public virtual Patient Patient { get; set; } = null!;
+
+        [Required]
+        [StringLength(50)]
+        public string QuanHe { get; set; } = string.Empty; // Cha, Mẹ, Anh/Chị/Em, Ông/Bà...
+
+        [Required]
+        [StringLength(200)]
+        public string TenBenh { get; set; } = string.Empty;
+
+        [StringLength(300)]
+        public string GhiChu { get; set; } = string.Empty;
+
+        public DateTime NgayGhiNhan { get; set; } = DateTime.Now;
+    }
+
+    [Table("TiemChung")]
+    public class Immunization
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int BenhNhanId { get; set; }
+
+        [ForeignKey("BenhNhanId")]
+        public virtual Patient Patient { get; set; } = null!;
+
+        [Required]
+        [StringLength(150)]
+        public string TenVaccine { get; set; } = string.Empty;
+
+        [Required]
+        public DateTime NgayTiem { get; set; }
+
+        [StringLength(20)]
+        public string MuiSo { get; set; } = string.Empty; // "Mũi 1", "Mũi 2", "Nhắc lại"...
+
+        [StringLength(300)]
+        public string GhiChu { get; set; } = string.Empty;
+    }
 }

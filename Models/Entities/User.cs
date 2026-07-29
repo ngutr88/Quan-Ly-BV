@@ -37,6 +37,9 @@ namespace QuanLyBenhVien.Models
 
         public DateTime NgayTao { get; set; } = DateTime.Now;
 
+        [StringLength(260)]
+        public string? AnhDaiDien { get; set; }
+
         // Navigation properties
         public virtual Doctor? DoctorProfile { get; set; }
         public virtual Patient? PatientProfile { get; set; }
@@ -104,6 +107,8 @@ namespace QuanLyBenhVien.Models
 
         [StringLength(50)]
         public string SoBHYT { get; set; } = string.Empty;
+
+        public DateTime? NgayHetHanBHYT { get; set; }
 
         [StringLength(20)]
         public string SoCCCD { get; set; } = string.Empty;

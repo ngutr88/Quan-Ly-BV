@@ -1,0 +1,108 @@
+@model QuanLyBenhVien.Models.Patient
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chỉnh sửa Bệnh nhân";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/Patients/Details/@Model.Id" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại hồ sơ bệnh nhân
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Sửa thông tin: @Model.User.HoTen</h2>
+    <p class="text-body-md text-on-surface-variant">Cập nhật thông tin hành chính của bệnh nhân BN-@Model.Id.ToString("D4").</p>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-error-container text-on-error-container border border-error/20 rounded-xl flex items-center gap-2 max-w-3xl">
+        <span class="material-symbols-outlined text-error">error</span>
+        <span class="font-body-md font-semibold">@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm max-w-3xl">
+    <form action="/Admin/Patients/Edit" method="POST" class="space-y-unit-md">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="hoTen">Họ và tên <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md"
+                       id="hoTen" name="hoTen" value="@Model.User.HoTen" required type="text" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="sdt">Số điện thoại <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md"
+                       id="sdt" name="sdt" value="@Model.User.Sdt" required type="tel" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="email">Email (không thể sửa)</label>
+                <input class="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-lg font-body-md text-on-surface-variant cursor-not-allowed"
+                       id="email" value="@Model.User.Email" readonly type="email" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="ngaySinh">Ngày sinh <span class="text-error">*</span></label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md"
+                       id="ngaySinh" name="ngaySinh" value="@Model.NgaySinh.ToString("yyyy-MM-dd")" required type="date" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="gioiTinh">Giới tính <span class="text-error">*</span></label>
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md" id="gioiTinh" name="gioiTinh" required>
+                    <option value="Nam" selected="@(Model.GioiTinh == "Nam")">Nam</option>
+                    <option value="Nữ" selected="@(Model.GioiTinh == "Nữ")">Nữ</option>
+                    <option value="Khác" selected="@(Model.GioiTinh == "Khác")">Khác</option>
+                </select>
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="nhomMau">Nhóm máu</label>
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md" id="nhomMau" name="nhomMau">
+                    <option value="O+" selected="@(Model.NhomMau == "O+")">O+</option>
+                    <option value="O-" selected="@(Model.NhomMau == "O-")">O-</option>
+                    <option value="A+" selected="@(Model.NhomMau == "A+")">A+</option>
+                    <option value="A-" selected="@(Model.NhomMau == "A-")">A-</option>
+                    <option value="B+" selected="@(Model.NhomMau == "B+")">B+</option>
+                    <option value="B-" selected="@(Model.NhomMau == "B-")">B-</option>
+                    <option value="AB+" selected="@(Model.NhomMau == "AB+")">AB+</option>
+                    <option value="AB-" selected="@(Model.NhomMau == "AB-")">AB-</option>
+                </select>
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="soBHYT">Số BHYT</label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md"
+                       id="soBHYT" name="soBHYT" value="@Model.SoBHYT" type="text" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="ngayHetHanBHYT">Hạn thẻ BHYT</label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md"
+                       id="ngayHetHanBHYT" name="ngayHetHanBHYT" value="@(Model.NgayHetHanBHYT?.ToString("yyyy-MM-dd"))" type="date" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="soCCCD">Số CCCD</label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md"
+                       id="soCCCD" name="soCCCD" value="@Model.SoCCCD" type="text" />
+            </div>
+
+            <div class="space-y-unit-xs md:col-span-2">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="tienSuBenh">Tiền sử bệnh án</label>
+                <textarea class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md" id="tienSuBenh" name="tienSuBenh" rows="3">@Model.TienSuBenh</textarea>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-unit-md pt-unit-md border-t border-outline-variant mt-unit-lg">
+            <button class="bg-primary text-on-primary font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98]" type="submit">
+                Lưu thay đổi
+            </button>
+            <a href="/Admin/Patients/Details/@Model.Id" class="text-on-surface-variant hover:underline font-label-md">Hủy bỏ</a>
+        </div>
+    </form>
+</div>
