@@ -18,6 +18,7 @@ namespace QuanLyBenhVien.Data
             SynchronizeCompletedAppointmentStates(context);
             SeedAdditionalRoleAccounts(context);
             SeedRoleOverviewDemoData(context);
+            SeedRolePermissionDefaults(context);
 
             // Runs before the "complete dataset" shortcut below so existing
             // databases also pick up the public-site articles.
@@ -2027,6 +2028,34 @@ namespace QuanLyBenhVien.Data
 
             if (changed)
             {
+                context.SaveChanges();
+            }
+        }
+
+        // Backfills one allowed row per (role, module) so the permission-matrix
+        // screen starts in a state that matches today's real behavior (every
+        // role fully allowed inside its own area). Only inserts rows that are
+        // missing, so re-running after new modules are added never clobbers an
+        // admin's existing on/off choices.
+        private static void SeedRolePermissionDefaults(ApplicationDbContext context)
+        {
+            var existing = context.RolePermissions
+                .Select(p => p.VaiTro + "|" + p.ModuleKey)
+                .ToHashSet();
+
+            var toAdd = new System.Collections.Generic.List<RolePermission>();
+            foreach (var (role, _, modules) in Helpers.ModulePermissionRegistry.AllGroups())
+            {
+                foreach (var module in modules)
+                {
+                    if (existing.Contains(role + "|" + module.Key)) continue;
+                    toAdd.Add(new RolePermission { VaiTro = role, ModuleKey = module.Key, DuocPhep = true });
+                }
+            }
+
+            if (toAdd.Count > 0)
+            {
+                context.RolePermissions.AddRange(toAdd);
                 context.SaveChanges();
             }
         }

@@ -1,0 +1,82 @@
+@model List<QuanLyBenhVien.Areas.Admin.Controllers.StaffPermissionMatrixGroup>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Ma trận phân quyền RBAC";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/Staff" class="text-label-md text-primary font-semibold inline-flex items-center gap-1 mb-2">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại Nhân sự &amp; Phân quyền
+    </a>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Ma trận phân quyền RBAC</h2>
+    <p class="text-body-md text-on-surface-variant">
+        Bật/tắt quyền truy cập từng module cho mỗi vai trò. Đây là lớp kiểm soát bổ sung, nằm phía trong ranh giới
+        khu vực (Area) hiện có &mdash; tắt một module ở đây chỉ ẩn module đó với chính vai trò sở hữu nó, không thể
+        cấp quyền chéo sang khu vực của vai trò khác.
+    </p>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-label-md">@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+<form method="POST" action="/Admin/Staff/SavePermissionMatrix" class="space-y-unit-lg max-w-5xl">
+    @Html.AntiForgeryToken()
+
+    @foreach (var group in Model)
+    {
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg">
+            <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-unit-md flex items-center gap-2">
+                <span class="material-symbols-outlined">
+                    @(group.Role == "Admin" ? "admin_panel_settings" : group.Role == "Doctor" ? "stethoscope" : "personal_injury")
+                </span>
+                Vai trò: @group.RoleLabel
+            </h3>
+
+            <div class="divide-y divide-outline-variant/40">
+                @foreach (var row in group.Modules)
+                {
+                    <div class="flex items-center justify-between py-3 gap-unit-md">
+                        <div>
+                            <span class="font-label-md font-bold text-on-surface">@row.Label</span>
+                            @if (row.Locked)
+                            {
+                                <span class="ml-2 inline-flex items-center gap-1 text-[11px] font-semibold text-on-surface-variant uppercase">
+                                    <span class="material-symbols-outlined text-[14px]">lock</span> Luôn bật
+                                </span>
+                            }
+                            <p class="text-caption text-on-surface-variant font-mono">@row.ModuleKey</p>
+                        </div>
+                        <label class="inline-flex items-center @(row.Locked ? "cursor-not-allowed opacity-60" : "cursor-pointer")">
+                            <input type="checkbox" name="allowedKeys" value="@(group.Role)|@(row.ModuleKey)"
+                                   class="sr-only peer" @(row.Allowed ? "checked" : "") disabled="@row.Locked" />
+                            @if (row.Locked)
+                            {
+                                <!-- Disabled checkboxes are not posted by browsers; resend the fixed
+                                     "always allowed" value explicitly so the server-side lock and the
+                                     displayed toggle never fall out of sync. -->
+                                <input type="hidden" name="allowedKeys" value="@(group.Role)|@(row.ModuleKey)" />
+                            }
+                            <div class="relative w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="flex items-center gap-unit-md pt-4">
+        <button type="submit" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[20px]">save</span>
+            Lưu ma trận phân quyền
+        </button>
+        <a href="/Admin/Staff" class="bg-surface-container-high hover:bg-surface-container-highest px-unit-lg py-2.5 rounded-lg font-label-md transition-colors text-on-surface-variant font-semibold">
+            Hủy bỏ
+        </a>
+    </div>
+</form>

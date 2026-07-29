@@ -28,6 +28,9 @@
     };
 
     Func<object, IHtmlContent> pageActions = @<text>
+        <a href="/Admin/Staff/PermissionMatrix" class="hms-btn hms-btn-secondary">
+            <span class="material-symbols-outlined">rule</span> Ma trận phân quyền
+        </a>
         <a href="/Admin/Staff/Export@(string.IsNullOrEmpty(exportQuery) ? "" : "?" + exportQuery)" class="hms-btn hms-btn-secondary">
             <span class="material-symbols-outlined">download</span> Xuất Excel
         </a>

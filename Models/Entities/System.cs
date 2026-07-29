@@ -57,4 +57,36 @@ namespace QuanLyBenhVien.Models
 
         public int? DoiTuongId { get; set; }
     }
+
+    // Fine-grained, admin-editable on/off switch layered on top of the fixed
+    // per-area [Authorize(Roles=...)] gate. A missing row means "allowed" (the
+    // area gate already governs access); a row with DuocPhep=false additionally
+    // hides that one module from that role. This can never grant a role access
+    // to another role's area — it can only further restrict within a role's own
+    // area — so it cannot loosen the authorization boundary already enforced by
+    // the area-level [Authorize] attributes.
+    [Table("PhanQuyenVaiTro")]
+    public class RolePermission
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public string VaiTro { get; set; } = string.Empty;
+
+        // "{Area}.{Controller}", e.g. "Admin.Medicines", "Doctor.Chat", "Patient.Payment".
+        [Required]
+        [StringLength(100)]
+        public string ModuleKey { get; set; } = string.Empty;
+
+        public bool DuocPhep { get; set; } = true;
+
+        public DateTime CapNhatLuc { get; set; } = DateTime.Now;
+
+        public int? CapNhatBoiId { get; set; }
+
+        [ForeignKey("CapNhatBoiId")]
+        public virtual User? CapNhatBoi { get; set; }
+    }
 }

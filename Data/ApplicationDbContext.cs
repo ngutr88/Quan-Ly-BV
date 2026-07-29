@@ -32,10 +32,16 @@ namespace QuanLyBenhVien.Data
         public DbSet<FamilyHistory> FamilyHistories { get; set; } = null!;
         public DbSet<Immunization> Immunizations { get; set; } = null!;
         public DbSet<PatientHealthMetric> PatientHealthMetrics { get; set; } = null!;
+        public DbSet<RolePermission> RolePermissions { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // One on/off switch per role+module.
+            modelBuilder.Entity<RolePermission>()
+                .HasIndex(p => new { p.VaiTro, p.ModuleKey })
+                .IsUnique();
 
             // User - Doctor (One-to-One)
             modelBuilder.Entity<User>()

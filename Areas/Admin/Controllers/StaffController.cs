@@ -396,10 +396,118 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
             return RedirectToAction(nameof(Details), new { id = id });
         }
 
+        // GET: Admin/Staff/PermissionMatrix
+        public async Task<IActionResult> PermissionMatrix()
+        {
+            var saved = await _context.RolePermissions.AsNoTracking().ToListAsync();
+            var savedLookup = saved.ToDictionary(p => p.VaiTro + "|" + p.ModuleKey, p => p.DuocPhep);
+
+            var groups = QuanLyBenhVien.Helpers.ModulePermissionRegistry.AllGroups()
+                .Select(g => new StaffPermissionMatrixGroup
+                {
+                    Role = g.Role,
+                    RoleLabel = g.RoleLabel,
+                    Modules = g.Modules.Select(m => new StaffPermissionMatrixRow
+                    {
+                        ModuleKey = m.Key,
+                        Label = m.Label,
+                        Allowed = !savedLookup.TryGetValue(g.Role + "|" + m.Key, out var allowed) || allowed,
+                        Locked = QuanLyBenhVien.Helpers.ModulePermissionRegistry.AlwaysAllowed.Contains(m.Key)
+                    }).ToList()
+                }).ToList();
+
+            return View(groups);
+        }
+
+        // POST: Admin/Staff/SavePermissionMatrix
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SavePermissionMatrix([FromForm] List<string> allowedKeys)
+        {
+            allowedKeys ??= new List<string>();
+            var allowedSet = allowedKeys.ToHashSet();
+
+            var existing = await _context.RolePermissions.ToListAsync();
+            var existingLookup = existing.ToDictionary(p => p.VaiTro + "|" + p.ModuleKey, p => p);
+
+            var changedModules = new List<string>();
+
+            foreach (var (role, _, modules) in QuanLyBenhVien.Helpers.ModulePermissionRegistry.AllGroups())
+            {
+                foreach (var module in modules)
+                {
+                    // These modules always stay allowed regardless of what was posted,
+                    // so an admin can never lock every admin out of Staff/Dashboard.
+                    var isLocked = QuanLyBenhVien.Helpers.ModulePermissionRegistry.AlwaysAllowed.Contains(module.Key);
+                    var combo = role + "|" + module.Key;
+                    var wantAllowed = isLocked || allowedSet.Contains(combo);
+
+                    if (existingLookup.TryGetValue(combo, out var row))
+                    {
+                        if (row.DuocPhep != wantAllowed)
+                        {
+                            row.DuocPhep = wantAllowed;
+                            row.CapNhatLuc = DateTime.Now;
+                            row.CapNhatBoiId = GetCurrentUserId();
+                            _context.Entry(row).State = EntityState.Modified;
+                            changedModules.Add($"{module.Label} ({role}) -> {(wantAllowed ? "Bật" : "Tắt")}");
+                        }
+                    }
+                    else if (!wantAllowed)
+                    {
+                        // Only insert a row when explicitly turning a module off;
+                        // "allowed" is already the default for any missing row.
+                        _context.RolePermissions.Add(new RolePermission
+                        {
+                            VaiTro = role,
+                            ModuleKey = module.Key,
+                            DuocPhep = false,
+                            CapNhatLuc = DateTime.Now,
+                            CapNhatBoiId = GetCurrentUserId()
+                        });
+                        changedModules.Add($"{module.Label} ({role}) -> Tắt");
+                    }
+                }
+            }
+
+            if (changedModules.Count > 0)
+            {
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    NguoiDungId = GetCurrentUserId(),
+                    HanhDong = "Cập nhật ma trận phân quyền",
+                    ChiTiet = $"Thay đổi quyền truy cập module: {string.Join("; ", changedModules)}."
+                });
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Đã lưu ma trận phân quyền thành công.";
+            }
+            else
+            {
+                TempData["SuccessMessage"] = "Không có thay đổi nào để lưu.";
+            }
+
+            return RedirectToAction(nameof(PermissionMatrix));
+        }
+
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
         }
+    }
+
+    public class StaffPermissionMatrixGroup
+    {
+        public string Role { get; set; } = string.Empty;
+        public string RoleLabel { get; set; } = string.Empty;
+        public List<StaffPermissionMatrixRow> Modules { get; set; } = new();
+    }
+
+    public class StaffPermissionMatrixRow
+    {
+        public string ModuleKey { get; set; } = string.Empty;
+        public string Label { get; set; } = string.Empty;
+        public bool Allowed { get; set; }
+        public bool Locked { get; set; }
     }
 }

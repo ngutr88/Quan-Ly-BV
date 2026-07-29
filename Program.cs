@@ -26,7 +26,11 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<QuanLyBenhVien.Helpers.ModulePermissionFilter>();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.AddService<QuanLyBenhVien.Helpers.ModulePermissionFilter>();
+});
 builder.Services.AddScoped<QuanLyBenhVien.Services.ExcelExportService>();
 
 var dataProtectionKeysPath = builder.Configuration["DataProtectionKeysPath"]
