@@ -401,22 +401,33 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
         {
             var saved = await _context.RolePermissions.AsNoTracking().ToListAsync();
             var savedLookup = saved.ToDictionary(p => p.VaiTro + "|" + p.ModuleKey, p => p.DuocPhep);
+            var roles = QuanLyBenhVien.Helpers.ModulePermissionRegistry.AllGroups()
+                .Select(g => (g.Role, g.RoleLabel)).ToList();
 
-            var groups = QuanLyBenhVien.Helpers.ModulePermissionRegistry.AllGroups()
-                .Select(g => new StaffPermissionMatrixGroup
+            var rows = new List<StaffPermissionMatrixRow>();
+            foreach (var (owningRole, _, modules) in QuanLyBenhVien.Helpers.ModulePermissionRegistry.AllGroups())
+            {
+                foreach (var module in modules)
                 {
-                    Role = g.Role,
-                    RoleLabel = g.RoleLabel,
-                    Modules = g.Modules.Select(m => new StaffPermissionMatrixRow
+                    rows.Add(new StaffPermissionMatrixRow
                     {
-                        ModuleKey = m.Key,
-                        Label = m.Label,
-                        Allowed = !savedLookup.TryGetValue(g.Role + "|" + m.Key, out var allowed) || allowed,
-                        Locked = QuanLyBenhVien.Helpers.ModulePermissionRegistry.AlwaysAllowed.Contains(m.Key)
-                    }).ToList()
-                }).ToList();
+                        GroupRole = owningRole,
+                        OwningRole = owningRole,
+                        ModuleKey = module.Key,
+                        Label = module.Label,
+                        Allowed = !savedLookup.TryGetValue(owningRole + "|" + module.Key, out var allowed) || allowed,
+                        Locked = QuanLyBenhVien.Helpers.ModulePermissionRegistry.AlwaysAllowed.Contains(module.Key)
+                    });
+                }
+            }
 
-            return View(groups);
+            var model = new StaffPermissionMatrixViewModel
+            {
+                Roles = roles,
+                Rows = rows
+            };
+
+            return View(model);
         }
 
         // POST: Admin/Staff/SavePermissionMatrix
@@ -496,15 +507,21 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
         }
     }
 
-    public class StaffPermissionMatrixGroup
+    public class StaffPermissionMatrixViewModel
     {
-        public string Role { get; set; } = string.Empty;
-        public string RoleLabel { get; set; } = string.Empty;
-        public List<StaffPermissionMatrixRow> Modules { get; set; } = new();
+        public List<(string Role, string RoleLabel)> Roles { get; set; } = new();
+        public List<StaffPermissionMatrixRow> Rows { get; set; } = new();
     }
 
     public class StaffPermissionMatrixRow
     {
+        // Which role column this module's row "lives under" — every module belongs
+        // to exactly one role's area, so only that role's cell in the grid gets a
+        // real checkbox; the other role columns render a fixed "not applicable"
+        // cell, since the area-level [Authorize] gate makes cross-role grants
+        // impossible regardless of what this matrix says.
+        public string GroupRole { get; set; } = string.Empty;
+        public string OwningRole { get; set; } = string.Empty;
         public string ModuleKey { get; set; } = string.Empty;
         public string Label { get; set; } = string.Empty;
         public bool Allowed { get; set; }

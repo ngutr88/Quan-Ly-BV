@@ -1,8 +1,31 @@
-@model List<QuanLyBenhVien.Areas.Admin.Controllers.StaffPermissionMatrixGroup>
+@model QuanLyBenhVien.Areas.Admin.Controllers.StaffPermissionMatrixViewModel
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Ma trận phân quyền RBAC";
+
+    string GroupTitle(string role) => role switch
+    {
+        "Admin" => "Khu vực Quản trị",
+        "Doctor" => "Khu vực Bác sĩ",
+        _ => "Khu vực Bệnh nhân"
+    };
+}
+
+@section Styles {
+<style>
+    /* The Tailwind Forms plugin resets every checkbox to appearance:none for its
+       own custom-styled checkbox look, but that look never got wired up on this
+       page (this app's other screens all use the sr-only toggle-switch pattern
+       instead). Force the browser's native checkbox back on so the checked
+       state — a plain checkmark, matching a real permission-matrix grid — is
+       actually visible instead of rendering as a blank circle. */
+    .permission-matrix-grid input[type="checkbox"] {
+        appearance: auto;
+        -webkit-appearance: auto;
+        accent-color: #0b5cab;
+    }
+</style>
 }
 
 <div class="mb-unit-lg">
@@ -11,9 +34,9 @@
     </a>
     <h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">Ma trận phân quyền RBAC</h2>
     <p class="text-body-md text-on-surface-variant">
-        Bật/tắt quyền truy cập từng module cho mỗi vai trò. Đây là lớp kiểm soát bổ sung, nằm phía trong ranh giới
-        khu vực (Area) hiện có &mdash; tắt một module ở đây chỉ ẩn module đó với chính vai trò sở hữu nó, không thể
-        cấp quyền chéo sang khu vực của vai trò khác.
+        Mỗi module chỉ thuộc về đúng một khu vực (Admin / Bác sĩ / Bệnh nhân). Ô thuộc đúng khu vực có thể bật/tắt;
+        hai cột còn lại hiển thị dấu &laquo;&mdash;&raquo; vì ranh giới khu vực hiện có luôn chặn truy cập chéo,
+        bất kể ma trận này được cấu hình thế nào.
     </p>
 </div>
 
@@ -25,52 +48,78 @@
     </div>
 }
 
-<form method="POST" action="/Admin/Staff/SavePermissionMatrix" class="space-y-unit-lg max-w-5xl">
+<form method="POST" action="/Admin/Staff/SavePermissionMatrix">
     @Html.AntiForgeryToken()
 
-    @foreach (var group in Model)
-    {
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg">
-            <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-unit-md flex items-center gap-2">
-                <span class="material-symbols-outlined">
-                    @(group.Role == "Admin" ? "admin_panel_settings" : group.Role == "Doctor" ? "stethoscope" : "personal_injury")
-                </span>
-                Vai trò: @group.RoleLabel
-            </h3>
+    <div class="permission-matrix-grid w-full min-w-0 max-w-full bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+        <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Ma trận phân quyền RBAC" tabindex="0">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                        <th class="px-unit-md py-3">Module</th>
+                        @foreach (var role in Model.Roles)
+                        {
+                            <th class="px-unit-md py-3 text-center whitespace-nowrap">@role.RoleLabel</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant">
+                    @{ string currentGroup = null; }
+                    @foreach (var row in Model.Rows)
+                    {
+                        if (row.GroupRole != currentGroup)
+                        {
+                            currentGroup = row.GroupRole;
+                            <tr class="bg-primary/5">
+                                <td colspan="@(Model.Roles.Count + 1)" class="px-unit-md py-2 font-label-md font-bold text-primary uppercase text-[11px] tracking-wide">
+                                    @GroupTitle(currentGroup)
+                                </td>
+                            </tr>
+                        }
 
-            <div class="divide-y divide-outline-variant/40">
-                @foreach (var row in group.Modules)
-                {
-                    <div class="flex items-center justify-between py-3 gap-unit-md">
-                        <div>
-                            <span class="font-label-md font-bold text-on-surface">@row.Label</span>
-                            @if (row.Locked)
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="px-unit-md py-3">
+                                <span class="font-label-md font-bold text-on-surface">@row.Label</span>
+                                @if (row.Locked)
+                                {
+                                    <span class="ml-2 inline-flex items-center gap-1 text-[11px] font-semibold text-on-surface-variant uppercase">
+                                        <span class="material-symbols-outlined text-[14px]">lock</span> Luôn bật
+                                    </span>
+                                }
+                                <p class="text-caption text-on-surface-variant font-mono">@row.ModuleKey</p>
+                            </td>
+                            @foreach (var role in Model.Roles)
                             {
-                                <span class="ml-2 inline-flex items-center gap-1 text-[11px] font-semibold text-on-surface-variant uppercase">
-                                    <span class="material-symbols-outlined text-[14px]">lock</span> Luôn bật
-                                </span>
+                                <td class="px-unit-md py-3 text-center">
+                                    @if (role.Role == row.OwningRole)
+                                    {
+                                        <label class="inline-flex items-center @(row.Locked ? "cursor-not-allowed opacity-60" : "cursor-pointer")">
+                                            <input type="checkbox" name="allowedKeys" value="@(row.OwningRole)|@(row.ModuleKey)"
+                                                   class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/40"
+                                                   @(row.Allowed ? "checked" : "") disabled="@row.Locked" />
+                                            @if (row.Locked)
+                                            {
+                                                <!-- Disabled checkboxes are not posted by browsers; resend the fixed
+                                                     "always allowed" value explicitly so the server-side lock and the
+                                                     displayed toggle never fall out of sync. -->
+                                                <input type="hidden" name="allowedKeys" value="@(row.OwningRole)|@(row.ModuleKey)" />
+                                            }
+                                        </label>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-outline-variant select-none" title="Không áp dụng &ndash; ngoài phạm vi khu vực này" aria-label="Không áp dụng">&mdash;</span>
+                                    }
+                                </td>
                             }
-                            <p class="text-caption text-on-surface-variant font-mono">@row.ModuleKey</p>
-                        </div>
-                        <label class="inline-flex items-center @(row.Locked ? "cursor-not-allowed opacity-60" : "cursor-pointer")">
-                            <input type="checkbox" name="allowedKeys" value="@(group.Role)|@(row.ModuleKey)"
-                                   class="sr-only peer" @(row.Allowed ? "checked" : "") disabled="@row.Locked" />
-                            @if (row.Locked)
-                            {
-                                <!-- Disabled checkboxes are not posted by browsers; resend the fixed
-                                     "always allowed" value explicitly so the server-side lock and the
-                                     displayed toggle never fall out of sync. -->
-                                <input type="hidden" name="allowedKeys" value="@(group.Role)|@(row.ModuleKey)" />
-                            }
-                            <div class="relative w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
-                    </div>
-                }
-            </div>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
-    }
+    </div>
 
-    <div class="flex items-center gap-unit-md pt-4">
+    <div class="flex items-center gap-unit-md pt-unit-lg">
         <button type="submit" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">
             <span class="material-symbols-outlined text-[20px]">save</span>
             Lưu ma trận phân quyền
