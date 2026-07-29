@@ -180,4 +180,25 @@ namespace QuanLyBenhVien.Models
         [StringLength(300)]
         public string GhiChu { get; set; } = string.Empty;
     }
+
+    [Table("ChiSoSucKhoeTuDo")]
+    public class PatientHealthMetric
+    {
+        [Key]
+        public int Id { get; set; }
+        [Required]
+        public int BenhNhanId { get; set; }
+        [ForeignKey("BenhNhanId")]
+        public virtual Patient Patient { get; set; } = null!;
+        public DateTime NgayDo { get; set; } = DateTime.Now;
+        public decimal? CanNang { get; set; }
+        public decimal? ChieuCao { get; set; }
+        public int? HuyetApTamThu { get; set; }
+        public int? HuyetApTamTruong { get; set; }
+        public int? NhipTim { get; set; }
+        public decimal? DuongHuyet { get; set; }
+        [StringLength(300)]
+        public string GhiChu { get; set; } = string.Empty;
+        public DateTime NgayTao { get; set; } = DateTime.Now;
+    }
 }

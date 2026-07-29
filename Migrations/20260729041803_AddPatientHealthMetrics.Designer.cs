@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanLyBenhVien.Data;
 
@@ -10,9 +11,11 @@ using QuanLyBenhVien.Data;
 namespace QuanLyBenhVien.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260729041803_AddPatientHealthMetrics")]
+    partial class AddPatientHealthMetrics
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
@@ -432,24 +435,6 @@ namespace QuanLyBenhVien.Migrations
                     b.HasIndex("BenhNhanId");
 
                     b.ToTable("TiemChung");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.PatientHealthMetric", b =>
-                {
-                    b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("INTEGER");
-                    b.Property<int>("BenhNhanId").HasColumnType("INTEGER");
-                    b.Property<decimal?>("CanNang").HasColumnType("TEXT");
-                    b.Property<decimal?>("ChieuCao").HasColumnType("TEXT");
-                    b.Property<decimal?>("DuongHuyet").HasColumnType("TEXT");
-                    b.Property<string>("GhiChu").IsRequired().HasMaxLength(300).HasColumnType("TEXT");
-                    b.Property<int?>("HuyetApTamThu").HasColumnType("INTEGER");
-                    b.Property<int?>("HuyetApTamTruong").HasColumnType("INTEGER");
-                    b.Property<DateTime>("NgayDo").HasColumnType("TEXT");
-                    b.Property<DateTime>("NgayTao").HasColumnType("TEXT");
-                    b.Property<int?>("NhipTim").HasColumnType("INTEGER");
-                    b.HasKey("Id");
-                    b.HasIndex("BenhNhanId");
-                    b.ToTable("ChiSoSucKhoeTuDo");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.Invoice", b =>
@@ -950,16 +935,6 @@ namespace QuanLyBenhVien.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Patient");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.PatientHealthMetric", b =>
-                {
-                    b.HasOne("QuanLyBenhVien.Models.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("BenhNhanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                     b.Navigation("Patient");
                 });
 

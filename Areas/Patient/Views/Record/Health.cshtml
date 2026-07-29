@@ -1,221 +1,145 @@
 @model QuanLyBenhVien.Models.Patient
-
+@using QuanLyBenhVien.Models
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
-    ViewData["Title"] = "Sổ sức khỏe điện tử";
-    var rawLogsStr = ViewBag.HealthLogsJson as string ?? "[]";
-    var hasLogs = rawLogsStr != "[]" && rawLogsStr != "null";
+    ViewData["Title"] = "Hồ sơ sức khỏe";
+    var rawLogs = ViewBag.HealthLogsJson as string ?? "[]";
+    var immunizations = ViewBag.Immunizations as List<Immunization> ?? new();
+    var documents = ViewBag.Documents as List<PatientDocument> ?? new();
+    string MaskId(string value) => string.IsNullOrWhiteSpace(value) ? "Chưa cung cấp" :
+        value.Length <= 4 ? value : $"{value[..Math.Min(3, value.Length)]}{new string('•', Math.Max(3, value.Length - 6))}{value[^Math.Min(3, value.Length)..]}";
+    var histories = (Model.TienSuBenh ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    var allergies = (Model.DiUng ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }
 
-@{
-    var pageHeader = new PageHeaderViewModel
-    {
-        Title = "Sổ sức khỏe cá nhân",
-        Subtitle = "Theo dõi biểu đồ thay đổi các chỉ số sinh tồn qua từng ca khám bệnh.",
-        Breadcrumbs = new[] { new BreadcrumbItem("Trang chủ", "/Patient/Dashboard") },
-        CurrentCrumb = "Sổ sức khỏe"
-    };
-}
+<partial name="_PageHeader" model='new PageHeaderViewModel {
+    Title = "Hồ sơ sức khỏe",
+    Subtitle = "Tổng hợp và theo dõi các chỉ số sức khỏe của bạn theo thời gian.",
+    Breadcrumbs = new[] { new BreadcrumbItem("Trang chủ", "/Patient/Dashboard") },
+    CurrentCrumb = "Hồ sơ sức khỏe"
+}' />
 
-<partial name="_PageHeader" model="pageHeader" />
-
-
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
-    <!-- Profile summary (1 col) -->
-    <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md h-fit">
-        <div class="flex items-center gap-unit-md">
-            <div class="w-12 h-12 bg-secondary rounded-full flex items-center justify-center text-white text-[20px] font-bold">
-                @(string.IsNullOrWhiteSpace(Model.User.HoTen) ? "BN" : Model.User.HoTen.Trim().Split(' ').Last().Substring(0, 1).ToUpper())
-            </div>
-            <div>
-                <h3 class="font-title-lg font-bold">@Model.User.HoTen</h3>
-                <span class="text-caption text-on-surface-variant">Hồ sơ sức khỏe cá nhân</span>
-            </div>
-        </div>
-
-        <div class="border-t border-outline-variant pt-unit-md text-body-md space-y-unit-sm">
-            <div>
-                <span class="text-caption text-on-surface-variant block">Nhóm máu</span>
-                <span class="font-semibold text-secondary text-[16px]">@Model.NhomMau</span>
-            </div>
-            <div>
-                <span class="text-caption text-on-surface-variant block">Ngày sinh (Tuổi)</span>
-                <span>@Model.NgaySinh.ToString("dd/MM/yyyy") (@(DateTime.Today.Year - Model.NgaySinh.Year) tuổi)</span>
-            </div>
-            <div>
-                <span class="text-caption text-on-surface-variant block">Số CCCD</span>
-                <span class="font-medium font-mono">@(string.IsNullOrWhiteSpace(Model.SoCCCD) ? "Chưa cung cấp" : Model.SoCCCD)</span>
-            </div>
-            <div>
-                <span class="text-caption text-on-surface-variant block">Tiền sử bệnh án</span>
-                <span class="italic text-on-surface-variant">@Model.TienSuBenh</span>
-            </div>
-            <div>
-                <span class="text-caption text-on-surface-variant block">Khai báo dị ứng</span>
-                <span class="font-semibold text-error">@Model.DiUng</span>
-            </div>
-        </div>
+<div class="flex flex-wrap justify-between items-center gap-3 mb-4 no-print">
+    <div class="flex gap-2 overflow-x-auto">
+        <button class="health-tab active" data-tab="overview">Tổng quan</button>
+        <button class="health-tab" data-tab="vitals">Sinh hiệu</button>
+        <button class="health-tab" data-tab="tests">Xét nghiệm</button>
+        <button class="health-tab" data-tab="vaccines">Tiêm chủng</button>
+        <button class="health-tab" data-tab="documents">Tài liệu</button>
     </div>
-
-    <!-- Charts area (2 cols) -->
-    <div class="lg:col-span-2 space-y-unit-lg">
-        @if (!hasLogs)
-        {
-            <div class="bg-white border border-outline-variant rounded-xl p-unit-xl text-center shadow-sm py-16 flex flex-col items-center">
-                <span class="material-symbols-outlined text-[64px] text-outline mb-4">monitoring</span>
-                <h3 class="font-headline-md text-headline-md text-on-surface mb-2">Chưa có chỉ số theo dõi</h3>
-                <p class="text-body-md text-on-surface-variant max-w-md">Bạn chưa có lịch sử đo chỉ số sinh tồn. Chỉ số sẽ được cập nhật tự động sau khi bác sĩ thực hiện phiên khám đầu tiên tại bệnh viện.</p>
-            </div>
-        }
-        else
-        {
-            <!-- Chart 1: Weight and BMI -->
-            <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-                <h3 class="font-title-lg text-title-lg font-bold text-primary mb-unit-md flex items-center gap-1">
-                    <span class="material-symbols-outlined">monitoring</span> Biểu đồ Cân nặng &amp; Chỉ số BMI
-                </h3>
-                <div class="w-full h-64">
-                    <canvas id="weightChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Chart 2: Blood Pressure and Heart Rate -->
-            <div class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm">
-                <h3 class="font-title-lg text-title-lg font-bold text-primary mb-unit-md flex items-center gap-1">
-                    <span class="material-symbols-outlined">heart_check</span> Biểu đồ Huyết áp &amp; Nhịp tim
-                </h3>
-                <div class="w-full h-64">
-                    <canvas id="bpChart"></canvas>
-                </div>
-            </div>
-        }
+    <div class="flex gap-2">
+        <button type="button" onclick="window.print()" class="hms-btn hms-btn-secondary"><span class="material-symbols-outlined">download</span>Tải hồ sơ PDF</button>
+        <button type="button" onclick="openHealthModal()" class="hms-btn hms-btn-primary"><span class="material-symbols-outlined">add</span>Ghi chỉ số</button>
     </div>
 </div>
 
+<section class="health-panel" data-panel="overview">
+    <div id="latestMetrics" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-5"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+        <aside class="bg-white border border-outline-variant rounded-xl p-unit-lg shadow-sm h-fit">
+            <div class="flex items-center gap-3 pb-4 border-b border-outline-variant">
+                <div class="w-12 h-12 bg-secondary rounded-xl flex items-center justify-center text-white text-xl font-bold">@(string.IsNullOrWhiteSpace(Model.User.HoTen) ? "BN" : Model.User.HoTen.Trim().Split(' ').Last()[0])</div>
+                <div><h2 class="font-bold text-lg">@Model.User.HoTen</h2><p class="text-sm text-on-surface-variant">Hồ sơ sức khỏe cá nhân</p></div>
+            </div>
+            <dl class="space-y-3 py-4 text-sm">
+                <div><dt class="text-on-surface-variant">Nhóm máu</dt><dd class="font-bold text-secondary">@(!string.IsNullOrWhiteSpace(Model.NhomMau) ? Model.NhomMau : "Chưa xác định")</dd></div>
+                <div><dt class="text-on-surface-variant">Ngày sinh</dt><dd>@Model.NgaySinh.ToString("dd/MM/yyyy")</dd></div>
+                <div><dt class="text-on-surface-variant">Số CCCD</dt><dd class="font-mono">@MaskId(Model.SoCCCD)</dd></div>
+                <div><dt class="text-on-surface-variant mb-1">Bệnh đang theo dõi</dt><dd class="flex flex-wrap gap-1">@if(histories.Length == 0){<span>Không ghi nhận</span>}else{foreach(var item in histories){<span class="health-badge">@item</span>}}</dd></div>
+                <div><dt class="text-on-surface-variant mb-1">Dị ứng</dt><dd class="flex flex-wrap gap-1">@if(allergies.Length == 0 || allergies.All(x => x.Equals("Không", StringComparison.OrdinalIgnoreCase))){<span>Không ghi nhận</span>}else{foreach(var item in allergies){<span class="health-badge health-badge-danger"><span class="material-symbols-outlined">warning</span>@item</span>}}</dd></div>
+            </dl>
+            <p class="text-xs text-on-surface-variant border-t border-outline-variant pt-3"><span class="material-symbols-outlined text-sm align-middle">verified</span> Thông tin chuyên môn cần được bác sĩ xác nhận.</p>
+        </aside>
+
+        <div class="lg:col-span-2 space-y-4">
+            <div id="healthInsight" class="health-insight"></div>
+            <div class="bg-white border border-outline-variant rounded-xl p-4 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                    <h3 class="font-bold text-primary flex items-center gap-1"><span class="material-symbols-outlined">monitoring</span>Cân nặng &amp; BMI</h3>
+                    <select class="health-range" aria-label="Khoảng thời gian"><option value="90">3 tháng</option><option value="180">6 tháng</option><option value="365">1 năm</option><option value="0" selected>Tất cả</option></select>
+                </div>
+                <div class="h-64"><canvas id="weightChart"></canvas></div>
+                <div class="chart-legend-note"><span class="dot solid"></span>Đo tại viện <span class="dot hollow"></span>Tự đo tại nhà</div>
+            </div>
+            <div class="bg-white border border-outline-variant rounded-xl p-4 shadow-sm">
+                <h3 class="font-bold text-primary mb-3 flex items-center gap-1"><span class="material-symbols-outlined">heart_check</span>Huyết áp &amp; Nhịp tim</h3>
+                <div class="h-64"><canvas id="bpChart"></canvas></div>
+                <p class="text-xs text-on-surface-variant mt-3">Vùng xanh là khoảng tham chiếu tổng quát. Kết quả chỉ mang tính tham khảo, không thay thế chẩn đoán hoặc tư vấn của bác sĩ.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="health-panel hidden" data-panel="vitals"><div class="hms-empty"><span class="material-symbols-outlined">monitor_heart</span><h3>Sinh hiệu được trình bày tại Tổng quan</h3><p>Dùng bộ lọc thời gian và rê chuột lên từng điểm để xem chi tiết.</p></div></section>
+<section class="health-panel hidden" data-panel="tests"><div class="hms-empty"><span class="material-symbols-outlined">biotech</span><h3>Chưa có kết quả xét nghiệm dạng số</h3><p>Kết quả được bệnh viện xác nhận sẽ xuất hiện tại đây; hệ thống không tự tạo dữ liệu y tế.</p></div></section>
+<section class="health-panel hidden" data-panel="vaccines">
+    <div class="bg-white rounded-xl border border-outline-variant overflow-hidden">
+        @if (!immunizations.Any()) { <div class="hms-empty"><span class="material-symbols-outlined">vaccines</span><h3>Chưa ghi nhận lịch sử tiêm chủng</h3></div> }
+        else { <table class="w-full"><thead><tr><th class="p-3">Vaccine</th><th class="p-3">Mũi</th><th class="p-3">Ngày tiêm</th></tr></thead><tbody>@foreach(var item in immunizations){<tr><td class="p-3 font-semibold">@item.TenVaccine</td><td class="p-3">@item.MuiSo</td><td class="p-3">@item.NgayTiem.ToString("dd/MM/yyyy")</td></tr>}</tbody></table> }
+    </div>
+</section>
+<section class="health-panel hidden" data-panel="documents">
+    <div class="bg-white rounded-xl border border-outline-variant p-4">
+        @if (!documents.Any()) { <div class="hms-empty"><span class="material-symbols-outlined">folder_open</span><h3>Chưa có tài liệu sức khỏe</h3><a href="/Patient/Record" class="hms-btn hms-btn-primary mt-3">Tải tài liệu lên</a></div> }
+        else { <div class="space-y-2">@foreach(var doc in documents){<a href="/Patient/Record/DownloadDocument/@doc.Id" target="_blank" class="flex items-center gap-2 p-3 border rounded-lg hover:border-primary"><span class="material-symbols-outlined">description</span><span class="font-semibold">@doc.TenTaiLieu</span><span class="ml-auto text-xs">@doc.NgayTaiLen.ToString("dd/MM/yyyy")</span></a>}</div> }
+    </div>
+</section>
+
+<div id="healthMetricModal" class="hms-modal-overlay fixed inset-0 z-[100] hidden items-center justify-center bg-on-background/40 p-4">
+    <form method="post" action="/Patient/Record/AddHealthMetric" class="bg-white rounded-xl shadow-2xl w-full max-w-xl p-5">
+        @Html.AntiForgeryToken()
+        <div class="flex justify-between items-center mb-4"><div><h2 class="font-bold text-xl">Ghi chỉ số tại nhà</h2><p class="text-sm text-on-surface-variant">Dữ liệu sẽ được đánh dấu là tự đo.</p></div><button type="button" onclick="closeHealthModal()" class="hms-icon-btn"><span class="material-symbols-outlined">close</span></button></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="sm:col-span-2">Thời điểm đo<input name="ngayDo" type="datetime-local" required class="w-full mt-1" /></label>
+            <label>Cân nặng (kg)<input name="canNang" type="number" min="20" max="350" step="0.1" class="w-full mt-1" /></label>
+            <label>Chiều cao (cm)<input name="chieuCao" type="number" min="80" max="250" step="0.1" class="w-full mt-1" /></label>
+            <label>Huyết áp tâm thu<input name="huyetApTamThu" type="number" min="60" max="250" class="w-full mt-1" /></label>
+            <label>Huyết áp tâm trương<input name="huyetApTamTruong" type="number" min="40" max="150" class="w-full mt-1" /></label>
+            <label>Nhịp tim (lần/phút)<input name="nhipTim" type="number" min="30" max="220" class="w-full mt-1" /></label>
+            <label>Đường huyết (mmol/L)<input name="duongHuyet" type="number" min="1" max="40" step="0.1" class="w-full mt-1" /></label>
+            <label class="sm:col-span-2">Ghi chú<textarea name="ghiChu" maxlength="300" rows="2" class="w-full mt-1"></textarea></label>
+        </div>
+        <div class="flex justify-end gap-2 mt-5"><button type="button" onclick="closeHealthModal()" class="hms-btn hms-btn-secondary">Hủy</button><button class="hms-btn hms-btn-primary">Lưu chỉ số</button></div>
+    </form>
+</div>
+
+@section Styles {
+<style>
+.health-tab{padding:.55rem .8rem;border-radius:.65rem;font-size:.85rem;font-weight:700;color:#627d98;white-space:nowrap}.health-tab.active,.health-tab:hover{background:#e8f1ff;color:#0b5cab}.metric-card{background:#fff;border:1px solid #d9e5ec;border-radius:.85rem;padding:1rem;box-shadow:var(--clinical-shadow-sm)}.metric-value{font-size:1.6rem;font-weight:800;color:#102a43}.metric-meta{font-size:.72rem;color:#627d98}.metric-status{font-size:.7rem;font-weight:700;padding:.2rem .45rem;border-radius:999px;background:#e3f7ee;color:#0a6b48}.metric-status.warn{background:#fff2d8;color:#805500}.health-badge{display:inline-flex;align-items:center;gap:.2rem;padding:.25rem .5rem;border-radius:999px;background:#e8f1ff;color:#08457f;font-size:.75rem;font-weight:700}.health-badge-danger{background:#ffedea;color:#ba1a1a}.health-badge .material-symbols-outlined{font-size:.9rem}.health-insight{padding:1rem;border:1px solid #f2d28b;border-left:4px solid #d38b00;border-radius:.75rem;background:#fff9e9;color:#5f4600;font-size:.85rem}.health-range{padding:.35rem 2rem .35rem .65rem!important;font-size:.8rem}.chart-legend-note{display:flex;align-items:center;justify-content:flex-end;gap:.4rem;margin-top:.5rem;color:#627d98;font-size:.72rem}.dot{width:.55rem;height:.55rem;border:2px solid #0b5cab;border-radius:50%;display:inline-block;margin-left:.5rem}.dot.solid{background:#0b5cab}.dot.hollow{background:#fff}
+</style>}
+
 @section Scripts {
-    <!-- Load Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Parse logs from ViewBag
-            const rawLogs = @Html.Raw(ViewBag.HealthLogsJson);
-            
-            if (rawLogs.length === 0) {
-                return;
-            }
-
-            const dates = rawLogs.map(l => l.date);
-            const weights = rawLogs.map(l => l.weight);
-            const bmis = rawLogs.map(l => l.bmi);
-            const hrs = rawLogs.map(l => l.hr);
-
-            // Parse blood pressure (systolic and diastolic)
-            const systolic = [];
-            const diastolic = [];
-            rawLogs.forEach(l => {
-                if (l.bp) {
-                    const parts = l.bp.split('/');
-                    if (parts.length === 2) {
-                        systolic.push(parseInt(parts[0]));
-                        diastolic.push(parseInt(parts[1]));
-                    } else {
-                        systolic.push(120);
-                        diastolic.push(80);
-                    }
-                } else {
-                    systolic.push(null);
-                    diastolic.push(null);
-                }
-            });
-
-            // 1. Weight & BMI Chart
-            new Chart(document.getElementById('weightChart').getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [
-                        {
-                            label: 'Cân nặng (kg)',
-                            data: weights,
-                            borderColor: '#003f87',
-                            backgroundColor: 'rgba(0, 63, 135, 0.1)',
-                            yAxisID: 'y',
-                            tension: 0.1,
-                            fill: true
-                        },
-                        {
-                            label: 'BMI',
-                            data: bmis,
-                            borderColor: '#006c49',
-                            backgroundColor: 'rgba(0, 108, 73, 0.1)',
-                            yAxisID: 'y1',
-                            tension: 0.1,
-                            fill: false
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: { display: true, text: 'Cân nặng (kg)' }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: { display: true, text: 'BMI' },
-                            grid: { drawOnChartArea: false }
-                        }
-                    }
-                }
-            });
-
-            // 2. BP & HR Chart
-            new Chart(document.getElementById('bpChart').getContext('2d'), {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [
-                        {
-                            label: 'Huyết áp Tâm thu (Tối đa)',
-                            data: systolic,
-                            borderColor: '#ba1a1a',
-                            borderDash: [5, 5],
-                            tension: 0.1,
-                            fill: false
-                        },
-                        {
-                            label: 'Huyết áp Tâm trương (Tối thiểu)',
-                            data: diastolic,
-                            borderColor: '#ffb95f',
-                            borderDash: [2, 2],
-                            tension: 0.1,
-                            fill: false
-                        },
-                        {
-                            label: 'Nhịp tim (lần/phút)',
-                            data: hrs,
-                            borderColor: '#006c49',
-                            tension: 0.1,
-                            fill: false
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            title: { display: true, text: 'Chỉ số đo' }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const healthLogs=@Html.Raw(rawLogs);
+let charts=[];
+const parseBp=v=>{const p=(v.bp||'').split('/');return {sys:+p[0]||null,dia:+p[1]||null}};
+const fmtDate=v=>new Date(v).toLocaleDateString('vi-VN');
+function latestValue(key){return [...healthLogs].reverse().find(x=>x[key]!=null)}
+function metricCard(icon,label,value,status,date,delta,warn=false){return `<article class="metric-card"><div class="flex justify-between"><span class="material-symbols-outlined text-primary">${icon}</span><span class="metric-status ${warn?'warn':''}">${status}</span></div><div class="metric-value mt-2">${value}</div><div class="text-sm font-semibold">${label}</div><div class="metric-meta mt-1">${delta||'Chưa đủ dữ liệu so sánh'} · ${date}</div></article>`}
+function renderLatest(){
+ const weight=latestValue('weight'), bmi=latestValue('bmi'), hr=latestValue('hr'), bp=[...healthLogs].reverse().find(x=>x.bp);
+ const bpv=bp?parseBp(bp):{}; const cards=[];
+ cards.push(metricCard('monitor_weight','Cân nặng',weight?`${(+weight.weight).toFixed(1)} kg`:'—','Theo dõi',weight?fmtDate(weight.date):'Chưa có dữ liệu'));
+ cards.push(metricCard('calculate','BMI',bmi?`${(+bmi.bmi).toFixed(1)}`:'—',bmi&&bmi.bmi>=18.5&&bmi.bmi<25?'Bình thường':'Cần lưu ý',bmi?fmtDate(bmi.date):'Chưa có dữ liệu','',bmi&&(bmi.bmi<18.5||bmi.bmi>=25)));
+ cards.push(metricCard('blood_pressure','Huyết áp',bp?`${bpv.sys}/${bpv.dia}`:'—',bpv.sys&&bpv.sys<=120&&bpv.dia<=80?'Trong ngưỡng':'Cần theo dõi',bp?fmtDate(bp.date):'Chưa có dữ liệu','',bpv.sys>120||bpv.dia>80));
+ cards.push(metricCard('favorite','Nhịp tim',hr?`${hr.hr} l/p`:'—',hr&&hr.hr>=60&&hr.hr<=100?'Bình thường':'Cần lưu ý',hr?fmtDate(hr.date):'Chưa có dữ liệu','',hr&&(hr.hr<60||hr.hr>100)));
+ document.getElementById('latestMetrics').innerHTML=cards.join('');
+ const recent=healthLogs.slice(-11), high=recent.filter(x=>parseBp(x).sys>120).length;
+ document.getElementById('healthInsight').innerHTML=`<strong>Nhận xét dễ hiểu:</strong> ${high?`Huyết áp tâm thu cao hơn khoảng tham chiếu trong <strong>${high}/${recent.length}</strong> lần đo gần đây. Bạn nên trao đổi với bác sĩ nếu tình trạng lặp lại.`:'Các lần đo huyết áp gần đây chưa ghi nhận điểm vượt khoảng tham chiếu đã đặt.'}<br><span class="text-xs">Thông tin chỉ mang tính tham khảo, không thay thế tư vấn y khoa.</span>`;
 }
+function chartData(logs,key,extra={}){return logs.filter(x=>x[key]!=null).map(x=>({x:new Date(x.date).getTime(),y:+x[key],source:x.source,...extra}))}
+function renderCharts(days=0){
+ charts.forEach(x=>x.destroy()); charts=[]; const cutoff=days?Date.now()-days*86400000:0; const logs=healthLogs.filter(x=>new Date(x.date).getTime()>=cutoff);
+ const pointBg=ctx=>ctx.raw?.source==='home'?'#fff':ctx.dataset.borderColor;
+ const common={responsive:true,maintainAspectRatio:false,interaction:{mode:'nearest',intersect:false},plugins:{tooltip:{callbacks:{title:i=>fmtDate(i[0].raw.x),afterLabel:i=>i.raw.source==='home'?'Nguồn: Tự đo tại nhà':'Nguồn: Bệnh viện'}}},scales:{x:{type:'linear',ticks:{callback:v=>fmtDate(v)}}}};
+ charts.push(new Chart(document.getElementById('weightChart'),{type:'line',data:{datasets:[{label:'Cân nặng (kg)',data:chartData(logs,'weight'),borderColor:'#0b5cab',backgroundColor:'rgba(11,92,171,.1)',fill:true,pointBackgroundColor:pointBg,pointBorderWidth:2},{label:'BMI',data:chartData(logs,'bmi'),borderColor:'#08765b',yAxisID:'y1',pointBackgroundColor:pointBg,pointBorderWidth:2}]},options:{...common,scales:{...common.scales,y:{beginAtZero:false},y1:{position:'right',min:15,max:35,grid:{drawOnChartArea:false}}}}}));
+ const bpLogs=logs.map(x=>({...x,...parseBp(x)}));
+ charts.push(new Chart(document.getElementById('bpChart'),{type:'line',data:{datasets:[{label:'Tâm thu',data:chartData(bpLogs,'sys'),borderColor:'#ba1a1a',pointBackgroundColor:ctx=>ctx.raw?.y>120?'#ba1a1a':pointBg(ctx),pointBorderWidth:2},{label:'Tâm trương',data:chartData(bpLogs,'dia'),borderColor:'#d57900',pointBackgroundColor:pointBg,pointBorderWidth:2},{label:'Nhịp tim',data:chartData(logs,'hr'),borderColor:'#08765b',pointBackgroundColor:pointBg,pointBorderWidth:2}]},options:{...common,scales:{...common.scales,y:{suggestedMin:40,suggestedMax:150}}}}));
+}
+document.querySelectorAll('.health-range').forEach(x=>x.addEventListener('change',e=>renderCharts(+e.target.value)));
+document.querySelectorAll('.health-tab').forEach(x=>x.addEventListener('click',()=>{document.querySelectorAll('.health-tab').forEach(y=>y.classList.remove('active'));x.classList.add('active');document.querySelectorAll('.health-panel').forEach(y=>y.classList.toggle('hidden',y.dataset.panel!==x.dataset.tab));}));
+function openHealthModal(){const m=document.getElementById('healthMetricModal');m.classList.remove('hidden');m.classList.add('flex');const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());m.querySelector('[name=ngayDo]').value=d.toISOString().slice(0,16)}
+function closeHealthModal(){const m=document.getElementById('healthMetricModal');m.classList.add('hidden');m.classList.remove('flex')}
+renderLatest(); if(healthLogs.length)renderCharts();
+</script>}

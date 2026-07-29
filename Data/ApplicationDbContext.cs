@@ -31,6 +31,7 @@ namespace QuanLyBenhVien.Data
         public DbSet<Article> Articles { get; set; } = null!;
         public DbSet<FamilyHistory> FamilyHistories { get; set; } = null!;
         public DbSet<Immunization> Immunizations { get; set; } = null!;
+        public DbSet<PatientHealthMetric> PatientHealthMetrics { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

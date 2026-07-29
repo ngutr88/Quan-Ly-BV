@@ -163,24 +163,77 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
             if (patient == null) return NotFound();
 
             // Fetch vital signs from past examination records to plot trends
-            var healthLogs = await _context.ExaminationRecords
+            var hospitalLogs = await _context.ExaminationRecords
                 .Where(e => e.Appointment.BenhNhanId == patient.Id)
                 .OrderBy(e => e.NgayKham)
                 .Select(e => new
                 {
-                    date = e.NgayKham.ToString("dd/MM/yyyy"),
+                    date = e.NgayKham,
                     weight = e.CanNang,
                     height = e.ChieuCao,
                     bmi = e.BMI,
                     bp = e.HuyetAp,
-                    hr = e.NhipTim
+                    hr = e.NhipTim,
+                    glucose = (decimal?)null,
+                    source = "hospital"
                 })
                 .ToListAsync();
 
+            var homeLogs = await _context.PatientHealthMetrics
+                .Where(m => m.BenhNhanId == patient.Id)
+                .OrderBy(m => m.NgayDo)
+                .Select(m => new
+                {
+                    date = m.NgayDo,
+                    weight = m.CanNang,
+                    height = m.ChieuCao,
+                    bmi = m.CanNang.HasValue && m.ChieuCao.HasValue && m.ChieuCao > 0
+                        ? m.CanNang / ((m.ChieuCao / 100) * (m.ChieuCao / 100))
+                        : (decimal?)null,
+                    bp = m.HuyetApTamThu.HasValue && m.HuyetApTamTruong.HasValue
+                        ? m.HuyetApTamThu + "/" + m.HuyetApTamTruong
+                        : string.Empty,
+                    hr = m.NhipTim,
+                    glucose = m.DuongHuyet,
+                    source = "home"
+                })
+                .ToListAsync();
+
+            var healthLogs = hospitalLogs.Concat(homeLogs).OrderBy(l => l.date).ToList();
             ViewBag.Patient = patient;
             ViewBag.HealthLogsJson = System.Text.Json.JsonSerializer.Serialize(healthLogs);
+            ViewBag.Immunizations = await _context.Immunizations.Where(i => i.BenhNhanId == patient.Id).OrderByDescending(i => i.NgayTiem).ToListAsync();
+            ViewBag.Documents = await _context.PatientDocuments.Where(d => d.BenhNhanId == patient.Id).OrderByDescending(d => d.NgayTaiLen).ToListAsync();
 
             return View(patient);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddHealthMetric(DateTime ngayDo, decimal? canNang, decimal? chieuCao,
+            int? huyetApTamThu, int? huyetApTamTruong, int? nhipTim, decimal? duongHuyet, string? ghiChu)
+        {
+            var patient = await GetCurrentPatientAsync();
+            if (patient == null) return NotFound();
+            if (ngayDo > DateTime.Now.AddMinutes(5) || ngayDo < DateTime.Today.AddYears(-5) ||
+                canNang is < 20 or > 350 || chieuCao is < 80 or > 250 ||
+                huyetApTamThu is < 60 or > 250 || huyetApTamTruong is < 40 or > 150 ||
+                nhipTim is < 30 or > 220 || duongHuyet is < 1 or > 40 ||
+                (!canNang.HasValue && !huyetApTamThu.HasValue && !nhipTim.HasValue && !duongHuyet.HasValue))
+            {
+                TempData["ErrorMessage"] = "Chỉ số không hợp lệ. Vui lòng kiểm tra lại thông tin đã nhập.";
+                return RedirectToAction(nameof(Health));
+            }
+
+            _context.PatientHealthMetrics.Add(new PatientHealthMetric
+            {
+                BenhNhanId = patient.Id, NgayDo = ngayDo, CanNang = canNang, ChieuCao = chieuCao,
+                HuyetApTamThu = huyetApTamThu, HuyetApTamTruong = huyetApTamTruong,
+                NhipTim = nhipTim, DuongHuyet = duongHuyet, GhiChu = ghiChu?.Trim() ?? string.Empty
+            });
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Đã lưu chỉ số tự đo.";
+            return RedirectToAction(nameof(Health));
         }
 
         // GET: /Patient/Record/Dependents
