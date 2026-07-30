@@ -94,5 +94,25 @@ namespace QuanLyBenhVien.Helpers
         {
             return day == 7 ? 6 : day - 1;
         }
+
+        // Không cho một bác sĩ có hai ca làm việc bị chồng thời gian trong cùng một
+        // ngày trong tuần (mục 7 của yêu cầu nghiệp vụ). Chỉ so sánh trong cùng lô lịch
+        // vừa được sinh ra từ mô tả free-text; đây là nơi duy nhất tạo LichLamViecBacSi.
+        public static bool HasOverlap(IEnumerable<DoctorWorkSchedule> schedules)
+        {
+            foreach (var group in schedules.GroupBy(s => s.ThuTrongTuan))
+            {
+                var ordered = group.OrderBy(s => s.GioBatDau).ToList();
+                for (var i = 1; i < ordered.Count; i++)
+                {
+                    if (ordered[i].GioBatDau < ordered[i - 1].GioKetThuc)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
     }
 }

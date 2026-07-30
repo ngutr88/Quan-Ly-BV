@@ -25,9 +25,11 @@ namespace QuanLyBenhVien.Models
         [StringLength(50)]
         public string TrangThaiThanhToan { get; set; } = "ChuaThanhToan"; // ChuaThanhToan, DaThanhToan, DaHuy
 
-        [Required]
+        // Nullable: hóa đơn chưa thanh toán thì chưa có phương thức được chọn.
+        // NULL nghĩa là "chưa chọn phương thức", không dùng chuỗi "ChuaThanhToan"
+        // giả làm phương thức (đó là một TrangThaiThanhToan, không phải PhuongThuc).
         [StringLength(50)]
-        public string PhuongThuc { get; set; } = "TienMat"; // TienMat, ChuyenKhoan, Online
+        public string? PhuongThuc { get; set; } = "TienMat"; // TienMat, ChuyenKhoan, Online (MoMo), Online (VNPay), Online (ZaloPay), Online
 
         [StringLength(100)]
         public string? MaGiaoDich { get; set; }

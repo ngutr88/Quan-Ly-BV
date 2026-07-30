@@ -51,6 +51,11 @@ namespace QuanLyBenhVien.Models
         [StringLength(50)]
         public string SoLo { get; set; } = string.Empty; // Batch/Lot number
 
+        // Ngày nhập lô thuốc. Bắt buộc để ràng buộc CHECK (HanSuDung >= NgayNhap)
+        // có thể kiểm tra được; mặc định ngày hiện tại cho lô mới.
+        [Required]
+        public DateTime NgayNhap { get; set; } = DateTime.Now;
+
         [Required]
         public DateTime HanSuDung { get; set; }
 

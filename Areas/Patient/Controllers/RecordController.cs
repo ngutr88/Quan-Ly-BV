@@ -312,6 +312,13 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
             var doctorExists = await _context.Doctors.AnyAsync(d => d.Id == doctorId);
             if (!doctorExists) return Json(new { success = false, message = "Bác sĩ không tồn tại." });
 
+            // Chỉ bệnh nhân đã hoàn thành ít nhất một lần khám với bác sĩ này mới được
+            // đánh giá (mục 7 của yêu cầu nghiệp vụ).
+            var hasCompletedVisit = await _context.Appointments
+                .AnyAsync(a => a.BenhNhanId == patient.Id && a.BacSiId == doctorId && a.TrangThai == "HoanThanh");
+            if (!hasCompletedVisit)
+                return Json(new { success = false, message = "Bạn cần hoàn thành một lần khám với bác sĩ này trước khi đánh giá." });
+
             var existingReview = await _context.Reviews
                 .FirstOrDefaultAsync(r => r.BenhNhanId == patient.Id && r.BacSiId == doctorId);
 

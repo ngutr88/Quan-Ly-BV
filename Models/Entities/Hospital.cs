@@ -91,6 +91,14 @@ namespace QuanLyBenhVien.Models
         [ForeignKey("BacSiId")]
         public virtual Doctor Doctor { get; set; } = null!;
 
+        // Gắn đánh giá với đúng lần khám đã hoàn thành (nếu được cung cấp), để
+        // ràng buộc UNIQUE ngăn đánh giá trùng cho cùng một lần khám. NULL cho
+        // các đánh giá cũ/chưa gắn lần khám cụ thể (tương thích ngược).
+        public int? LichKhamId { get; set; }
+
+        [ForeignKey("LichKhamId")]
+        public virtual Appointment? Appointment { get; set; }
+
         [Range(1, 5)]
         public int SoSao { get; set; }
 

@@ -1584,7 +1584,7 @@ namespace QuanLyBenhVien.Data
                     PhieuKhamId = exam3.Id,
                     TongTien = 150000,
                     TrangThaiThanhToan = "ChuaThanhToan",
-                    PhuongThuc = "ChuaThanhToan",
+                    PhuongThuc = "TienMat", // Mặc định như ExamController.CompleteSession dùng cho hóa đơn mới, chưa có nghĩa là đã thanh toán
                     NgayTao = DateTime.Now.AddDays(-1)
                 };
                 context.Invoices.Add(invoice3);
@@ -1630,7 +1630,7 @@ namespace QuanLyBenhVien.Data
                     PhieuKhamId = exam4.Id,
                     TongTien = 150000 + 200000 + 100000,
                     TrangThaiThanhToan = "QuaHan",
-                    PhuongThuc = "ChuaThanhToan",
+                    PhuongThuc = "TienMat", // Mặc định như ExamController.CompleteSession dùng cho hóa đơn mới, chưa có nghĩa là đã thanh toán
                     NgayTao = DateTime.Now.AddDays(-35)
                 };
                 context.Invoices.Add(invoice4);
@@ -1774,7 +1774,7 @@ namespace QuanLyBenhVien.Data
                     PhieuKhamId = exam7.Id,
                     TongTien = 120000,
                     TrangThaiThanhToan = "DaHuy",
-                    PhuongThuc = "ChuaThanhToan",
+                    PhuongThuc = "TienMat", // Mặc định như ExamController.CompleteSession dùng cho hóa đơn mới, chưa có nghĩa là đã thanh toán
                     NgayTao = DateTime.Now.AddDays(-6)
                 };
                 context.Invoices.Add(invoice7);

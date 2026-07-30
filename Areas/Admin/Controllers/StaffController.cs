@@ -174,9 +174,17 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                         _context.Doctors.Add(doctor);
                         await _context.SaveChangesAsync();
 
-                        // Add work schedules
-                        _context.DoctorWorkSchedules.AddRange(
-                            DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec));
+                        // Add work schedules - từ chối nếu mô tả free-text sinh ra các ca
+                        // chồng giờ nhau trong cùng một ngày (mục 7 của yêu cầu nghiệp vụ).
+                        var newSchedules = DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec);
+                        if (DoctorScheduleHelper.HasOverlap(newSchedules))
+                        {
+                            ModelState.AddModelError("", "Mô tả lịch làm việc tạo ra các ca bị chồng giờ nhau. Vui lòng chỉnh lại.");
+                            ViewBag.KhoaId = new SelectList(await _context.Departments.ToListAsync(), "Id", "TenKhoa", khoaId);
+                            return View();
+                        }
+
+                        _context.DoctorWorkSchedules.AddRange(newSchedules);
                         await _context.SaveChangesAsync();
                     }
 
@@ -273,18 +281,30 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                             _context.Doctors.Add(doctor);
                             await _context.SaveChangesAsync();
 
-                            _context.DoctorWorkSchedules.AddRange(
-                                DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec));
+                            var newSchedules = DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec);
+                            if (DoctorScheduleHelper.HasOverlap(newSchedules))
+                            {
+                                ModelState.AddModelError("", "Mô tả lịch làm việc tạo ra các ca bị chồng giờ nhau. Vui lòng chỉnh lại.");
+                                ViewBag.KhoaId = new SelectList(await _context.Departments.ToListAsync(), "Id", "TenKhoa", khoaId);
+                                return View(user);
+                            }
+
+                            _context.DoctorWorkSchedules.AddRange(newSchedules);
                         }
                         else
                         {
-                            // Update existing doctor profile
+                            // Update existing doctor profile. Nếu hồ sơ này trước đó đã bị
+                            // xóa mềm (đổi vai trò Doctor -> Admin rồi quay lại Doctor), việc
+                            // đổi vai trò về Doctor đồng nghĩa với kích hoạt lại hồ sơ.
                             var doctor = user.DoctorProfile;
                             doctor.KhoaId = khoaId.Value;
                             doctor.ChuyenKhoa = chuyenKhoa ?? "Đa khoa";
                             doctor.HocVi = hocVi ?? "BS";
                             doctor.SoNamKinhNghiem = soNamKinhNghiem ?? 1;
                             doctor.ChucVu = chucVu ?? "Bác sĩ";
+                            doctor.DaXoa = false;
+                            doctor.NgayXoa = null;
+                            doctor.XoaBoiId = null;
 
                             var scheduleChanged = doctor.LichLamViec != lichLamViec;
                             doctor.LichLamViec = string.IsNullOrEmpty(lichLamViec) ? "Ca sang (08:00 - 12:00) & Chiều (13:30 - 17:30)" : lichLamViec;
@@ -292,25 +312,38 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
 
                             if (scheduleChanged)
                             {
+                                var newSchedules = DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec);
+                                if (DoctorScheduleHelper.HasOverlap(newSchedules))
+                                {
+                                    ModelState.AddModelError("", "Mô tả lịch làm việc tạo ra các ca bị chồng giờ nhau. Vui lòng chỉnh lại.");
+                                    ViewBag.KhoaId = new SelectList(await _context.Departments.ToListAsync(), "Id", "TenKhoa", khoaId);
+                                    return View(user);
+                                }
+
                                 var oldSchedules = await _context.DoctorWorkSchedules
                                     .Where(s => s.BacSiId == doctor.Id)
                                     .ToListAsync();
                                 _context.DoctorWorkSchedules.RemoveRange(oldSchedules);
-                                _context.DoctorWorkSchedules.AddRange(
-                                    DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec));
+                                _context.DoctorWorkSchedules.AddRange(newSchedules);
                             }
                         }
                     }
                     else if (oldRole == "Doctor" && vaiTro == "Admin")
                     {
-                        // Remove Doctor profile if role changed from Doctor to Admin
+                        // Xóa mềm hồ sơ bác sĩ khi đổi vai trò sang Admin - KHÔNG xóa cứng,
+                        // để giữ lại lịch sử LichKham/DanhGia đã gắn với BacSiId này (mục 5).
+                        // Lịch làm việc thì gỡ bỏ vì bác sĩ không còn nhận lịch khám mới.
                         if (user.DoctorProfile != null)
                         {
                             var oldSchedules = await _context.DoctorWorkSchedules
                                 .Where(s => s.BacSiId == user.DoctorProfile.Id)
                                 .ToListAsync();
                             _context.DoctorWorkSchedules.RemoveRange(oldSchedules);
-                            _context.Doctors.Remove(user.DoctorProfile);
+
+                            user.DoctorProfile.DaXoa = true;
+                            user.DoctorProfile.NgayXoa = DateTime.Now;
+                            user.DoctorProfile.XoaBoiId = GetCurrentUserId();
+                            _context.Entry(user.DoctorProfile).State = EntityState.Modified;
                         }
                     }
 

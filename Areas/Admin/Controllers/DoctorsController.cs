@@ -235,12 +235,22 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
             _context.Entry(doctor.User).State = EntityState.Modified;
             _context.Entry(doctor).State = EntityState.Modified;
 
+            // Từ chối nếu mô tả free-text sinh ra các ca bị chồng giờ nhau trong cùng
+            // một ngày (mục 7 của yêu cầu nghiệp vụ: không cho một bác sĩ có hai ca
+            // làm việc chồng thời gian).
+            var newSchedules = DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec);
+            if (DoctorScheduleHelper.HasOverlap(newSchedules))
+            {
+                ModelState.AddModelError("", "Mô tả lịch làm việc tạo ra các ca bị chồng giờ nhau. Vui lòng chỉnh lại.");
+                ViewBag.KhoaId = new SelectList(await _context.Departments.ToListAsync(), "Id", "TenKhoa", khoaId);
+                return View(doctor);
+            }
+
             var oldSchedules = await _context.DoctorWorkSchedules
                 .Where(s => s.BacSiId == doctor.Id)
                 .ToListAsync();
             _context.DoctorWorkSchedules.RemoveRange(oldSchedules);
-            _context.DoctorWorkSchedules.AddRange(
-                DoctorScheduleHelper.BuildSchedulesFromDescription(doctor.Id, doctor.LichLamViec));
+            _context.DoctorWorkSchedules.AddRange(newSchedules);
 
             _context.AuditLogs.Add(new AuditLog
             {

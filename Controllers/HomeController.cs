@@ -38,7 +38,7 @@ public class HomeController : Controller
         ViewBag.FeaturedDoctors = await _context.Doctors
             .Include(d => d.User)
             .Include(d => d.Department)
-            .Where(d => d.User.TrangThai == "Active")
+            .Where(d => !d.DaXoa && d.User.TrangThai == "Active")
             .OrderByDescending(d => d.SoNamKinhNghiem)
             .Take(4)
             .ToListAsync();
@@ -140,7 +140,7 @@ public class HomeController : Controller
 
         // Doctor headcount per department, so the page reports real staffing.
         ViewBag.DoctorCounts = await _context.Doctors
-            .Where(d => d.User.TrangThai == "Active")
+            .Where(d => !d.DaXoa && d.User.TrangThai == "Active")
             .GroupBy(d => d.KhoaId)
             .Select(g => new { KhoaId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.KhoaId, x => x.Count);
@@ -163,7 +163,7 @@ public class HomeController : Controller
         var query = _context.Doctors
             .Include(d => d.User)
             .Include(d => d.Department)
-            .Where(d => d.User.TrangThai == "Active");
+            .Where(d => !d.DaXoa && d.User.TrangThai == "Active");
 
         if (!string.IsNullOrEmpty(searchString))
         {
@@ -267,7 +267,7 @@ public class HomeController : Controller
     private async Task PopulateHospitalFactsAsync()
     {
         ViewBag.DepartmentCount = await _context.Departments.CountAsync();
-        ViewBag.DoctorCount = await _context.Doctors.CountAsync(d => d.User.TrangThai == "Active");
+        ViewBag.DoctorCount = await _context.Doctors.CountAsync(d => !d.DaXoa && d.User.TrangThai == "Active");
         ViewBag.CompletedVisits = await _context.Appointments.CountAsync(a => a.TrangThai == "HoanThanh");
         ViewBag.ServiceCount = await _context.Services.CountAsync();
 
