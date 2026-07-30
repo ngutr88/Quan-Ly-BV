@@ -48,6 +48,37 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
+// A relative Sqlite "Data Source=..." path resolves against the process's
+// current directory, which differs between launch methods: `dotnet run`/
+// `dotnet ef` use the project directory, while Visual Studio's F5 debugger
+// runs the built .exe directly from bin/Debug/netX.0. Left unpinned, this
+// silently created and diverged TWO separate hms.db files (one per launch
+// method) with different real data - anchor relative Sqlite paths to the
+// directory containing the .csproj (the actual project root) so every
+// launch method reads/writes the exact same file. Falls back to the app's
+// own base directory when no .csproj is present (published/Docker builds),
+// which matches the previous, already-correct behavior there.
+static string ResolveSqliteConnectionString(string? connectionString)
+{
+    const string prefix = "Data Source=";
+    if (string.IsNullOrEmpty(connectionString) ||
+        !connectionString.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        return connectionString ?? string.Empty;
+
+    var dataSource = connectionString.Substring(prefix.Length).Split(';')[0].Trim();
+    if (string.IsNullOrEmpty(dataSource) || Path.IsPathRooted(dataSource))
+        return connectionString;
+
+    var projectDir = new DirectoryInfo(AppContext.BaseDirectory);
+    while (projectDir != null && projectDir.GetFiles("*.csproj").Length == 0)
+    {
+        projectDir = projectDir.Parent;
+    }
+    var anchor = projectDir?.FullName ?? AppContext.BaseDirectory;
+
+    return $"Data Source={Path.Combine(anchor, dataSource)}";
+}
+
 // Register Database Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -62,7 +93,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     else if (provider.Equals("MySql", StringComparison.OrdinalIgnoreCase))
         options.UseMySQL(connectionString);
     else
-        options.UseSqlite(connectionString);
+        options.UseSqlite(ResolveSqliteConnectionString(connectionString));
     options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 

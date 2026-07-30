@@ -303,6 +303,27 @@ erDiagram
 
 ## 7. Chạy migration
 
+**Trạng thái: đã áp dụng thành công lên `hms.db` thật** (migration
+`20260730044849_DataIntegrityConstraints`, xác nhận trong
+`__EFMigrationsHistory`). Toàn bộ 312 `NguoiDung`, 279 `BacSi`, 28 `BenhNhan`
+và các bảng còn lại giữ nguyên số dòng sau migrate (không mất dữ liệu),
+`PRAGMA foreign_key_check` không báo vi phạm. Đã khởi động lại ứng dụng thật,
+đăng nhập Admin và tải các trang Dashboard/Medicines/Batches/Staff/Doctors/
+Patients/Invoices/Appointments - tất cả trả về 200, không còn lỗi
+`no such column`.
+
+Lưu ý sự cố đã gặp và cách xử lý trong lần chạy đầu: **một tiến trình
+`QuanLyBenhVien.exe` đang chạy từ trước** (dev server cũ) đã tự động thử
+migrate lúc khởi động, thất bại (dùng bản build cũ hơn bản vá cuối), rồi vẫn
+tiếp tục chạy do khối `try/catch` bọc quanh `Migrate()`/`Seed()` trong
+`Program.cs` chỉ log lỗi chứ không dừng ứng dụng (hành vi có sẵn từ trước,
+không phải thay đổi của migration này) - khiến ứng dụng phục vụ request với
+schema cũ trong khi code đã theo model mới. Đã dừng tiến trình cũ, build lại,
+và áp dụng migration thành công. Nếu gặp lại tình huống tương tự: dừng mọi
+tiến trình `dotnet`/`QuanLyBenhVien.exe` đang chạy trước khi build/migrate lại.
+
+Các bước đã thực hiện (để tái sử dụng cho môi trường khác):
+
 ```powershell
 # 1) LUÔN sao lưu trước (script đã tạo sẵn):
 .\scripts\backup-sqlite.ps1
@@ -311,12 +332,13 @@ erDiagram
 #    xem scripts/data-cleanup.sql - có thể copy hms.db ra bản test rồi mở
 #    bằng "DB Browser for SQLite" / bất kỳ client SQLite nào để chạy thử.
 
-# 3) Áp dụng migration (đã được kiểm thử trên bản sao đầy đủ của hms.db,
-#    bao gồm cả kiểm tra "insert dữ liệu sai bị từ chối đúng như kỳ vọng"):
+# 3) Dừng mọi tiến trình dotnet/QuanLyBenhVien.exe đang chạy (tránh khóa file build).
+
+# 4) Áp dụng migration:
 dotnet ef database update --context ApplicationDbContext
 
-# Hoặc đơn giản là chạy ứng dụng - Program.cs đã gọi context.Database.Migrate()
-# tự động khi khởi động (trừ khi Database:Provider = MySql, dùng EnsureCreated).
+# Hoặc chạy ứng dụng - Program.cs gọi context.Database.Migrate() tự động khi
+# khởi động cho provider Sqlite (xem ghi chú provider ở mục 8).
 dotnet run
 ```
 
@@ -341,20 +363,81 @@ Khôi phục dữ liệu nếu cần:
   tình huống dữ liệu sai (SoSao ngoài khoảng, trùng Email, tồn kho âm,
   VaiTro/TrangThai/ChucVu không hợp lệ, xóa tài khoản còn hồ sơ bác sĩ, phiếu
   khám thứ 2 cho cùng lịch khám...) đều bị từ chối đúng như thiết kế.
-- **SQL Server**: `ApplicationDbContext` đã tự phát hiện provider
-  (`Database.ProviderName`) để dùng đúng cú pháp - `GETDATE()` thay
-  `CURRENT_TIMESTAMP`, filtered UNIQUE INDEX (`WHERE [Col] IS NOT NULL`) vì
-  SQL Server mặc định chỉ cho 1 giá trị NULL trong UNIQUE INDEX/CONSTRAINT
-  (khác SQLite/MySQL coi mỗi NULL là khác biệt). Chưa kiểm thử trực tiếp trên
-  SQL Server thật (dự án hiện chưa cấu hình instance nào) - khuyến nghị chạy
-  `dotnet ef database update` trên một SQL Server rỗng/staging trước khi dùng
-  production, dùng `scripts/backup-sqlserver.sql` trước đó.
-- **MySQL**: dự án dùng `context.Database.EnsureCreated()` cho provider này
-  (xem `Program.cs`), **không** chạy qua hệ thống Migrations - đây là lựa
-  chọn đã có từ trước (xem `docs/DATABASE-MYSQL.md`), không phải thay đổi của
-  migration này. Các CHECK constraint có được tạo hay không phụ thuộc vào hỗ
-  trợ của `MySql.EntityFrameworkCore` khi dịch model sang DDL; nên xác minh
-  riêng nếu triển khai MySQL production.
+- **SQL Server**: đính chính lại so với ghi chú ban đầu - `Program.cs` hiện
+  cho **cả SQL Server lẫn MySQL** dùng `context.Database.EnsureCreated()`,
+  không đi qua hệ thống Migrations (chỉ Sqlite mới gọi `Migrate()`). Điều này
+  đã có từ trước (comment trong `Program.cs`: "legacy migrations ... generated
+  for SQLite ... For SQL Server and MySQL, build the schema from the current
+  model instead"), không phải thay đổi của lần này. Nghĩa là khi triển khai
+  SQL Server, EF Core sẽ tạo bảng trực tiếp từ model hiện tại (đã bao gồm mọi
+  UNIQUE/CHECK/FK ở trên) trên một database rỗng - script làm sạch dữ liệu
+  trong migration sẽ không chạy (không cần thiết vì không có dữ liệu cũ).
+  `ApplicationDbContext` vẫn tự phát hiện provider (`Database.ProviderName`)
+  để dùng đúng cú pháp - `GETDATE()` thay `CURRENT_TIMESTAMP`, filtered UNIQUE
+  INDEX (`WHERE [Col] IS NOT NULL`) vì SQL Server mặc định chỉ cho 1 giá trị
+  NULL trong UNIQUE INDEX/CONSTRAINT (khác SQLite/MySQL coi mỗi NULL là khác
+  biệt) - áp dụng cho trường hợp sau này có ai đó chuyển sang chạy migration
+  thật trên SQL Server. Chưa kiểm thử trực tiếp trên SQL Server thật (dự án
+  hiện chưa cấu hình instance nào) - dùng `scripts/backup-sqlserver.sql` nếu
+  triển khai lên SQL Server đã có dữ liệu.
+- **MySQL**: tương tự SQL Server, dùng `EnsureCreated()` (xem
+  `docs/DATABASE-MYSQL.md`). Các CHECK constraint có được tạo hay không phụ
+  thuộc vào hỗ trợ của `MySql.EntityFrameworkCore` khi dịch model sang DDL;
+  nên xác minh riêng nếu triển khai MySQL production.
+
+## 9.bis Sự cố phát hiện khi triển khai thật: 2 file `hms.db` song song
+
+Khi áp dụng migration lần đầu qua Visual Studio, gặp lỗi `CHECK constraint
+failed: CK_BacSi_ChucVu` dù đã kiểm thử kỹ trên bản sao `hms.db`. Điều tra
+cho thấy nguyên nhân sâu hơn nhiều so với một CHECK constraint đơn thuần:
+
+**Nguyên nhân gốc**: chuỗi kết nối `"Data Source=hms.db"` trong
+`appsettings.json` là đường dẫn **tương đối**. SQLite/EF Core phân giải nó
+theo thư mục làm việc hiện tại của tiến trình - và thư mục đó khác nhau tùy
+cách khởi chạy:
+- `dotnet run` / `dotnet ef` (terminal): thư mục làm việc là **gốc project**
+  (`D:\QuanLyBenhVien`) → dùng `D:\QuanLyBenhVien\hms.db`.
+- Visual Studio (F5/Debug): chạy trực tiếp file `.exe` đã build, thư mục làm
+  việc mặc định là **thư mục build output** → dùng
+  `D:\QuanLyBenhVien\bin\Debug\net10.0\hms.db` - một file HOÀN TOÀN KHÁC.
+
+Hai file này đã tồn tại song song và **phân kỳ dữ liệu thật theo cả hai
+hướng** qua nhiều phiên làm việc trước đó (một số bảng nhiều hơn ở file này,
+một số bảng nhiều hơn ở file kia) - đây là một lỗi tiềm ẩn từ trước, migration
+chỉ là dịp phát hiện ra nó (khi cả hai file có schema khác nhau, chạy nhầm
+file sẽ gặp đúng loại lỗi "thiếu cột"/"CHECK vi phạm" như đã gặp).
+
+**Xử lý đã thực hiện** (sau khi xác nhận với người dùng, không tự ý ghi đè):
+1. Sao lưu CẢ HAI file (mỗi file 2 bản: trong `backups/` và một bản ngoài
+   project) trước khi động vào bất kỳ file nào.
+2. Xác định file `bin\Debug\net10.0\hms.db` chứa dữ liệu thật của người dùng
+   (tài khoản `nongvannguyen20202023@gmail.com`, 34 lịch khám...) - nhiều hơn
+   và quan trọng hơn dữ liệu ở file gốc (chủ yếu là tài khoản QA test).
+3. Áp dụng cùng migration lên bản sao dữ liệu thật đó (làm sạch thêm một
+   trường hợp mới phát hiện: 15 bác sĩ có `ChucVu` rỗng `''` - bổ sung vào
+   câu lệnh `UPDATE` sẵn có, xem mục 2.2/lại `scripts/data-cleanup.sql`).
+4. Thay nội dung `D:\QuanLyBenhVien\hms.db` bằng bản dữ liệu thật đã migrate
+   (bản QA-test cũ đã lưu riêng tại
+   `backups/hms_root_QAdata_superseded_*.db` nếu cần tham khảo lại).
+5. **Sửa tận gốc** trong `Program.cs`: thêm hàm `ResolveSqliteConnectionString`
+   neo mọi đường dẫn SQLite tương đối về đúng thư mục chứa `QuanLyBenhVien.csproj`
+   (tìm bằng cách đi ngược thư mục từ `AppContext.BaseDirectory`), bất kể
+   tiến trình được khởi chạy từ đâu. Nếu không tìm thấy `.csproj` (trường hợp
+   publish/Docker, nơi mã nguồn không được deploy kèm theo), giữ nguyên hành
+   vi cũ (dùng thư mục chứa file thực thi) - không ảnh hưởng triển khai
+   production hiện tại.
+6. Đã kiểm chứng bằng cách khởi chạy `.exe` với thư mục làm việc giả lập
+   giống hệt Visual Studio (`bin\Debug\net10.0`) - log xác nhận
+   `Content root path: ...\bin\Debug\net10.0` (giống hệt Visual Studio) nhưng
+   `"No migrations were applied. The database is already up to date"` -
+   tức là đã đọc đúng file gốc đã migrate, file `bin\Debug\net10.0\hms.db` cũ
+   không còn bị đụng tới nữa (mtime không đổi sau khi chạy).
+
+**Khuyến nghị cho người dùng**: từ nay, dù mở bằng Visual Studio hay chạy
+`dotnet run`/`dotnet ef` từ terminal, ứng dụng đều chỉ đọc/ghi đúng một file
+`D:\QuanLyBenhVien\hms.db`. File cũ trong `bin\Debug\net10.0` không còn được
+dùng (an toàn, không cần xóa - thư mục `bin/` vốn được tạo lại mỗi lần build
+và đã nằm trong `.gitignore`).
 
 ## 9. Phạm vi cố ý không thực hiện (và lý do)
 

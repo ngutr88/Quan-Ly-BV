@@ -73,7 +73,7 @@ WHERE SoCCCD IS NOT NULL AND Id NOT IN (
 -- ----------------------------------------------------------------------------
 SELECT ChucVu, count(*) FROM BacSi GROUP BY ChucVu;
 
-UPDATE BacSi SET ChucVu = 'Bác sĩ' WHERE ChucVu IN ('Bac si', 'Bác sĩ điều trị');
+UPDATE BacSi SET ChucVu = 'Bác sĩ' WHERE ChucVu IN ('Bac si', 'Bác sĩ điều trị', '');
 UPDATE BacSi SET ChucVu = 'Phó trưởng khoa' WHERE ChucVu = 'Pho truong khoa';
 
 -- Sau khi sua - chi con dung 3 gia tri:

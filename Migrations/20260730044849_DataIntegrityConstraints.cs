@@ -58,7 +58,7 @@ namespace QuanLyBenhVien.Migrations
             // ("Bac si", "Pho truong khoa") và một biến thể mô tả thêm ("Bác sĩ điều
             // trị") lẽ ra cùng nghĩa với "Bác sĩ". Chuẩn hóa về đúng 3 giá trị hợp lệ
             // trước khi thêm CK_BacSi_ChucVu.
-            migrationBuilder.Sql("UPDATE BacSi SET ChucVu = 'Bác sĩ' WHERE ChucVu IN ('Bac si', 'Bác sĩ điều trị');");
+            migrationBuilder.Sql("UPDATE BacSi SET ChucVu = 'Bác sĩ' WHERE ChucVu IN ('Bac si', 'Bác sĩ điều trị', '');");
             migrationBuilder.Sql("UPDATE BacSi SET ChucVu = 'Phó trưởng khoa' WHERE ChucVu = 'Pho truong khoa';");
 
             // 5) HoaDon.PhuongThuc: một số hóa đơn chưa thanh toán bị gán nhầm
