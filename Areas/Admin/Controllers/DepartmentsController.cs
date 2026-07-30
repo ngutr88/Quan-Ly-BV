@@ -62,7 +62,9 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 .Where(d => d.KhoaId == selectedDept.Id)
                 .FirstOrDefaultAsync();
 
-            string truongKhoa = chiefDoctor != null ? $"{chiefDoctor.HocVi}. {chiefDoctor.User.HoTen}" : "Chưa bổ nhiệm";
+            string truongKhoa = chiefDoctor != null
+                ? FormatDoctorName(chiefDoctor)
+                : "Chưa bổ nhiệm";
             int activeDocsCount = doctorCounts.ContainsKey(selectedDept.Id) ? doctorCounts[selectedDept.Id] : 0;
 
             // Stats
@@ -271,6 +273,18 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
+        }
+
+        private static string FormatDoctorName(QuanLyBenhVien.Models.Doctor doctor)
+        {
+            var fullName = doctor.User?.HoTen?.Trim() ?? string.Empty;
+            if (fullName.StartsWith("BS.", StringComparison.OrdinalIgnoreCase))
+            {
+                fullName = fullName[3..].TrimStart();
+            }
+
+            var degree = doctor.HocVi?.Trim().TrimEnd('.') ?? string.Empty;
+            return string.IsNullOrEmpty(degree) ? fullName : $"{degree}. {fullName}";
         }
     }
 }

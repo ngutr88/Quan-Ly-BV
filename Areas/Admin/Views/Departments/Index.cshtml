@@ -9,6 +9,18 @@
     string truongKhoa = ViewBag.TruongKhoa as string ?? "Chưa bổ nhiệm";
     int activeDocsCount = ViewBag.ActiveDocsCount is int count ? count : 0;
     int totalStaff = ViewBag.TotalStaff is int ts ? ts : 0;
+
+    string FormatDoctorName(QuanLyBenhVien.Models.Doctor doctor)
+    {
+        var fullName = doctor.User?.HoTen?.Trim() ?? string.Empty;
+        if (fullName.StartsWith("BS.", StringComparison.OrdinalIgnoreCase))
+        {
+            fullName = fullName[3..].TrimStart();
+        }
+
+        var degree = doctor.HocVi?.Trim().TrimEnd('.') ?? string.Empty;
+        return string.IsNullOrEmpty(degree) ? fullName : $"{degree}. {fullName}";
+    }
 }
 
 <!-- Alert Messages -->
@@ -200,7 +212,7 @@
                                         <td class="px-unit-md py-4 font-mono font-bold text-on-surface">BS-@doc.Id.ToString("D3")</td>
                                         <td class="px-unit-md py-4">
                                             <div class="font-bold text-on-surface text-body-md flex items-center gap-2">
-                                                @doc.HocVi. @doc.User.HoTen
+                                                @FormatDoctorName(doc)
                                                 @if (doc.ChucVu == "Trưởng khoa")
                                                 {
                                                     <span class="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded">Trưởng khoa</span>
