@@ -191,11 +191,14 @@ namespace QuanLyBenhVien.Models
         [ForeignKey("BenhNhanId")]
         public virtual Patient Patient { get; set; } = null!;
         public DateTime NgayDo { get; set; } = DateTime.Now;
+        [Column(TypeName = "decimal(5, 2)")]
         public decimal? CanNang { get; set; }
+        [Column(TypeName = "decimal(5, 2)")]
         public decimal? ChieuCao { get; set; }
         public int? HuyetApTamThu { get; set; }
         public int? HuyetApTamTruong { get; set; }
         public int? NhipTim { get; set; }
+        [Column(TypeName = "decimal(5, 2)")]
         public decimal? DuongHuyet { get; set; }
         [StringLength(300)]
         public string GhiChu { get; set; } = string.Empty;

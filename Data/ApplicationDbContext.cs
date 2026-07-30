@@ -393,8 +393,15 @@ namespace QuanLyBenhVien.Data
 
             // ChucVu có dữ liệu thực tế bị gõ sai/thiếu dấu (đã làm sạch trong migration
             // trước khi thêm CHECK này - xem script làm sạch dữ liệu).
+            // Chuỗi có dấu tiếng Việt: SQL Server diễn giải literal '...' (không tiền tố
+            // N) theo bảng mã không-Unicode mặc định của server, làm hỏng dấu thành '?'
+            // (đã phát hiện thực tế khi EnsureCreated trên SQL Server) - bắt buộc dùng
+            // N'...' trên SQL Server; SQLite/MySQL thì dùng nguyên văn không tiền tố N.
+            var chucVuList = isSqlServer
+                ? "N'Bác sĩ',N'Phó trưởng khoa',N'Trưởng khoa'"
+                : "'Bác sĩ','Phó trưởng khoa','Trưởng khoa'";
             modelBuilder.Entity<Doctor>()
-                .ToTable(t => t.HasCheckConstraint("CK_BacSi_ChucVu", "ChucVu IN ('Bác sĩ','Phó trưởng khoa','Trưởng khoa')"));
+                .ToTable(t => t.HasCheckConstraint("CK_BacSi_ChucVu", $"ChucVu IN ({chucVuList})"));
 
             // ================================================================
             // Giá trị mặc định cho cột ngày giờ (mục 9 của yêu cầu)
