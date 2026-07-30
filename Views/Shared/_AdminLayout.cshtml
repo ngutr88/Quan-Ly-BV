@@ -1,5 +1,29 @@
+@using Microsoft.EntityFrameworkCore
+@inject QuanLyBenhVien.Data.ApplicationDbContext _dbContext
 @{
     Layout = "_Layout";
+
+    // Chuông thông báo Admin: hệ thống hiện chưa có bảng thông báo riêng cho
+    // Admin (bảng ThongBao chỉ phục vụ bệnh nhân), nên dùng chính các cảnh báo
+    // "cần chú ý" đã tính sẵn ở Dashboard (tồn kho thấp, lô sắp hết hạn, lịch
+    // chờ xác nhận) làm nguồn dữ liệu - luôn phản ánh đúng tình trạng hiện tại,
+    // không cần cơ chế đánh dấu đã đọc riêng.
+    var expiryThreshold = DateTime.Today.AddDays(30);
+    var lowStockMedicines = _dbContext.Medicines
+        .Where(m => m.TonKho <= m.NguongToiThieu)
+        .OrderBy(m => m.TonKho)
+        .Take(5)
+        .ToList();
+    var lowStockTotal = _dbContext.Medicines.Count(m => m.TonKho <= m.NguongToiThieu);
+    var nearExpiryBatches = _dbContext.MedicineBatches
+        .Include(b => b.Medicine)
+        .Where(b => b.SoLuongTon > 0 && b.HanSuDung <= expiryThreshold)
+        .OrderBy(b => b.HanSuDung)
+        .Take(5)
+        .ToList();
+    var nearExpiryTotal = _dbContext.MedicineBatches.Count(b => b.SoLuongTon > 0 && b.HanSuDung <= expiryThreshold);
+    var pendingAppointmentsTotal = _dbContext.Appointments.Count(a => a.TrangThai == "ChoXacNhan");
+    var adminAlertTotal = lowStockTotal + nearExpiryTotal + pendingAppointmentsTotal;
 }
 
 <div class="staff-portal admin-portal text-on-surface overflow-hidden flex h-screen w-full max-w-full">
@@ -123,9 +147,61 @@
 
             <div class="flex items-center gap-unit-md">
                 <!-- Notification Bell -->
-                <button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all relative">
-                    <span class="material-symbols-outlined">notifications</span>
-                </button>
+                <div class="relative">
+                    <button type="button" id="admin-alert-bell" onclick="toggleAdminAlerts()"
+                            aria-label="Cảnh báo hệ thống" aria-haspopup="true"
+                            class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                        @if (adminAlertTotal > 0)
+                        {
+                            <span class="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-error text-white font-semibold text-[10px] rounded-full flex items-center justify-center">@(adminAlertTotal > 9 ? "9+" : adminAlertTotal.ToString())</span>
+                        }
+                    </button>
+                    <div id="admin-alert-dropdown" class="hidden absolute right-0 top-12 w-80 max-w-[90vw] bg-surface-container-lowest border border-outline-variant rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div class="px-unit-md py-3 border-b border-outline-variant font-title-md text-title-md text-on-surface">Cảnh báo hệ thống</div>
+                        <div class="max-h-96 overflow-y-auto divide-y divide-outline-variant">
+                            @if (adminAlertTotal == 0)
+                            {
+                                <div class="px-unit-md py-unit-lg text-center text-on-surface-variant text-body-md">Không có cảnh báo nào.</div>
+                            }
+                            else
+                            {
+                                @if (pendingAppointmentsTotal > 0)
+                                {
+                                    <a href="/Admin/Appointments?statusFilter=ChoXacNhan" class="flex items-start gap-unit-sm px-unit-md py-3 hover:bg-surface-container-low transition-colors">
+                                        <span class="material-symbols-outlined text-tertiary">event_upcoming</span>
+                                        <div>
+                                            <p class="font-label-md text-on-surface font-semibold">@pendingAppointmentsTotal lịch khám chờ xác nhận</p>
+                                            <p class="text-caption text-on-surface-variant">Cần xác nhận hoặc từ chối</p>
+                                        </div>
+                                    </a>
+                                }
+                                @foreach (var m in lowStockMedicines)
+                                {
+                                    <a href="/Admin/Medicines?lowStock=true" class="flex items-start gap-unit-sm px-unit-md py-3 hover:bg-surface-container-low transition-colors">
+                                        <span class="material-symbols-outlined text-error">inventory_2</span>
+                                        <div>
+                                            <p class="font-label-md text-on-surface font-semibold">@m.TenThuoc sắp hết kho</p>
+                                            <p class="text-caption text-on-surface-variant">Còn @m.TonKho @m.DonViTinh (ngưỡng @m.NguongToiThieu)</p>
+                                        </div>
+                                    </a>
+                                }
+                                @foreach (var b in nearExpiryBatches)
+                                {
+                                    var daysLeft = (b.HanSuDung.Date - DateTime.Today).Days;
+                                    <a href="/Admin/Medicines/Batches" class="flex items-start gap-unit-sm px-unit-md py-3 hover:bg-surface-container-low transition-colors">
+                                        <span class="material-symbols-outlined text-tertiary">schedule</span>
+                                        <div>
+                                            <p class="font-label-md text-on-surface font-semibold">Lô @b.SoLo - @b.Medicine.TenThuoc</p>
+                                            <p class="text-caption text-on-surface-variant">@(daysLeft <= 0 ? "Đã hết hạn" : $"Còn {daysLeft} ngày tới hạn")</p>
+                                        </div>
+                                    </a>
+                                }
+                            }
+                        </div>
+                        <a href="/Admin/Dashboard" class="block text-center px-unit-md py-3 text-primary font-label-md font-semibold hover:bg-surface-container-low transition-colors border-t border-outline-variant">Xem tổng quan Dashboard</a>
+                    </div>
+                </div>
                 <div class="h-8 w-px bg-outline-variant"></div>
                 <!-- User Profile -->
                 <div class="flex items-center gap-unit-sm hover:bg-surface-container-high p-1 pr-3 rounded-lg transition-all cursor-pointer">
@@ -169,6 +245,19 @@
 
         window.addEventListener('resize', () => {
             if (window.innerWidth >= 768) closeAdminSidebar();
+        });
+
+        function toggleAdminAlerts() {
+            document.getElementById('admin-alert-dropdown')?.classList.toggle('hidden');
+        }
+
+        document.addEventListener('click', function (e) {
+            const dropdown = document.getElementById('admin-alert-dropdown');
+            const bell = document.getElementById('admin-alert-bell');
+            if (!dropdown || dropdown.classList.contains('hidden')) return;
+            if (!dropdown.contains(e.target) && !bell.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
         });
     </script>
 }

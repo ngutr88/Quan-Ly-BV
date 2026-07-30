@@ -33,8 +33,16 @@ builder.Services.AddControllersWithViews(options =>
 });
 builder.Services.AddScoped<QuanLyBenhVien.Services.ExcelExportService>();
 
+// Previously defaulted to Path.GetTempPath() ("%TEMP%\QuanLyBenhVien\..."):
+// the OS temp folder is expected to be cleared at any time (disk cleanup,
+// low-space maintenance...), and every time that happened here, ALL existing
+// login cookies/antiforgery tokens instantly became undecryptable ("key was
+// not found in the key ring"), forcing every logged-in user out with a
+// cryptic error. Anchor to the stable project directory instead (same
+// "walk up to find the .csproj" trick used for the Sqlite path below), so
+// keys only disappear if someone deletes them on purpose.
 var dataProtectionKeysPath = builder.Configuration["DataProtectionKeysPath"]
-    ?? Path.Combine(Path.GetTempPath(), "QuanLyBenhVien", "data-protection-keys");
+    ?? Path.Combine(FindProjectRootOrBaseDirectory(), ".dataprotection-keys");
 Directory.CreateDirectory(dataProtectionKeysPath);
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
@@ -58,6 +66,29 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 // launch method reads/writes the exact same file. Falls back to the app's
 // own base directory when no .csproj is present (published/Docker builds),
 // which matches the previous, already-correct behavior there.
+// Directory containing the .csproj (found by walking up from the running
+// process's own base directory), used as a stable anchor for local dev state
+// that must stay put regardless of how/where the app was launched from -
+// falls back to the app's own base directory when no .csproj is present
+// (published/Docker builds), matching the previous, already-correct behavior
+// there.
+static string FindProjectRootOrBaseDirectory()
+{
+    var projectDir = new DirectoryInfo(AppContext.BaseDirectory);
+    while (projectDir != null && projectDir.GetFiles("*.csproj").Length == 0)
+    {
+        projectDir = projectDir.Parent;
+    }
+    return projectDir?.FullName ?? AppContext.BaseDirectory;
+}
+
+// A relative Sqlite "Data Source=..." path resolves against the process's
+// current directory, which differs between launch methods: `dotnet run`/
+// `dotnet ef` use the project directory, while Visual Studio's F5 debugger
+// runs the built .exe directly from bin/Debug/netX.0. Left unpinned, this
+// silently created and diverged TWO separate hms.db files (one per launch
+// method) with different real data - anchor relative Sqlite paths to the
+// project root so every launch method reads/writes the exact same file.
 static string ResolveSqliteConnectionString(string? connectionString)
 {
     const string prefix = "Data Source=";
@@ -69,14 +100,7 @@ static string ResolveSqliteConnectionString(string? connectionString)
     if (string.IsNullOrEmpty(dataSource) || Path.IsPathRooted(dataSource))
         return connectionString;
 
-    var projectDir = new DirectoryInfo(AppContext.BaseDirectory);
-    while (projectDir != null && projectDir.GetFiles("*.csproj").Length == 0)
-    {
-        projectDir = projectDir.Parent;
-    }
-    var anchor = projectDir?.FullName ?? AppContext.BaseDirectory;
-
-    return $"Data Source={Path.Combine(anchor, dataSource)}";
+    return $"Data Source={Path.Combine(FindProjectRootOrBaseDirectory(), dataSource)}";
 }
 
 // Register Database Context
