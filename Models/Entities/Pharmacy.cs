@@ -18,6 +18,15 @@ namespace QuanLyBenhVien.Models
         [StringLength(150)]
         public string HoatChat { get; set; } = string.Empty;
 
+        // Hàm lượng hoạt chất (vd. "500mg"). Nullable: thuốc có từ trước khi
+        // có tính năng phiếu nhập kho chưa khai báo giá trị này.
+        [StringLength(50)]
+        public string? HamLuong { get; set; }
+
+        // Quy cách đóng gói (vd. "Hộp 10 vỉ x 10 viên"). Nullable cùng lý do trên.
+        [StringLength(150)]
+        public string? QuyCachDongGoi { get; set; }
+
         [Required]
         [StringLength(50)]
         public string DonViTinh { get; set; } = string.Empty; // e.g. "Viên", "Chai", "Vỉ"
@@ -64,5 +73,15 @@ namespace QuanLyBenhVien.Models
 
         [Required]
         public int SoLuongTon { get; set; }
+
+        // Giá nhập (chưa VAT) của lô này. Nullable: các lô có từ trước khi có
+        // tính năng phiếu nhập kho (mục "Nâng cấp ReceiveBatch") không có giá trị này.
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? GiaNhap { get; set; }
+
+        public int? NhaCungCapId { get; set; }
+
+        [ForeignKey("NhaCungCapId")]
+        public virtual Supplier? NhaCungCap { get; set; }
     }
 }

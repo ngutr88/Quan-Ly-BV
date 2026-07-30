@@ -1,0 +1,223 @@
+@model QuanLyBenhVien.Models.GoodsReceipt
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = $"Phiếu nhập kho {Model.MaPhieu}";
+    var canApprove = (bool)ViewBag.CanApprove;
+
+    string StatusBadge(string trangThai) => trangThai switch
+    {
+        "Nhap" => "bg-surface-container-high text-on-surface-variant",
+        "ChoDuyet" => "bg-tertiary-fixed/30 text-on-tertiary-fixed-variant",
+        "DaDuyet" => "bg-secondary-container/20 text-on-secondary-container",
+        "TuChoi" => "bg-error-container text-error",
+        "DaHuy" => "bg-surface-container-high text-outline",
+        _ => "bg-surface-container-high text-on-surface-variant"
+    };
+
+    string StatusLabel(string trangThai) => trangThai switch
+    {
+        "Nhap" => "Nháp",
+        "ChoDuyet" => "Chờ duyệt",
+        "DaDuyet" => "Đã duyệt",
+        "TuChoi" => "Từ chối",
+        "DaHuy" => "Đã hủy",
+        _ => trangThai
+    };
+
+    string LoaiNhapLabel(string loai) => loai switch
+    {
+        "MuaNCC" => "Mua nhà cung cấp",
+        "ChuyenKho" => "Chuyển kho nội bộ",
+        "HangTraVe" => "Hàng trả về",
+        "VienTro" => "Viện trợ / tài trợ",
+        _ => loai
+    };
+
+    string KhoNhapLabel(string kho) => kho switch
+    {
+        "KhoChan" => "Kho chẵn",
+        "KhoLe" => "Kho lẻ",
+        "NhaThuoc" => "Nhà thuốc",
+        _ => kho
+    };
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/Medicines/Receipts" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách phiếu nhập
+    </a>
+    <div class="flex items-center gap-unit-sm flex-wrap">
+        <h2 class="font-headline-lg text-headline-lg text-on-surface font-mono">@Model.MaPhieu</h2>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-tight @StatusBadge(Model.TrangThai)">@StatusLabel(Model.TrangThai)</span>
+    </div>
+    @if (Model.PhieuGoc != null)
+    {
+        <p class="text-body-md text-tertiary">Phiếu điều chỉnh cho <a class="underline font-semibold" href="/Admin/Medicines/ReceiptDetails/@Model.PhieuGoc.Id">@Model.PhieuGoc.MaPhieu</a></p>
+    }
+</div>
+
+@if (Model.TrangThai == "TuChoi" && !string.IsNullOrEmpty(Model.LyDoTuChoi))
+{
+    <div class="p-unit-md mb-unit-md bg-error-container/20 border-l-4 border-error text-error rounded-r">
+        <strong>Lý do từ chối:</strong> @Model.LyDoTuChoi
+    </div>
+}
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg mb-unit-lg">
+    <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-unit-md">Thông tin phiếu</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-unit-md text-body-md">
+        <div><span class="text-on-surface-variant block text-caption">Ngày nhập</span> @Model.NgayNhap.ToString("dd/MM/yyyy")</div>
+        <div><span class="text-on-surface-variant block text-caption">Loại nhập</span> @LoaiNhapLabel(Model.LoaiNhap)</div>
+        <div><span class="text-on-surface-variant block text-caption">Kho nhập</span> @KhoNhapLabel(Model.KhoNhap)</div>
+        <div><span class="text-on-surface-variant block text-caption">Nhà cung cấp</span> @(Model.NhaCungCap?.TenNhaCungCap ?? "--")</div>
+        <div><span class="text-on-surface-variant block text-caption">Số hóa đơn NCC</span> @(Model.SoHoaDonNCC ?? "--")</div>
+        <div><span class="text-on-surface-variant block text-caption">Ngày hóa đơn</span> @(Model.NgayHoaDon?.ToString("dd/MM/yyyy") ?? "--")</div>
+        <div><span class="text-on-surface-variant block text-caption">Người giao hàng</span> @(Model.NguoiGiaoHang ?? "--")</div>
+        <div><span class="text-on-surface-variant block text-caption">Người lập phiếu</span> @Model.NguoiTao?.HoTen</div>
+        <div>
+            <span class="text-on-surface-variant block text-caption">Người duyệt</span>
+            @(Model.NguoiDuyet?.HoTen ?? "--") @(Model.NgayDuyet.HasValue ? $"({Model.NgayDuyet:dd/MM/yyyy HH:mm})" : "")
+        </div>
+        @if (!string.IsNullOrEmpty(Model.GhiChu))
+        {
+            <div class="md:col-span-3"><span class="text-on-surface-variant block text-caption">Ghi chú</span> @Model.GhiChu</div>
+        }
+    </div>
+</div>
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg mb-unit-lg">
+    <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-unit-md">Chi tiết thuốc nhập</h3>
+    <div class="hms-table-scroll overflow-x-auto">
+        <table class="w-full text-left text-body-md">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[11px] uppercase">
+                    <th class="px-2 py-2">Tên thuốc</th>
+                    <th class="px-2 py-2">Số lô</th>
+                    <th class="px-2 py-2">Hạn dùng</th>
+                    <th class="px-2 py-2 text-right">Số lượng</th>
+                    <th class="px-2 py-2 text-right">Đơn giá</th>
+                    <th class="px-2 py-2 text-right">%VAT</th>
+                    <th class="px-2 py-2 text-right">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @foreach (var d in Model.ChiTiet)
+                {
+                    <tr>
+                        <td class="px-2 py-2">
+                            <div class="font-semibold">@d.Medicine.TenThuoc</div>
+                            <div class="text-caption text-on-surface-variant">@d.Medicine.HoatChat</div>
+                        </td>
+                        <td class="px-2 py-2 font-mono">@d.SoLo</td>
+                        <td class="px-2 py-2">@d.HanSuDung.ToString("dd/MM/yyyy")</td>
+                        <td class="px-2 py-2 text-right">@d.SoLuong @d.Medicine.DonViTinh</td>
+                        <td class="px-2 py-2 text-right">@d.DonGia.ToString("N0") đ</td>
+                        <td class="px-2 py-2 text-right">@d.PhanTramVAT %</td>
+                        <td class="px-2 py-2 text-right font-semibold">@d.ThanhTien.ToString("N0") đ</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="bg-surface-container-low font-semibold">
+                    <td colspan="6" class="px-2 py-2 text-right">Tổng số mặt hàng: @Model.TongSoMatHang</td>
+                    <td class="px-2 py-2 text-right"></td>
+                </tr>
+                <tr>
+                    <td colspan="6" class="px-2 py-2 text-right">Tổng tiền trước VAT</td>
+                    <td class="px-2 py-2 text-right">@Model.TongTienTruocVAT.ToString("N0") đ</td>
+                </tr>
+                <tr>
+                    <td colspan="6" class="px-2 py-2 text-right">Tiền VAT</td>
+                    <td class="px-2 py-2 text-right">@Model.TienVAT.ToString("N0") đ</td>
+                </tr>
+                <tr class="text-title-md">
+                    <td colspan="6" class="px-2 py-2 text-right font-bold text-primary">Tổng thanh toán</td>
+                    <td class="px-2 py-2 text-right font-bold text-primary">@Model.TongThanhToan.ToString("N0") đ</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="flex flex-wrap gap-unit-sm">
+    @if (Model.TrangThai == "Nhap" || Model.TrangThai == "TuChoi")
+    {
+        <a href="/Admin/Medicines/ReceiveBatch/@Model.Id" class="hms-btn hms-btn-primary">
+            <span class="material-symbols-outlined">edit</span> Chỉnh sửa
+        </a>
+        <button type="button" class="hms-btn hms-btn-secondary" onclick="postAction('/Admin/Medicines/CancelReceipt/@Model.Id')">
+            <span class="material-symbols-outlined">cancel</span> Hủy phiếu
+        </button>
+    }
+    @if (Model.TrangThai == "ChoDuyet")
+    {
+        @if (canApprove)
+        {
+            <button type="button" class="hms-btn hms-btn-primary" onclick="postAction('/Admin/Medicines/ApproveReceipt/@Model.Id')">
+                <span class="material-symbols-outlined">check_circle</span> Duyệt phiếu
+            </button>
+            <button type="button" class="hms-btn hms-btn-secondary" onclick="openRejectModal()">
+                <span class="material-symbols-outlined">block</span> Từ chối
+            </button>
+        }
+        <button type="button" class="hms-btn hms-btn-secondary" onclick="postAction('/Admin/Medicines/CancelReceipt/@Model.Id')">
+            <span class="material-symbols-outlined">cancel</span> Hủy phiếu
+        </button>
+    }
+    @if (Model.TrangThai == "DaDuyet")
+    {
+        <a href="/Admin/Medicines/PrintReceipt/@Model.Id" target="_blank" class="hms-btn hms-btn-secondary">
+            <span class="material-symbols-outlined">print</span> In phiếu nhập kho
+        </a>
+        <a href="/Admin/Medicines/PrintInspectionRecord/@Model.Id" target="_blank" class="hms-btn hms-btn-secondary">
+            <span class="material-symbols-outlined">fact_check</span> In biên bản kiểm nhập
+        </a>
+        <a href="/Admin/Medicines/ReceiveBatch?phieuGocId=@Model.Id" class="hms-btn hms-btn-secondary">
+            <span class="material-symbols-outlined">edit_note</span> Lập phiếu điều chỉnh
+        </a>
+    }
+</div>
+
+<!-- Reject reason modal -->
+<div id="modalReject" class="hidden fixed inset-0 bg-on-background/40 z-[100] flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest rounded-xl shadow-2xl p-unit-lg max-w-md w-full">
+        <h4 class="font-title-md text-title-md text-on-surface mb-2">Từ chối phiếu @Model.MaPhieu</h4>
+        <label class="hms-field-label">Lý do từ chối <span class="text-error">*</span></label>
+        <textarea id="rejectReason" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg mt-1" rows="3" placeholder="Nhập lý do từ chối phiếu này..."></textarea>
+        <div class="flex justify-end gap-unit-sm mt-unit-md">
+            <button type="button" class="hms-btn hms-btn-secondary" onclick="document.getElementById('modalReject').classList.add('hidden')">Đóng</button>
+            <button type="button" class="hms-btn hms-btn-primary" onclick="submitReject()">Xác nhận từ chối</button>
+        </div>
+    </div>
+</div>
+
+<form id="actionForm" method="POST" class="hidden">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="lyDo" id="actionLyDo" />
+</form>
+
+@section Scripts {
+    <script>
+        function postAction(url) {
+            const form = document.getElementById('actionForm');
+            form.action = url;
+            document.getElementById('actionLyDo').value = '';
+            form.submit();
+        }
+
+        function openRejectModal() { document.getElementById('modalReject').classList.remove('hidden'); }
+
+        function submitReject() {
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) {
+                showGlobalToast('Thiếu thông tin', 'Vui lòng nhập lý do từ chối.', 'error');
+                return;
+            }
+            const form = document.getElementById('actionForm');
+            form.action = '/Admin/Medicines/RejectReceipt/@Model.Id';
+            document.getElementById('actionLyDo').value = reason;
+            form.submit();
+        }
+    </script>
+}

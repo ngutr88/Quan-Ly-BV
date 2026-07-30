@@ -33,6 +33,9 @@ namespace QuanLyBenhVien.Data
         public DbSet<Immunization> Immunizations { get; set; } = null!;
         public DbSet<PatientHealthMetric> PatientHealthMetrics { get; set; } = null!;
         public DbSet<RolePermission> RolePermissions { get; set; } = null!;
+        public DbSet<Supplier> Suppliers { get; set; } = null!;
+        public DbSet<GoodsReceipt> GoodsReceipts { get; set; } = null!;
+        public DbSet<GoodsReceiptDetail> GoodsReceiptDetails { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -421,6 +424,110 @@ namespace QuanLyBenhVien.Data
             // khi tạo lô mới (xem MedicineBatch.NgayNhap và MedicinesController.ReceiveBatch)
             // nên giá trị mặc định này chỉ có tác dụng cho dữ liệu cũ / INSERT SQL trực tiếp.
             modelBuilder.Entity<MedicineBatch>().Property(b => b.NgayNhap).HasDefaultValueSql("'2000-01-01 00:00:00'");
+
+            // ================================================================
+            // Phiếu nhập kho thuốc (NhaCungCap / PhieuNhapKho / PhieuNhapKhoChiTiet)
+            // ================================================================
+
+            modelBuilder.Entity<MedicineBatch>()
+                .HasOne(b => b.NhaCungCap)
+                .WithMany()
+                .HasForeignKey(b => b.NhaCungCapId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GoodsReceipt>()
+                .HasOne(r => r.NhaCungCap)
+                .WithMany(s => s.PhieuNhaps)
+                .HasForeignKey(r => r.NhaCungCapId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GoodsReceipt>()
+                .HasOne(r => r.NguoiTao)
+                .WithMany()
+                .HasForeignKey(r => r.NguoiTaoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GoodsReceipt>()
+                .HasOne(r => r.NguoiDuyet)
+                .WithMany()
+                .HasForeignKey(r => r.NguoiDuyetId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Phiếu điều chỉnh tự tham chiếu phiếu gốc - NoAction để tránh lỗi
+            // "multiple cascade paths" của SQL Server trên self-reference.
+            modelBuilder.Entity<GoodsReceipt>()
+                .HasOne(r => r.PhieuGoc)
+                .WithMany()
+                .HasForeignKey(r => r.PhieuGocId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Chi tiết phụ thuộc hoàn toàn vào phiếu nhập => Cascade hợp lý
+            // (giống ChiTietDonThuoc/ChiTietHoaDon, mục 5 của yêu cầu CSDL trước).
+            modelBuilder.Entity<GoodsReceiptDetail>()
+                .HasOne(d => d.PhieuNhapKho)
+                .WithMany(r => r.ChiTiet)
+                .HasForeignKey(d => d.PhieuNhapKhoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GoodsReceiptDetail>()
+                .HasOne(d => d.Medicine)
+                .WithMany()
+                .HasForeignKey(d => d.ThuocId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // SetNull: nếu lô thuốc kết quả sau này biến mất (vd Thuoc gốc bị
+            // xóa, Cascade xuống LoThuoc), dòng chi tiết phiếu vẫn giữ lại để
+            // không mất lịch sử nhập kho, chỉ mất liên kết tới lô cụ thể.
+            modelBuilder.Entity<GoodsReceiptDetail>()
+                .HasOne(d => d.LoThuoc)
+                .WithMany()
+                .HasForeignKey(d => d.LoThuocId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<GoodsReceipt>()
+                .HasIndex(r => r.MaPhieu)
+                .IsUnique();
+
+            modelBuilder.Entity<GoodsReceipt>()
+                .HasIndex(r => r.TrangThai);
+
+            modelBuilder.Entity<GoodsReceipt>(e =>
+            {
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_PhieuNhapKho_TrangThai",
+                        "TrangThai IN ('Nhap','ChoDuyet','DaDuyet','TuChoi','DaHuy')");
+                    t.HasCheckConstraint("CK_PhieuNhapKho_LoaiNhap",
+                        "LoaiNhap IN ('MuaNCC','ChuyenKho','HangTraVe','VienTro')");
+                    t.HasCheckConstraint("CK_PhieuNhapKho_KhoNhap",
+                        "KhoNhap IN ('KhoChan','KhoLe','NhaThuoc')");
+                    t.HasCheckConstraint("CK_PhieuNhapKho_TongSoMatHang", "TongSoMatHang >= 0");
+                    t.HasCheckConstraint("CK_PhieuNhapKho_TongTienTruocVAT", "TongTienTruocVAT >= 0");
+                    t.HasCheckConstraint("CK_PhieuNhapKho_TienVAT", "TienVAT >= 0");
+                    t.HasCheckConstraint("CK_PhieuNhapKho_TongThanhToan", "TongThanhToan >= 0");
+                });
+            });
+
+            modelBuilder.Entity<GoodsReceiptDetail>(e =>
+            {
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_PhieuNhapKhoChiTiet_SoLuong", "SoLuong > 0");
+                    t.HasCheckConstraint("CK_PhieuNhapKhoChiTiet_DonGia", "DonGia >= 0");
+                    t.HasCheckConstraint("CK_PhieuNhapKhoChiTiet_PhanTramVAT", "PhanTramVAT BETWEEN 0 AND 100");
+                    t.HasCheckConstraint("CK_PhieuNhapKhoChiTiet_ThanhTien", "ThanhTien >= 0");
+                });
+            });
+
+            modelBuilder.Entity<MedicineBatch>()
+                .ToTable(t => t.HasCheckConstraint("CK_LoThuoc_GiaNhap", "GiaNhap IS NULL OR GiaNhap >= 0"));
+
+            modelBuilder.Entity<Supplier>()
+                .HasIndex(s => s.TenNhaCungCap);
+
+            modelBuilder.Entity<GoodsReceipt>().Property(r => r.NgayNhap).HasDefaultValueSql(NowSql());
+            modelBuilder.Entity<GoodsReceipt>().Property(r => r.NgayTao).HasDefaultValueSql(NowSql());
+            modelBuilder.Entity<Supplier>().Property(s => s.NgayTao).HasDefaultValueSql(NowSql());
         }
     }
 }

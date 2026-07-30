@@ -1,0 +1,149 @@
+@model QuanLyBenhVien.Models.GoodsReceipt
+@{
+    Layout = null;
+
+    string LoaiNhapLabel(string loai) => loai switch
+    {
+        "MuaNCC" => "Mua nhà cung cấp",
+        "ChuyenKho" => "Chuyển kho nội bộ",
+        "HangTraVe" => "Hàng trả về",
+        "VienTro" => "Viện trợ / tài trợ",
+        _ => loai
+    };
+
+    string KhoNhapLabel(string kho) => kho switch
+    {
+        "KhoChan" => "Kho chẵn",
+        "KhoLe" => "Kho lẻ",
+        "NhaThuoc" => "Nhà thuốc",
+        _ => kho
+    };
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Phiếu nhập kho @Model.MaPhieu</title>
+    <style>
+        @@page { size: A4; margin: 15mm 14mm; }
+        * { box-sizing: border-box; }
+        body { font-family: "Times New Roman", Times, serif; font-size: 13px; color: #111; margin: 0; }
+        .print-toolbar { text-align: center; padding: 10px; background: #f0f0f0; }
+        .print-toolbar button { padding: 8px 18px; font-size: 14px; cursor: pointer; }
+        @@media print { .print-toolbar { display: none; } }
+
+        .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .org-info { font-weight: bold; text-transform: uppercase; }
+        .doc-title { text-align: center; margin: 14px 0 4px; }
+        .doc-title h1 { font-size: 20px; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .doc-sub { text-align: center; font-style: italic; margin-bottom: 14px; }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; margin-bottom: 14px; }
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        table.items th, table.items td { border: 1px solid #333; padding: 5px 6px; font-size: 12.5px; }
+        table.items th { background: #eee; text-align: center; }
+        table.items td.num { text-align: right; }
+        .totals { width: 320px; margin-left: auto; margin-bottom: 24px; }
+        .totals div { display: flex; justify-content: space-between; padding: 2px 0; }
+        .totals .grand { font-weight: bold; font-size: 15px; border-top: 1px solid #333; padding-top: 4px; }
+        .signatures { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; margin-top: 30px; }
+        .signatures .sig-line { margin-top: 60px; font-weight: bold; }
+        .signatures .role { font-weight: bold; }
+        .signatures .hint { font-style: italic; font-size: 11.5px; }
+    </style>
+</head>
+<body>
+    <div class="print-toolbar">
+        <button onclick="window.print()">In phiếu</button>
+    </div>
+
+    <div class="header-row">
+        <div class="org-info">
+            BỆNH VIỆN MEDIFLOW HMS<br />
+            <span style="font-weight:normal; text-transform:none;">Khoa Dược - Bộ phận Kho</span>
+        </div>
+        <div style="text-align:right;">
+            Số: <strong>@Model.MaPhieu</strong>
+        </div>
+    </div>
+
+    <div class="doc-title">
+        <h1>Phiếu nhập kho</h1>
+    </div>
+    <div class="doc-sub">Ngày @Model.NgayNhap.ToString("dd") tháng @Model.NgayNhap.ToString("MM") năm @Model.NgayNhap.ToString("yyyy")</div>
+
+    <div class="meta-grid">
+        <div>Loại nhập: <strong>@LoaiNhapLabel(Model.LoaiNhap)</strong></div>
+        <div>Kho nhập: <strong>@KhoNhapLabel(Model.KhoNhap)</strong></div>
+        <div>Nhà cung cấp: <strong>@(Model.NhaCungCap?.TenNhaCungCap ?? "--")</strong></div>
+        <div>Số hóa đơn NCC: <strong>@(Model.SoHoaDonNCC ?? "--")</strong></div>
+        <div>Ngày hóa đơn: <strong>@(Model.NgayHoaDon?.ToString("dd/MM/yyyy") ?? "--")</strong></div>
+        <div>Người giao hàng: <strong>@(Model.NguoiGiaoHang ?? "--")</strong></div>
+        <div>Người lập phiếu: <strong>@Model.NguoiTao?.HoTen</strong></div>
+        <div>Người duyệt: <strong>@Model.NguoiDuyet?.HoTen</strong> (@Model.NgayDuyet?.ToString("dd/MM/yyyy"))</div>
+    </div>
+
+    <table class="items">
+        <thead>
+            <tr>
+                <th style="width:26px;">STT</th>
+                <th>Tên thuốc</th>
+                <th>Số lô</th>
+                <th>Hạn dùng</th>
+                <th>ĐVT</th>
+                <th>Số lượng</th>
+                <th>Đơn giá</th>
+                <th>%VAT</th>
+                <th>Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ var i = 1; }
+            @foreach (var d in Model.ChiTiet)
+            {
+                <tr>
+                    <td style="text-align:center;">@i</td>
+                    <td>@d.Medicine.TenThuoc<br /><span style="font-size:11px; font-style:italic;">@d.Medicine.HoatChat</span></td>
+                    <td style="text-align:center;">@d.SoLo</td>
+                    <td style="text-align:center;">@d.HanSuDung.ToString("dd/MM/yyyy")</td>
+                    <td style="text-align:center;">@d.Medicine.DonViTinh</td>
+                    <td class="num">@d.SoLuong</td>
+                    <td class="num">@d.DonGia.ToString("N0")</td>
+                    <td class="num">@d.PhanTramVAT %</td>
+                    <td class="num">@d.ThanhTien.ToString("N0")</td>
+                </tr>
+                i++;
+            }
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <div><span>Tổng số mặt hàng</span><span>@Model.TongSoMatHang</span></div>
+        <div><span>Tổng tiền trước VAT</span><span>@Model.TongTienTruocVAT.ToString("N0") đ</span></div>
+        <div><span>Tiền VAT</span><span>@Model.TienVAT.ToString("N0") đ</span></div>
+        <div class="grand"><span>Tổng thanh toán</span><span>@Model.TongThanhToan.ToString("N0") đ</span></div>
+    </div>
+
+    <div class="signatures">
+        <div>
+            <div class="role">Người giao hàng</div>
+            <div class="hint">(Ký, ghi rõ họ tên)</div>
+            <div class="sig-line">&nbsp;</div>
+        </div>
+        <div>
+            <div class="role">Người lập phiếu</div>
+            <div class="hint">(Ký, ghi rõ họ tên)</div>
+            <div class="sig-line">@Model.NguoiTao?.HoTen</div>
+        </div>
+        <div>
+            <div class="role">Thủ kho</div>
+            <div class="hint">(Ký, ghi rõ họ tên)</div>
+            <div class="sig-line">@Model.NguoiDuyet?.HoTen</div>
+        </div>
+        <div>
+            <div class="role">Trưởng khoa Dược</div>
+            <div class="hint">(Ký, ghi rõ họ tên)</div>
+            <div class="sig-line">&nbsp;</div>
+        </div>
+    </div>
+</body>
+</html>

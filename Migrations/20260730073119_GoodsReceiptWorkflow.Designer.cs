@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanLyBenhVien.Data;
 
@@ -10,9 +11,11 @@ using QuanLyBenhVien.Data;
 namespace QuanLyBenhVien.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260730073119_GoodsReceiptWorkflow")]
+    partial class GoodsReceiptWorkflow
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
@@ -56,7 +59,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("TrangThai");
 
-                    b.ToTable("LichKham", null, t =>
+                    b.ToTable("LichKham", t =>
                         {
                             t.HasCheckConstraint("CK_LichKham_TrangThai", "TrangThai IN ('ChoXacNhan','DaXacNhan','DangKham','HoanThanh','DaHuy','VangMat')");
                         });
@@ -114,7 +117,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TinTuc", (string)null);
+                    b.ToTable("TinTuc");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.AuditLog", b =>
@@ -156,7 +159,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("NguoiDungId");
 
-                    b.ToTable("NhatKyHeThong", (string)null);
+                    b.ToTable("NhatKyHeThong");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.Department", b =>
@@ -181,7 +184,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Khoa", (string)null);
+                    b.ToTable("Khoa");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.Dependent", b =>
@@ -230,7 +233,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("BenhNhanId");
 
-                    b.ToTable("NguoiThan", (string)null);
+                    b.ToTable("NguoiThan");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.Doctor", b =>
@@ -285,7 +288,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("XoaBoiId");
 
-                    b.ToTable("BacSi", null, t =>
+                    b.ToTable("BacSi", t =>
                         {
                             t.HasCheckConstraint("CK_BacSi_ChucVu", "ChucVu IN ('Bác sĩ','Phó trưởng khoa','Trưởng khoa')");
                         });
@@ -333,7 +336,7 @@ namespace QuanLyBenhVien.Migrations
                     b.HasIndex("BacSiId", "ThuTrongTuan", "GioBatDau", "GioKetThuc")
                         .IsUnique();
 
-                    b.ToTable("LichLamViecBacSi", null, t =>
+                    b.ToTable("LichLamViecBacSi", t =>
                         {
                             t.HasCheckConstraint("CK_LichLamViecBacSi_GioKetThuc", "GioKetThuc > GioBatDau");
 
@@ -403,7 +406,7 @@ namespace QuanLyBenhVien.Migrations
                     b.HasIndex("LichKhamId")
                         .IsUnique();
 
-                    b.ToTable("PhieuKham", (string)null);
+                    b.ToTable("PhieuKham");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.FamilyHistory", b =>
@@ -438,7 +441,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("BenhNhanId");
 
-                    b.ToTable("TienSuGiaDinh", (string)null);
+                    b.ToTable("TienSuGiaDinh");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.GoodsReceipt", b =>
@@ -541,7 +544,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("TrangThai");
 
-                    b.ToTable("PhieuNhapKho", null, t =>
+                    b.ToTable("PhieuNhapKho", t =>
                         {
                             t.HasCheckConstraint("CK_PhieuNhapKho_KhoNhap", "KhoNhap IN ('KhoChan','KhoLe','NhaThuoc')");
 
@@ -608,7 +611,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("ThuocId");
 
-                    b.ToTable("PhieuNhapKhoChiTiet", null, t =>
+                    b.ToTable("PhieuNhapKhoChiTiet", t =>
                         {
                             t.HasCheckConstraint("CK_PhieuNhapKhoChiTiet_DonGia", "DonGia >= 0");
 
@@ -649,7 +652,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("BenhNhanId");
 
-                    b.ToTable("TiemChung", (string)null);
+                    b.ToTable("TiemChung");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.Invoice", b =>
@@ -690,7 +693,7 @@ namespace QuanLyBenhVien.Migrations
                     b.HasIndex("PhieuKhamId")
                         .IsUnique();
 
-                    b.ToTable("HoaDon", null, t =>
+                    b.ToTable("HoaDon", t =>
                         {
                             t.HasCheckConstraint("CK_HoaDon_PhuongThuc", "PhuongThuc IS NULL OR PhuongThuc IN ('TienMat','ChuyenKhoan','Online (MoMo)','Online (VNPay)','Online (ZaloPay)','Online')");
 
@@ -721,7 +724,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("HoaDonId");
 
-                    b.ToTable("ChiTietHoaDon", null, t =>
+                    b.ToTable("ChiTietHoaDon", t =>
                         {
                             t.HasCheckConstraint("CK_ChiTietHoaDon_SoTien", "SoTien >= 0");
                         });
@@ -767,7 +770,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Thuoc", null, t =>
+                    b.ToTable("Thuoc", t =>
                         {
                             t.HasCheckConstraint("CK_Thuoc_Gia", "Gia >= 0");
 
@@ -817,7 +820,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("ThuocId");
 
-                    b.ToTable("LoThuoc", null, t =>
+                    b.ToTable("LoThuoc", t =>
                         {
                             t.HasCheckConstraint("CK_LoThuoc_GiaNhap", "GiaNhap IS NULL OR GiaNhap >= 0");
 
@@ -857,7 +860,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("NguoiDungId");
 
-                    b.ToTable("ThongBao", (string)null);
+                    b.ToTable("ThongBao");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.Patient", b =>
@@ -922,7 +925,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("XoaBoiId");
 
-                    b.ToTable("BenhNhan", null, t =>
+                    b.ToTable("BenhNhan", t =>
                         {
                             t.HasCheckConstraint("CK_BenhNhan_NgaySinh", "NgaySinh <= CURRENT_TIMESTAMP");
                         });
@@ -973,7 +976,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("BenhNhanId");
 
-                    b.ToTable("TaiLieuBenhNhan", (string)null);
+                    b.ToTable("TaiLieuBenhNhan");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.PatientHealthMetric", b =>
@@ -1021,7 +1024,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("BenhNhanId");
 
-                    b.ToTable("ChiSoSucKhoeTuDo", (string)null);
+                    b.ToTable("ChiSoSucKhoeTuDo");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.Prescription", b =>
@@ -1043,7 +1046,7 @@ namespace QuanLyBenhVien.Migrations
                     b.HasIndex("PhieuKhamId")
                         .IsUnique();
 
-                    b.ToTable("DonThuoc", (string)null);
+                    b.ToTable("DonThuoc");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.PrescriptionDetail", b =>
@@ -1072,7 +1075,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("ThuocId");
 
-                    b.ToTable("ChiTietDonThuoc", null, t =>
+                    b.ToTable("ChiTietDonThuoc", t =>
                         {
                             t.HasCheckConstraint("CK_ChiTietDonThuoc_SoLuong", "SoLuong > 0");
                         });
@@ -1114,7 +1117,7 @@ namespace QuanLyBenhVien.Migrations
                     b.HasIndex("LichKhamId")
                         .IsUnique();
 
-                    b.ToTable("DanhGia", null, t =>
+                    b.ToTable("DanhGia", t =>
                         {
                             t.HasCheckConstraint("CK_DanhGia_SoSao", "SoSao BETWEEN 1 AND 5");
                         });
@@ -1154,7 +1157,7 @@ namespace QuanLyBenhVien.Migrations
                     b.HasIndex("VaiTro", "ModuleKey")
                         .IsUnique();
 
-                    b.ToTable("PhanQuyenVaiTro", (string)null);
+                    b.ToTable("PhanQuyenVaiTro");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.Service", b =>
@@ -1178,7 +1181,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("KhoaId");
 
-                    b.ToTable("DichVu", null, t =>
+                    b.ToTable("DichVu", t =>
                         {
                             t.HasCheckConstraint("CK_DichVu_Gia", "Gia >= 0");
                         });
@@ -1227,7 +1230,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("TenNhaCungCap");
 
-                    b.ToTable("NhaCungCap", (string)null);
+                    b.ToTable("NhaCungCap");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.User", b =>
@@ -1297,7 +1300,7 @@ namespace QuanLyBenhVien.Migrations
 
                     b.HasIndex("XoaBoiId");
 
-                    b.ToTable("NguoiDung", null, t =>
+                    b.ToTable("NguoiDung", t =>
                         {
                             t.HasCheckConstraint("CK_NguoiDung_TrangThai", "TrangThai IN ('Active','Blocked')");
 

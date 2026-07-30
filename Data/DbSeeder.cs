@@ -19,6 +19,7 @@ namespace QuanLyBenhVien.Data
             SeedAdditionalRoleAccounts(context);
             SeedRoleOverviewDemoData(context);
             SeedRolePermissionDefaults(context);
+            SeedGoodsReceiptDemoData(context);
 
             // Runs before the "complete dataset" shortcut below so existing
             // databases also pick up the public-site articles.
@@ -2056,6 +2057,30 @@ namespace QuanLyBenhVien.Data
             if (toAdd.Count > 0)
             {
                 context.RolePermissions.AddRange(toAdd);
+                context.SaveChanges();
+            }
+        }
+
+        // Dữ liệu mẫu cho tính năng phiếu nhập kho: vài nhà cung cấp để chọn
+        // trong combobox, và cấp quyền duyệt phiếu cho một tài khoản Admin cụ
+        // thể (đóng vai thủ kho/trưởng khoa dược) để có thể kiểm thử luồng
+        // duyệt/từ chối ngay trên dữ liệu demo.
+        private static void SeedGoodsReceiptDemoData(ApplicationDbContext context)
+        {
+            if (!context.Suppliers.Any())
+            {
+                context.Suppliers.AddRange(
+                    new Supplier { TenNhaCungCap = "Công ty CP Dược phẩm Trung ương 1 (Pharbaco)", MaSoThue = "0100107839", DiaChi = "160 Tôn Đức Thắng, Đống Đa, Hà Nội", SoDienThoai = "024.3845.1111", NguoiLienHe = "Nguyễn Văn Bình" },
+                    new Supplier { TenNhaCungCap = "Công ty CP Xuất nhập khẩu Y tế Domesco", MaSoThue = "1400384433", DiaChi = "66 Hai Bà Trưng, TP. Cao Lãnh, Đồng Tháp", SoDienThoai = "0277.3852.278", NguoiLienHe = "Trần Thị Hoa" },
+                    new Supplier { TenNhaCungCap = "Công ty CP Dược Hậu Giang", MaSoThue = "1800156801", DiaChi = "288 Bis Nguyễn Văn Cừ, Ninh Kiều, Cần Thơ", SoDienThoai = "0292.3891.433", NguoiLienHe = "Lê Minh Tuấn" }
+                );
+                context.SaveChanges();
+            }
+
+            var quanLyKho = context.Users.FirstOrDefault(u => u.Email == "admin.operations@hms.com");
+            if (quanLyKho != null && !quanLyKho.DuocDuyetPhieuNhapKho)
+            {
+                quanLyKho.DuocDuyetPhieuNhapKho = true;
                 context.SaveChanges();
             }
         }

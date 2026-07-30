@@ -51,6 +51,13 @@ namespace QuanLyBenhVien.Models
         [ForeignKey("XoaBoiId")]
         public virtual User? XoaBoi { get; set; }
 
+        // Cho phép tài khoản Admin này duyệt phiếu nhập kho thuốc (vai trò
+        // nghiệp vụ "thủ kho"/"trưởng khoa dược"). Hệ thống hiện chỉ có 3 vai
+        // trò (Admin/Doctor/Patient) nên đây là cờ phân quyền chi tiết cấp
+        // tài khoản, không phải một VaiTro mới, để không phải mở rộng danh
+        // sách vai trò/ràng buộc CHECK đã có.
+        public bool DuocDuyetPhieuNhapKho { get; set; } = false;
+
         // Navigation properties
         public virtual Doctor? DoctorProfile { get; set; }
         public virtual Patient? PatientProfile { get; set; }

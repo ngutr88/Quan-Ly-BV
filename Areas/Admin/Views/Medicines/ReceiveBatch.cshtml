@@ -1,129 +1,669 @@
+@model QuanLyBenhVien.Models.ViewModels.GoodsReceiptViewModel
+@using QuanLyBenhVien.Models
+
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = "Nhập kho lô thuốc mới";
+    ViewData["Title"] = "Lập phiếu nhập kho";
+
+    var suppliers = (List<Supplier>)ViewBag.Suppliers;
+    var existingMedicines = ViewBag.ExistingMedicines as Dictionary<int, Medicine>;
+    var isPreview = (bool)ViewBag.IsPreviewMaPhieu;
+    var isEditable = Model.TrangThai == "Nhap" || Model.TrangThai == "TuChoi";
 }
 
 @section Styles {
     <link href="~/lib/select2/css/select2.min.css" rel="stylesheet" asp-append-version="true" />
     <style>
-        .medicine-select2 + .select2-container {
-            width: 100% !important;
-        }
+        .medicine-select2 + .select2-container { width: 100% !important; }
         .medicine-select2 + .select2-container .select2-selection--single {
-            height: 3.25rem;
+            height: 2.75rem;
             border: 1px solid #cbd8e3;
             border-radius: .5rem;
             background: #fff;
         }
         .medicine-select2 + .select2-container .select2-selection--single .select2-selection__rendered {
-            padding: 0 2.75rem 0 1rem;
-            line-height: 3.15rem;
+            padding: 0 2.5rem 0 .75rem;
+            line-height: 2.65rem;
             color: #102a43;
+            font-size: .875rem;
         }
-        .medicine-select2 + .select2-container .select2-selection--single .select2-selection__arrow {
-            top: 50%;
-            right: .75rem;
-            transform: translateY(-50%);
-        }
-        .medicine-select2 + .select2-container.select2-container--focus .select2-selection--single,
-        .medicine-select2 + .select2-container.select2-container--open .select2-selection--single {
-            border-color: #0056b3;
-            box-shadow: 0 0 0 4px rgba(0, 86, 179, .1);
-            outline: none;
-        }
-        .select2-dropdown {
-            border-color: #cbd8e3;
-            border-radius: .5rem;
-            overflow: hidden;
-        }
-        .select2-search--dropdown .select2-search__field {
-            border: 1px solid #cbd8e3 !important;
-            border-radius: .4rem;
-            padding: .55rem .75rem;
-            outline: none;
-        }
-        .select2-results__option {
-            padding: .65rem 1rem;
-        }
-        .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background: #0056b3;
-        }
+        .medicine-select2 + .select2-container .select2-selection--single .select2-selection__arrow { top: 50%; right: .5rem; transform: translateY(-50%); }
+        .select2-dropdown { border-color: #cbd8e3; border-radius: .5rem; overflow: hidden; z-index: 60; }
+        .select2-container { z-index: 60; }
+        .field-error { border-color: #ba1a1a !important; background-color: rgba(186,26,26,.04); }
+        .field-error-msg { color: #ba1a1a; font-size: .72rem; margin-top: 2px; display: block; }
+        .receipt-detail-table input, .receipt-detail-table select { font-size: .8rem; }
+        .sticky-summary-bar { position: sticky; bottom: 0; z-index: 40; }
     </style>
 }
 
 <div class="mb-unit-lg">
-    <a href="/Admin/Medicines" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
-        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại kho dược phẩm
+    <a href="/Admin/Medicines/Receipts" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách phiếu nhập
     </a>
-    <h2 class="font-headline-lg text-headline-lg text-on-surface">Nhập kho Lô thuốc mới</h2>
-    <p class="text-body-md text-on-surface-variant">Lập phiếu nhập kho lô thuốc mới, hạn sử dụng và số lượng thực tế.</p>
+    <div class="flex items-center gap-unit-sm flex-wrap">
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">@(Model.Id.HasValue ? "Chỉnh sửa phiếu nhập kho" : "Lập phiếu nhập kho")</h2>
+        <span id="ma-phieu-badge" class="px-2 py-1 rounded-md bg-primary-container/20 text-primary font-mono font-bold text-body-md">
+            @Model.MaPhieu@(isPreview ? " (dự kiến)" : "")
+        </span>
+        @if (Model.PhieuGocId.HasValue)
+        {
+            <span class="px-2 py-1 rounded-md bg-tertiary-container/20 text-tertiary font-label-md">
+                Phiếu điều chỉnh cho @(ViewBag.PhieuGocMaPhieu ?? "phiếu gốc #" + Model.PhieuGocId)
+            </span>
+        }
+    </div>
+    <p class="text-body-md text-on-surface-variant">Nhập đầy đủ thông tin phiếu và danh sách thuốc trước khi lưu nháp hoặc gửi duyệt.</p>
 </div>
 
-<div class="glass-card rounded-xl p-unit-lg shadow-sm max-w-xl">
-    <form action="/Admin/Medicines/ReceiveBatch" method="POST" class="space-y-unit-md">
-        @Html.AntiForgeryToken()
+@if (!isEditable)
+{
+    <div class="p-unit-md mb-unit-md bg-error-container/20 border-l-4 border-error text-error rounded-r">
+        Phiếu này đang ở trạng thái "@Model.TrangThai" và đã bị khóa, không thể chỉnh sửa.
+    </div>
+}
 
-        @if (!ViewData.ModelState.IsValid)
-        {
-            <div class="p-unit-md bg-error-container/20 border-l-4 border-error text-error text-body-md rounded-r mb-unit-md">
-                @Html.ValidationSummary(true)
+<form id="receipt-form" class="space-y-unit-lg" autocomplete="off">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="receiptId" value="@Model.Id" />
+    <input type="hidden" id="phieuGocId" value="@Model.PhieuGocId" />
+
+    <!-- Header -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg">
+        <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-unit-md">Thông tin phiếu</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-unit-md">
+            <div class="space-y-unit-xs">
+                <label class="hms-field-label">Ngày nhập <span class="text-error">*</span></label>
+                <input type="date" id="ngayNhap" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg" value="@Model.NgayNhap.ToString("yyyy-MM-dd")" @(isEditable ? "" : "disabled") />
             </div>
-        }
+            <div class="space-y-unit-xs">
+                <label class="hms-field-label">Loại nhập <span class="text-error">*</span></label>
+                <select id="loaiNhap" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg" @(isEditable ? "" : "disabled")>
+                    <option value="MuaNCC" selected="@(Model.LoaiNhap == "MuaNCC")">Mua nhà cung cấp</option>
+                    <option value="ChuyenKho" selected="@(Model.LoaiNhap == "ChuyenKho")">Chuyển kho nội bộ</option>
+                    <option value="HangTraVe" selected="@(Model.LoaiNhap == "HangTraVe")">Hàng trả về</option>
+                    <option value="VienTro" selected="@(Model.LoaiNhap == "VienTro")">Viện trợ / tài trợ</option>
+                </select>
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="hms-field-label">Kho nhập <span class="text-error">*</span></label>
+                <select id="khoNhap" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg" @(isEditable ? "" : "disabled")>
+                    <option value="KhoChan" selected="@(Model.KhoNhap == "KhoChan")">Kho chẵn</option>
+                    <option value="KhoLe" selected="@(Model.KhoNhap == "KhoLe")">Kho lẻ</option>
+                    <option value="NhaThuoc" selected="@(Model.KhoNhap == "NhaThuoc")">Nhà thuốc</option>
+                </select>
+            </div>
 
-        <!-- Medicine Select -->
-        <div class="space-y-unit-xs">
-            <label class="block text-caption font-semibold text-on-surface-variant" for="thuocId">Dược phẩm <span class="text-error">*</span></label>
-            <select class="medicine-select2 w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                    id="thuocId" name="thuocId" asp-items="ViewBag.ThuocId" required>
-                <option value="">Chọn thuốc nhập kho</option>
-            </select>
+            <div class="space-y-unit-xs" id="nhaCungCapWrap">
+                <label class="hms-field-label">Nhà cung cấp <span id="nccRequiredMark" class="text-error">*</span></label>
+                <select id="nhaCungCapId" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg" @(isEditable ? "" : "disabled")>
+                    <option value="">-- Chọn nhà cung cấp --</option>
+                    @foreach (var s in suppliers)
+                    {
+                        <option value="@s.Id" selected="@(Model.NhaCungCapId == s.Id)">@s.TenNhaCungCap</option>
+                    }
+                </select>
+                <span class="field-error-msg hidden" data-error-for="header.nhaCungCapId"></span>
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="hms-field-label">Số hóa đơn NCC</label>
+                <input type="text" id="soHoaDonNCC" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg" value="@Model.SoHoaDonNCC" @(isEditable ? "" : "disabled") />
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="hms-field-label">Ngày hóa đơn</label>
+                <input type="date" id="ngayHoaDon" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg" value="@(Model.NgayHoaDon?.ToString("yyyy-MM-dd"))" @(isEditable ? "" : "disabled") />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="hms-field-label">Người giao hàng</label>
+                <input type="text" id="nguoiGiaoHang" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg" value="@Model.NguoiGiaoHang" @(isEditable ? "" : "disabled") />
+            </div>
+            <div class="space-y-unit-xs md:col-span-2">
+                <label class="hms-field-label">Ghi chú</label>
+                <input type="text" id="ghiChu" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg" value="@Model.GhiChu" @(isEditable ? "" : "disabled") />
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail table -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg">
+        <div class="flex items-center justify-between mb-unit-md flex-wrap gap-2">
+            <h3 class="font-title-lg text-title-lg text-primary">Chi tiết thuốc nhập</h3>
+            @if (isEditable)
+            {
+                <button type="button" id="btnAddRow" class="hms-btn hms-btn-secondary">
+                    <span class="material-symbols-outlined">add</span> Thêm dòng
+                </button>
+            }
         </div>
 
-        <!-- Lot Number -->
-        <div class="space-y-unit-xs">
-            <label class="block text-caption font-semibold text-on-surface-variant" for="soLo">Mã số Lô nhập (Batch/Lot No.) <span class="text-error">*</span></label>
-            <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus font-mono" 
-                   id="soLo" name="soLo" placeholder="Ví dụ: LOT-PARA-003" required type="text" />
+        <div class="hms-table-scroll overflow-x-auto border border-outline-variant rounded-lg" role="region" aria-label="Bảng chi tiết thuốc" tabindex="0">
+            <table class="w-full text-left receipt-detail-table" style="min-width: 1080px;">
+                <thead>
+                    <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[11px] uppercase">
+                        <th class="px-2 py-2 w-64">Tên thuốc</th>
+                        <th class="px-2 py-2 w-32">Số lô</th>
+                        <th class="px-2 py-2 w-36">Hạn dùng</th>
+                        <th class="px-2 py-2 w-24">Số lượng</th>
+                        <th class="px-2 py-2 w-20">ĐVT</th>
+                        <th class="px-2 py-2 w-28">Đơn giá</th>
+                        <th class="px-2 py-2 w-16">%VAT</th>
+                        <th class="px-2 py-2 w-32 text-right">Thành tiền</th>
+                        <th class="px-2 py-2 w-10"></th>
+                    </tr>
+                </thead>
+                <tbody id="chiTietBody" class="divide-y divide-outline-variant"></tbody>
+            </table>
         </div>
+        <div id="emptyDetailMsg" class="text-center text-on-surface-variant py-unit-md hidden">Chưa có dòng thuốc nào. Nhấn "Thêm dòng" để bắt đầu.</div>
+        <span class="field-error-msg hidden" data-error-for="chiTiet"></span>
+    </div>
 
-        <!-- Expiry Date -->
-        <div class="space-y-unit-xs">
-            <label class="block text-caption font-semibold text-on-surface-variant" for="hanSuDung">Hạn sử dụng (Expiry Date) <span class="text-error">*</span></label>
-            <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                   id="hanSuDung" name="hanSuDung" required type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+    @if (isEditable)
+    {
+        <div class="sticky-summary-bar bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg p-unit-md flex flex-wrap items-center justify-between gap-unit-md">
+            <div class="flex flex-wrap gap-unit-lg text-body-md">
+                <div><span class="text-on-surface-variant">Số mặt hàng:</span> <strong id="sumSoMatHang">0</strong></div>
+                <div><span class="text-on-surface-variant">Tổng trước VAT:</span> <strong id="sumTruocVAT">0 đ</strong></div>
+                <div><span class="text-on-surface-variant">Tiền VAT:</span> <strong id="sumVAT">0 đ</strong></div>
+                <div><span class="text-on-surface-variant">Tổng thanh toán:</span> <strong id="sumTongThanhToan" class="text-primary text-title-lg">0 đ</strong></div>
+            </div>
+            <div class="flex items-center gap-unit-sm">
+                <button type="button" id="btnCancelForm" class="hms-btn hms-btn-secondary">Hủy bỏ</button>
+                <button type="button" id="btnSaveDraft" class="hms-btn hms-btn-secondary">
+                    <span class="material-symbols-outlined">save</span> Lưu nháp
+                </button>
+                <button type="button" id="btnSubmit" class="hms-btn hms-btn-primary">
+                    <span class="material-symbols-outlined">send</span> Gửi duyệt
+                </button>
+            </div>
         </div>
+    }
+</form>
 
-        <!-- Quantity -->
-        <div class="space-y-unit-xs">
-            <label class="block text-caption font-semibold text-on-surface-variant" for="soLuongNhap">Số lượng viên / lọ nhập kho <span class="text-error">*</span></label>
-            <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                   id="soLuongNhap" name="soLuongNhap" placeholder="Nhập số lượng thực tế" required min="1" type="number" />
+<!-- Modal: cận date confirm -->
+<div id="modalCanDate" class="hidden fixed inset-0 bg-on-background/40 z-[100] flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest rounded-xl shadow-2xl p-unit-lg max-w-md w-full">
+        <div class="flex items-start gap-unit-sm mb-unit-md">
+            <span class="material-symbols-outlined text-tertiary text-[28px]">warning</span>
+            <div>
+                <h4 class="font-title-md text-title-md text-on-surface">Thuốc cận date</h4>
+                <p class="text-body-md text-on-surface-variant">Hạn sử dụng còn dưới 6 tháng. Bạn có chắc chắn vẫn muốn nhập lô này?</p>
+            </div>
         </div>
+        <div class="flex justify-end gap-unit-sm">
+            <button type="button" class="hms-btn hms-btn-secondary" onclick="closeModal('modalCanDate')">Hủy</button>
+            <button type="button" class="hms-btn hms-btn-primary" id="btnConfirmCanDate">Xác nhận vẫn nhập</button>
+        </div>
+    </div>
+</div>
 
-        <!-- Actions -->
-        <div class="flex items-center gap-unit-md pt-unit-md border-t border-outline-variant mt-unit-lg">
-            <button class="bg-primary text-on-primary font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] shadow-md flex items-center justify-center gap-1" type="submit">
-                <span class="material-symbols-outlined text-[20px]">save</span> Lưu phiếu nhập kho
-            </button>
-            <a href="/Admin/Medicines" class="text-on-surface-variant hover:underline font-label-md">Hủy bỏ</a>
+<!-- Modal: cộng dồn lô -->
+<div id="modalCongDon" class="hidden fixed inset-0 bg-on-background/40 z-[100] flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest rounded-xl shadow-2xl p-unit-lg max-w-md w-full">
+        <div class="flex items-start gap-unit-sm mb-unit-md">
+            <span class="material-symbols-outlined text-primary text-[28px]">layers</span>
+            <div>
+                <h4 class="font-title-md text-title-md text-on-surface">Số lô đã tồn tại</h4>
+                <p class="text-body-md text-on-surface-variant">Thuốc và số lô này đã có trong kho. Bạn muốn cộng dồn vào lô hiện có hay tạo bản ghi mới?</p>
+            </div>
         </div>
-    </form>
+        <div class="flex justify-end gap-unit-sm">
+            <button type="button" class="hms-btn hms-btn-secondary" id="btnCongDonNo">Tạo bản ghi mới</button>
+            <button type="button" class="hms-btn hms-btn-primary" id="btnCongDonYes">Cộng dồn vào lô hiện có</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: xác nhận hủy bỏ form -->
+<div id="modalConfirmCancel" class="hidden fixed inset-0 bg-on-background/40 z-[100] flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest rounded-xl shadow-2xl p-unit-lg max-w-md w-full">
+        <h4 class="font-title-md text-title-md text-on-surface mb-2">Hủy bỏ thay đổi?</h4>
+        <p class="text-body-md text-on-surface-variant mb-unit-md">Dữ liệu bạn vừa nhập sẽ không được lưu lại.</p>
+        <div class="flex justify-end gap-unit-sm">
+            <button type="button" class="hms-btn hms-btn-secondary" onclick="closeModal('modalConfirmCancel')">Tiếp tục chỉnh sửa</button>
+            <button type="button" class="hms-btn hms-btn-primary" id="btnConfirmCancelYes">Hủy bỏ</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast thành công + 2 lựa chọn -->
+<div id="modalSuccess" class="hidden fixed inset-0 bg-on-background/40 z-[100] flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest rounded-xl shadow-2xl p-unit-lg max-w-md w-full text-center">
+        <span class="material-symbols-outlined text-secondary text-[48px]">check_circle</span>
+        <p id="successMessageText" class="font-title-md text-title-md text-on-surface my-unit-sm">Đã lưu phiếu thành công.</p>
+        <div class="flex justify-center gap-unit-sm mt-unit-md">
+            <a id="btnGoToNew" href="/Admin/Medicines/ReceiveBatch" class="hms-btn hms-btn-secondary">Tạo phiếu mới</a>
+            <a id="btnGoToView" href="#" class="hms-btn hms-btn-primary">Xem phiếu</a>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
     <script src="~/lib/select2/js/select2.min.js" asp-append-version="true"></script>
     <script>
-        $(function () {
-            $('#thuocId').select2({
-                width: '100%',
-                placeholder: 'Chọn thuốc nhập kho',
-                allowClear: true,
-                language: {
-                    noResults: function () { return 'Không tìm thấy dược phẩm'; },
-                    searching: function () { return 'Đang tìm kiếm...'; }
+        const ANTIFORGERY_TOKEN = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const IS_EDITABLE = @Html.Raw(isEditable ? "true" : "false");
+        const CAN_DATE_MONTHS = 6;
+        const INTEGER_ONLY_UNITS = ['viên', 'ống', 'lọ'];
+        let rowSeq = 0;
+        let formIsDirty = false;
+        let pendingCanDateRow = null;
+        let pendingCongDonRow = null;
+
+        function isIntegerOnlyUnit(donViTinh) {
+            if (!donViTinh) return true;
+            const lower = donViTinh.toLowerCase();
+            return INTEGER_ONLY_UNITS.some(u => lower.includes(u));
+        }
+
+        function formatVND(n) {
+            return Math.round(n).toLocaleString('vi-VN') + ' đ';
+        }
+
+        function parseVNNumber(str) {
+            if (typeof str !== 'string') return Number(str) || 0;
+            return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+        }
+
+        function formatVNInputNumber(n) {
+            if (isNaN(n)) return '';
+            return Math.round(n).toLocaleString('vi-VN');
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+
+        function clearFieldErrors() {
+            $('.field-error').removeClass('field-error');
+            $('.field-error-msg').addClass('hidden').text('');
+        }
+
+        function paintErrors(errors) {
+            clearFieldErrors();
+            (errors || []).forEach(err => {
+                const parts = err.field.split('.');
+                if (parts[0] === 'header') {
+                    $(`#${parts[1]}`).addClass('field-error');
+                    $(`[data-error-for="${err.field}"]`).removeClass('hidden').text(err.message);
+                } else if (parts[0] === 'chiTiet' && parts.length === 3) {
+                    const idx = parts[1];
+                    const col = parts[2];
+                    $(`#row-${idx} [data-col="${col}"]`).addClass('field-error');
+                    $(`#row-${idx} [data-error-for="${col}"]`).removeClass('hidden').text(err.message);
+                } else {
+                    $(`[data-error-for="chiTiet"]`).removeClass('hidden').text(err.message);
                 }
             });
+            if (errors && errors.length) {
+                showGlobalToast('Không thể lưu phiếu', 'Vui lòng kiểm tra lại các ô được đánh dấu đỏ.', 'error');
+                const firstBad = document.querySelector('.field-error');
+                if (firstBad) firstBad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function rowHtml(idx) {
+            return `
+            <tr id="row-${idx}" class="chitiet-row align-top">
+                <td class="px-2 py-2">
+                    <select class="medicine-select2 medicine-picker" id="thuocId-${idx}" data-col="thuocId"></select>
+                    <span class="field-error-msg hidden" data-error-for="thuocId"></span>
+                    <div class="text-[11px] text-on-surface-variant mt-1 hidden" id="medInfo-${idx}"></div>
+                </td>
+                <td class="px-2 py-2">
+                    <input type="text" id="soLo-${idx}" data-col="soLo" class="w-full px-2 py-2 border border-outline-variant rounded-lg font-mono"
+                           placeholder="vd: B2024051" />
+                    <span class="text-[10px] text-on-surface-variant block mt-0.5">Nhập theo số lô in trên bao bì</span>
+                    <span class="field-error-msg hidden" data-error-for="soLo"></span>
+                </td>
+                <td class="px-2 py-2">
+                    <input type="date" id="hanSuDung-${idx}" data-col="hanSuDung" class="w-full px-2 py-2 border border-outline-variant rounded-lg" />
+                    <div class="hidden mt-1 text-[11px] text-tertiary font-semibold flex items-center gap-1" id="canDateWarn-${idx}">
+                        <span class="material-symbols-outlined text-[14px]">warning</span> Cận date - đã xác nhận
+                    </div>
+                    <span class="field-error-msg hidden" data-error-for="hanSuDung"></span>
+                </td>
+                <td class="px-2 py-2">
+                    <input type="number" min="1" step="1" id="soLuong-${idx}" data-col="soLuong" class="w-full px-2 py-2 border border-outline-variant rounded-lg" />
+                    <span class="field-error-msg hidden" data-error-for="soLuong"></span>
+                </td>
+                <td class="px-2 py-2">
+                    <span id="donViTinh-${idx}" class="text-on-surface-variant">--</span>
+                </td>
+                <td class="px-2 py-2">
+                    <input type="text" inputmode="numeric" id="donGia-${idx}" data-col="donGia" class="w-full px-2 py-2 border border-outline-variant rounded-lg text-right" placeholder="0" />
+                    <span class="field-error-msg hidden" data-error-for="donGia"></span>
+                </td>
+                <td class="px-2 py-2">
+                    <input type="number" min="0" max="100" step="0.01" id="vat-${idx}" data-col="phanTramVAT" value="0" class="w-full px-2 py-2 border border-outline-variant rounded-lg text-right" />
+                    <span class="field-error-msg hidden" data-error-for="phanTramVAT"></span>
+                </td>
+                <td class="px-2 py-2 text-right font-semibold" id="thanhTien-${idx}">0 đ</td>
+                <td class="px-2 py-2 text-center">
+                    <button type="button" class="text-error hover:bg-error-container/20 rounded-full w-8 h-8 inline-flex items-center justify-center" onclick="removeRow(${idx})" title="Xóa dòng">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                </td>
+            </tr>`;
+        }
+
+        function addRow(prefill) {
+            const idx = rowSeq++;
+            $('#chiTietBody').append(rowHtml(idx));
+            initRowBehavior(idx, prefill);
+            toggleEmptyState();
+            return idx;
+        }
+
+        function removeRow(idx) {
+            $(`#row-${idx}`).remove();
+            formIsDirty = true;
+            recalcTotals();
+            toggleEmptyState();
+        }
+
+        function toggleEmptyState() {
+            const hasRows = $('#chiTietBody tr').length > 0;
+            $('#emptyDetailMsg').toggleClass('hidden', hasRows);
+        }
+
+        function initRowBehavior(idx, prefill) {
+            const $select = $(`#thuocId-${idx}`);
+            $select.select2({
+                width: '100%',
+                placeholder: 'Gõ tên thuốc hoặc hoạt chất...',
+                allowClear: true,
+                ajax: {
+                    url: '/Admin/Medicines/SearchMedicinesForReceipt',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({ term: params.term }),
+                    processResults: data => ({ results: data.results })
+                },
+                minimumInputLength: 1,
+                language: {
+                    inputTooShort: () => 'Gõ ít nhất 1 ký tự để tìm...',
+                    noResults: () => 'Không tìm thấy thuốc phù hợp',
+                    searching: () => 'Đang tìm kiếm...'
+                }
+            });
+
+            $select.on('select2:select', function (e) {
+                applyMedicineInfo(idx, e.params.data);
+                formIsDirty = true;
+                revalidateLot(idx);
+            });
+
+            $(`#soLo-${idx}`).on('blur', () => revalidateLot(idx));
+
+            $(`#hanSuDung-${idx}`).on('change', function () {
+                formIsDirty = true;
+                checkCanDate(idx);
+            });
+
+            $(`#soLuong-${idx}, #vat-${idx}`).on('input', function () {
+                formIsDirty = true;
+                recalcRow(idx);
+            });
+
+            $(`#donGia-${idx}`).on('input', function () {
+                formIsDirty = true;
+                recalcRow(idx);
+            }).on('blur', function () {
+                const val = parseVNNumber($(this).val());
+                $(this).val(val ? formatVNInputNumber(val) : '');
+            });
+
+            if (prefill) {
+                if (prefill.medicine) applyMedicineInfo(idx, {
+                    id: prefill.thuocId, tenThuoc: prefill.medicine.tenThuoc, hoatChat: prefill.medicine.hoatChat,
+                    hamLuong: prefill.medicine.hamLuong, quyCachDongGoi: prefill.medicine.quyCachDongGoi,
+                    donViTinh: prefill.medicine.donViTinh, tonKho: prefill.medicine.tonKho
+                });
+                const opt = new Option(prefill.medicine ? `${prefill.medicine.tenThuoc} (${prefill.medicine.hoatChat})` : '', prefill.thuocId, true, true);
+                $select.append(opt).trigger('change');
+
+                $(`#soLo-${idx}`).val(prefill.soLo);
+                $(`#hanSuDung-${idx}`).val(prefill.hanSuDung ? prefill.hanSuDung.substring(0, 10) : '');
+                $(`#soLuong-${idx}`).val(prefill.soLuong);
+                $(`#donGia-${idx}`).val(formatVNInputNumber(prefill.donGia));
+                $(`#vat-${idx}`).val(prefill.phanTramVAT);
+                if (prefill.xacNhanCanDate) {
+                    $(`#row-${idx}`).data('canDateConfirmed', true);
+                    $(`#canDateWarn-${idx}`).removeClass('hidden');
+                }
+                if (prefill.congDonVaoLoHienCo) $(`#row-${idx}`).data('congDon', true);
+                recalcRow(idx);
+                checkCanDate(idx, true);
+            }
+        }
+
+        function applyMedicineInfo(idx, med) {
+            $(`#row-${idx}`).data('medicine', med);
+            $(`#donViTinh-${idx}`).text(med.donViTinh || '--');
+            const infoParts = [];
+            if (med.hoatChat) infoParts.push(`Hoạt chất: ${med.hoatChat}`);
+            if (med.hamLuong) infoParts.push(`Hàm lượng: ${med.hamLuong}`);
+            if (med.quyCachDongGoi) infoParts.push(`Quy cách: ${med.quyCachDongGoi}`);
+            infoParts.push(`Tồn kho hiện tại: ${med.tonKho} ${med.donViTinh}`);
+            $(`#medInfo-${idx}`).html(infoParts.join(' &middot; ')).removeClass('hidden');
+
+            const $qty = $(`#soLuong-${idx}`);
+            if (isIntegerOnlyUnit(med.donViTinh)) {
+                $qty.attr('step', '1');
+            } else {
+                $qty.attr('step', '1'); // Số lượng luôn là số nguyên trong hệ thống hiện tại (xem ghi chú controller).
+            }
+        }
+
+        function revalidateLot(idx) {
+            const thuocId = $(`#thuocId-${idx}`).val();
+            const soLo = $(`#soLo-${idx}`).val();
+            if (!thuocId || !soLo) return;
+
+            $.getJSON('/Admin/Medicines/CheckExistingLot', { thuocId, soLo }, function (res) {
+                if (res.exists && !$(`#row-${idx}`).data('congDonAsked')) {
+                    pendingCongDonRow = idx;
+                    openModal('modalCongDon');
+                }
+            });
+        }
+
+        function checkCanDate(idx, skipModal) {
+            const val = $(`#hanSuDung-${idx}`).val();
+            if (!val) { $(`#canDateWarn-${idx}`).addClass('hidden'); return; }
+            const hsd = new Date(val);
+            const threshold = new Date();
+            threshold.setMonth(threshold.getMonth() + CAN_DATE_MONTHS);
+
+            if (hsd < threshold) {
+                if ($(`#row-${idx}`).data('canDateConfirmed')) {
+                    $(`#canDateWarn-${idx}`).removeClass('hidden');
+                } else if (!skipModal) {
+                    pendingCanDateRow = idx;
+                    openModal('modalCanDate');
+                }
+            } else {
+                $(`#row-${idx}`).data('canDateConfirmed', false);
+                $(`#canDateWarn-${idx}`).addClass('hidden');
+            }
+        }
+
+        $('#btnConfirmCanDate').on('click', function () {
+            if (pendingCanDateRow !== null) {
+                $(`#row-${pendingCanDateRow}`).data('canDateConfirmed', true);
+                $(`#canDateWarn-${pendingCanDateRow}`).removeClass('hidden');
+            }
+            closeModal('modalCanDate');
+            pendingCanDateRow = null;
+        });
+
+        $('#btnCongDonYes, #btnCongDonNo').on('click', function () {
+            if (pendingCongDonRow !== null) {
+                $(`#row-${pendingCongDonRow}`).data('congDon', this.id === 'btnCongDonYes');
+                $(`#row-${pendingCongDonRow}`).data('congDonAsked', true);
+            }
+            closeModal('modalCongDon');
+            pendingCongDonRow = null;
+        });
+
+        function recalcRow(idx) {
+            const soLuong = parseFloat($(`#soLuong-${idx}`).val()) || 0;
+            const donGia = parseVNNumber($(`#donGia-${idx}`).val());
+            const vat = parseFloat($(`#vat-${idx}`).val()) || 0;
+            const thanhTien = soLuong * donGia * (1 + vat / 100);
+            $(`#thanhTien-${idx}`).text(formatVND(thanhTien));
+            recalcTotals();
+        }
+
+        function recalcTotals() {
+            let soMatHang = 0, truocVAT = 0, tienVAT = 0;
+            $('.chitiet-row').each(function () {
+                const idx = this.id.replace('row-', '');
+                const soLuong = parseFloat($(`#soLuong-${idx}`).val()) || 0;
+                const donGia = parseVNNumber($(`#donGia-${idx}`).val());
+                const vat = parseFloat($(`#vat-${idx}`).val()) || 0;
+                soMatHang++;
+                truocVAT += soLuong * donGia;
+                tienVAT += soLuong * donGia * (vat / 100);
+            });
+            $('#sumSoMatHang').text(soMatHang);
+            $('#sumTruocVAT').text(formatVND(truocVAT));
+            $('#sumVAT').text(formatVND(tienVAT));
+            $('#sumTongThanhToan').text(formatVND(truocVAT + tienVAT));
+        }
+
+        function toggleSupplierRequirement() {
+            const required = $('#loaiNhap').val() === 'MuaNCC';
+            $('#nccRequiredMark').toggleClass('hidden', !required);
+        }
+
+        function collectFormData() {
+            const fd = new FormData();
+            fd.append('__RequestVerificationToken', ANTIFORGERY_TOKEN);
+            fd.append('id', $('#receiptId').val() || '');
+            fd.append('phieuGocId', $('#phieuGocId').val() || '');
+            fd.append('ngayNhap', $('#ngayNhap').val());
+            fd.append('loaiNhap', $('#loaiNhap').val());
+            fd.append('nhaCungCapId', $('#nhaCungCapId').val() || '');
+            fd.append('soHoaDonNCC', $('#soHoaDonNCC').val() || '');
+            fd.append('ngayHoaDon', $('#ngayHoaDon').val() || '');
+            fd.append('khoNhap', $('#khoNhap').val());
+            fd.append('nguoiGiaoHang', $('#nguoiGiaoHang').val() || '');
+            fd.append('ghiChu', $('#ghiChu').val() || '');
+
+            let i = 0;
+            $('.chitiet-row').each(function () {
+                const idx = this.id.replace('row-', '');
+                const prefix = `ChiTiet[${i}].`;
+                fd.append(prefix + 'ThuocId', $(`#thuocId-${idx}`).val() || '');
+                fd.append(prefix + 'SoLo', $(`#soLo-${idx}`).val() || '');
+                fd.append(prefix + 'HanSuDung', $(`#hanSuDung-${idx}`).val() || '');
+                fd.append(prefix + 'SoLuong', $(`#soLuong-${idx}`).val() || '0');
+                fd.append(prefix + 'DonGia', parseVNNumber($(`#donGia-${idx}`).val()));
+                fd.append(prefix + 'PhanTramVAT', $(`#vat-${idx}`).val() || '0');
+                fd.append(prefix + 'XacNhanCanDate', $(`#row-${idx}`).data('canDateConfirmed') ? 'true' : 'false');
+                fd.append(prefix + 'CongDonVaoLoHienCo', $(`#row-${idx}`).data('congDon') ? 'true' : 'false');
+                i++;
+            });
+            return fd;
+        }
+
+        function submitReceipt(url) {
+            clearFieldErrors();
+            $.ajax({
+                url,
+                method: 'POST',
+                data: collectFormData(),
+                processData: false,
+                contentType: false
+            }).done(function (result) {
+                if (result.success) {
+                    formIsDirty = false;
+                    $('#successMessageText').text(result.message);
+                    $('#btnGoToView').attr('href', result.redirectUrl);
+                    $('#receiptId').val(result.id);
+                    $('#ma-phieu-badge').text(result.maPhieu);
+                    openModal('modalSuccess');
+                } else {
+                    paintErrors(result.errors);
+                }
+            }).fail(function () {
+                showGlobalToast('Lỗi hệ thống', 'Không thể lưu phiếu, vui lòng thử lại.', 'error');
+            });
+        }
+
+        $('#btnSaveDraft').on('click', () => submitReceipt('/Admin/Medicines/SaveDraft'));
+        $('#btnSubmit').on('click', () => submitReceipt('/Admin/Medicines/SubmitReceipt'));
+        $('#btnAddRow').on('click', () => addRow());
+        $('#loaiNhap').on('change', toggleSupplierRequirement);
+
+        $('#btnCancelForm').on('click', function () {
+            if (formIsDirty) openModal('modalConfirmCancel');
+            else window.location.href = '/Admin/Medicines/Receipts';
+        });
+        $('#btnConfirmCancelYes').on('click', function () { window.location.href = '/Admin/Medicines/Receipts'; });
+
+        // Enter ở ô cuối cùng (%VAT) của dòng cuối cùng tự thêm dòng mới.
+        $(document).on('keydown', 'input[data-col="phanTramVAT"]', function (e) {
+            if (e.key !== 'Enter') return;
+            e.preventDefault();
+            const $rows = $('.chitiet-row');
+            if ($(this).closest('tr').is($rows.last())) {
+                addRow();
+                setTimeout(() => $(`#thuocId-${rowSeq - 1}`).select2('open'), 50);
+            }
+        });
+
+        $(document).on('input change', 'input, select', function () {
+            if ($(this).closest('.chitiet-row, #receipt-form').length) formIsDirty = true;
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            if (formIsDirty && IS_EDITABLE) { e.preventDefault(); e.returnValue = ''; }
+        });
+
+        $(function () {
+            toggleSupplierRequirement();
+            toggleEmptyState();
+
+            @if (Model.ChiTiet.Any())
+            {
+                @foreach (var line in Model.ChiTiet)
+                {
+                    var med = existingMedicines != null && existingMedicines.TryGetValue(line.ThuocId, out var mv) ? mv : null;
+                    var medicineJson = med == null
+                        ? "null"
+                        : System.Text.Json.JsonSerializer.Serialize(new
+                        {
+                            tenThuoc = med.TenThuoc,
+                            hoatChat = med.HoatChat,
+                            hamLuong = med.HamLuong,
+                            quyCachDongGoi = med.QuyCachDongGoi,
+                            donViTinh = med.DonViTinh,
+                            tonKho = med.TonKho
+                        });
+                    <text>
+                    addRow({
+                        thuocId: @line.ThuocId,
+                        medicine: @Html.Raw(medicineJson),
+                        soLo: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(line.SoLo)),
+                        hanSuDung: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(line.HanSuDung?.ToString("yyyy-MM-dd"))),
+                        soLuong: @line.SoLuong,
+                        donGia: @line.DonGia.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        phanTramVAT: @line.PhanTramVAT.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                        xacNhanCanDate: @Html.Raw(line.XacNhanCanDate ? "true" : "false"),
+                        congDonVaoLoHienCo: @Html.Raw(line.CongDonVaoLoHienCo ? "true" : "false")
+                    });
+                    </text>
+                }
+                <text>formIsDirty = false;</text>
+            }
+            else if (isEditable)
+            {
+                <text>addRow();</text>
+            }
         });
     </script>
 }

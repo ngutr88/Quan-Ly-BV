@@ -15,7 +15,7 @@
 | Họ tên | Email đăng nhập | Mật khẩu | Trạng thái |
 |---|---|---|---|
 | Quản trị viên Hệ thống | `admin@hms.com` | `Admin@123` | Active |
-| Nguyen Minh Quan | `admin.operations@hms.com` | `Admin@123` | Active |
+| Nguyen Minh Quan | `admin.operations@hms.com` | `Admin@123` | Active — được cấp quyền duyệt phiếu nhập kho thuốc (thủ kho/trưởng khoa dược) |
 | Le Thu Huong | `admin.finance@hms.com` | `Admin@123` | Active |
 | Tran Duc Long | `admin.reception@hms.com` | `Admin@123` | Active |
 

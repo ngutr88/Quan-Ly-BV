@@ -230,7 +230,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
         // POST: Admin/Staff/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, string hoTen, string sdt, string vaiTro, string trangThai, int? khoaId, string chuyenKhoa, string hocVi, int? soNamKinhNghiem, string lichLamViec, string chucVu)
+        public async Task<IActionResult> Edit(int id, string hoTen, string sdt, string vaiTro, string trangThai, int? khoaId, string chuyenKhoa, string hocVi, int? soNamKinhNghiem, string lichLamViec, string chucVu, bool duocDuyetPhieuNhapKho)
         {
             var user = await _context.Users.Include(u => u.DoctorProfile).FirstOrDefaultAsync(u => u.Id == id);
             if (user == null) return NotFound();
@@ -253,6 +253,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                     
                     var oldRole = user.VaiTro;
                     user.VaiTro = vaiTro;
+                    user.DuocDuyetPhieuNhapKho = duocDuyetPhieuNhapKho;
                     _context.Entry(user).State = EntityState.Modified;
 
                     // 2. Manage doctor profiles when changing roles
