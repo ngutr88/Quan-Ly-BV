@@ -1,0 +1,117 @@
+@model QuanLyBenhVien.Models.LabOrderItem
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Chi tiết kết quả cận lâm sàng";
+    var result = Model.KetQua!;
+    var patient = Model.PhieuChiDinh.Patient;
+    var activeDrugs = ViewBag.ActivePrescriptionDrugs as List<string> ?? new List<string>();
+    var isAssignedDoctor = (bool)(ViewBag.IsAssignedDoctor ?? true);
+    var doctorNote = ViewBag.DoctorNote as string;
+
+    var header = new PageHeaderViewModel
+    {
+        Title = Model.DichVu.TenDichVu,
+        Subtitle = $"Bệnh nhân {patient.User.HoTen} - Phiếu {Model.PhieuChiDinh.MaPhieu}",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard"), new BreadcrumbItem("Kết quả cận lâm sàng", "/Doctor/LabResults") },
+        CurrentCrumb = Model.DichVu.TenDichVu
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-label-md">@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+@if (!isAssignedDoctor)
+{
+    <div class="mb-unit-md p-4 bg-tertiary-container/25 text-tertiary border border-tertiary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined">visibility</span>
+        <span class="font-label-md">Bạn đang xem kết quả này ngoài phạm vi phụ trách thông thường qua chế độ truy cập khẩn (break-the-glass) - đã được ghi log.</span>
+    </div>
+}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    <div class="lg:col-span-2 space-y-unit-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <div class="flex items-center justify-between mb-unit-md">
+                <h3 class="font-title-lg text-title-lg text-primary font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined">science</span> Kết luận
+                </h3>
+                @if (result.CoBatThuong)
+                {
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-error-container text-error flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">gpp_maybe</span> Có bất thường
+                    </span>
+                }
+            </div>
+            <p class="text-body-md whitespace-pre-line">@result.KetLuan</p>
+            <p class="text-caption text-on-surface-variant mt-unit-sm">Người duyệt: @(result.NguoiDuyetTen ?? "-") • Trả kết quả lúc @result.NgayTra.ToString("dd/MM/yyyy HH:mm")</p>
+
+            @if (result.Files.Any())
+            {
+                <div class="mt-unit-md pt-unit-md border-t border-outline-variant">
+                    <h4 class="text-caption font-bold text-on-surface-variant uppercase tracking-wider mb-2">File đính kèm (@result.Files.Count)</h4>
+                    <div class="space-y-2">
+                        @foreach (var file in result.Files.OrderBy(f => f.ThuTu))
+                        {
+                            <a href="/Doctor/LabResults/DownloadResultFile?fileId=@file.Id@(isAssignedDoctor ? "" : "&breakGlass=true")" target="_blank"
+                               class="flex items-center gap-2 border border-outline-variant rounded-lg p-2 hover:border-primary">
+                                <span class="material-symbols-outlined text-primary">@(file.ContentType == "application/pdf" ? "picture_as_pdf" : "image")</span>
+                                <span class="truncate text-body-md font-semibold">@file.TenGoc</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (isAssignedDoctor)
+        {
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+                <h3 class="font-title-lg text-title-lg text-primary font-bold flex items-center gap-1 mb-unit-md">
+                    <span class="material-symbols-outlined">edit_note</span> Ghi chú nhận định của tôi
+                </h3>
+                <form method="POST" action="/Doctor/LabResults/AddDoctorNote/@Model.Id" class="space-y-unit-sm">
+                    @Html.AntiForgeryToken()
+                    <textarea name="ghiChu" rows="3" class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                              placeholder="Nhận định riêng của bạn về kết quả này (chỉ nội bộ chuyên môn, không hiện cho bệnh nhân)...">@doctorNote</textarea>
+                    <button type="submit" class="bg-primary text-white font-semibold px-unit-lg py-2 rounded-lg hover:bg-primary-container transition-all">Lưu ghi chú</button>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div class="space-y-unit-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h3 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-primary">Bệnh nhân</h3>
+            <div class="space-y-unit-sm text-body-md">
+                <div><span class="text-caption text-on-surface-variant block">Họ và tên</span><span class="font-semibold">@patient.User.HoTen</span></div>
+                <div><span class="text-caption text-on-surface-variant block">Ngày sinh / Giới tính</span><span>@patient.NgaySinh.ToString("dd/MM/yyyy") • @patient.GioiTinh</span></div>
+                @if (!string.IsNullOrEmpty(patient.DiUng) && patient.DiUng != "Không")
+                {
+                    <div><span class="text-caption text-on-surface-variant block">Dị ứng</span><span class="text-error font-semibold">@patient.DiUng</span></div>
+                }
+                <div>
+                    <span class="text-caption text-on-surface-variant block">Thuốc đang dùng</span>
+                    @if (activeDrugs.Any())
+                    {
+                        <span>@string.Join(", ", activeDrugs)</span>
+                    }
+                    else
+                    {
+                        <span class="italic text-on-surface-variant">Không có đơn thuốc đang hiệu lực.</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <a href="/Doctor/LabResults/PrintOrder?labOrderId=@Model.PhieuChiDinh.Id" target="_blank" class="inline-flex items-center gap-1 text-primary font-semibold hover:underline">
+            <span class="material-symbols-outlined text-[18px]">print</span> In phiếu chỉ định
+        </a>
+    </div>
+</div>

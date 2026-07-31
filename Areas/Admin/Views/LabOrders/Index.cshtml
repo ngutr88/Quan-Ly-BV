@@ -1,0 +1,186 @@
+@model QuanLyBenhVien.Helpers.PagedList<QuanLyBenhVien.Models.LabOrderItem>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Cận lâm sàng - Chỉ định & Kết quả";
+    var canProcess = (bool)(ViewBag.CanProcess ?? false);
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Cận lâm sàng",
+        Subtitle = "Tiếp nhận, thực hiện và trả kết quả các dịch vụ cận lâm sàng được bác sĩ chỉ định.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Quản trị", "/Admin/Dashboard") },
+        CurrentCrumb = "Cận lâm sàng"
+    };
+
+    Func<object, IHtmlContent> pageActions = @<text>
+        <a href="/Admin/LabOrders/Bundles" class="hms-btn hms-btn-secondary">
+            <span class="material-symbols-outlined">list_alt</span> Bộ chỉ định
+        </a>
+        <a href="/Admin/LabOrders/Catalog" class="hms-btn hms-btn-secondary">
+            <span class="material-symbols-outlined">science</span> Danh mục dịch vụ
+        </a>
+    </text>;
+    ViewData["PageActions"] = pageActions;
+
+    var filters = new Dictionary<string, string>
+    {
+        ["trangThai"] = ViewBag.TrangThaiFilter as string,
+        ["searchString"] = ViewBag.SearchString as string
+    };
+
+    string StatusLabel(string s) => s switch
+    {
+        "ChoThucHien" => "Chờ thực hiện",
+        "DangThucHien" => "Đang thực hiện",
+        "DaCoKetQua" => "Đã có kết quả",
+        "DaHuy" => "Đã hủy",
+        _ => s
+    };
+    string StatusBadgeClass(string s) => s switch
+    {
+        "ChoThucHien" => "bg-tertiary-container text-tertiary",
+        "DangThucHien" => "bg-primary/10 text-primary",
+        "DaCoKetQua" => "bg-secondary-container text-secondary",
+        "DaHuy" => "bg-surface-container-high text-on-surface-variant",
+        _ => "bg-surface-container-high text-on-surface-variant"
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+
+@if (!canProcess)
+{
+    <div class="mb-unit-md p-4 bg-tertiary-container/25 text-tertiary border border-tertiary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined">info</span>
+        <span class="font-label-md">Tài khoản của bạn chỉ có thể xem danh sách. Liên hệ Quản trị viên có quyền "Kỹ thuật viên CLS" để tiếp nhận/trả kết quả.</span>
+    </div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-label-md">@TempData["SuccessMessage"]</span>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-error-container/25 text-error border border-error/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-error">error</span>
+        <span class="font-label-md">@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="hms-toolbar">
+    <form method="GET" action="/Admin/LabOrders" class="hms-toolbar-grid">
+        <div style="grid-column: span 2 / span 2;">
+            <label class="hms-field-label" for="searchString">Tìm kiếm</label>
+            <div class="hms-search">
+                <span class="material-symbols-outlined">search</span>
+                <input id="searchString" class="w-full py-2 pr-4 border border-outline-variant rounded-lg font-body-md"
+                       name="searchString" value="@ViewBag.SearchString" placeholder="Tên bệnh nhân, mã phiếu, tên dịch vụ..." type="text" />
+            </div>
+        </div>
+        <div>
+            <label class="hms-field-label" for="trangThai">Trạng thái</label>
+            <select id="trangThai" class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md" name="trangThai">
+                <option value="">Tất cả trạng thái</option>
+                <option value="ChoThucHien" selected="@(ViewBag.TrangThaiFilter == "ChoThucHien")">Chờ thực hiện</option>
+                <option value="DangThucHien" selected="@(ViewBag.TrangThaiFilter == "DangThucHien")">Đang thực hiện</option>
+                <option value="DaCoKetQua" selected="@(ViewBag.TrangThaiFilter == "DaCoKetQua")">Đã có kết quả</option>
+                <option value="DaHuy" selected="@(ViewBag.TrangThaiFilter == "DaHuy")">Đã hủy</option>
+            </select>
+        </div>
+        <button type="submit" class="hms-btn hms-btn-primary">
+            <span class="material-symbols-outlined">filter_list</span> Áp dụng lọc
+        </button>
+    </form>
+</div>
+
+<div class="w-full min-w-0 max-w-full bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Danh sách chỉ định cận lâm sàng" tabindex="0">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Mã phiếu</th>
+                    <th class="px-unit-md py-3">Bệnh nhân</th>
+                    <th class="px-unit-md py-3">Dịch vụ</th>
+                    <th class="px-unit-md py-3">Bác sĩ chỉ định</th>
+                    <th class="px-unit-md py-3 whitespace-nowrap">Ngày chỉ định</th>
+                    <th class="px-unit-md py-3 whitespace-nowrap">Trạng thái</th>
+                    <th class="px-unit-md py-3 text-right whitespace-nowrap">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (Model.Items.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="hms-empty">
+                                <div class="hms-empty-icon"><span class="material-symbols-outlined">science</span></div>
+                                <p class="hms-empty-title">Không có chỉ định nào phù hợp</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="px-unit-md py-4 font-bold text-primary whitespace-nowrap">@item.PhieuChiDinh.MaPhieu</td>
+                            <td class="px-unit-md py-4 font-semibold">@item.PhieuChiDinh.Patient.User.HoTen</td>
+                            <td class="px-unit-md py-4">@item.DichVu.TenDichVu</td>
+                            <td class="px-unit-md py-4">@item.PhieuChiDinh.BacSiChiDinh.User.HoTen</td>
+                            <td class="px-unit-md py-4 whitespace-nowrap">@item.PhieuChiDinh.NgayChiDinh.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="px-unit-md py-4 whitespace-nowrap"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold @StatusBadgeClass(item.TrangThai)">@StatusLabel(item.TrangThai)</span></td>
+                            <td class="px-unit-md py-4 text-right whitespace-nowrap">
+                                <div class="flex justify-end gap-2">
+                                    <a href="/Admin/LabOrders/PrintOrder?labOrderId=@item.PhieuChiDinh.Id" target="_blank" class="text-on-surface-variant hover:text-primary" title="In phiếu"><span class="material-symbols-outlined text-[20px]">print</span></a>
+                                    @if (canProcess && item.TrangThai == "ChoThucHien")
+                                    {
+                                        <form method="POST" action="/Admin/LabOrders/ReceiveOrderItem/@item.Id">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="text-primary font-semibold hover:underline">Tiếp nhận</button>
+                                        </form>
+                                    }
+                                    @if (item.TrangThai == "DangThucHien" || item.TrangThai == "DaCoKetQua")
+                                    {
+                                        <a href="/Admin/LabOrders/Report/@item.Id" class="text-primary font-semibold hover:underline">@(item.TrangThai == "DaCoKetQua" ? "Xem kết quả" : "Nhập kết quả")</a>
+                                    }
+                                    @if (canProcess && (item.TrangThai == "ChoThucHien" || item.TrangThai == "DangThucHien"))
+                                    {
+                                        <form method="POST" action="/Admin/LabOrders/CancelOrderItem/@item.Id" class="cancel-order-item-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="lyDo" class="cancel-reason-input" />
+                                            <button type="submit" class="text-error font-semibold hover:underline">Hủy</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Items.Count > 0)
+    {
+        <partial name="_Pagination" model='PaginationViewModel.From(Model, "/Admin/LabOrders", "dòng chỉ định", filters)' />
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.cancel-order-item-form').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                const reason = prompt('Nhập lý do hủy dòng chỉ định này:');
+                if (!reason || !reason.trim()) {
+                    e.preventDefault();
+                    return;
+                }
+                form.querySelector('.cancel-reason-input').value = reason.trim();
+            });
+        });
+    </script>
+}

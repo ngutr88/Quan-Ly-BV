@@ -20,6 +20,8 @@ namespace QuanLyBenhVien.Data
             SeedRoleOverviewDemoData(context);
             SeedRolePermissionDefaults(context);
             SeedGoodsReceiptDemoData(context);
+            SeedPrescriptionSafetyDemoData(context);
+            SeedLabCatalogAndDemoData(context);
 
             // Runs before the "complete dataset" shortcut below so existing
             // databases also pick up the public-site articles.
@@ -2080,6 +2082,237 @@ namespace QuanLyBenhVien.Data
             if (quanLyKho != null && !quanLyKho.DuocDuyetPhieuNhapKho)
             {
                 quanLyKho.DuocDuyetPhieuNhapKho = true;
+                context.SaveChanges();
+            }
+        }
+
+        // Dữ liệu tương tác thuốc + nhóm chéo phản ứng dưới đây là DỮ LIỆU MINH
+        // HỌA (LaDuLieuMinhHoa = true) cho engine cảnh báo an toàn kê đơn -
+        // CHƯA qua thẩm định dược lý lâm sàng, không dùng làm nguồn tra cứu y
+        // khoa chính thức. Một số cặp dùng đúng hoạt chất của 11 thuốc đã seed
+        // sẵn (Paracetamol, Amoxicillin, Ibuprofen, Atorvastatin Calcium,
+        // Azithromycin, Amlodipine Besylate, Omeprazole, Metformin
+        // Hydrochloride, Cetirizine Hydrochloride, Salbutamol Sulfate) để có
+        // thể kiểm thử ngay; phần còn lại dùng tên hoạt chất phổ biến khác để
+        // sẵn sàng khi danh mục thuốc được bổ sung thêm.
+        private static void SeedPrescriptionSafetyDemoData(ApplicationDbContext context)
+        {
+            if (!context.DrugInteractions.Any())
+            {
+                var pairs = new (string A, string B, string MucDo, string MoTa)[]
+                {
+                    ("Azithromycin", "Atorvastatin Calcium", "ChongChiDinh", "Kháng sinh nhóm macrolide làm tăng nồng độ statin, nguy cơ tiêu cơ vân nghiêm trọng."),
+                    ("Sildenafil", "Nitroglycerin", "ChongChiDinh", "Phối hợp gây tụt huyết áp nghiêm trọng, có thể đe dọa tính mạng."),
+                    ("Simvastatin", "Clarithromycin", "ChongChiDinh", "Ức chế chuyển hóa statin qua CYP3A4, tăng nguy cơ tiêu cơ vân."),
+                    ("Methotrexate", "Sulfamethoxazole/Trimethoprim", "ChongChiDinh", "Tăng độc tính lên tủy xương."),
+                    ("Warfarin", "Aspirin", "ChongChiDinh", "Tăng nguy cơ xuất huyết nghiêm trọng."),
+                    ("Phenelzine", "Fluoxetine", "ChongChiDinh", "Nguy cơ hội chứng serotonin nặng."),
+                    ("Allopurinol", "Azathioprine", "ChongChiDinh", "Tăng độc tính lên tủy xương do giảm chuyển hóa azathioprine."),
+
+                    ("Azithromycin", "Amlodipine Besylate", "NghiemTrong", "Nguy cơ kéo dài khoảng QT."),
+                    ("Warfarin", "Ibuprofen", "NghiemTrong", "Tăng nguy cơ xuất huyết tiêu hóa."),
+                    ("Lithium", "Ibuprofen", "NghiemTrong", "NSAID làm tăng nồng độ lithium, nguy cơ ngộ độc."),
+                    ("Digoxin", "Furosemide", "NghiemTrong", "Hạ kali máu làm tăng độc tính digoxin."),
+                    ("Lisinopril", "Spironolactone", "NghiemTrong", "Nguy cơ tăng kali máu nghiêm trọng."),
+                    ("Losartan", "Spironolactone", "NghiemTrong", "Nguy cơ tăng kali máu nghiêm trọng."),
+                    ("Theophylline", "Ciprofloxacin", "NghiemTrong", "Ciprofloxacin làm tăng nồng độ theophylline, nguy cơ ngộ độc."),
+                    ("Carbamazepine", "Erythromycin", "NghiemTrong", "Erythromycin làm tăng nồng độ carbamazepine."),
+                    ("Amiodarone", "Simvastatin", "NghiemTrong", "Tăng nguy cơ tiêu cơ vân."),
+                    ("Tramadol", "Fluoxetine", "NghiemTrong", "Nguy cơ hội chứng serotonin."),
+                    ("Clarithromycin", "Digoxin", "NghiemTrong", "Tăng nồng độ digoxin, nguy cơ ngộ độc."),
+                    ("Codeine", "Diazepam", "NghiemTrong", "Tăng nguy cơ ức chế hô hấp."),
+                    ("Sulfamethoxazole/Trimethoprim", "Warfarin", "NghiemTrong", "Tăng tác dụng chống đông, nguy cơ xuất huyết."),
+                    ("Fluconazole", "Simvastatin", "NghiemTrong", "Tăng nồng độ statin, nguy cơ tiêu cơ vân."),
+                    ("Erythromycin", "Digoxin", "NghiemTrong", "Tăng nồng độ digoxin, nguy cơ ngộ độc."),
+
+                    ("Ibuprofen", "Atorvastatin Calcium", "TrungBinh", "Tăng nhẹ nguy cơ ảnh hưởng đến cơ khi phối hợp kéo dài."),
+                    ("Amlodipine Besylate", "Atorvastatin Calcium", "TrungBinh", "Amlodipine ức chế CYP3A4 nhẹ, có thể tăng nồng độ statin."),
+                    ("Ibuprofen", "Amlodipine Besylate", "TrungBinh", "NSAID có thể làm giảm hiệu quả hạ áp."),
+                    ("Azithromycin", "Salbutamol Sulfate", "TrungBinh", "Nguy cơ kéo dài QT nhẹ khi phối hợp."),
+                    ("Clopidogrel", "Omeprazole", "TrungBinh", "Omeprazole có thể làm giảm hiệu quả chống kết tập tiểu cầu của clopidogrel."),
+                    ("Phenytoin", "Fluconazole", "TrungBinh", "Fluconazole làm tăng nồng độ phenytoin."),
+                    ("Verapamil", "Atorvastatin Calcium", "TrungBinh", "Tăng nồng độ statin qua ức chế CYP3A4."),
+                    ("Warfarin", "Amoxicillin", "TrungBinh", "Kháng sinh có thể làm tăng tác dụng chống đông của warfarin."),
+                    ("Warfarin", "Azithromycin", "TrungBinh", "Kháng sinh có thể làm tăng tác dụng chống đông của warfarin."),
+                    ("Prednisone", "Ibuprofen", "TrungBinh", "Tăng nguy cơ viêm loét, xuất huyết tiêu hóa."),
+                    ("Aspirin", "Prednisone", "TrungBinh", "Tăng nguy cơ viêm loét, xuất huyết tiêu hóa."),
+                    ("Rifampin", "Atorvastatin Calcium", "TrungBinh", "Rifampin làm giảm nồng độ statin, giảm hiệu quả điều trị."),
+                    ("Metronidazole", "Warfarin", "TrungBinh", "Tăng tác dụng chống đông của warfarin."),
+
+                    ("Cetirizine Hydrochloride", "Salbutamol Sulfate", "Nhe", "Có thể tăng nhẹ cảm giác hồi hộp, tim nhanh."),
+                    ("Ibuprofen", "Omeprazole", "Nhe", "Tương tác không đáng kể, omeprazole thường được dùng để bảo vệ dạ dày."),
+                    ("Amoxicillin", "Metformin Hydrochloride", "Nhe", "Không có tương tác đáng kể trên lâm sàng."),
+                    ("Ibuprofen", "Metformin Hydrochloride", "Nhe", "Theo dõi chức năng thận khi dùng kéo dài."),
+                    ("Paracetamol", "Ibuprofen", "Nhe", "Phối hợp phổ biến, theo dõi liều dùng kéo dài ảnh hưởng gan/thận."),
+                    ("Omeprazole", "Metformin Hydrochloride", "Nhe", "Không có tương tác đáng kể trên lâm sàng."),
+                    ("Atorvastatin Calcium", "Metformin Hydrochloride", "Nhe", "Không có tương tác đáng kể trên lâm sàng."),
+                    ("Metformin Hydrochloride", "Furosemide", "Nhe", "Theo dõi đường huyết khi phối hợp lợi tiểu."),
+                    ("Insulin", "Metformin Hydrochloride", "Nhe", "Phối hợp phổ biến trong điều trị đái tháo đường, theo dõi hạ đường huyết."),
+                    ("Ciprofloxacin", "Amlodipine Besylate", "Nhe", "Không có tương tác đáng kể trên lâm sàng."),
+                    ("Levothyroxine", "Omeprazole", "Nhe", "PPI có thể làm giảm hấp thu levothyroxine, nên uống cách xa nhau."),
+                    ("Diazepam", "Cetirizine Hydrochloride", "Nhe", "Tăng nhẹ tác dụng an thần khi phối hợp."),
+                    ("Metformin Hydrochloride", "Amlodipine Besylate", "Nhe", "Không có tương tác đáng kể trên lâm sàng."),
+                };
+
+                context.DrugInteractions.AddRange(pairs.Select(p => new DrugInteraction
+                {
+                    HoatChatA = p.A,
+                    HoatChatB = p.B,
+                    MucDoTuongTac = p.MucDo,
+                    MoTa = p.MoTa,
+                    LaDuLieuMinhHoa = true
+                }));
+                context.SaveChanges();
+            }
+
+            if (!context.DrugAllergyGroups.Any())
+            {
+                context.DrugAllergyGroups.AddRange(
+                    new DrugAllergyGroup
+                    {
+                        TenNhom = "Beta-lactam",
+                        MoTa = "Nhóm kháng sinh Penicillin/Cephalosporin có nguy cơ dị ứng chéo.",
+                        LaDuLieuMinhHoa = true,
+                        ThanhVien = new List<DrugAllergyGroupMember>
+                        {
+                            new() { HoatChat = "Penicillin" },
+                            new() { HoatChat = "Amoxicillin" },
+                            new() { HoatChat = "Ampicillin" },
+                            new() { HoatChat = "Cephalexin" },
+                            new() { HoatChat = "Cefuroxime" }
+                        }
+                    },
+                    new DrugAllergyGroup
+                    {
+                        TenNhom = "NSAID",
+                        MoTa = "Nhóm thuốc kháng viêm không steroid có nguy cơ dị ứng chéo.",
+                        LaDuLieuMinhHoa = true,
+                        ThanhVien = new List<DrugAllergyGroupMember>
+                        {
+                            new() { HoatChat = "Aspirin" },
+                            new() { HoatChat = "Ibuprofen" },
+                            new() { HoatChat = "Diclofenac" },
+                            new() { HoatChat = "Naproxen" },
+                            new() { HoatChat = "Meloxicam" }
+                        }
+                    },
+                    new DrugAllergyGroup
+                    {
+                        TenNhom = "Sulfonamide",
+                        MoTa = "Nhóm thuốc chứa gốc sulfa có nguy cơ dị ứng chéo.",
+                        LaDuLieuMinhHoa = true,
+                        ThanhVien = new List<DrugAllergyGroupMember>
+                        {
+                            new() { HoatChat = "Sulfamethoxazole" },
+                            new() { HoatChat = "Sulfadiazine" },
+                            new() { HoatChat = "Sulfasalazine" }
+                        }
+                    }
+                );
+                context.SaveChanges();
+            }
+
+            // Vá thêm ngưỡng an toàn cho một số thuốc đã seed sẵn (idempotent -
+            // chỉ đặt nếu chưa từng được đặt), phục vụ minh họa cảnh báo vượt
+            // liều tối đa/ngày và ngưỡng theo cân nặng bệnh nhi.
+            void PatchMedicine(string tenThuoc, Action<Medicine> apply)
+            {
+                var medicine = context.Medicines.FirstOrDefault(m => m.TenThuoc == tenThuoc);
+                if (medicine != null && !medicine.LieuToiDaMoiNgay.HasValue)
+                {
+                    apply(medicine);
+                }
+            }
+
+            PatchMedicine("Paracetamol 500mg", m =>
+            {
+                m.LieuToiDaMoiNgay = 8; // 500mg x 8 = 4000mg/ngày, ngưỡng tối đa thường gặp ở người lớn
+                m.LieuToiDaMoiNgayTheoKg = 0.12m; // ước lượng ~60mg/kg/ngày / 500mg mỗi viên
+                m.QuyCachSoLuong = 10;
+                m.CoBaoHiemYTe = true;
+            });
+            PatchMedicine("Ibuprofen 400mg", m =>
+            {
+                m.LieuToiDaMoiNgay = 6; // 400mg x 6 = 2400mg/ngày
+                m.QuyCachSoLuong = 10;
+            });
+            PatchMedicine("Amoxicillin 500mg (Kháng sinh)", m =>
+            {
+                m.LieuToiDaMoiNgay = 6;
+                m.QuyCachSoLuong = 10;
+                m.CoBaoHiemYTe = true;
+            });
+            context.SaveChanges();
+        }
+
+        // Danh mục dịch vụ CLS + bộ chỉ định - đây là danh mục VẬN HÀNH thật
+        // (không phải dữ liệu minh họa dược lý như tương tác thuốc ở trên), nên
+        // KHÔNG gắn cờ LaDuLieuMinhHoa. Phủ đủ 6 nhóm CLS để kiểm thử mọi
+        // nhánh của bộ lọc theo nhóm.
+        private static void SeedLabCatalogAndDemoData(ApplicationDbContext context)
+        {
+            if (!context.LabServiceCatalogs.Any())
+            {
+                var services = new (string Ma, string Ten, string Nhom, string NoiThucHien, decimal Gia)[]
+                {
+                    ("CTM", "Công thức máu (CTM)", "HuyetHoc", "Khoa Xét nghiệm - Huyết học", 80000),
+                    ("DONGMAU", "Đông máu cơ bản (PT/APTT)", "HuyetHoc", "Khoa Xét nghiệm - Huyết học", 120000),
+                    ("DHUYET", "Đường huyết (Glucose)", "SinhHoa", "Khoa Xét nghiệm - Sinh hóa", 40000),
+                    ("URE", "Ure máu", "SinhHoa", "Khoa Xét nghiệm - Sinh hóa", 45000),
+                    ("CREA", "Creatinine máu", "SinhHoa", "Khoa Xét nghiệm - Sinh hóa", 45000),
+                    ("ASTALT", "Men gan (AST/ALT)", "SinhHoa", "Khoa Xét nghiệm - Sinh hóa", 70000),
+                    ("CAYMAU", "Cấy máu tìm vi khuẩn", "ViSinh", "Khoa Xét nghiệm - Vi sinh", 250000),
+                    ("CAYNUOCTIEU", "Cấy nước tiểu", "ViSinh", "Khoa Xét nghiệm - Vi sinh", 150000),
+                    ("XQ-NGUC", "X-quang ngực thẳng", "CDHA", "Khoa Chẩn đoán hình ảnh", 120000),
+                    ("SA-BUNG", "Siêu âm ổ bụng tổng quát", "CDHA", "Khoa Chẩn đoán hình ảnh", 180000),
+                    ("CT-SONAO", "CT sọ não không cản quang", "CDHA", "Khoa Chẩn đoán hình ảnh", 900000),
+                    ("ECG", "Điện tâm đồ (ECG)", "ThamDoChucNang", "Khoa Thăm dò chức năng", 60000),
+                    ("HHKY", "Đo chức năng hô hấp (Hô hấp ký)", "ThamDoChucNang", "Khoa Thăm dò chức năng", 150000),
+                    ("SINHTHIET", "Sinh thiết mô bệnh học", "GiaiPhauBenh", "Khoa Giải phẫu bệnh", 500000),
+                };
+
+                context.LabServiceCatalogs.AddRange(services.Select(s => new LabServiceCatalog
+                {
+                    MaDichVu = s.Ma,
+                    TenDichVu = s.Ten,
+                    NhomCLS = s.Nhom,
+                    NoiThucHien = s.NoiThucHien,
+                    Gia = s.Gia,
+                    DangHoatDong = true
+                }));
+                context.SaveChanges();
+            }
+
+            if (!context.LabOrderBundles.Any())
+            {
+                var byMa = context.LabServiceCatalogs.ToDictionary(s => s.MaDichVu, s => s.Id);
+
+                LabOrderBundleItem Item(string ma) => new() { DichVuCLSId = byMa[ma] };
+
+                context.LabOrderBundles.AddRange(
+                    new LabOrderBundle
+                    {
+                        TenBo = "Bộ khám tổng quát",
+                        MoTa = "Các xét nghiệm/CĐHA cơ bản cho khám sức khỏe tổng quát định kỳ.",
+                        DangHoatDong = true,
+                        ThanhVien = new List<LabOrderBundleItem>
+                        {
+                            Item("CTM"), Item("DHUYET"), Item("URE"), Item("CREA"),
+                            Item("XQ-NGUC"), Item("SA-BUNG"), Item("ECG")
+                        }
+                    },
+                    new LabOrderBundle
+                    {
+                        TenBo = "Bộ tiền phẫu",
+                        MoTa = "Các xét nghiệm/CĐHA bắt buộc trước khi chỉ định phẫu thuật.",
+                        DangHoatDong = true,
+                        ThanhVien = new List<LabOrderBundleItem>
+                        {
+                            Item("CTM"), Item("DONGMAU"), Item("DHUYET"), Item("URE"), Item("CREA"),
+                            Item("XQ-NGUC"), Item("ECG")
+                        }
+                    }
+                );
                 context.SaveChanges();
             }
         }

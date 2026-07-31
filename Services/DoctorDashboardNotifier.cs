@@ -37,5 +37,11 @@ namespace QuanLyBenhVien.Services
             if (!doctorId.HasValue) return Task.CompletedTask;
             return _hub.Clients.Group(DoctorDashboardHub.GroupName(doctorId.Value)).SendAsync("NotificationCountChanged");
         }
+
+        public Task NotifyLabResultsUpdatedAsync(int? doctorId)
+        {
+            if (!doctorId.HasValue) return Task.CompletedTask;
+            return _hub.Clients.Group(DoctorDashboardHub.GroupName(doctorId.Value)).SendAsync("LabResultsUpdated");
+        }
     }
 }

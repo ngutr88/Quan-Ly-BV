@@ -1,0 +1,145 @@
+@model QuanLyBenhVien.Models.LabOrderItem
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Nhập kết quả cận lâm sàng";
+    var canProcess = (bool)(ViewBag.CanProcess ?? false);
+    var result = Model.KetQua;
+    var isPublished = Model.TrangThai == "DaCoKetQua";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = Model.DichVu.TenDichVu,
+        Subtitle = $"Bệnh nhân {Model.PhieuChiDinh.Patient.User.HoTen} - Phiếu {Model.PhieuChiDinh.MaPhieu} - BS chỉ định {Model.PhieuChiDinh.BacSiChiDinh.User.HoTen}",
+        Breadcrumbs = new[] { new BreadcrumbItem("Quản trị", "/Admin/Dashboard"), new BreadcrumbItem("Cận lâm sàng", "/Admin/LabOrders") },
+        CurrentCrumb = Model.DichVu.TenDichVu
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-label-md">@TempData["SuccessMessage"]</span>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-error-container/25 text-error border border-error/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-error">error</span>
+        <span class="font-label-md">@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    <div class="lg:col-span-2 space-y-unit-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <div class="flex items-center justify-between mb-unit-md">
+                <h3 class="font-title-lg text-title-lg text-primary font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined">science</span> Kết luận
+                </h3>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold @(isPublished ? "bg-secondary-container text-secondary" : "bg-primary/10 text-primary")">
+                    @(isPublished ? "Đã phát hành" : "Đang thực hiện")
+                </span>
+            </div>
+
+            @if (isPublished)
+            {
+                <div class="space-y-unit-sm text-body-md">
+                    <p>@result!.KetLuan</p>
+                    @if (result.CoBatThuong)
+                    {
+                        <p class="text-error font-bold flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">gpp_maybe</span> Có bất thường</p>
+                    }
+                    <p class="text-caption text-on-surface-variant">Người duyệt: @(result.NguoiDuyetTen ?? "-") • Trả kết quả lúc @result.NgayTra.ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+            }
+            else if (canProcess)
+            {
+                <form method="POST" action="/Admin/LabOrders/Report/@Model.Id" enctype="multipart/form-data" class="space-y-unit-md">
+                    @Html.AntiForgeryToken()
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Kết luận <span class="text-error">*</span></label>
+                        <textarea name="ketLuan" rows="4" required class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus">@(result?.KetLuan)</textarea>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="coBatThuong" name="coBatThuong" value="true" class="rounded text-error focus:ring-error h-4 w-4" checked="@(result?.CoBatThuong ?? false)" />
+                        <label for="coBatThuong" class="font-label-md text-on-surface cursor-pointer select-none">Kết quả có bất thường</label>
+                    </div>
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Người duyệt (ghi tên, không bắt buộc tài khoản)</label>
+                        <input type="text" name="nguoiDuyetTen" value="@(result?.NguoiDuyetTen)" class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" />
+                    </div>
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Đính kèm file kết quả (PDF/JPG/PNG, tối đa 10MB/file, tối đa 10 file)</label>
+                        <input type="file" name="files" multiple accept=".pdf,.jpg,.jpeg,.png" class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md" />
+                    </div>
+                    <button type="submit" class="bg-primary text-white font-semibold px-unit-lg py-2.5 rounded-lg hover:bg-primary-container transition-all">
+                        Lưu kết quả (nháp)
+                    </button>
+                </form>
+            }
+            else
+            {
+                <p class="text-body-md text-on-surface-variant italic">Bạn không có quyền nhập kết quả. Nội dung hiện tại: @(result?.KetLuan ?? "Chưa có kết luận nào được lưu.")</p>
+            }
+
+            @if (result != null && result.Files.Any())
+            {
+                <div class="mt-unit-md pt-unit-md border-t border-outline-variant">
+                    <h4 class="text-caption font-bold text-on-surface-variant uppercase tracking-wider mb-2">File đính kèm (@result.Files.Count)</h4>
+                    <div class="space-y-2">
+                        @foreach (var file in result.Files.OrderBy(f => f.ThuTu))
+                        {
+                            <div class="flex items-center justify-between border border-outline-variant rounded-lg p-2">
+                                <a href="/Admin/LabOrders/DownloadResultFile?fileId=@file.Id" target="_blank" class="flex items-center gap-2 text-primary font-semibold hover:underline truncate">
+                                    <span class="material-symbols-outlined text-[18px]">@(file.ContentType == "application/pdf" ? "picture_as_pdf" : "image")</span>
+                                    <span class="truncate">@file.TenGoc</span>
+                                </a>
+                                @if (!isPublished && canProcess)
+                                {
+                                    <form method="POST" action="/Admin/LabOrders/DeleteResultFile" class="shrink-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="fileId" value="@file.Id" />
+                                        <input type="hidden" name="itemId" value="@Model.Id" />
+                                        <button type="submit" class="text-error text-caption font-semibold hover:underline" onclick="return confirm('Xóa file này?')">Xóa</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!isPublished && canProcess && result != null && !string.IsNullOrWhiteSpace(result.KetLuan))
+            {
+                <form method="POST" action="/Admin/LabOrders/PublishResult/@Model.Id" class="mt-unit-lg pt-unit-lg border-t border-outline-variant"
+                      onsubmit="return confirm('Phát hành kết quả cho bác sĩ chỉ định? Sau khi phát hành sẽ không thể sửa/xóa file đính kèm.')">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="bg-secondary text-on-secondary font-semibold px-unit-lg py-2.5 rounded-lg hover:opacity-90 transition-all flex items-center gap-1">
+                        <span class="material-symbols-outlined">send</span> Phát hành kết quả cho bác sĩ
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm h-fit">
+        <h3 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-primary">Thông tin chỉ định</h3>
+        <div class="space-y-unit-sm text-body-md">
+            <div><span class="text-caption text-on-surface-variant block">Mã phiếu</span><span class="font-semibold">@Model.PhieuChiDinh.MaPhieu</span></div>
+            <div><span class="text-caption text-on-surface-variant block">Bệnh nhân</span><span class="font-semibold">@Model.PhieuChiDinh.Patient.User.HoTen</span></div>
+            <div><span class="text-caption text-on-surface-variant block">Bác sĩ chỉ định</span><span>@Model.PhieuChiDinh.BacSiChiDinh.User.HoTen</span></div>
+            <div><span class="text-caption text-on-surface-variant block">Dịch vụ</span><span>@Model.DichVu.TenDichVu (@Model.DichVu.NhomCLS)</span></div>
+            <div><span class="text-caption text-on-surface-variant block">Ngày chỉ định</span><span>@Model.PhieuChiDinh.NgayChiDinh.ToString("dd/MM/yyyy HH:mm")</span></div>
+            @if (Model.NgayNhanThucHien.HasValue)
+            {
+                <div><span class="text-caption text-on-surface-variant block">Ngày tiếp nhận</span><span>@Model.NgayNhanThucHien.Value.ToString("dd/MM/yyyy HH:mm")</span></div>
+            }
+        </div>
+        <a href="/Admin/LabOrders/PrintOrder?labOrderId=@Model.PhieuChiDinh.Id" target="_blank" class="mt-unit-md inline-flex items-center gap-1 text-primary font-semibold hover:underline">
+            <span class="material-symbols-outlined text-[18px]">print</span> In phiếu chỉ định
+        </a>
+    </div>
+</div>

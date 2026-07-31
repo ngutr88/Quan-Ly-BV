@@ -1,0 +1,96 @@
+@model QuanLyBenhVien.Helpers.PagedList<QuanLyBenhVien.Models.ViewModels.PrescriptionListItemViewModel>
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Kê đơn & Y lệnh";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Kê đơn & Y lệnh",
+        Subtitle = "Danh sách đơn đã kê, đơn bị dược phản hồi, và mẫu đơn cá nhân.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
+        CurrentCrumb = "Kê đơn & Y lệnh"
+    };
+
+    string StatusLabel(string s) => s switch
+    {
+        "Nhap" => "Nháp",
+        "ChoCapPhat" => "Chờ cấp phát",
+        "DaCapPhat" => "Đã cấp phát",
+        "DuocPhanHoi" => "Dược phản hồi",
+        "DaHuy" => "Đã hủy",
+        _ => s
+    };
+
+    string StatusBadgeClass(string s) => s switch
+    {
+        "ChoCapPhat" => "bg-tertiary-container text-tertiary",
+        "DaCapPhat" => "bg-secondary-container text-secondary",
+        "DuocPhanHoi" => "bg-error-container text-error",
+        "DaHuy" => "bg-surface-container-high text-on-surface-variant",
+        _ => "bg-surface-container-high text-on-surface-variant"
+    };
+
+    var filters = new Dictionary<string, string>();
+    if (!string.IsNullOrEmpty(ViewBag.From as string)) filters["from"] = ViewBag.From;
+    if (!string.IsNullOrEmpty(ViewBag.To as string)) filters["to"] = ViewBag.To;
+    if (!string.IsNullOrEmpty(ViewBag.PatientQuery as string)) filters["patientQuery"] = ViewBag.PatientQuery;
+    if (!string.IsNullOrEmpty(ViewBag.Status as string)) filters["status"] = ViewBag.Status;
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_TabNav" />
+
+<form method="get" action="/Doctor/Prescriptions/List" class="grid grid-cols-2 md:grid-cols-5 gap-unit-sm mb-unit-lg bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md">
+    <input type="date" name="from" value="@ViewBag.From" class="px-3 py-2 bg-surface border border-outline-variant rounded-lg text-body-md" placeholder="Từ ngày" />
+    <input type="date" name="to" value="@ViewBag.To" class="px-3 py-2 bg-surface border border-outline-variant rounded-lg text-body-md" placeholder="Đến ngày" />
+    <input type="text" name="patientQuery" value="@ViewBag.PatientQuery" class="px-3 py-2 bg-surface border border-outline-variant rounded-lg text-body-md" placeholder="Tìm theo tên bệnh nhân" />
+    <select name="status" class="px-3 py-2 bg-surface border border-outline-variant rounded-lg text-body-md">
+        <option value="">-- Tất cả trạng thái --</option>
+        <option value="ChoCapPhat" selected="@(ViewBag.Status == "ChoCapPhat")">Chờ cấp phát</option>
+        <option value="DaCapPhat" selected="@(ViewBag.Status == "DaCapPhat")">Đã cấp phát</option>
+        <option value="DuocPhanHoi" selected="@(ViewBag.Status == "DuocPhanHoi")">Dược phản hồi</option>
+        <option value="DaHuy" selected="@(ViewBag.Status == "DaHuy")">Đã hủy</option>
+    </select>
+    <button type="submit" class="bg-primary text-white rounded-lg font-semibold hover:bg-primary-container transition-all">Lọc</button>
+</form>
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Danh sách đơn thuốc đã kê" tabindex="0">
+        <table class="w-full text-left text-body-md">
+            <thead class="bg-surface-container-low">
+                <tr class="text-caption font-bold text-on-surface-variant uppercase">
+                    <th class="py-3 px-4">Ngày kê</th>
+                    <th class="py-3 px-4">Bệnh nhân</th>
+                    <th class="py-3 px-4">Chẩn đoán</th>
+                    <th class="py-3 px-4">Số loại thuốc</th>
+                    <th class="py-3 px-4">Trạng thái</th>
+                    <th class="py-3 px-4 text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/40">
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="6" class="py-6 text-center text-on-surface-variant italic">Chưa có đơn thuốc nào.</td></tr>
+                }
+                else
+                {
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="py-3 px-4">@item.NgayKe.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="py-3 px-4 font-semibold">@item.PatientName <span class="text-caption text-on-surface-variant">(BN-@item.PatientId.ToString("D4"))</span></td>
+                            <td class="py-3 px-4">@item.ChanDoan</td>
+                            <td class="py-3 px-4">@item.SoLoaiThuoc</td>
+                            <td class="py-3 px-4"><span class="px-2 py-1 rounded-full text-caption font-bold @StatusBadgeClass(item.TrangThai)">@StatusLabel(item.TrangThai)</span></td>
+                            <td class="py-3 px-4 text-right">
+                                <a href="/Doctor/Prescriptions/Details/@item.Id" class="text-primary font-semibold hover:underline">Xem chi tiết</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<partial name="_Pagination" model='PaginationViewModel.From(Model, "/Doctor/Prescriptions/List", "đơn thuốc", filters)' />

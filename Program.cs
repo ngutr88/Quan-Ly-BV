@@ -42,6 +42,8 @@ builder.Services.AddSingleton<QuanLyBenhVien.Services.HospitalSettingsProvider>(
 builder.Services.AddScoped<QuanLyBenhVien.Services.AppointmentSlotService>();
 builder.Services.AddScoped<QuanLyBenhVien.Services.IEmailSender, QuanLyBenhVien.Services.MockEmailSender>();
 builder.Services.AddScoped<QuanLyBenhVien.Services.ISmsSender, QuanLyBenhVien.Services.MockSmsSender>();
+builder.Services.AddScoped<QuanLyBenhVien.Services.IPrescriptionSafetyChecker, QuanLyBenhVien.Services.PrescriptionSafetyChecker>();
+builder.Services.AddScoped<QuanLyBenhVien.Services.MedicineStockAllocator>();
 
 // Previously defaulted to Path.GetTempPath() ("%TEMP%\QuanLyBenhVien\..."):
 // the OS temp folder is expected to be cleared at any time (disk cleanup,
@@ -214,6 +216,280 @@ using (var scope = app.Services.CreateScope())
                     CREATE INDEX IX_YeuCauKhoiPhucMatKhau_NguoiDungId_NgayTao ON YeuCauKhoiPhucMatKhau (NguoiDungId, NgayTao);
                     CREATE INDEX IX_YeuCauKhoiPhucMatKhau_IpAddress_NgayTao ON YeuCauKhoiPhucMatKhau (IpAddress, NgayTao);
                     CREATE INDEX IX_YeuCauKhoiPhucMatKhau_ResetTokenHash ON YeuCauKhoiPhucMatKhau (ResetTokenHash);
+                END");
+
+                // Kê đơn & Y lệnh (Sprint 1) - cùng lý do như trên: EnsureCreated()
+                // không tự thêm bảng/cột mới vào DB SQL Server đã tồn tại.
+                //
+                // Tách thành nhiều batch ExecuteSqlRaw riêng (không gộp chung 1
+                // chuỗi): SQL Server biên dịch toàn bộ 1 batch trước khi chạy, nên
+                // 1 câu ALTER TABLE...ADD COLUMN và 1 câu khác THAM CHIẾU đúng cột
+                // vừa thêm đó (CHECK constraint, UPDATE, ALTER COLUMN, ADD FK)
+                // không được phép nằm chung 1 batch - sẽ báo "Invalid column
+                // name" dù cột đã tồn tại, vì tên cột mới chưa "nhìn thấy được"
+                // cho tới khi batch trước đó hoàn tất.
+                context.Database.ExecuteSqlRaw(@"
+                IF COL_LENGTH('Thuoc','CoBaoHiemYTe') IS NULL
+                    ALTER TABLE Thuoc ADD CoBaoHiemYTe BIT NOT NULL DEFAULT 0;
+                IF COL_LENGTH('Thuoc','LieuToiDaMoiNgay') IS NULL
+                    ALTER TABLE Thuoc ADD LieuToiDaMoiNgay INT NULL;
+                IF COL_LENGTH('Thuoc','LieuToiDaMoiNgayTheoKg') IS NULL
+                    ALTER TABLE Thuoc ADD LieuToiDaMoiNgayTheoKg DECIMAL(10, 4) NULL;
+                IF COL_LENGTH('Thuoc','QuyCachSoLuong') IS NULL
+                    ALTER TABLE Thuoc ADD QuyCachSoLuong INT NULL;
+
+                IF COL_LENGTH('ChiTietDonThuoc','LieuMoiLan') IS NULL
+                    ALTER TABLE ChiTietDonThuoc ADD LieuMoiLan DECIMAL(10, 2) NULL;
+                IF COL_LENGTH('ChiTietDonThuoc','SoLanMoiNgay') IS NULL
+                    ALTER TABLE ChiTietDonThuoc ADD SoLanMoiNgay INT NULL;
+                IF COL_LENGTH('ChiTietDonThuoc','DuongDung') IS NULL
+                    ALTER TABLE ChiTietDonThuoc ADD DuongDung NVARCHAR(50) NULL;
+                IF COL_LENGTH('ChiTietDonThuoc','ThoiDiemDung') IS NULL
+                    ALTER TABLE ChiTietDonThuoc ADD ThoiDiemDung NVARCHAR(50) NULL;
+                IF COL_LENGTH('ChiTietDonThuoc','SoNgayDung') IS NULL
+                    ALTER TABLE ChiTietDonThuoc ADD SoNgayDung INT NULL;
+                IF COL_LENGTH('ChiTietDonThuoc','HuongDanSuDung') IS NULL
+                    ALTER TABLE ChiTietDonThuoc ADD HuongDanSuDung NVARCHAR(300) NULL;
+
+                IF COL_LENGTH('PhieuKham','NgayHenTaiKham') IS NULL
+                    ALTER TABLE PhieuKham ADD NgayHenTaiKham DATETIME2 NULL;
+
+                IF COL_LENGTH('BenhNhan','MucDoDiUng') IS NULL
+                    ALTER TABLE BenhNhan ADD MucDoDiUng NVARCHAR(20) NULL;
+
+                IF COL_LENGTH('DonThuoc','TrangThai') IS NULL
+                    ALTER TABLE DonThuoc ADD TrangThai NVARCHAR(20) NOT NULL DEFAULT 'ChoCapPhat';
+                IF COL_LENGTH('DonThuoc','LyDoHuy') IS NULL
+                    ALTER TABLE DonThuoc ADD LyDoHuy NVARCHAR(500) NULL;
+                IF COL_LENGTH('DonThuoc','BacSiKeId') IS NULL
+                    ALTER TABLE DonThuoc ADD BacSiKeId INT NULL;");
+
+                // Batch riêng: các câu lệnh tham chiếu tên cột vừa thêm ở trên.
+                if (!context.Database.SqlQueryRaw<int>(
+                        "SELECT CAST(1 AS INT) AS Value WHERE EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_BenhNhan_MucDoDiUng')")
+                    .AsEnumerable().Any())
+                {
+                    context.Database.ExecuteSqlRaw(@"
+                    ALTER TABLE BenhNhan ADD CONSTRAINT CK_BenhNhan_MucDoDiUng
+                        CHECK (MucDoDiUng IS NULL OR MucDoDiUng IN ('Nhe','TrungBinh','NghiemTrong'));");
+                }
+
+                if (!context.Database.SqlQueryRaw<int>(
+                        "SELECT CAST(1 AS INT) AS Value WHERE EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_DonThuoc_TrangThai')")
+                    .AsEnumerable().Any())
+                {
+                    context.Database.ExecuteSqlRaw(@"
+                    ALTER TABLE DonThuoc ADD CONSTRAINT CK_DonThuoc_TrangThai
+                        CHECK (TrangThai IN ('Nhap','ChoCapPhat','DaCapPhat','DuocPhanHoi','DaHuy'));");
+                }
+
+                if (!context.Database.SqlQueryRaw<int>(
+                        "SELECT CAST(1 AS INT) AS Value WHERE EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_DonThuoc_BacSi_BacSiKeId')")
+                    .AsEnumerable().Any())
+                {
+                    context.Database.ExecuteSqlRaw(@"
+                    UPDATE dt SET dt.BacSiKeId = lk.BacSiId
+                        FROM DonThuoc dt
+                        INNER JOIN PhieuKham pk ON pk.Id = dt.PhieuKhamId
+                        INNER JOIN LichKham lk ON lk.Id = pk.LichKhamId
+                        WHERE dt.BacSiKeId IS NULL;
+                    UPDATE DonThuoc SET BacSiKeId = (SELECT TOP 1 Id FROM BacSi ORDER BY Id) WHERE BacSiKeId IS NULL;
+                    ALTER TABLE DonThuoc ALTER COLUMN BacSiKeId INT NOT NULL;
+                    ALTER TABLE DonThuoc ADD CONSTRAINT FK_DonThuoc_BacSi_BacSiKeId FOREIGN KEY (BacSiKeId) REFERENCES BacSi (Id);");
+                }
+
+                context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'TuongTacThuoc')
+                BEGIN
+                    CREATE TABLE TuongTacThuoc (
+                        Id INT NOT NULL CONSTRAINT PK_TuongTacThuoc PRIMARY KEY IDENTITY,
+                        HoatChatA NVARCHAR(150) NOT NULL,
+                        HoatChatB NVARCHAR(150) NOT NULL,
+                        MucDoTuongTac NVARCHAR(20) NOT NULL,
+                        MoTa NVARCHAR(500) NOT NULL,
+                        NguonNhap NVARCHAR(30) NOT NULL DEFAULT 'SeedDemo',
+                        LaDuLieuMinhHoa BIT NOT NULL DEFAULT 1,
+                        NgayTao DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        CONSTRAINT CK_TuongTacThuoc_MucDo CHECK (MucDoTuongTac IN ('ChongChiDinh','NghiemTrong','TrungBinh','Nhe'))
+                    );
+                    CREATE INDEX IX_TuongTacThuoc_HoatChatA_HoatChatB ON TuongTacThuoc (HoatChatA, HoatChatB);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'NhomHoatChatCheoPhanUng')
+                BEGIN
+                    CREATE TABLE NhomHoatChatCheoPhanUng (
+                        Id INT NOT NULL CONSTRAINT PK_NhomHoatChatCheoPhanUng PRIMARY KEY IDENTITY,
+                        TenNhom NVARCHAR(150) NOT NULL,
+                        MoTa NVARCHAR(500) NULL,
+                        LaDuLieuMinhHoa BIT NOT NULL DEFAULT 1
+                    );
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'ThanhVienNhomHoatChat')
+                BEGIN
+                    CREATE TABLE ThanhVienNhomHoatChat (
+                        Id INT NOT NULL CONSTRAINT PK_ThanhVienNhomHoatChat PRIMARY KEY IDENTITY,
+                        NhomId INT NOT NULL,
+                        HoatChat NVARCHAR(150) NOT NULL,
+                        CONSTRAINT FK_ThanhVienNhomHoatChat_NhomHoatChatCheoPhanUng_NhomId
+                            FOREIGN KEY (NhomId) REFERENCES NhomHoatChatCheoPhanUng (Id)
+                    );
+                    CREATE INDEX IX_ThanhVienNhomHoatChat_HoatChat ON ThanhVienNhomHoatChat (HoatChat);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PhanBoLoThuocDonThuoc')
+                BEGIN
+                    CREATE TABLE PhanBoLoThuocDonThuoc (
+                        Id INT NOT NULL CONSTRAINT PK_PhanBoLoThuocDonThuoc PRIMARY KEY IDENTITY,
+                        ChiTietDonThuocId INT NOT NULL,
+                        LoThuocId INT NOT NULL,
+                        SoLuongLay INT NOT NULL,
+                        DaHoanTra BIT NOT NULL DEFAULT 0,
+                        NgayPhanBo DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        CONSTRAINT FK_PhanBoLoThuocDonThuoc_ChiTietDonThuoc_ChiTietDonThuocId
+                            FOREIGN KEY (ChiTietDonThuocId) REFERENCES ChiTietDonThuoc (Id),
+                        CONSTRAINT FK_PhanBoLoThuocDonThuoc_LoThuoc_LoThuocId
+                            FOREIGN KEY (LoThuocId) REFERENCES LoThuoc (Id)
+                    );
+                    CREATE INDEX IX_PhanBoLoThuocDonThuoc_ChiTietDonThuocId ON PhanBoLoThuocDonThuoc (ChiTietDonThuocId);
+                END");
+
+                // Cận lâm sàng (Giai đoạn 1) - cùng lý do như các khối trên.
+                // Batch 1: chỉ ALTER TABLE...ADD COLUMN, tự chứa, không câu nào
+                // khác trong CÙNG batch tham chiếu tên cột vừa thêm.
+                context.Database.ExecuteSqlRaw(@"
+                IF COL_LENGTH('NguoiDung','DuocXuLyCLS') IS NULL
+                    ALTER TABLE NguoiDung ADD DuocXuLyCLS BIT NOT NULL DEFAULT 0;
+                IF COL_LENGTH('PhieuKham','GhiChuCLSCuaBacSi') IS NULL
+                    ALTER TABLE PhieuKham ADD GhiChuCLSCuaBacSi NVARCHAR(1000) NULL;");
+
+                // Batch 2: toàn bộ CREATE TABLE mới, theo đúng thứ tự phụ thuộc.
+                // Đây là CREATE TABLE (không phải ALTER TABLE ADD COLUMN), nên
+                // một bảng tham chiếu bảng khác vừa được tạo trước đó TRONG
+                // CÙNG batch là hợp lệ (đã áp dụng y hệt cho
+                // TuongTacThuoc/NhomHoatChatCheoPhanUng/ThanhVienNhomHoatChat ở trên).
+                context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'DichVuCLS')
+                BEGIN
+                    CREATE TABLE DichVuCLS (
+                        Id INT NOT NULL CONSTRAINT PK_DichVuCLS PRIMARY KEY IDENTITY,
+                        MaDichVu NVARCHAR(30) NOT NULL,
+                        TenDichVu NVARCHAR(200) NOT NULL,
+                        NhomCLS NVARCHAR(30) NOT NULL,
+                        NoiThucHien NVARCHAR(150) NULL,
+                        Gia DECIMAL(12, 2) NOT NULL,
+                        DangHoatDong BIT NOT NULL DEFAULT 1,
+                        GhiChu NVARCHAR(500) NULL,
+                        CONSTRAINT CK_DichVuCLS_NhomCLS CHECK (NhomCLS IN ('HuyetHoc','SinhHoa','ViSinh','CDHA','ThamDoChucNang','GiaiPhauBenh')),
+                        CONSTRAINT CK_DichVuCLS_Gia CHECK (Gia >= 0)
+                    );
+                    CREATE UNIQUE INDEX IX_DichVuCLS_MaDichVu ON DichVuCLS (MaDichVu);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'BoChiDinhCLS')
+                BEGIN
+                    CREATE TABLE BoChiDinhCLS (
+                        Id INT NOT NULL CONSTRAINT PK_BoChiDinhCLS PRIMARY KEY IDENTITY,
+                        TenBo NVARCHAR(150) NOT NULL,
+                        MoTa NVARCHAR(500) NULL,
+                        DangHoatDong BIT NOT NULL DEFAULT 1
+                    );
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'ChiTietBoChiDinhCLS')
+                BEGIN
+                    CREATE TABLE ChiTietBoChiDinhCLS (
+                        Id INT NOT NULL CONSTRAINT PK_ChiTietBoChiDinhCLS PRIMARY KEY IDENTITY,
+                        BoChiDinhCLSId INT NOT NULL,
+                        DichVuCLSId INT NOT NULL,
+                        CONSTRAINT FK_ChiTietBoChiDinhCLS_BoChiDinhCLS_BoChiDinhCLSId
+                            FOREIGN KEY (BoChiDinhCLSId) REFERENCES BoChiDinhCLS (Id) ON DELETE CASCADE,
+                        CONSTRAINT FK_ChiTietBoChiDinhCLS_DichVuCLS_DichVuCLSId
+                            FOREIGN KEY (DichVuCLSId) REFERENCES DichVuCLS (Id)
+                    );
+                    CREATE UNIQUE INDEX IX_ChiTietBoChiDinhCLS_BoChiDinhCLSId_DichVuCLSId ON ChiTietBoChiDinhCLS (BoChiDinhCLSId, DichVuCLSId);
+                    CREATE INDEX IX_ChiTietBoChiDinhCLS_DichVuCLSId ON ChiTietBoChiDinhCLS (DichVuCLSId);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PhieuChiDinhCLS')
+                BEGIN
+                    CREATE TABLE PhieuChiDinhCLS (
+                        Id INT NOT NULL CONSTRAINT PK_PhieuChiDinhCLS PRIMARY KEY IDENTITY,
+                        MaPhieu NVARCHAR(30) NOT NULL,
+                        PhieuKhamId INT NOT NULL,
+                        BenhNhanId INT NOT NULL,
+                        BacSiChiDinhId INT NOT NULL,
+                        NgayChiDinh DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        BoChiDinhCLSId INT NULL,
+                        GhiChuChiDinh NVARCHAR(500) NULL,
+                        CONSTRAINT FK_PhieuChiDinhCLS_PhieuKham_PhieuKhamId FOREIGN KEY (PhieuKhamId) REFERENCES PhieuKham (Id),
+                        CONSTRAINT FK_PhieuChiDinhCLS_BenhNhan_BenhNhanId FOREIGN KEY (BenhNhanId) REFERENCES BenhNhan (Id),
+                        CONSTRAINT FK_PhieuChiDinhCLS_BacSi_BacSiChiDinhId FOREIGN KEY (BacSiChiDinhId) REFERENCES BacSi (Id),
+                        CONSTRAINT FK_PhieuChiDinhCLS_BoChiDinhCLS_BoChiDinhCLSId FOREIGN KEY (BoChiDinhCLSId) REFERENCES BoChiDinhCLS (Id)
+                    );
+                    CREATE UNIQUE INDEX IX_PhieuChiDinhCLS_MaPhieu ON PhieuChiDinhCLS (MaPhieu);
+                    CREATE INDEX IX_PhieuChiDinhCLS_PhieuKhamId ON PhieuChiDinhCLS (PhieuKhamId);
+                    CREATE INDEX IX_PhieuChiDinhCLS_BenhNhanId ON PhieuChiDinhCLS (BenhNhanId);
+                    CREATE INDEX IX_PhieuChiDinhCLS_BacSiChiDinhId ON PhieuChiDinhCLS (BacSiChiDinhId);
+                    CREATE INDEX IX_PhieuChiDinhCLS_BoChiDinhCLSId ON PhieuChiDinhCLS (BoChiDinhCLSId);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'ChiTietPhieuChiDinhCLS')
+                BEGIN
+                    CREATE TABLE ChiTietPhieuChiDinhCLS (
+                        Id INT NOT NULL CONSTRAINT PK_ChiTietPhieuChiDinhCLS PRIMARY KEY IDENTITY,
+                        PhieuChiDinhCLSId INT NOT NULL,
+                        DichVuCLSId INT NOT NULL,
+                        TrangThai NVARCHAR(20) NOT NULL DEFAULT 'ChoThucHien',
+                        LyDoHuy NVARCHAR(500) NULL,
+                        NgayNhanThucHien DATETIME2 NULL,
+                        NguoiNhanId INT NULL,
+                        CONSTRAINT CK_ChiTietPhieuChiDinhCLS_TrangThai CHECK (TrangThai IN ('ChoThucHien','DangThucHien','DaCoKetQua','DaHuy')),
+                        CONSTRAINT FK_ChiTietPhieuChiDinhCLS_PhieuChiDinhCLS_PhieuChiDinhCLSId
+                            FOREIGN KEY (PhieuChiDinhCLSId) REFERENCES PhieuChiDinhCLS (Id) ON DELETE CASCADE,
+                        CONSTRAINT FK_ChiTietPhieuChiDinhCLS_DichVuCLS_DichVuCLSId FOREIGN KEY (DichVuCLSId) REFERENCES DichVuCLS (Id),
+                        CONSTRAINT FK_ChiTietPhieuChiDinhCLS_NguoiDung_NguoiNhanId FOREIGN KEY (NguoiNhanId) REFERENCES NguoiDung (Id)
+                    );
+                    CREATE INDEX IX_ChiTietPhieuChiDinhCLS_PhieuChiDinhCLSId ON ChiTietPhieuChiDinhCLS (PhieuChiDinhCLSId);
+                    CREATE INDEX IX_ChiTietPhieuChiDinhCLS_DichVuCLSId ON ChiTietPhieuChiDinhCLS (DichVuCLSId);
+                    CREATE INDEX IX_ChiTietPhieuChiDinhCLS_NguoiNhanId ON ChiTietPhieuChiDinhCLS (NguoiNhanId);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'KetQuaCLS')
+                BEGIN
+                    CREATE TABLE KetQuaCLS (
+                        Id INT NOT NULL CONSTRAINT PK_KetQuaCLS PRIMARY KEY IDENTITY,
+                        ChiTietPhieuChiDinhCLSId INT NOT NULL,
+                        KetLuan NVARCHAR(1000) NOT NULL,
+                        CoBatThuong BIT NOT NULL DEFAULT 0,
+                        NguoiThucHienId INT NOT NULL,
+                        NguoiDuyetTen NVARCHAR(150) NULL,
+                        NgayTra DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        DaXem BIT NOT NULL DEFAULT 0,
+                        NgayXem DATETIME2 NULL,
+                        CONSTRAINT FK_KetQuaCLS_ChiTietPhieuChiDinhCLS_ChiTietPhieuChiDinhCLSId
+                            FOREIGN KEY (ChiTietPhieuChiDinhCLSId) REFERENCES ChiTietPhieuChiDinhCLS (Id),
+                        CONSTRAINT FK_KetQuaCLS_NguoiDung_NguoiThucHienId FOREIGN KEY (NguoiThucHienId) REFERENCES NguoiDung (Id)
+                    );
+                    CREATE UNIQUE INDEX IX_KetQuaCLS_ChiTietPhieuChiDinhCLSId ON KetQuaCLS (ChiTietPhieuChiDinhCLSId);
+                    CREATE INDEX IX_KetQuaCLS_NguoiThucHienId ON KetQuaCLS (NguoiThucHienId);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'FileKetQuaCLS')
+                BEGIN
+                    CREATE TABLE FileKetQuaCLS (
+                        Id INT NOT NULL CONSTRAINT PK_FileKetQuaCLS PRIMARY KEY IDENTITY,
+                        KetQuaCLSId INT NOT NULL,
+                        TenGoc NVARCHAR(260) NOT NULL,
+                        TenLuuTru NVARCHAR(260) NOT NULL,
+                        ContentType NVARCHAR(100) NOT NULL,
+                        KichThuoc BIGINT NOT NULL,
+                        ThuTu INT NOT NULL DEFAULT 0,
+                        NgayTaiLen DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        CONSTRAINT FK_FileKetQuaCLS_KetQuaCLS_KetQuaCLSId
+                            FOREIGN KEY (KetQuaCLSId) REFERENCES KetQuaCLS (Id) ON DELETE CASCADE
+                    );
+                    CREATE INDEX IX_FileKetQuaCLS_KetQuaCLSId ON FileKetQuaCLS (KetQuaCLSId);
                 END");
             }
         }

@@ -62,12 +62,6 @@
                         class="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg text-primary hover:bg-surface-container-high shrink-0">
                     <span class="material-symbols-outlined">menu</span>
                 </button>
-                <div class="relative w-80 hidden lg:block" id="doctor-search-wrap">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-                    <input id="doctor-search-input" class="w-full pl-10 pr-4 py-2 bg-surface-container rounded-lg border-none focus:ring-2 focus:ring-primary text-body-md"
-                           placeholder="Tìm kiếm bệnh nhân..." type="text" autocomplete="off" />
-                    <div id="doctor-search-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg max-h-96 overflow-y-auto z-50"></div>
-                </div>
             </div>
 
             <div class="flex items-center gap-unit-md">
@@ -129,6 +123,7 @@
                 .build();
             window.doctorHubConnection = connection;
             connection.on('NotificationCountChanged', refreshDoctorNotificationBadge);
+            connection.on('LabResultsUpdated', refreshDoctorLabResultsBadge);
             connection.start().catch(function (err) { console.error('Lỗi kết nối SignalR:', err); });
         })();
 
@@ -155,106 +150,29 @@
         }
         document.addEventListener('DOMContentLoaded', refreshDoctorNotificationBadge);
 
-        // Topbar quick search - scoped to this doctor's own patients
-        // (Doctor/History/QuickSearch), with a break-the-glass prompt for
-        // out-of-scope matches.
-        (function () {
-            const input = document.getElementById('doctor-search-input');
-            const resultsBox = document.getElementById('doctor-search-results');
-            if (!input || !resultsBox) return;
-
-            let debounceTimer = null;
-
-            input.addEventListener('input', function () {
-                clearTimeout(debounceTimer);
-                const q = input.value.trim();
-                if (q.length < 2) {
-                    resultsBox.classList.add('hidden');
-                    resultsBox.innerHTML = '';
-                    return;
-                }
-                debounceTimer = setTimeout(function () { runSearch(q); }, 300);
-            });
-
-            document.addEventListener('click', function (e) {
-                if (!resultsBox.contains(e.target) && e.target !== input) {
-                    resultsBox.classList.add('hidden');
-                }
-            });
-
-            function runSearch(q) {
-                fetch('/Doctor/History/QuickSearch?q=' + encodeURIComponent(q))
-                    .then(function (r) { return r.json(); })
-                    .then(renderResults)
-                    .catch(function () { resultsBox.classList.add('hidden'); });
-            }
-
-            function escapeHtml(s) {
-                const div = document.createElement('div');
-                div.textContent = s == null ? '' : s;
-                return div.innerHTML;
-            }
-
-            function renderResults(items) {
-                if (!items || items.length === 0) {
-                    resultsBox.innerHTML = '<div class="p-3 text-caption text-on-surface-variant">Không tìm thấy bệnh nhân.</div>';
-                    resultsBox.classList.remove('hidden');
-                    return;
-                }
-
-                resultsBox.innerHTML = items.map(function (item) {
-                    if (item.inScope) {
-                        return '<a href="/Doctor/History?searchString=' + encodeURIComponent(item.patientName) +
-                            '" class="block px-4 py-2.5 hover:bg-surface-container-low border-b border-outline-variant last:border-b-0">' +
-                            '<div class="font-semibold text-on-surface">' + escapeHtml(item.patientName) + '</div>' +
-                            '<div class="text-caption text-on-surface-variant">' + escapeHtml(item.phone) + '</div></a>';
-                    }
-
-                    return '<div class="px-4 py-2.5 border-b border-outline-variant last:border-b-0 flex items-center justify-between gap-2">' +
-                        '<div class="min-w-0"><div class="font-semibold text-on-surface-variant truncate">' + escapeHtml(item.patientName) + '</div>' +
-                        '<div class="text-caption text-outline flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">lock</span> Ngoài phạm vi</div></div>' +
-                        '<button type="button" class="shrink-0 text-caption text-primary font-semibold hover:underline" ' +
-                        'data-patient-id="' + item.patientId + '" data-latest-lich-kham-id="' + (item.latestLichKhamId ?? '') + '" data-patient-name="' + escapeHtml(item.patientName) + '">' +
-                        'Yêu cầu truy cập</button></div>';
-                }).join('');
-
-                resultsBox.querySelectorAll('button[data-patient-id]').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        const latest = btn.dataset.latestLichKhamId;
-                        requestBreakTheGlass(btn.dataset.patientId, latest ? parseInt(latest, 10) : null, btn.dataset.patientName);
-                    });
-                });
-
-                resultsBox.classList.remove('hidden');
-            }
-        })();
-
-        function requestBreakTheGlass(patientId, latestLichKhamId, patientName) {
-            if (!latestLichKhamId) {
-                alert(patientName + ' chưa có hồ sơ khám nào để xem.');
-                return;
-            }
-            const reason = prompt('Nhập lý do truy cập hồ sơ của ' + patientName + ' (bắt buộc, sẽ được ghi vào nhật ký hệ thống):');
-            if (reason === null) return;
-            if (reason.trim().length < 5) {
-                alert('Lý do truy cập cần tối thiểu 5 ký tự.');
-                return;
-            }
-
-            const fd = antiForgeryFormData();
-            fd.append('patientId', patientId);
-            fd.append('reason', reason.trim());
-
-            fetch('/Doctor/History/BreakTheGlass', { method: 'POST', body: fd })
+        // Sidebar mục "Kết quả cận lâm sàng" - mục badge sidebar ĐẦU TIÊN được
+        // làm mới realtime qua SignalR (trước đây sidebar chỉ render 1 lần lúc
+        // tải trang); định vị qua data-module-key thay vì id vì mỗi mục sidebar
+        // không có id riêng.
+        function refreshDoctorLabResultsBadge() {
+            fetch('/Doctor/LabResults/UnreadCount')
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
-                    if (data.success) {
-                        window.location.href = '/Doctor/History/RecordDetails/' + latestLichKhamId + '?breakGlass=true';
-                    } else {
-                        alert(data.message || 'Không thể ghi nhận yêu cầu truy cập.');
+                    const link = document.querySelector('a[data-module-key="Doctor.LabResults"]');
+                    if (!link) return;
+                    let badge = link.querySelector('.sidebar-badge');
+                    if (!data.count || data.count <= 0) {
+                        if (badge) badge.remove();
+                        return;
                     }
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'sidebar-badge shrink-0 min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-error text-white text-[10px] font-bold';
+                        link.appendChild(badge);
+                    }
+                    badge.textContent = data.count > 9 ? '9+' : data.count;
                 })
-                .catch(function () { alert('Có lỗi xảy ra, vui lòng thử lại.'); });
+                .catch(function () { /* sidebar badge is best-effort */ });
         }
 
         function openDoctorSidebar() {

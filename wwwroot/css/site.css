@@ -656,8 +656,8 @@ a, button, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 .staff-sidebar > div:last-child, .patient-sidebar > div:last-child { border-color: rgba(255, 255, 255, .14) !important; }
 .staff-sidebar nav, .patient-sidebar nav {
   min-height: 0;
-  padding-bottom: .75rem;
-  scroll-padding-bottom: .75rem;
+  padding-bottom: 1.5rem;
+  scroll-padding-bottom: 1.5rem;
 }
 .staff-sidebar > div:last-child, .patient-sidebar > div:last-child {
   flex-shrink: 0;

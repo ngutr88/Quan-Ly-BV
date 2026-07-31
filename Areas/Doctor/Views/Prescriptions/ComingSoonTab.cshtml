@@ -1,3 +1,4 @@
+@model QuanLyBenhVien.Models.ViewModels.ComingSoonViewModel
 @{
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
     ViewData["Title"] = "Kê đơn & Y lệnh";
@@ -9,14 +10,8 @@
         Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
         CurrentCrumb = "Kê đơn & Y lệnh"
     };
-
-    var comingSoon = new ComingSoonViewModel
-    {
-        Icon = "medication",
-        Message = "Tính năng đang được phát triển.",
-        SubMessage = "Việc kê đơn hiện vẫn thực hiện trong phiên khám bệnh — trang tổng hợp riêng này sẽ được xây ở đợt sau."
-    };
 }
 
 <partial name="_PageHeader" model="header" />
-<partial name="_ComingSoon" model="comingSoon" />
+<partial name="_TabNav" />
+<partial name="_ComingSoon" model="Model" />

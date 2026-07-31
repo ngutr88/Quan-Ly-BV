@@ -41,6 +41,24 @@ namespace QuanLyBenhVien.Models
         [Required]
         public int NguongToiThieu { get; set; } // Ngưỡng tồn tối thiểu để cảnh báo
 
+        // Chỉ để hiển thị trong kết quả tìm thuốc khi kê đơn - KHÔNG tính đồng
+        // chi trả BHYT thật (đó là một tính năng tài chính riêng, lớn hơn nhiều).
+        public bool CoBaoHiemYTe { get; set; } = false;
+
+        // Ngưỡng an toàn cho công cụ kê đơn (Kê đơn & Y lệnh). Theo SỐ ĐƠN VỊ/NGÀY
+        // (viên/ngày theo DonViTinh), KHÔNG phải mg/kg thật, vì HamLuong là text
+        // tự do chưa chuẩn hóa số - nullable vì phần lớn thuốc hiện có chưa khai
+        // báo giá trị này.
+        public int? LieuToiDaMoiNgay { get; set; }
+
+        [Column(TypeName = "decimal(10, 4)")]
+        public decimal? LieuToiDaMoiNgayTheoKg { get; set; }
+
+        // Bội số đóng gói nhỏ nhất để làm tròn số lượng kê lên (vd 10 cho "vỉ 10
+        // viên") - không tái dùng QuyCachDongGoi vì đó là text tự do không parse
+        // được đáng tin cậy.
+        public int? QuyCachSoLuong { get; set; }
+
         public virtual ICollection<MedicineBatch> LoThuocs { get; set; } = new List<MedicineBatch>();
     }
 

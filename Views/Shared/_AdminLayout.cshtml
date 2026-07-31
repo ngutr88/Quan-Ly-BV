@@ -93,6 +93,12 @@
                 <span class="font-body-md text-body-md">Hóa đơn</span>
             </a>
 
+            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "LabOrders" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
+               href="/Admin/LabOrders">
+                <span class="material-symbols-outlined">biotech</span>
+                <span class="font-body-md text-body-md">Cận lâm sàng</span>
+            </a>
+
             <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "News" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
                href="/Admin/News">
                 <span class="material-symbols-outlined">newspaper</span>

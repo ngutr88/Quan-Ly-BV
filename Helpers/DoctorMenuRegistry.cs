@@ -12,19 +12,24 @@ public record DoctorMenuItem(
     string Route,
     string Group,
     string? ExtraVisibilityKey = null,
-    string? BadgeSourceKey = null
+    string? BadgeSourceKey = null,
+    // Static, non-numeric badge (e.g. "Sắp ra mắt") - mutually exclusive with
+    // BadgeSourceKey. Rendered in a neutral color, unlike the alert-red
+    // numeric badge, so it never reads as a warning.
+    string? StaticBadgeText = null
 );
 
 public static class DoctorMenuRegistry
 {
     public const string BadgeUnreadNotifications = "UnreadNotifications";
+    public const string BadgeUnreadLabResults = "UnreadLabResults";
 
     public static readonly IReadOnlyList<DoctorMenuItem> Items = new List<DoctorMenuItem>
     {
         new("Doctor.Dashboard", "dashboard", "/Doctor/Dashboard", DoctorMenuGroups.CongViecHangNgay),
         new("Doctor.Queue", "patient_list", "/Doctor/Queue", DoctorMenuGroups.CongViecHangNgay),
         new("Doctor.Inpatient", "bed", "/Doctor/Inpatient", DoctorMenuGroups.CongViecHangNgay, DoctorMenuConditions.WardAssignment),
-        new("Doctor.LabResults", "biotech", "/Doctor/LabResults", DoctorMenuGroups.CongViecHangNgay),
+        new("Doctor.LabResults", "biotech", "/Doctor/LabResults", DoctorMenuGroups.CongViecHangNgay, BadgeSourceKey: BadgeUnreadLabResults),
 
         new("Doctor.History", "history_edu", "/Doctor/History", DoctorMenuGroups.HoSoChuyenMon),
         new("Doctor.Prescriptions", "medication", "/Doctor/Prescriptions", DoctorMenuGroups.HoSoChuyenMon),

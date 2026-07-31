@@ -1,22 +1,103 @@
+@model QuanLyBenhVien.Helpers.PagedList<QuanLyBenhVien.Models.LabOrderItem>
 @{
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
     ViewData["Title"] = "Kết quả cận lâm sàng";
+    var tab = ViewBag.Tab as string ?? "ChuaXem";
+    var thresholdHours = (int)(ViewBag.PendingThresholdHours ?? 24);
 
     var header = new PageHeaderViewModel
     {
         Title = "Kết quả cận lâm sàng",
-        Subtitle = "Hộp thư kết quả xét nghiệm / chẩn đoán hình ảnh của bệnh nhân bạn chỉ định.",
+        Subtitle = "Hộp thư kết quả xét nghiệm/chẩn đoán hình ảnh của các bệnh nhân bạn chỉ định.",
         Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
         CurrentCrumb = "Kết quả cận lâm sàng"
     };
 
-    var comingSoon = new ComingSoonViewModel
+    string TabClass(string t) => tab == t
+        ? "text-primary border-b-2 border-primary"
+        : "text-on-surface-variant hover:text-primary border-b-2 border-transparent";
+
+    string StatusLabel(string s) => s switch
     {
-        Icon = "biotech",
-        Message = "Tính năng đang được phát triển.",
-        SubMessage = "Hệ thống chưa có kết quả xét nghiệm/CĐHA dạng có cấu trúc — sẽ được xây dựng ở một đợt riêng cùng quy trình nhập kết quả."
+        "ChoThucHien" => "Chờ thực hiện", "DangThucHien" => "Đang thực hiện",
+        "DaCoKetQua" => "Đã có kết quả", "DaHuy" => "Đã hủy", _ => s
+    };
+    string StatusBadgeClass(string s) => s switch
+    {
+        "ChoThucHien" => "bg-tertiary-container text-tertiary",
+        "DangThucHien" => "bg-primary/10 text-primary",
+        "DaCoKetQua" => "bg-secondary-container text-secondary",
+        "DaHuy" => "bg-surface-container-high text-on-surface-variant",
+        _ => "bg-surface-container-high text-on-surface-variant"
     };
 }
 
 <partial name="_PageHeader" model="header" />
-<partial name="_ComingSoon" model="comingSoon" />
+
+<div class="flex gap-1 border-b border-outline-variant mb-unit-lg overflow-x-auto">
+    <a href="/Doctor/LabResults?tab=ChuaXem" class="px-unit-md py-2 font-semibold text-body-md whitespace-nowrap @TabClass("ChuaXem")">Chưa xem (@ViewBag.CountChuaXem)</a>
+    <a href="/Doctor/LabResults?tab=CoBatThuong" class="px-unit-md py-2 font-semibold text-body-md whitespace-nowrap @TabClass("CoBatThuong")">Có bất thường (@ViewBag.CountCoBatThuong)</a>
+    <a href="/Doctor/LabResults?tab=ChoKetQua" class="px-unit-md py-2 font-semibold text-body-md whitespace-nowrap @TabClass("ChoKetQua")">Chờ kết quả (@ViewBag.CountChoKetQua)</a>
+    <a href="/Doctor/LabResults?tab=TatCa" class="px-unit-md py-2 font-semibold text-body-md whitespace-nowrap @TabClass("TatCa")">Tất cả (@ViewBag.CountTatCa)</a>
+</div>
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Danh sách kết quả cận lâm sàng" tabindex="0">
+        <table class="w-full text-left text-body-md">
+            <thead class="bg-surface-container-low">
+                <tr class="text-caption font-bold text-on-surface-variant uppercase">
+                    <th class="py-3 px-4">Mã phiếu</th>
+                    <th class="py-3 px-4">Dịch vụ</th>
+                    <th class="py-3 px-4">Bệnh nhân</th>
+                    <th class="py-3 px-4">@(tab == "ChoKetQua" ? "Ngày chỉ định" : "Ngày trả kết quả")</th>
+                    <th class="py-3 px-4">Trạng thái</th>
+                    <th class="py-3 px-4 text-right">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/40">
+                @if (!Model.Items.Any())
+                {
+                    <tr><td colspan="6" class="py-6 text-center text-on-surface-variant italic">Không có kết quả nào trong mục này.</td></tr>
+                }
+                else
+                {
+                    @foreach (var item in Model.Items)
+                    {
+                        var isOverdue = tab == "ChoKetQua" && (DateTime.Now - item.PhieuChiDinh.NgayChiDinh).TotalHours > thresholdHours;
+                        var isUnread = item.TrangThai == "DaCoKetQua" && item.KetQua != null && !item.KetQua.DaXem;
+                        <tr class="hover:bg-surface-container-low transition-colors @(isOverdue ? "bg-tertiary-container/15" : "") @(isUnread ? "font-semibold" : "")">
+                            <td class="py-3 px-4">@item.PhieuChiDinh.MaPhieu</td>
+                            <td class="py-3 px-4">
+                                @item.DichVu.TenDichVu
+                                @if (item.TrangThai == "DaCoKetQua" && item.KetQua != null && item.KetQua.CoBatThuong)
+                                {
+                                    <span class="material-symbols-outlined text-error text-[16px] align-middle ml-1" title="Có bất thường">gpp_maybe</span>
+                                }
+                            </td>
+                            <td class="py-3 px-4">@item.PhieuChiDinh.Patient.User.HoTen</td>
+                            <td class="py-3 px-4 whitespace-nowrap">
+                                @((tab == "ChoKetQua" ? item.PhieuChiDinh.NgayChiDinh : (item.KetQua != null ? item.KetQua.NgayTra : item.PhieuChiDinh.NgayChiDinh)).ToString("dd/MM/yyyy HH:mm"))
+                                @if (isOverdue)
+                                {
+                                    <span class="block text-caption text-tertiary font-bold">Quá @thresholdHours giờ chưa có kết quả</span>
+                                }
+                            </td>
+                            <td class="py-3 px-4"><span class="px-2 py-1 rounded-full text-caption font-bold @StatusBadgeClass(item.TrangThai)">@StatusLabel(item.TrangThai)</span></td>
+                            <td class="py-3 px-4 text-right whitespace-nowrap">
+                                <div class="flex justify-end items-center gap-2">
+                                    <a href="/Doctor/LabResults/PrintOrder?labOrderId=@item.PhieuChiDinh.Id" target="_blank" class="text-on-surface-variant hover:text-primary" title="In phiếu"><span class="material-symbols-outlined text-[20px]">print</span></a>
+                                    @if (item.TrangThai == "DaCoKetQua")
+                                    {
+                                        <a href="/Doctor/LabResults/Details/@item.Id" class="text-primary font-semibold hover:underline">Xem chi tiết</a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<partial name="_Pagination" model='PaginationViewModel.From(Model, "/Doctor/LabResults", "kết quả", new Dictionary<string, string> { ["tab"] = tab })' />

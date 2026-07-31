@@ -33,6 +33,7 @@ public static class ModulePermissionRegistry
         new("Admin.Patients", "Bệnh nhân"),
         new("Admin.Departments", "Khoa & Dịch vụ"),
         new("Admin.Medicines", "Thuốc & Kho"),
+        new("Admin.LabOrders", "Cận lâm sàng (Chỉ định & Kết quả)"),
         new("Admin.Invoices", "Hóa đơn"),
         new("Admin.News", "Tin tức & Thông báo"),
         new("Admin.Staff", "Nhân sự & Phân quyền"),

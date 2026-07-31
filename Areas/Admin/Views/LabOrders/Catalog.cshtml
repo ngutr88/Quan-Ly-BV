@@ -1,0 +1,243 @@
+@model List<QuanLyBenhVien.Models.LabServiceCatalog>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Danh mục dịch vụ cận lâm sàng";
+    var canProcess = (bool)(ViewBag.CanProcess ?? false);
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Danh mục dịch vụ cận lâm sàng",
+        Subtitle = "Quản lý các dịch vụ CLS có thể chỉ định (xét nghiệm, chẩn đoán hình ảnh, thăm dò chức năng...).",
+        Breadcrumbs = new[] { new BreadcrumbItem("Quản trị", "/Admin/Dashboard"), new BreadcrumbItem("Cận lâm sàng", "/Admin/LabOrders") },
+        CurrentCrumb = "Danh mục dịch vụ"
+    };
+
+    string NhomLabel(string n) => n switch
+    {
+        "HuyetHoc" => "Huyết học",
+        "SinhHoa" => "Sinh hóa",
+        "ViSinh" => "Vi sinh",
+        "CDHA" => "Chẩn đoán hình ảnh",
+        "ThamDoChucNang" => "Thăm dò chức năng",
+        "GiaiPhauBenh" => "Giải phẫu bệnh",
+        _ => n
+    };
+    var nhomOptions = new[] { "HuyetHoc", "SinhHoa", "ViSinh", "CDHA", "ThamDoChucNang", "GiaiPhauBenh" };
+
+    Func<object, IHtmlContent> pageActions = @<text>
+        @if (canProcess)
+        {
+            <button onclick="openModal('addServiceModal')" class="hms-btn hms-btn-primary">
+                <span class="material-symbols-outlined">add</span> Thêm dịch vụ
+            </button>
+        }
+    </text>;
+    ViewData["PageActions"] = pageActions;
+}
+
+<partial name="_PageHeader" model="header" />
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-label-md">@TempData["SuccessMessage"]</span>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-error-container/25 text-error border border-error/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-error">error</span>
+        <span class="font-label-md">@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="hms-toolbar">
+    <form method="GET" action="/Admin/LabOrders/Catalog" class="hms-toolbar-grid">
+        <div>
+            <label class="hms-field-label" for="nhom">Nhóm CLS</label>
+            <select id="nhom" name="nhom" class="w-full py-2 px-3 border border-outline-variant rounded-lg font-body-md">
+                <option value="">Tất cả nhóm</option>
+                @foreach (var n in nhomOptions)
+                {
+                    <option value="@n" selected="@(ViewBag.NhomFilter == n)">@NhomLabel(n)</option>
+                }
+            </select>
+        </div>
+        <button type="submit" class="hms-btn hms-btn-primary">
+            <span class="material-symbols-outlined">filter_list</span> Lọc
+        </button>
+    </form>
+</div>
+
+<div class="w-full min-w-0 max-w-full bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Danh mục dịch vụ CLS" tabindex="0">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Mã</th>
+                    <th class="px-unit-md py-3">Tên dịch vụ</th>
+                    <th class="px-unit-md py-3">Nhóm</th>
+                    <th class="px-unit-md py-3">Nơi thực hiện</th>
+                    <th class="px-unit-md py-3 text-right">Giá</th>
+                    <th class="px-unit-md py-3 whitespace-nowrap">Trạng thái</th>
+                    <th class="px-unit-md py-3 text-right whitespace-nowrap">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant">
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="7"><div class="hms-empty"><p class="hms-empty-title">Chưa có dịch vụ nào.</p></div></td></tr>
+                }
+                else
+                {
+                    @foreach (var s in Model)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="px-unit-md py-4 font-mono text-caption">@s.MaDichVu</td>
+                            <td class="px-unit-md py-4 font-semibold">@s.TenDichVu</td>
+                            <td class="px-unit-md py-4">@NhomLabel(s.NhomCLS)</td>
+                            <td class="px-unit-md py-4 text-on-surface-variant">@(s.NoiThucHien ?? "-")</td>
+                            <td class="px-unit-md py-4 text-right">@s.Gia.ToString("N0")đ</td>
+                            <td class="px-unit-md py-4 whitespace-nowrap">
+                                @if (s.DangHoatDong)
+                                {
+                                    <span class="px-2.5 py-1 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Đang dùng</span>
+                                }
+                                else
+                                {
+                                    <span class="px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface-variant text-[11px] font-bold">Đã ẩn</span>
+                                }
+                            </td>
+                            <td class="px-unit-md py-4 text-right whitespace-nowrap">
+                                @if (canProcess)
+                                {
+                                    <div class="flex justify-end gap-2">
+                                        <button type="button" onclick='openEditServiceModal(@s.Id, @Html.Raw(Json.Serialize(s.TenDichVu)), @Html.Raw(Json.Serialize(s.NhomCLS)), @Html.Raw(Json.Serialize(s.NoiThucHien)), @s.Gia, @Html.Raw(Json.Serialize(s.GhiChu)))' class="text-primary font-semibold hover:underline">Sửa</button>
+                                        <form method="POST" action="/Admin/LabOrders/CatalogToggleActive/@s.Id">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="@(s.DangHoatDong ? "text-error" : "text-secondary") font-semibold hover:underline">@(s.DangHoatDong ? "Ẩn" : "Bật lại")</button>
+                                        </form>
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Service Modal -->
+<div id="addServiceModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="p-unit-lg border-b border-outline-variant flex items-center justify-between">
+            <h3 class="font-title-lg text-title-lg font-bold text-on-surface">Thêm dịch vụ CLS</h3>
+            <button onclick="closeModal('addServiceModal')" class="p-2 hover:bg-surface-container-high rounded-full text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <form method="POST" action="/Admin/LabOrders/CatalogCreate" class="p-unit-lg space-y-unit-md">
+            @Html.AntiForgeryToken()
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Mã dịch vụ *</label>
+                <input type="text" name="maDichVu" required class="w-full px-3 py-2 border border-outline-variant rounded-lg" />
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Tên dịch vụ *</label>
+                <input type="text" name="tenDichVu" required class="w-full px-3 py-2 border border-outline-variant rounded-lg" />
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Nhóm CLS *</label>
+                <select name="nhomCLS" required class="w-full px-3 py-2 border border-outline-variant rounded-lg">
+                    @foreach (var n in nhomOptions) { <option value="@n">@NhomLabel(n)</option> }
+                </select>
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Nơi thực hiện</label>
+                <input type="text" name="noiThucHien" class="w-full px-3 py-2 border border-outline-variant rounded-lg" />
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Giá (đ) *</label>
+                <input type="number" name="gia" min="0" step="1000" required class="w-full px-3 py-2 border border-outline-variant rounded-lg" />
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Ghi chú</label>
+                <textarea name="ghiChu" rows="2" class="w-full px-3 py-2 border border-outline-variant rounded-lg"></textarea>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeModal('addServiceModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg">Hủy</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-white font-bold rounded-lg">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Service Modal -->
+<div id="editServiceModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="p-unit-lg border-b border-outline-variant flex items-center justify-between">
+            <h3 class="font-title-lg text-title-lg font-bold text-on-surface">Sửa dịch vụ CLS</h3>
+            <button onclick="closeModal('editServiceModal')" class="p-2 hover:bg-surface-container-high rounded-full text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <form method="POST" id="editServiceForm" action="/Admin/LabOrders/CatalogEdit" class="p-unit-lg space-y-unit-md">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="editServiceId" />
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Tên dịch vụ *</label>
+                <input type="text" name="tenDichVu" id="editServiceTen" required class="w-full px-3 py-2 border border-outline-variant rounded-lg" />
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Nhóm CLS *</label>
+                <select name="nhomCLS" id="editServiceNhom" required class="w-full px-3 py-2 border border-outline-variant rounded-lg">
+                    @foreach (var n in nhomOptions) { <option value="@n">@NhomLabel(n)</option> }
+                </select>
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Nơi thực hiện</label>
+                <input type="text" name="noiThucHien" id="editServiceNoi" class="w-full px-3 py-2 border border-outline-variant rounded-lg" />
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Giá (đ) *</label>
+                <input type="number" name="gia" id="editServiceGia" min="0" step="1000" required class="w-full px-3 py-2 border border-outline-variant rounded-lg" />
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Ghi chú</label>
+                <textarea name="ghiChu" id="editServiceGhiChu" rows="2" class="w-full px-3 py-2 border border-outline-variant rounded-lg"></textarea>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" onclick="closeModal('editServiceModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg">Hủy</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-white font-bold rounded-lg">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            requestAnimationFrame(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            });
+        }
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.firstElementChild.classList.remove('scale-100');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 150);
+        }
+        function openEditServiceModal(id, ten, nhom, noi, gia, ghiChu) {
+            document.getElementById('editServiceId').value = id;
+            document.getElementById('editServiceTen').value = ten;
+            document.getElementById('editServiceNhom').value = nhom;
+            document.getElementById('editServiceNoi').value = noi || '';
+            document.getElementById('editServiceGia').value = gia;
+            document.getElementById('editServiceGhiChu').value = ghiChu || '';
+            document.getElementById('editServiceForm').action = '/Admin/LabOrders/CatalogEdit';
+            openModal('editServiceModal');
+        }
+    </script>
+}

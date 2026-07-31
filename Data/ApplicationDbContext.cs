@@ -37,6 +37,17 @@ namespace QuanLyBenhVien.Data
         public DbSet<GoodsReceipt> GoodsReceipts { get; set; } = null!;
         public DbSet<GoodsReceiptDetail> GoodsReceiptDetails { get; set; } = null!;
         public DbSet<PasswordResetRequest> PasswordResetRequests { get; set; } = null!;
+        public DbSet<DrugInteraction> DrugInteractions { get; set; } = null!;
+        public DbSet<DrugAllergyGroup> DrugAllergyGroups { get; set; } = null!;
+        public DbSet<DrugAllergyGroupMember> DrugAllergyGroupMembers { get; set; } = null!;
+        public DbSet<PrescriptionBatchAllocation> PrescriptionBatchAllocations { get; set; } = null!;
+        public DbSet<LabServiceCatalog> LabServiceCatalogs { get; set; } = null!;
+        public DbSet<LabOrderBundle> LabOrderBundles { get; set; } = null!;
+        public DbSet<LabOrderBundleItem> LabOrderBundleItems { get; set; } = null!;
+        public DbSet<LabOrder> LabOrders { get; set; } = null!;
+        public DbSet<LabOrderItem> LabOrderItems { get; set; } = null!;
+        public DbSet<LabResult> LabResults { get; set; } = null!;
+        public DbSet<LabResultFile> LabResultFiles { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -551,6 +562,134 @@ namespace QuanLyBenhVien.Data
                 });
             });
             modelBuilder.Entity<PasswordResetRequest>().Property(r => r.NgayTao).HasDefaultValueSql(NowSql());
+
+            // Kê đơn & Y lệnh - dữ liệu tương tác/nhóm dị ứng chéo là DỮ LIỆU
+            // MINH HỌA (LaDuLieuMinhHoa=true khi seed), chưa qua thẩm định dược
+            // lý lâm sàng - xem DbSeeder và UI cảnh báo kê đơn.
+            modelBuilder.Entity<DrugInteraction>(e =>
+            {
+                e.HasIndex(i => new { i.HoatChatA, i.HoatChatB });
+                e.ToTable(t => t.HasCheckConstraint("CK_TuongTacThuoc_MucDo",
+                    "MucDoTuongTac IN ('ChongChiDinh','NghiemTrong','TrungBinh','Nhe')"));
+            });
+            modelBuilder.Entity<DrugInteraction>().Property(i => i.NgayTao).HasDefaultValueSql(NowSql());
+
+            modelBuilder.Entity<DrugAllergyGroupMember>()
+                .HasIndex(m => m.HoatChat);
+
+            modelBuilder.Entity<PrescriptionBatchAllocation>()
+                .HasIndex(a => a.ChiTietDonThuocId);
+            modelBuilder.Entity<PrescriptionBatchAllocation>().Property(a => a.NgayPhanBo).HasDefaultValueSql(NowSql());
+
+            modelBuilder.Entity<Prescription>(e =>
+            {
+                e.HasIndex(p => p.BacSiKeId);
+                e.ToTable(t => t.HasCheckConstraint("CK_DonThuoc_TrangThai",
+                    "TrangThai IN ('Nhap','ChoCapPhat','DaCapPhat','DuocPhanHoi','DaHuy')"));
+                // Mặc định ở tầng DB khớp với default ở tầng C# - nếu không khai
+                // báo, migration sẽ backfill dòng cũ bằng "" (rỗng), vi phạm
+                // CHECK constraint ngay phía trên.
+                e.Property(p => p.TrangThai).HasDefaultValue("ChoCapPhat");
+            });
+
+            modelBuilder.Entity<Patient>()
+                .ToTable(t => t.HasCheckConstraint("CK_BenhNhan_MucDoDiUng",
+                    "MucDoDiUng IS NULL OR MucDoDiUng IN ('Nhe','TrungBinh','NghiemTrong')"));
+
+            // ================================================================
+            // Cận lâm sàng (Giai đoạn 1: chỉ định -> thực hiện -> trả kết quả file)
+            // ================================================================
+            modelBuilder.Entity<LabServiceCatalog>(e =>
+            {
+                e.HasIndex(s => s.MaDichVu).IsUnique();
+                e.ToTable(t => t.HasCheckConstraint("CK_DichVuCLS_NhomCLS",
+                    "NhomCLS IN ('HuyetHoc','SinhHoa','ViSinh','CDHA','ThamDoChucNang','GiaiPhauBenh')"));
+                e.ToTable(t => t.HasCheckConstraint("CK_DichVuCLS_Gia", "Gia >= 0"));
+            });
+
+            modelBuilder.Entity<LabOrderBundleItem>(e =>
+            {
+                e.HasOne(i => i.BoChiDinh)
+                    .WithMany(b => b.ThanhVien)
+                    .HasForeignKey(i => i.BoChiDinhCLSId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(i => i.DichVu)
+                    .WithMany(s => s.ThuocCacBo)
+                    .HasForeignKey(i => i.DichVuCLSId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasIndex(i => new { i.BoChiDinhCLSId, i.DichVuCLSId }).IsUnique();
+            });
+
+            modelBuilder.Entity<LabOrder>(e =>
+            {
+                e.HasIndex(o => o.MaPhieu).IsUnique();
+
+                e.HasOne(o => o.ExaminationRecord)
+                    .WithMany()
+                    .HasForeignKey(o => o.PhieuKhamId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(o => o.Patient)
+                    .WithMany()
+                    .HasForeignKey(o => o.BenhNhanId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(o => o.BacSiChiDinh)
+                    .WithMany()
+                    .HasForeignKey(o => o.BacSiChiDinhId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(o => o.BoChiDinh)
+                    .WithMany()
+                    .HasForeignKey(o => o.BoChiDinhCLSId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<LabOrder>().Property(o => o.NgayChiDinh).HasDefaultValueSql(NowSql());
+
+            modelBuilder.Entity<LabOrderItem>(e =>
+            {
+                e.HasOne(i => i.PhieuChiDinh)
+                    .WithMany(o => o.ChiTiet)
+                    .HasForeignKey(i => i.PhieuChiDinhCLSId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(i => i.DichVu)
+                    .WithMany()
+                    .HasForeignKey(i => i.DichVuCLSId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(i => i.NguoiNhan)
+                    .WithMany()
+                    .HasForeignKey(i => i.NguoiNhanId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.ToTable(t => t.HasCheckConstraint("CK_ChiTietPhieuChiDinhCLS_TrangThai",
+                    "TrangThai IN ('ChoThucHien','DangThucHien','DaCoKetQua','DaHuy')"));
+            });
+
+            // Đúng 1 kết quả cho mỗi dòng chỉ định.
+            modelBuilder.Entity<LabResult>()
+                .HasOne(r => r.ChiTietPhieuChiDinh)
+                .WithOne(i => i.KetQua)
+                .HasForeignKey<LabResult>(r => r.ChiTietPhieuChiDinhCLSId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LabResult>()
+                .HasOne(r => r.NguoiThucHien)
+                .WithMany()
+                .HasForeignKey(r => r.NguoiThucHienId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LabResult>().Property(r => r.NgayTra).HasDefaultValueSql(NowSql());
+
+            modelBuilder.Entity<LabResultFile>()
+                .HasOne(f => f.KetQua)
+                .WithMany(r => r.Files)
+                .HasForeignKey(f => f.KetQuaCLSId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<LabResultFile>().Property(f => f.NgayTaiLen).HasDefaultValueSql(NowSql());
         }
     }
 }

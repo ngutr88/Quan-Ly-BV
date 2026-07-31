@@ -1,0 +1,113 @@
+@model QuanLyBenhVien.Models.LabOrder
+@{
+    Layout = null;
+
+    string NhomLabel(string n) => n switch
+    {
+        "HuyetHoc" => "Huyết học", "SinhHoa" => "Sinh hóa", "ViSinh" => "Vi sinh",
+        "CDHA" => "Chẩn đoán hình ảnh", "ThamDoChucNang" => "Thăm dò chức năng", "GiaiPhauBenh" => "Giải phẫu bệnh",
+        _ => n
+    };
+    string TrangThaiLabel(string t) => t switch
+    {
+        "ChoThucHien" => "Chờ thực hiện", "DangThucHien" => "Đang thực hiện",
+        "DaCoKetQua" => "Đã có kết quả", "DaHuy" => "Đã hủy", _ => t
+    };
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Phiếu chỉ định CLS @Model.MaPhieu</title>
+    <style>
+        @@page { size: A4; margin: 15mm 14mm; }
+        * { box-sizing: border-box; }
+        body { font-family: "Times New Roman", Times, serif; font-size: 13px; color: #111; margin: 0; }
+        .print-toolbar { text-align: center; padding: 10px; background: #f0f0f0; }
+        .print-toolbar button { padding: 8px 18px; font-size: 14px; cursor: pointer; }
+        @@media print { .print-toolbar { display: none; } }
+
+        .header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .org-info { font-weight: bold; text-transform: uppercase; }
+        .doc-title { text-align: center; margin: 14px 0 4px; }
+        .doc-title h1 { font-size: 20px; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .doc-sub { text-align: center; font-style: italic; margin-bottom: 14px; }
+        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; margin-bottom: 14px; }
+        table.items { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        table.items th, table.items td { border: 1px solid #333; padding: 5px 6px; font-size: 12.5px; }
+        table.items th { background: #eee; text-align: center; }
+        .signatures { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; text-align: center; margin-top: 30px; }
+        .signatures .sig-line { margin-top: 60px; font-weight: bold; }
+        .signatures .role { font-weight: bold; }
+        .signatures .hint { font-style: italic; font-size: 11.5px; }
+    </style>
+</head>
+<body>
+    <div class="print-toolbar">
+        <button onclick="window.print()">In phiếu</button>
+    </div>
+
+    <div class="header-row">
+        <div class="org-info">
+            BỆNH VIỆN MEDIFLOW HMS<br />
+            <span style="font-weight:normal; text-transform:none;">Khoa Xét nghiệm / Chẩn đoán hình ảnh</span>
+        </div>
+        <div style="text-align:right;">
+            Số: <strong>@Model.MaPhieu</strong>
+        </div>
+    </div>
+
+    <div class="doc-title">
+        <h1>Phiếu chỉ định cận lâm sàng</h1>
+    </div>
+    <div class="doc-sub">Ngày @Model.NgayChiDinh.ToString("dd") tháng @Model.NgayChiDinh.ToString("MM") năm @Model.NgayChiDinh.ToString("yyyy")</div>
+
+    <div class="meta-grid">
+        <div>Bệnh nhân: <strong>@Model.Patient.User.HoTen</strong></div>
+        <div>Ngày sinh: <strong>@Model.Patient.NgaySinh.ToString("dd/MM/yyyy")</strong> - Giới tính: <strong>@Model.Patient.GioiTinh</strong></div>
+        <div>Bác sĩ chỉ định: <strong>@Model.BacSiChiDinh.User.HoTen</strong></div>
+        <div>Bộ chỉ định: <strong>@(Model.BoChiDinh?.TenBo ?? "Chỉ định lẻ")</strong></div>
+        @if (!string.IsNullOrEmpty(Model.GhiChuChiDinh))
+        {
+            <div style="grid-column: span 2;">Ghi chú: <strong>@Model.GhiChuChiDinh</strong></div>
+        }
+    </div>
+
+    <table class="items">
+        <thead>
+            <tr>
+                <th style="width:26px;">STT</th>
+                <th>Tên dịch vụ</th>
+                <th>Nhóm</th>
+                <th>Trạng thái</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ var i = 1; }
+            @foreach (var item in Model.ChiTiet)
+            {
+                <tr>
+                    <td style="text-align:center;">@i</td>
+                    <td>@item.DichVu.TenDichVu</td>
+                    <td style="text-align:center;">@NhomLabel(item.DichVu.NhomCLS)</td>
+                    <td style="text-align:center;">@TrangThaiLabel(item.TrangThai)</td>
+                </tr>
+                i++;
+            }
+        </tbody>
+    </table>
+
+    <div class="signatures">
+        <div>
+            <div class="role">Bác sĩ chỉ định</div>
+            <div class="hint">(Ký, ghi rõ họ tên)</div>
+            <div class="sig-line">@Model.BacSiChiDinh.User.HoTen</div>
+        </div>
+        <div>
+            <div class="role">Kỹ thuật viên tiếp nhận</div>
+            <div class="hint">(Ký, ghi rõ họ tên)</div>
+            <div class="sig-line">&nbsp;</div>
+        </div>
+    </div>
+</body>
+</html>

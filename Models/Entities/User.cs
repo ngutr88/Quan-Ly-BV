@@ -58,6 +58,11 @@ namespace QuanLyBenhVien.Models
         // sách vai trò/ràng buộc CHECK đã có.
         public bool DuocDuyetPhieuNhapKho { get; set; } = false;
 
+        // Cho phép tài khoản Admin này xử lý phiếu chỉ định cận lâm sàng (vai
+        // trò nghiệp vụ "kỹ thuật viên CLS") - cùng cách làm như
+        // DuocDuyetPhieuNhapKho ở trên, không mở rộng danh sách VaiTro.
+        public bool DuocXuLyCLS { get; set; } = false;
+
         // Đổi mỗi khi mật khẩu tài khoản này thay đổi (tự phục vụ hoặc do
         // Admin) - phiên đăng nhập cũ mang claim SecurityStamp cũ sẽ bị
         // SecurityStampCookieValidator từ chối ở lần request kế tiếp, tức
@@ -169,6 +174,12 @@ namespace QuanLyBenhVien.Models
 
         [StringLength(500)]
         public string DiUng { get; set; } = string.Empty;
+
+        // Mức độ tổng quát của dị ứng đã khai báo ở trên - 1 trường duy nhất
+        // tương xứng với cách DiUng đang được mô hình (1 chuỗi duy nhất, không
+        // phải danh sách nhiều dị nguyên mỗi cái 1 mức độ riêng).
+        [StringLength(20)]
+        public string? MucDoDiUng { get; set; } // Nhe, TrungBinh, NghiemTrong
 
         // Soft-delete: gỡ một hồ sơ bệnh nhân không được xóa cứng, để giữ lại
         // toàn bộ lịch sử khám chữa bệnh (LichKham, PhieuKham, DonThuoc, HoaDon...).

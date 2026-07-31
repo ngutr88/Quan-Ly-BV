@@ -1,0 +1,11 @@
+@{
+    var active = ViewBag.ActiveTab as string ?? "List";
+    string TabClass(string tab) => active == tab
+        ? "text-primary border-b-2 border-primary"
+        : "text-on-surface-variant hover:text-primary border-b-2 border-transparent";
+}
+<div class="flex gap-1 border-b border-outline-variant mb-unit-lg overflow-x-auto">
+    <a href="/Doctor/Prescriptions/List" class="px-unit-md py-2 font-semibold text-body-md whitespace-nowrap @TabClass("List")">Danh sách đơn đã kê</a>
+    <a href="/Doctor/Prescriptions/Templates" class="px-unit-md py-2 font-semibold text-body-md whitespace-nowrap @TabClass("Templates")">Mẫu đơn của tôi</a>
+    <a href="/Doctor/Prescriptions/Feedback" class="px-unit-md py-2 font-semibold text-body-md whitespace-nowrap @TabClass("Feedback")">Dược phản hồi</a>
+</div>

@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBenhVien.Data;
 using QuanLyBenhVien.Models;
+using QuanLyBenhVien.Models.ViewModels;
+using QuanLyBenhVien.Models.ViewModels.PrescriptionSafety;
+using QuanLyBenhVien.Models.ViewModels.LabDiagnostics;
 using QuanLyBenhVien.Services;
 using System.Text.Json;
 using System.Security.Claims;
@@ -17,13 +20,23 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
     [Authorize(Roles = "Doctor")]
     public class ExamController : Controller
     {
+        private const int PediatricAgeThreshold = 15;
+
         private readonly ApplicationDbContext _context;
         private readonly DoctorDashboardNotifier _notifier;
+        private readonly IPrescriptionSafetyChecker _safetyChecker;
+        private readonly MedicineStockAllocator _stockAllocator;
 
-        public ExamController(ApplicationDbContext context, DoctorDashboardNotifier notifier)
+        public ExamController(
+            ApplicationDbContext context,
+            DoctorDashboardNotifier notifier,
+            IPrescriptionSafetyChecker safetyChecker,
+            MedicineStockAllocator stockAllocator)
         {
             _context = context;
             _notifier = notifier;
+            _safetyChecker = safetyChecker;
+            _stockAllocator = stockAllocator;
         }
 
         // GET: /Doctor/Exam/Session/5
@@ -61,73 +74,146 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                 .OrderByDescending(d => d.NgayTaiLen)
                 .ToListAsync();
 
-            // Fetch drug catalog for search
-            ViewBag.Medicines = await _context.Medicines.Where(m => m.TonKho > 0).ToListAsync();
+            // Khung ngữ cảnh bệnh nhân khi kê đơn (A1): thuốc đang dùng từ đơn
+            // còn hiệu lực + chỉ số sinh hiệu gần nhất. KHÔNG có chỉ số chức
+            // năng gan/thận (creatinine/eGFR/AST/ALT) ở bất kỳ đâu trong hệ
+            // thống - view phải hiện rõ "chưa có dữ liệu" thay vì bịa.
+            ViewBag.ActivePrescriptionDrugs = await _context.PrescriptionDetails
+                .Where(pd => (pd.Prescription.TrangThai == "ChoCapPhat" || pd.Prescription.TrangThai == "DaCapPhat")
+                    && pd.Prescription.ExaminationRecord.Appointment.BenhNhanId == appointment.BenhNhanId)
+                .Select(pd => pd.Medicine.TenThuoc)
+                .Distinct()
+                .ToListAsync();
+            ViewBag.RecentHealthMetric = await _context.PatientHealthMetrics
+                .Where(m => m.BenhNhanId == appointment.BenhNhanId)
+                .OrderByDescending(m => m.NgayDo)
+                .FirstOrDefaultAsync();
+            ViewBag.PatientAgeYears = (int)((DateTime.Today - appointment.Patient.NgaySinh).TotalDays / 365.25);
+
+            // Chỉ định CLS (Giai đoạn 1): danh mục dịch vụ đang hoạt động, nhóm
+            // theo NhomCLS để JS dựng danh sách chọn theo nhóm + các bộ chỉ
+            // định có sẵn để "áp dụng nhanh" một lần.
+            ViewBag.CLSCatalog = await _context.LabServiceCatalogs
+                .Where(s => s.DangHoatDong)
+                .OrderBy(s => s.NhomCLS).ThenBy(s => s.TenDichVu)
+                .Select(s => new LabServiceOptionViewModel { Id = s.Id, NhomCLS = s.NhomCLS, TenDichVu = s.TenDichVu, Gia = s.Gia })
+                .ToListAsync();
+            ViewBag.CLSBundles = await _context.LabOrderBundles
+                .Where(b => b.DangHoatDong)
+                .Include(b => b.ThanhVien)
+                .Select(b => new LabBundleOptionViewModel { Id = b.Id, TenBo = b.TenBo, DichVuIds = b.ThanhVien.Select(i => i.DichVuCLSId).ToList() })
+                .ToListAsync();
 
             return View(appointment);
         }
 
-        // API Endpoint: /Doctor/Exam/CheckAllergiesAndStock
-        [HttpPost]
-        public async Task<IActionResult> CheckAllergiesAndStock(int patientId, int medicineId, int qty)
+        // GET: /Doctor/Exam/SearchMedicines?q=para&page=1
+        [HttpGet]
+        public async Task<IActionResult> SearchMedicines(string q, int page = 1)
         {
-            var doctorId = await GetCurrentDoctorIdAsync();
-            if (!doctorId.HasValue) return Forbid();
-            if (qty <= 0) return BadRequest(new { success = false, message = "Số lượng thuốc phải lớn hơn 0." });
+            const int pageSize = 20;
+            var query = _context.Medicines.AsNoTracking().AsQueryable();
 
-            var assignedPatient = await _context.Appointments.AnyAsync(a =>
-                a.BacSiId == doctorId.Value &&
-                a.BenhNhanId == patientId &&
-                a.TrangThai != "DaHuy");
-            if (!assignedPatient) return Forbid();
-
-            var patient = await _context.Patients.FindAsync(patientId);
-            var medicine = await _context.Medicines.FindAsync(medicineId);
-
-            if (patient == null || medicine == null)
+            if (!string.IsNullOrWhiteSpace(q))
             {
-                return Json(new { success = false, message = "Không tìm thấy dữ liệu Bệnh nhân hoặc Thuốc." });
+                var term = q.Trim().ToLower();
+                query = query.Where(m => m.TenThuoc.ToLower().Contains(term) || m.HoatChat.ToLower().Contains(term));
             }
 
-            // 1. Check Inventory
-            if (medicine.TonKho < qty)
-            {
-                return Json(new { success = true, hasWarning = true, warningType = "stock", message = $"Kho không đủ thuốc. Hiện tại chỉ còn {medicine.TonKho} {medicine.DonViTinh}." });
-            }
+            var totalCount = await query.CountAsync();
+            var pageItems = await query
+                .OrderBy(m => m.TenThuoc)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
-            // 2. Check Allergies
-            bool hasAllergy = false;
-            if (!string.IsNullOrEmpty(patient.DiUng))
+            var items = new List<object>();
+            foreach (var m in pageItems)
             {
-                var allergies = patient.DiUng.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (var allergy in allergies)
+                var outOfStock = m.TonKho <= 0;
+                List<object>? alternatives = null;
+                if (outOfStock)
                 {
-                    if (medicine.TenThuoc.Contains(allergy, StringComparison.OrdinalIgnoreCase) || 
-                        medicine.HoatChat.Contains(allergy, StringComparison.OrdinalIgnoreCase))
-                    {
-                        hasAllergy = true;
-                        break;
-                    }
+                    alternatives = await _context.Medicines.AsNoTracking()
+                        .Where(alt => alt.Id != m.Id && alt.HoatChat == m.HoatChat && alt.TonKho > 0)
+                        .OrderByDescending(alt => alt.TonKho)
+                        .Take(3)
+                        .Select(alt => new { id = alt.Id, name = alt.TenThuoc, stock = alt.TonKho })
+                        .ToListAsync<object>();
                 }
-            }
 
-            if (hasAllergy)
-            {
-                return Json(new { 
-                    success = true, 
-                    hasWarning = true, 
-                    warningType = "allergy", 
-                    message = $"Cảnh báo nguy hiểm: Bệnh nhân có tiền sử dị ứng với nhóm thuốc chứa hoạt chất '{medicine.HoatChat}' (Khai báo dị ứng: {patient.DiUng})." 
+                items.Add(new
+                {
+                    id = m.Id,
+                    name = m.TenThuoc,
+                    ingredient = m.HoatChat,
+                    strength = m.HamLuong,
+                    packSpec = m.QuyCachDongGoi,
+                    unit = m.DonViTinh,
+                    price = m.Gia,
+                    stock = m.TonKho,
+                    outOfStock,
+                    coBaoHiemYTe = m.CoBaoHiemYTe,
+                    alternatives
                 });
             }
 
-            return Json(new { success = true, hasWarning = false });
+            return Json(new { success = true, items, hasMore = page * pageSize < totalCount });
+        }
+
+        // POST: /Doctor/Exam/CheckSafety - chạy lại mỗi khi thêm/sửa/xóa thuốc
+        // trong đơn đang soạn, kiểm tra TOÀN BỘ danh sách hiện tại (không chỉ
+        // dòng vừa thêm), vì tương tác/trùng hoạt chất có thể liên quan đến
+        // bất kỳ cặp thuốc nào trong đơn.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CheckSafety(int patientId, decimal? canNangKg, string linesJson)
+        {
+            var doctorId = await GetCurrentDoctorIdAsync();
+            if (!doctorId.HasValue) return Forbid();
+
+            var assignedPatient = await _context.Appointments.AnyAsync(a =>
+                a.BacSiId == doctorId.Value && a.BenhNhanId == patientId && a.TrangThai != "DaHuy");
+            if (!assignedPatient) return Forbid();
+
+            List<CandidateDrugLine> candidateLines;
+            try
+            {
+                candidateLines = string.IsNullOrWhiteSpace(linesJson) || linesJson == "[]"
+                    ? new List<CandidateDrugLine>()
+                    : JsonSerializer.Deserialize<List<CandidateDrugLine>>(linesJson) ?? new List<CandidateDrugLine>();
+            }
+            catch (JsonException)
+            {
+                return BadRequest(new { success = false, message = "Dữ liệu đơn thuốc không đúng định dạng." });
+            }
+
+            var result = await _safetyChecker.CheckAsync(new PrescriptionSafetyContext
+            {
+                PatientId = patientId,
+                CanNangKg = canNangKg,
+                CandidateLines = candidateLines
+            });
+
+            return Json(new
+            {
+                success = true,
+                warnings = result.Warnings.Select(w => new
+                {
+                    tier = w.Tier.ToString(),
+                    category = w.Category,
+                    message = w.Message,
+                    requiresAcknowledgement = w.RequiresAcknowledgement,
+                    relatedMedicineIdA = w.RelatedMedicineIdA,
+                    relatedMedicineIdB = w.RelatedMedicineIdB
+                })
+            });
         }
 
         // POST: /Doctor/Exam/CompleteSession
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CompleteSession(int appointmentId, string trieuChung, string huyetAp, int? nhipTim, decimal? nhietDo, decimal? canNang, decimal? chieuCao, string chanDoan, string loiDan, string chiDinhCls, string ketQuaCls, string presJson)
+        public async Task<IActionResult> CompleteSession(int appointmentId, string trieuChung, string huyetAp, int? nhipTim, decimal? nhietDo, decimal? canNang, decimal? chieuCao, string chanDoan, string loiDan, string chiDinhCls, string ketQuaCls, DateTime? ngayHenTaiKham, string presJson, string? clsOrderJson)
         {
             var doctorId = await GetCurrentDoctorIdAsync();
             if (!doctorId.HasValue) return Forbid();
@@ -141,39 +227,125 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             if (await _context.ExaminationRecords.AnyAsync(e => e.LichKhamId == appointmentId))
                 return BadRequest("Phiên khám này đã được hoàn tất trước đó.");
 
-            List<TempPrescriptionItem> items;
+            PrescriptionSubmissionPayload payload;
             try
             {
-                items = string.IsNullOrWhiteSpace(presJson) || presJson == "[]"
-                    ? new List<TempPrescriptionItem>()
-                    : JsonSerializer.Deserialize<List<TempPrescriptionItem>>(presJson) ?? new List<TempPrescriptionItem>();
+                payload = string.IsNullOrWhiteSpace(presJson) || presJson == "[]"
+                    ? new PrescriptionSubmissionPayload()
+                    : JsonSerializer.Deserialize<PrescriptionSubmissionPayload>(presJson) ?? new PrescriptionSubmissionPayload();
             }
             catch (JsonException)
             {
                 return BadRequest("Đơn thuốc không đúng định dạng.");
             }
 
-            var requestedQuantities = items
-                .GroupBy(i => i.MedicineId)
-                .ToDictionary(g => g.Key, g => g.Sum(i => i.Qty));
-            if (requestedQuantities.Any(x => x.Key <= 0 || x.Value <= 0))
-                return BadRequest("Số lượng thuốc phải là số nguyên dương.");
-
-            foreach (var request in requestedQuantities)
+            LabOrderSubmissionPayload clsPayload;
+            try
             {
-                var medicine = await _context.Medicines
-                    .Include(m => m.LoThuocs)
-                    .FirstOrDefaultAsync(m => m.Id == request.Key);
-                if (medicine == null) return BadRequest("Một hoặc nhiều thuốc không tồn tại.");
+                clsPayload = string.IsNullOrWhiteSpace(clsOrderJson) || clsOrderJson == "[]"
+                    ? new LabOrderSubmissionPayload()
+                    : JsonSerializer.Deserialize<LabOrderSubmissionPayload>(clsOrderJson) ?? new LabOrderSubmissionPayload();
+            }
+            catch (JsonException)
+            {
+                return BadRequest("Chỉ định cận lâm sàng không đúng định dạng.");
+            }
 
+            var selectedClsServices = clsPayload.DichVuCLSIds.Count > 0
+                ? await _context.LabServiceCatalogs
+                    .Where(s => clsPayload.DichVuCLSIds.Contains(s.Id) && s.DangHoatDong)
+                    .ToListAsync()
+                : new List<LabServiceCatalog>();
+
+            if (selectedClsServices.Count != clsPayload.DichVuCLSIds.Distinct().Count())
+                return BadRequest("Một hoặc nhiều dịch vụ cận lâm sàng không hợp lệ.");
+
+            foreach (var line in payload.Lines)
+            {
+                if (line.MedicineId <= 0 || line.LieuMoiLan <= 0 || line.SoLanMoiNgay <= 0 || line.SoNgayDung <= 0 || string.IsNullOrWhiteSpace(line.DuongDung))
+                    return BadRequest("Thông tin liều dùng của một hoặc nhiều thuốc chưa hợp lệ.");
+            }
+
+            // Bắt buộc cân nặng cho bệnh nhi <15 tuổi trước khi kê đơn (thực thi
+            // ở server, không chỉ gợi ý phía client).
+            var ageYears = (DateTime.Today - appointment.Patient.NgaySinh).TotalDays / 365.25;
+            if (payload.Lines.Count > 0 && ageYears < PediatricAgeThreshold && !canNang.HasValue)
+                return BadRequest("Bắt buộc nhập cân nặng cho bệnh nhân dưới 15 tuổi trước khi kê đơn.");
+
+            var medicines = await _context.Medicines
+                .Include(m => m.LoThuocs)
+                .Where(m => payload.Lines.Select(l => l.MedicineId).Contains(m.Id))
+                .ToDictionaryAsync(m => m.Id);
+
+            if (payload.Lines.Any(l => !medicines.ContainsKey(l.MedicineId)))
+                return BadRequest("Một hoặc nhiều thuốc không tồn tại.");
+
+            // Tính số lượng ở SERVER (không tin số lượng client gửi), làm tròn
+            // lên bội số đóng gói nếu có khai báo.
+            var computedQuantities = new Dictionary<int, int>();
+            foreach (var line in payload.Lines)
+            {
+                var medicine = medicines[line.MedicineId];
+                var rawQty = (int)Math.Ceiling(line.LieuMoiLan * line.SoLanMoiNgay * line.SoNgayDung);
+                if (medicine.QuyCachSoLuong.HasValue && medicine.QuyCachSoLuong.Value > 0)
+                {
+                    var pack = medicine.QuyCachSoLuong.Value;
+                    rawQty = ((rawQty + pack - 1) / pack) * pack;
+                }
+                computedQuantities[line.MedicineId] = computedQuantities.TryGetValue(line.MedicineId, out var existing) ? existing + rawQty : rawQty;
+            }
+
+            foreach (var kv in computedQuantities)
+            {
+                var medicine = medicines[kv.Key];
                 var available = medicine.LoThuocs
                     .Where(b => b.HanSuDung > DateTime.Today && b.SoLuongTon > 0)
                     .Sum(b => b.SoLuongTon);
-                if (available < request.Value || medicine.TonKho < request.Value)
+                if (available < kv.Value || medicine.TonKho < kv.Value)
                     return BadRequest($"Thuốc {medicine.TenThuoc} không đủ tồn kho hợp lệ.");
             }
 
+            // Chạy lại TOÀN BỘ kiểm tra an toàn ở server khi lưu - không chỉ tin
+            // kết quả xem trước phía client (đóng lỗ hổng "chỉ kiểm tra tham khảo").
+            if (payload.Lines.Count > 0)
+            {
+                var safetyResult = await _safetyChecker.CheckAsync(new PrescriptionSafetyContext
+                {
+                    PatientId = appointment.BenhNhanId,
+                    CanNangKg = canNang,
+                    CandidateLines = payload.Lines.Select(l => new CandidateDrugLine
+                    {
+                        MedicineId = l.MedicineId,
+                        LieuMoiLan = l.LieuMoiLan,
+                        SoLanMoiNgay = l.SoLanMoiNgay,
+                        SoNgayDung = l.SoNgayDung
+                    }).ToList()
+                });
+
+                var unacknowledged = safetyResult.Warnings
+                    .Where(w => w.RequiresAcknowledgement && !payload.AcknowledgedCategories.Contains(w.Category))
+                    .ToList();
+                if (unacknowledged.Count > 0)
+                    return BadRequest($"Cần xác nhận cảnh báo trước khi lưu: {unacknowledged[0].Message}");
+
+                var anyOverridden = safetyResult.Warnings.Any(w => w.RequiresAcknowledgement);
+                if (anyOverridden && string.IsNullOrWhiteSpace(payload.OverrideReason))
+                    return BadRequest("Vui lòng nhập lý do khi ghi đè cảnh báo an toàn.");
+            }
+
             await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            // Nối tên các dịch vụ CLS đã chọn vào chuỗi ChiDinhCLS tự do hiện có
+            // - giữ nguyên đường xem cũ (bệnh án, Cổng Bệnh nhân) vẫn hiển thị
+            // được nội dung có ý nghĩa mà không cần sửa các màn đó.
+            var combinedChiDinhCls = chiDinhCls ?? string.Empty;
+            if (selectedClsServices.Count > 0)
+            {
+                var clsNames = string.Join(", ", selectedClsServices.Select(s => s.TenDichVu));
+                combinedChiDinhCls = string.IsNullOrWhiteSpace(combinedChiDinhCls)
+                    ? clsNames
+                    : $"{combinedChiDinhCls}; {clsNames}";
+            }
 
             // 1. Create Examination Record
             var exam = new ExaminationRecord
@@ -187,15 +359,14 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                 ChieuCao = chieuCao,
                 ChanDoan = chanDoan,
                 LoiDan = loiDan ?? string.Empty,
-                ChiDinhCLS = chiDinhCls ?? string.Empty,
+                ChiDinhCLS = combinedChiDinhCls,
                 KetQuaCLS = ketQuaCls ?? string.Empty,
+                NgayHenTaiKham = ngayHenTaiKham,
                 NgayKham = DateTime.Now
             };
 
-            // Calculate BMI
             if (canNang.HasValue && chieuCao.HasValue && chieuCao.Value > 0)
             {
-                // height in cm -> convert to meters
                 decimal heightInMeters = chieuCao.Value / 100;
                 exam.BMI = canNang.Value / (heightInMeters * heightInMeters);
             }
@@ -203,72 +374,120 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             _context.ExaminationRecords.Add(exam);
             await _context.SaveChangesAsync(); // Generates exam.Id
 
-            decimal drugCost = 0;
-            var prescriptionsList = new List<PrescriptionDetail>();
-
-            // 2. Parse and Create Prescription Details (if any drugs prescribed)
-            if (!string.IsNullOrEmpty(presJson) && presJson != "[]")
+            if (selectedClsServices.Count > 0)
             {
-                var prescription = new Prescription
+                var labOrder = new LabOrder
+                {
+                    MaPhieu = await GenerateNextLabOrderMaPhieuAsync(DateTime.Now.Year),
+                    PhieuKhamId = exam.Id,
+                    BenhNhanId = appointment.BenhNhanId,
+                    BacSiChiDinhId = doctorId.Value,
+                    BoChiDinhCLSId = clsPayload.BoChiDinhCLSId,
+                    GhiChuChiDinh = string.IsNullOrWhiteSpace(clsPayload.GhiChu) ? null : clsPayload.GhiChu!.Trim(),
+                    NgayChiDinh = DateTime.Now
+                };
+                _context.LabOrders.Add(labOrder);
+                await _context.SaveChangesAsync(); // Generates labOrder.Id
+
+                foreach (var service in selectedClsServices)
+                {
+                    _context.LabOrderItems.Add(new LabOrderItem
+                    {
+                        PhieuChiDinhCLSId = labOrder.Id,
+                        DichVuCLSId = service.Id,
+                        TrangThai = "ChoThucHien"
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            decimal drugCost = 0;
+            Prescription? prescription = null;
+
+            if (payload.Lines.Count > 0)
+            {
+                prescription = new Prescription
                 {
                     PhieuKhamId = exam.Id,
+                    BacSiKeId = doctorId.Value,
+                    TrangThai = "ChoCapPhat",
                     NgayKe = DateTime.Now
                 };
                 _context.Prescriptions.Add(prescription);
+                await _context.SaveChangesAsync(); // Generates prescription.Id
+
+                foreach (var line in payload.Lines)
+                {
+                    var medicine = medicines[line.MedicineId];
+                    var qty = computedQuantities[line.MedicineId];
+                    var huongDan = !string.IsNullOrWhiteSpace(line.HuongDanSuDungOverride)
+                        ? line.HuongDanSuDungOverride!.Trim()
+                        : ComposeInstructions(line, medicine.DonViTinh);
+
+                    var detail = new PrescriptionDetail
+                    {
+                        DonThuocId = prescription.Id,
+                        ThuocId = line.MedicineId,
+                        LieuDung = huongDan,
+                        SoLuong = qty,
+                        LieuMoiLan = line.LieuMoiLan,
+                        SoLanMoiNgay = line.SoLanMoiNgay,
+                        DuongDung = line.DuongDung,
+                        ThoiDiemDung = line.ThoiDiemDung,
+                        SoNgayDung = line.SoNgayDung,
+                        HuongDanSuDung = huongDan
+                    };
+                    _context.PrescriptionDetails.Add(detail);
+                    drugCost += qty * medicine.Gia;
+                }
+                await _context.SaveChangesAsync(); // Generates PrescriptionDetail.Id cho từng dòng
+
+                foreach (var line in payload.Lines)
+                {
+                    var qty = computedQuantities[line.MedicineId];
+                    var detail = await _context.PrescriptionDetails
+                        .Where(d => d.DonThuocId == prescription.Id && d.ThuocId == line.MedicineId)
+                        .OrderByDescending(d => d.Id)
+                        .FirstAsync();
+                    // Đã trừ cho hoạt chất này ở lượt trước (2 dòng cùng thuốc đã gộp
+                    // số lượng ở computedQuantities) - chỉ phân bổ lô 1 lần/thuốc.
+                    var alreadyAllocated = await _context.PrescriptionBatchAllocations
+                        .AnyAsync(a => a.ChiTietDonThuoc.DonThuocId == prescription.Id && a.ChiTietDonThuoc.ThuocId == line.MedicineId);
+                    if (alreadyAllocated) continue;
+
+                    var allocated = await _stockAllocator.AllocateFefoAsync(line.MedicineId, detail.Id, qty);
+                    if (!allocated)
+                    {
+                        await transaction.RollbackAsync();
+                        return BadRequest($"Thuốc {medicines[line.MedicineId].TenThuoc} không đủ tồn kho hợp lệ.");
+                    }
+                }
                 await _context.SaveChangesAsync();
 
-                if (items.Count > 0)
+                // Ghi audit log cho mọi cảnh báo bị ghi đè (không chứa CCCD/BHYT/
+                // số liệu sức khỏe, chỉ tên thuốc + loại cảnh báo + lý do bác sĩ).
+                var safetyResultForAudit = await _safetyChecker.CheckAsync(new PrescriptionSafetyContext
                 {
-                    foreach (var item in items)
+                    PatientId = appointment.BenhNhanId,
+                    CanNangKg = canNang,
+                    CandidateLines = payload.Lines.Select(l => new CandidateDrugLine
                     {
-                        var medicine = await _context.Medicines.FindAsync(item.MedicineId);
-                        if (medicine == null) return BadRequest("Một hoặc nhiều thuốc không tồn tại.");
-
-                        // Create Prescription Detail link
-                        var detail = new PrescriptionDetail
-                        {
-                            DonThuocId = prescription.Id,
-                            ThuocId = item.MedicineId,
-                            LieuDung = item.Instructions,
-                            SoLuong = item.Qty
-                        };
-                        _context.PrescriptionDetails.Add(detail);
-
-                        // Deduct Stock following FEFO algorithm (First Expired, First Out)
-                        int remainingToDeduct = item.Qty;
-                        
-                        var activeBatches = await _context.MedicineBatches
-                            .Where(b => b.ThuocId == item.MedicineId && b.HanSuDung > DateTime.Today && b.SoLuongTon > 0)
-                            .OrderBy(b => b.HanSuDung) // Oldest batches (soonest expiry) first
-                            .ToListAsync();
-
-                        foreach (var batch in activeBatches)
-                        {
-                            if (remainingToDeduct <= 0) break;
-
-                            if (batch.SoLuongTon >= remainingToDeduct)
-                            {
-                                batch.SoLuongTon -= remainingToDeduct;
-                                remainingToDeduct = 0;
-                            }
-                            else
-                            {
-                                remainingToDeduct -= batch.SoLuongTon;
-                                batch.SoLuongTon = 0;
-                            }
-                            _context.Entry(batch).State = EntityState.Modified;
-                        }
-
-                        if (remainingToDeduct > 0)
-                            return BadRequest($"Thuốc {medicine.TenThuoc} không đủ tồn kho hợp lệ.");
-
-                        // Update overall medicine inventory
-                        medicine.TonKho = Math.Max(0, medicine.TonKho - item.Qty);
-                        _context.Entry(medicine).State = EntityState.Modified;
-
-                        // Calculate cost
-                        drugCost += (item.Qty * medicine.Gia);
-                    }
+                        MedicineId = l.MedicineId,
+                        LieuMoiLan = l.LieuMoiLan,
+                        SoLanMoiNgay = l.SoLanMoiNgay,
+                        SoNgayDung = l.SoNgayDung
+                    }).ToList()
+                });
+                foreach (var warning in safetyResultForAudit.Warnings.Where(w => w.RequiresAcknowledgement))
+                {
+                    _context.AuditLogs.Add(new AuditLog
+                    {
+                        NguoiDungId = GetCurrentUserId(),
+                        HanhDong = $"Ghi đè cảnh báo kê đơn ({warning.Category})",
+                        ChiTiet = $"{warning.Message} Lý do bác sĩ: {payload.OverrideReason}",
+                        DoiTuongLoai = "DonThuoc",
+                        DoiTuongId = prescription.Id
+                    });
                 }
             }
 
@@ -288,7 +507,6 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             _context.Invoices.Add(invoice);
             await _context.SaveChangesAsync();
 
-            // Add Invoice Details
             _context.InvoiceDetails.Add(new InvoiceDetail
             {
                 HoaDonId = invoice.Id,
@@ -345,6 +563,25 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             return RedirectToAction("Index", "Queue");
         }
 
+        private async Task<string> GenerateNextLabOrderMaPhieuAsync(int year)
+        {
+            var prefix = $"CLS-{year}-";
+            var maxSeq = (await _context.LabOrders
+                .Where(o => o.MaPhieu.StartsWith(prefix))
+                .Select(o => o.MaPhieu)
+                .ToListAsync())
+                .Select(m => int.TryParse(m.Substring(prefix.Length), out var n) ? n : 0)
+                .DefaultIfEmpty(0)
+                .Max();
+            return $"{prefix}{maxSeq + 1:D4}";
+        }
+
+        private static string ComposeInstructions(PrescriptionLineSubmission line, string donViTinh)
+        {
+            var thoiDiem = string.IsNullOrWhiteSpace(line.ThoiDiemDung) ? string.Empty : $", {line.ThoiDiemDung}";
+            return $"{line.DuongDung} {line.LieuMoiLan} {donViTinh}/lần, {line.SoLanMoiNgay} lần/ngày{thoiDiem}, dùng trong {line.SoNgayDung} ngày";
+        }
+
         private int GetCurrentUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -359,13 +596,6 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                 .Where(d => d.NguoiDungId == userId)
                 .Select(d => (int?)d.Id)
                 .FirstOrDefaultAsync();
-        }
-
-        private class TempPrescriptionItem
-        {
-            public int MedicineId { get; set; }
-            public int Qty { get; set; }
-            public string Instructions { get; set; } = string.Empty;
         }
     }
 }

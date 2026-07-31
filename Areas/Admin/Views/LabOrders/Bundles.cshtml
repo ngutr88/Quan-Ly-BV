@@ -1,0 +1,191 @@
+@model List<QuanLyBenhVien.Models.LabOrderBundle>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Bộ chỉ định cận lâm sàng";
+    var canProcess = (bool)(ViewBag.CanProcess ?? false);
+    var allServices = ViewBag.AllServices as List<QuanLyBenhVien.Models.LabServiceCatalog> ?? new();
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Bộ chỉ định cận lâm sàng",
+        Subtitle = "Nhóm nhiều dịch vụ CLS thành một bộ để bác sĩ chỉ định nhanh (vd Bộ khám tổng quát, Bộ tiền phẫu).",
+        Breadcrumbs = new[] { new BreadcrumbItem("Quản trị", "/Admin/Dashboard"), new BreadcrumbItem("Cận lâm sàng", "/Admin/LabOrders") },
+        CurrentCrumb = "Bộ chỉ định"
+    };
+
+    string NhomLabel(string n) => n switch
+    {
+        "HuyetHoc" => "Huyết học", "SinhHoa" => "Sinh hóa", "ViSinh" => "Vi sinh",
+        "CDHA" => "Chẩn đoán hình ảnh", "ThamDoChucNang" => "Thăm dò chức năng", "GiaiPhauBenh" => "Giải phẫu bệnh",
+        _ => n
+    };
+
+    Func<object, IHtmlContent> pageActions = @<text>
+        @if (canProcess)
+        {
+            <button onclick="openModal('addBundleModal')" class="hms-btn hms-btn-primary">
+                <span class="material-symbols-outlined">add</span> Tạo bộ chỉ định
+            </button>
+        }
+    </text>;
+    ViewData["PageActions"] = pageActions;
+}
+
+<partial name="_PageHeader" model="header" />
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-secondary-container/20 text-on-secondary-container border border-secondary/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary">check_circle</span>
+        <span class="font-label-md">@TempData["SuccessMessage"]</span>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-unit-md p-4 bg-error-container/25 text-error border border-error/20 rounded-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-error">error</span>
+        <span class="font-label-md">@TempData["ErrorMessage"]</span>
+    </div>
+}
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-unit-lg">
+    @if (Model.Count == 0)
+    {
+        <div class="hms-empty md:col-span-2"><p class="hms-empty-title">Chưa có bộ chỉ định nào.</p></div>
+    }
+    @foreach (var b in Model)
+    {
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <div class="flex items-start justify-between gap-unit-sm mb-2">
+                <div>
+                    <h3 class="font-title-md text-title-md font-bold text-on-surface">@b.TenBo</h3>
+                    @if (!string.IsNullOrEmpty(b.MoTa)) { <p class="text-caption text-on-surface-variant">@b.MoTa</p> }
+                </div>
+                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap @(b.DangHoatDong ? "bg-secondary-container/20 text-on-secondary-container" : "bg-surface-container-high text-on-surface-variant")">
+                    @(b.DangHoatDong ? "Đang dùng" : "Đã ẩn")
+                </span>
+            </div>
+            <ul class="text-body-md list-disc pl-4 mb-unit-md">
+                @foreach (var item in b.ThanhVien.OrderBy(i => i.DichVu.TenDichVu))
+                {
+                    <li>@item.DichVu.TenDichVu</li>
+                }
+            </ul>
+            @if (canProcess)
+            {
+                <div class="flex gap-2">
+                    <button type="button"
+                            onclick='openEditBundleModal(@b.Id, @Html.Raw(Json.Serialize(b.TenBo)), @Html.Raw(Json.Serialize(b.MoTa)), @Html.Raw(Json.Serialize(b.ThanhVien.Select(i => i.DichVuCLSId).ToList())))'
+                            class="text-primary font-semibold hover:underline text-caption">Sửa</button>
+                    <form method="POST" action="/Admin/LabOrders/BundleToggleActive/@b.Id">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="@(b.DangHoatDong ? "text-error" : "text-secondary") font-semibold hover:underline text-caption">@(b.DangHoatDong ? "Ẩn bộ này" : "Bật lại")</button>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@{
+    IHtmlContent ServiceCheckboxes(string namePrefix) =>
+        new HtmlString(string.Join("", allServices.GroupBy(s => s.NhomCLS).Select(g => $@"
+            <div class='mb-2'>
+                <p class='text-caption font-bold text-on-surface-variant uppercase tracking-wider mb-1'>{NhomLabel(g.Key)}</p>
+                <div class='space-y-1'>
+                    {string.Join("", g.Select(s => $@"
+                    <label class='flex items-center gap-2 text-body-md'>
+                        <input type='checkbox' name='{namePrefix}' value='{s.Id}' class='rounded text-primary h-4 w-4' />
+                        {System.Net.WebUtility.HtmlEncode(s.TenDichVu)}
+                    </label>"))}
+                </div>
+            </div>")));
+}
+
+<!-- Add Bundle Modal -->
+<div id="addBundleModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 max-h-[90vh] flex flex-col">
+        <div class="p-unit-lg border-b border-outline-variant flex items-center justify-between shrink-0">
+            <h3 class="font-title-lg text-title-lg font-bold text-on-surface">Tạo bộ chỉ định</h3>
+            <button onclick="closeModal('addBundleModal')" class="p-2 hover:bg-surface-container-high rounded-full text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <form method="POST" action="/Admin/LabOrders/BundleCreate" class="p-unit-lg space-y-unit-md overflow-y-auto">
+            @Html.AntiForgeryToken()
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Tên bộ *</label>
+                <input type="text" name="tenBo" required class="w-full px-3 py-2 border border-outline-variant rounded-lg" />
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Mô tả</label>
+                <textarea name="moTa" rows="2" class="w-full px-3 py-2 border border-outline-variant rounded-lg"></textarea>
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Dịch vụ trong bộ *</label>
+                @ServiceCheckboxes("dichVuIds")
+            </div>
+            <div class="flex justify-end gap-2 pt-2 sticky bottom-0 bg-surface-container-lowest">
+                <button type="button" onclick="closeModal('addBundleModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg">Hủy</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-white font-bold rounded-lg">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Bundle Modal -->
+<div id="editBundleModal" class="hms-modal-overlay fixed inset-0 bg-on-background/40 z-[100] hidden items-center justify-center p-4">
+    <div class="hms-modal-panel bg-surface-container-lowest border border-outline-variant rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden transform scale-95 transition-transform duration-300 max-h-[90vh] flex flex-col">
+        <div class="p-unit-lg border-b border-outline-variant flex items-center justify-between shrink-0">
+            <h3 class="font-title-lg text-title-lg font-bold text-on-surface">Sửa bộ chỉ định</h3>
+            <button onclick="closeModal('editBundleModal')" class="p-2 hover:bg-surface-container-high rounded-full text-on-surface-variant"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <form method="POST" id="editBundleForm" action="/Admin/LabOrders/BundleEdit" class="p-unit-lg space-y-unit-md overflow-y-auto">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="editBundleId" />
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Tên bộ *</label>
+                <input type="text" name="tenBo" id="editBundleTen" required class="w-full px-3 py-2 border border-outline-variant rounded-lg" />
+            </div>
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant">Mô tả</label>
+                <textarea name="moTa" id="editBundleMoTa" rows="2" class="w-full px-3 py-2 border border-outline-variant rounded-lg"></textarea>
+            </div>
+            <div class="space-y-unit-xs" id="editBundleServices">
+                <label class="block text-caption font-semibold text-on-surface-variant">Dịch vụ trong bộ *</label>
+                @ServiceCheckboxes("dichVuIds")
+            </div>
+            <div class="flex justify-end gap-2 pt-2 sticky bottom-0 bg-surface-container-lowest">
+                <button type="button" onclick="closeModal('editBundleModal')" class="px-4 py-2 border border-outline text-on-surface-variant font-semibold rounded-lg">Hủy</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-white font-bold rounded-lg">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            requestAnimationFrame(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            });
+        }
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.firstElementChild.classList.remove('scale-100');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 150);
+        }
+        function openEditBundleModal(id, ten, moTa, dichVuIds) {
+            document.getElementById('editBundleId').value = id;
+            document.getElementById('editBundleTen').value = ten;
+            document.getElementById('editBundleMoTa').value = moTa || '';
+            document.querySelectorAll('#editBundleServices input[type=checkbox]').forEach(cb => {
+                cb.checked = dichVuIds.includes(parseInt(cb.value, 10));
+            });
+            openModal('editBundleModal');
+        }
+    </script>
+}

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanLyBenhVien.Data;
 
@@ -10,9 +11,11 @@ using QuanLyBenhVien.Data;
 namespace QuanLyBenhVien.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260731123837_PrescriptionSafetyCore")]
+    partial class PrescriptionSafetyCore
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
@@ -461,10 +464,6 @@ namespace QuanLyBenhVien.Migrations
                     b.Property<decimal?>("ChieuCao")
                         .HasColumnType("decimal(5, 2)");
 
-                    b.Property<string>("GhiChuCLSCuaBacSi")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("HuyetAp")
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
@@ -825,275 +824,6 @@ namespace QuanLyBenhVien.Migrations
                     b.ToTable("ChiTietHoaDon", t =>
                         {
                             t.HasCheckConstraint("CK_ChiTietHoaDon_SoTien", "SoTien >= 0");
-                        });
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabOrder", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BacSiChiDinhId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BenhNhanId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("BoChiDinhCLSId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("GhiChuChiDinh")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("MaPhieu")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("NgayChiDinh")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("PhieuKhamId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BacSiChiDinhId");
-
-                    b.HasIndex("BenhNhanId");
-
-                    b.HasIndex("BoChiDinhCLSId");
-
-                    b.HasIndex("MaPhieu")
-                        .IsUnique();
-
-                    b.HasIndex("PhieuKhamId");
-
-                    b.ToTable("PhieuChiDinhCLS");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabOrderBundle", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("DangHoatDong")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("MoTa")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TenBo")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("BoChiDinhCLS");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabOrderBundleItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BoChiDinhCLSId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DichVuCLSId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DichVuCLSId");
-
-                    b.HasIndex("BoChiDinhCLSId", "DichVuCLSId")
-                        .IsUnique();
-
-                    b.ToTable("ChiTietBoChiDinhCLS");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabOrderItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DichVuCLSId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("LyDoHuy")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("NgayNhanThucHien")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("NguoiNhanId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("PhieuChiDinhCLSId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TrangThai")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DichVuCLSId");
-
-                    b.HasIndex("NguoiNhanId");
-
-                    b.HasIndex("PhieuChiDinhCLSId");
-
-                    b.ToTable("ChiTietPhieuChiDinhCLS", t =>
-                        {
-                            t.HasCheckConstraint("CK_ChiTietPhieuChiDinhCLS_TrangThai", "TrangThai IN ('ChoThucHien','DangThucHien','DaCoKetQua','DaHuy')");
-                        });
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabResult", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ChiTietPhieuChiDinhCLSId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("CoBatThuong")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("DaXem")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("KetLuan")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("NgayTra")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime?>("NgayXem")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NguoiDuyetTen")
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("NguoiThucHienId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ChiTietPhieuChiDinhCLSId")
-                        .IsUnique();
-
-                    b.HasIndex("NguoiThucHienId");
-
-                    b.ToTable("KetQuaCLS");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabResultFile", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("KetQuaCLSId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("KichThuoc")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("NgayTaiLen")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("TenGoc")
-                        .IsRequired()
-                        .HasMaxLength(260)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TenLuuTru")
-                        .IsRequired()
-                        .HasMaxLength(260)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ThuTu")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("KetQuaCLSId");
-
-                    b.ToTable("FileKetQuaCLS");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabServiceCatalog", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("DangHoatDong")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("GhiChu")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("Gia")
-                        .HasColumnType("decimal(12, 2)");
-
-                    b.Property<string>("MaDichVu")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NhomCLS")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NoiThucHien")
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TenDichVu")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MaDichVu")
-                        .IsUnique();
-
-                    b.ToTable("DichVuCLS", t =>
-                        {
-                            t.HasCheckConstraint("CK_DichVuCLS_Gia", "Gia >= 0");
-
-                            t.HasCheckConstraint("CK_DichVuCLS_NhomCLS", "NhomCLS IN ('HuyetHoc','SinhHoa','ViSinh','CDHA','ThamDoChucNang','GiaiPhauBenh')");
                         });
                 });
 
@@ -1779,9 +1509,6 @@ namespace QuanLyBenhVien.Migrations
                     b.Property<bool>("DuocDuyetPhieuNhapKho")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("DuocXuLyCLS")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -2051,115 +1778,6 @@ namespace QuanLyBenhVien.Migrations
                     b.Navigation("Invoice");
                 });
 
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabOrder", b =>
-                {
-                    b.HasOne("QuanLyBenhVien.Models.Doctor", "BacSiChiDinh")
-                        .WithMany()
-                        .HasForeignKey("BacSiChiDinhId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("QuanLyBenhVien.Models.Patient", "Patient")
-                        .WithMany()
-                        .HasForeignKey("BenhNhanId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("QuanLyBenhVien.Models.LabOrderBundle", "BoChiDinh")
-                        .WithMany()
-                        .HasForeignKey("BoChiDinhCLSId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("QuanLyBenhVien.Models.ExaminationRecord", "ExaminationRecord")
-                        .WithMany()
-                        .HasForeignKey("PhieuKhamId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("BacSiChiDinh");
-
-                    b.Navigation("BoChiDinh");
-
-                    b.Navigation("ExaminationRecord");
-
-                    b.Navigation("Patient");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabOrderBundleItem", b =>
-                {
-                    b.HasOne("QuanLyBenhVien.Models.LabOrderBundle", "BoChiDinh")
-                        .WithMany("ThanhVien")
-                        .HasForeignKey("BoChiDinhCLSId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("QuanLyBenhVien.Models.LabServiceCatalog", "DichVu")
-                        .WithMany("ThuocCacBo")
-                        .HasForeignKey("DichVuCLSId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("BoChiDinh");
-
-                    b.Navigation("DichVu");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabOrderItem", b =>
-                {
-                    b.HasOne("QuanLyBenhVien.Models.LabServiceCatalog", "DichVu")
-                        .WithMany()
-                        .HasForeignKey("DichVuCLSId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("QuanLyBenhVien.Models.User", "NguoiNhan")
-                        .WithMany()
-                        .HasForeignKey("NguoiNhanId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("QuanLyBenhVien.Models.LabOrder", "PhieuChiDinh")
-                        .WithMany("ChiTiet")
-                        .HasForeignKey("PhieuChiDinhCLSId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DichVu");
-
-                    b.Navigation("NguoiNhan");
-
-                    b.Navigation("PhieuChiDinh");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabResult", b =>
-                {
-                    b.HasOne("QuanLyBenhVien.Models.LabOrderItem", "ChiTietPhieuChiDinh")
-                        .WithOne("KetQua")
-                        .HasForeignKey("QuanLyBenhVien.Models.LabResult", "ChiTietPhieuChiDinhCLSId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("QuanLyBenhVien.Models.User", "NguoiThucHien")
-                        .WithMany()
-                        .HasForeignKey("NguoiThucHienId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("ChiTietPhieuChiDinh");
-
-                    b.Navigation("NguoiThucHien");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabResultFile", b =>
-                {
-                    b.HasOne("QuanLyBenhVien.Models.LabResult", "KetQua")
-                        .WithMany("Files")
-                        .HasForeignKey("KetQuaCLSId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("KetQua");
-                });
-
             modelBuilder.Entity("QuanLyBenhVien.Models.MedicineBatch", b =>
                 {
                     b.HasOne("QuanLyBenhVien.Models.Supplier", "NhaCungCap")
@@ -2369,31 +1987,6 @@ namespace QuanLyBenhVien.Migrations
             modelBuilder.Entity("QuanLyBenhVien.Models.Invoice", b =>
                 {
                     b.Navigation("InvoiceDetails");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabOrder", b =>
-                {
-                    b.Navigation("ChiTiet");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabOrderBundle", b =>
-                {
-                    b.Navigation("ThanhVien");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabOrderItem", b =>
-                {
-                    b.Navigation("KetQua");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabResult", b =>
-                {
-                    b.Navigation("Files");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.LabServiceCatalog", b =>
-                {
-                    b.Navigation("ThuocCacBo");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.Medicine", b =>

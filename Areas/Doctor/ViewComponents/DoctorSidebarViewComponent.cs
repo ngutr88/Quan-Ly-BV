@@ -44,6 +44,13 @@ namespace QuanLyBenhVien.Areas.Doctor.ViewComponents
                 if (count > 0) unreadNotifications = count;
             }
 
+            int? unreadLabResults = null;
+            if (doctor != null)
+            {
+                var count = await LabResultsCountHelper.GetUnreadCountAsync(_context, doctor.Id);
+                if (count > 0) unreadLabResults = count;
+            }
+
             var labelByKey = ModulePermissionRegistry.DoctorModules.ToDictionary(m => m.Key, m => m.Label);
 
             var groups = new List<DoctorSidebarGroupViewModel>();
@@ -67,14 +74,21 @@ namespace QuanLyBenhVien.Areas.Doctor.ViewComponents
                         if (doctor == null || !DoctorMenuConditions.ByKey[item.ExtraVisibilityKey](doctor)) continue;
                     }
 
-                    var badge = item.BadgeSourceKey == DoctorMenuRegistry.BadgeUnreadNotifications ? unreadNotifications : null;
+                    var badgeValues = new Dictionary<string, int?>
+                    {
+                        [DoctorMenuRegistry.BadgeUnreadNotifications] = unreadNotifications,
+                        [DoctorMenuRegistry.BadgeUnreadLabResults] = unreadLabResults
+                    };
+                    var badge = item.BadgeSourceKey != null && badgeValues.TryGetValue(item.BadgeSourceKey, out var v) ? v : null;
 
                     items.Add(new DoctorSidebarMenuItemViewModel
                     {
+                        ModuleKey = item.ModuleKey,
                         Label = labelByKey.TryGetValue(item.ModuleKey, out var label) ? label : item.ModuleKey,
                         Icon = item.Icon,
                         Route = item.Route,
-                        BadgeCount = badge
+                        BadgeCount = badge,
+                        StaticBadgeText = item.StaticBadgeText
                     });
                 }
 
@@ -96,9 +110,11 @@ namespace QuanLyBenhVien.Areas.Doctor.ViewComponents
 
     public class DoctorSidebarMenuItemViewModel
     {
+        public string ModuleKey { get; set; } = string.Empty;
         public string Label { get; set; } = string.Empty;
         public string Icon { get; set; } = string.Empty;
         public string Route { get; set; } = string.Empty;
         public int? BadgeCount { get; set; }
+        public string? StaticBadgeText { get; set; }
     }
 }

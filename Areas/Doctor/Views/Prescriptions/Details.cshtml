@@ -1,0 +1,107 @@
+@model QuanLyBenhVien.Models.Prescription
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Chi tiết đơn thuốc";
+    var auditEntries = ViewBag.AuditEntries as List<QuanLyBenhVien.Models.AuditLog> ?? new List<QuanLyBenhVien.Models.AuditLog>();
+    var patient = Model.ExaminationRecord.Appointment.Patient;
+
+    var header = new PageHeaderViewModel
+    {
+        Title = $"Đơn thuốc #{Model.Id:D5}",
+        Subtitle = $"Kê ngày {Model.NgayKe:dd/MM/yyyy HH:mm} cho bệnh nhân {patient.User.HoTen}.",
+        Breadcrumbs = new[]
+        {
+            new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard"),
+            new BreadcrumbItem("Kê đơn & Y lệnh", "/Doctor/Prescriptions/List")
+        },
+        CurrentCrumb = $"Đơn #{Model.Id:D5}"
+    };
+
+    string StatusLabel(string s) => s switch
+    {
+        "Nhap" => "Nháp",
+        "ChoCapPhat" => "Chờ cấp phát",
+        "DaCapPhat" => "Đã cấp phát",
+        "DuocPhanHoi" => "Dược phản hồi",
+        "DaHuy" => "Đã hủy",
+        _ => s
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_TabNav" />
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
+    <div class="lg:col-span-2 space-y-unit-lg">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <div class="flex items-center justify-between mb-unit-md">
+                <h3 class="font-title-lg text-title-lg text-primary font-bold flex items-center gap-1">
+                    <span class="material-symbols-outlined">medication</span> Danh sách thuốc
+                </h3>
+                <span class="px-2 py-1 rounded-full text-caption font-bold bg-surface-container-high text-on-surface-variant">@StatusLabel(Model.TrangThai)</span>
+            </div>
+            <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Chi tiết thuốc trong đơn" tabindex="0">
+                <table class="w-full text-left text-body-md">
+                    <thead>
+                        <tr class="border-b border-outline-variant text-caption font-bold text-on-surface-variant uppercase">
+                            <th class="py-2">Tên thuốc</th>
+                            <th class="py-2">Số lượng</th>
+                            <th class="py-2">Hướng dẫn sử dụng</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/40">
+                        @foreach (var detail in Model.PrescriptionDetails)
+                        {
+                            <tr>
+                                <td class="py-2 font-semibold">@detail.Medicine.TenThuoc</td>
+                                <td class="py-2">@detail.SoLuong @detail.Medicine.DonViTinh</td>
+                                <td class="py-2 text-on-surface-variant">@(detail.HuongDanSuDung ?? detail.LieuDung)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (Model.TrangThai == "DaHuy" && !string.IsNullOrEmpty(Model.LyDoHuy))
+            {
+                <p class="text-caption text-error mt-unit-sm">Lý do hủy: @Model.LyDoHuy</p>
+            }
+        </div>
+
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+            <h3 class="font-title-lg text-title-lg text-primary font-bold flex items-center gap-1 mb-unit-md">
+                <span class="material-symbols-outlined">history</span> Nhật ký liên quan đến đơn thuốc này
+            </h3>
+            @if (!auditEntries.Any())
+            {
+                <p class="text-body-md text-on-surface-variant italic">Không có ghi đè cảnh báo nào cho đơn này.</p>
+            }
+            else
+            {
+                <div class="space-y-unit-sm">
+                    @foreach (var entry in auditEntries)
+                    {
+                        <div class="p-unit-sm border border-outline-variant/50 rounded-lg bg-surface-container-low/20">
+                            <div class="flex justify-between text-caption font-bold text-on-surface">
+                                <span>@entry.HanhDong</span>
+                                <span class="text-on-surface-variant">@entry.ThoiGian.ToString("dd/MM/yyyy HH:mm")</span>
+                            </div>
+                            <p class="text-caption text-on-surface-variant">@entry.ChiTiet</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+        <h3 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-primary">Bệnh nhân</h3>
+        <div class="space-y-unit-sm text-body-md">
+            <div><span class="text-caption text-on-surface-variant block">Họ và tên</span><span class="font-semibold">@patient.User.HoTen</span></div>
+            <div><span class="text-caption text-on-surface-variant block">Chẩn đoán lượt khám</span><span>@Model.ExaminationRecord.ChanDoan</span></div>
+            @if (!string.IsNullOrEmpty(patient.DiUng) && patient.DiUng != "Không")
+            {
+                <div><span class="text-caption text-on-surface-variant block">Dị ứng</span><span class="text-error font-semibold">@patient.DiUng</span></div>
+            }
+        </div>
+    </div>
+</div>

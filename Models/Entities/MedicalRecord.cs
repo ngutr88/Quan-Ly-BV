@@ -84,6 +84,16 @@ namespace QuanLyBenhVien.Models
         public string KetQuaCLS { get; set; } = string.Empty; // Kết quả cận lâm sàng (file link hoặc mô tả)
 
         public DateTime NgayKham { get; set; } = DateTime.Now;
+
+        // Ngày hẹn tái khám do bác sĩ chỉ định lúc kê đơn/hoàn tất khám - cấp
+        // dữ liệu có cấu trúc cho nhắc tái khám ở Cổng bệnh nhân (trước đây chỉ
+        // suy đoán qua từ khóa bệnh mạn tính + 12 tuần chưa khám).
+        public DateTime? NgayHenTaiKham { get; set; }
+
+        // Ghi chú nhận định riêng của bác sĩ khi đọc kết quả CLS - tách khỏi
+        // LoiDan (đó là dặn dò cho bệnh nhân), trường này chỉ nội bộ chuyên môn.
+        [StringLength(1000)]
+        public string? GhiChuCLSCuaBacSi { get; set; }
     }
 
     [Table("DonThuoc")]
@@ -99,6 +109,22 @@ namespace QuanLyBenhVien.Models
         public virtual ExaminationRecord ExaminationRecord { get; set; } = null!;
 
         public DateTime NgayKe { get; set; } = DateTime.Now;
+
+        // Bác sĩ kê đơn - tham chiếu trực tiếp (trước đây chỉ suy ra gián tiếp
+        // qua ExaminationRecord.Appointment.BacSiId), cần thiết để truy vấn
+        // "đơn tôi đã kê" hiệu quả cho trang Kê đơn & Y lệnh.
+        [Required]
+        public int BacSiKeId { get; set; }
+
+        [ForeignKey("BacSiKeId")]
+        public virtual Doctor BacSiKe { get; set; } = null!;
+
+        [Required]
+        [StringLength(20)]
+        public string TrangThai { get; set; } = "ChoCapPhat"; // Nhap, ChoCapPhat, DaCapPhat, DuocPhanHoi, DaHuy
+
+        [StringLength(500)]
+        public string? LyDoHuy { get; set; }
 
         public virtual ICollection<PrescriptionDetail> PrescriptionDetails { get; set; } = new List<PrescriptionDetail>();
     }
@@ -127,6 +153,25 @@ namespace QuanLyBenhVien.Models
 
         [Required]
         public int SoLuong { get; set; }
+
+        // Liều dùng có cấu trúc (bổ sung cho LieuDung tự do ở trên, giữ nguyên
+        // để không phá dữ liệu cũ) - dùng để engine an toàn kiểm tra liều/ngày
+        // và để tự tính SoLuong ở server thay vì tin số client gửi.
+        [Column(TypeName = "decimal(10, 2)")]
+        public decimal? LieuMoiLan { get; set; }
+
+        public int? SoLanMoiNgay { get; set; }
+
+        [StringLength(50)]
+        public string? DuongDung { get; set; } // Uống, Tiêm, Bôi ngoài da...
+
+        [StringLength(50)]
+        public string? ThoiDiemDung { get; set; } // Trước ăn sáng, sau ăn tối...
+
+        public int? SoNgayDung { get; set; }
+
+        [StringLength(300)]
+        public string? HuongDanSuDung { get; set; } // Nhãn in, tự sinh từ các cột trên nhưng cho phép sửa tay
     }
 
     [Table("TienSuGiaDinh")]

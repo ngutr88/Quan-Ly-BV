@@ -5,7 +5,19 @@
     ViewData["Title"] = "Phiên khám bệnh";
     var historyExams = ViewBag.HistoryExams as List<QuanLyBenhVien.Models.ExaminationRecord> ?? new List<QuanLyBenhVien.Models.ExaminationRecord>();
     var patientDocuments = ViewBag.PatientDocuments as List<QuanLyBenhVien.Models.PatientDocument> ?? new List<QuanLyBenhVien.Models.PatientDocument>();
-    var medicines = ViewBag.Medicines as List<QuanLyBenhVien.Models.Medicine> ?? new List<QuanLyBenhVien.Models.Medicine>();
+    var activeDrugs = ViewBag.ActivePrescriptionDrugs as List<string> ?? new List<string>();
+    var recentMetric = ViewBag.RecentHealthMetric as QuanLyBenhVien.Models.PatientHealthMetric;
+    var patientAgeYears = (int)(ViewBag.PatientAgeYears ?? 0);
+
+    var clsCatalog = ViewBag.CLSCatalog as List<QuanLyBenhVien.Models.ViewModels.LabDiagnostics.LabServiceOptionViewModel> ?? new();
+    var clsBundles = ViewBag.CLSBundles as List<QuanLyBenhVien.Models.ViewModels.LabDiagnostics.LabBundleOptionViewModel> ?? new();
+    var clsCatalogGroups = clsCatalog.GroupBy(s => s.NhomCLS).ToList();
+    string NhomCLSLabel(string n) => n switch
+    {
+        "HuyetHoc" => "Huyết học", "SinhHoa" => "Sinh hóa", "ViSinh" => "Vi sinh",
+        "CDHA" => "Chẩn đoán hình ảnh", "ThamDoChucNang" => "Thăm dò chức năng", "GiaiPhauBenh" => "Giải phẫu bệnh",
+        _ => n
+    };
 }
 
 <div class="mb-unit-lg">
@@ -22,11 +34,49 @@
     <div class="p-unit-md bg-error-container/20 border-l-4 border-error text-error text-body-md rounded-r mb-unit-lg flex gap-2 shadow-sm">
         <span class="material-symbols-outlined text-[24px]">gpp_maybe</span>
         <div>
-            <strong class="font-bold">TIỀN SỬ DỊ ỨNG ĐẶC BIỆT CỦA BỆNH NHÂN:</strong> @Model.Patient.DiUng.
-            <p class="text-caption opacity-95">Hệ thống sẽ tự động quét cảnh báo khi bạn kê các thuốc chống chỉ định.</p>
+            <strong class="font-bold">TIỀN SỬ DỊ ỨNG ĐẶC BIỆT@(string.IsNullOrEmpty(Model.Patient.MucDoDiUng) ? "" : $" (mức độ: {Model.Patient.MucDoDiUng})"):</strong> @Model.Patient.DiUng.
+            <p class="text-caption opacity-95">Hệ thống tự động quét cảnh báo dị ứng trực tiếp và dị ứng chéo khi kê thuốc (dữ liệu tương tác/nhóm chéo là dữ liệu minh họa, chưa qua thẩm định dược lý lâm sàng).</p>
         </div>
     </div>
 }
+
+<!-- A1: Khung ngữ cảnh bệnh nhân khi kê đơn -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-unit-md mb-unit-lg">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md">
+        <h4 class="text-caption font-bold text-on-surface-variant uppercase tracking-wider mb-1">Thuốc đang dùng (đơn còn hiệu lực)</h4>
+        @if (activeDrugs.Any())
+        {
+            <ul class="text-body-md list-disc pl-4">
+                @foreach (var d in activeDrugs) { <li>@d</li> }
+            </ul>
+        }
+        else
+        {
+            <p class="text-body-md text-on-surface-variant italic">Không có đơn thuốc nào đang hiệu lực.</p>
+        }
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md">
+        <h4 class="text-caption font-bold text-on-surface-variant uppercase tracking-wider mb-1">Chỉ số sinh hiệu gần nhất</h4>
+        @if (recentMetric != null)
+        {
+            <p class="text-body-md">Ngày đo: @recentMetric.NgayDo.ToString("dd/MM/yyyy")</p>
+            <p class="text-body-md">CN: @(recentMetric.CanNang?.ToString() ?? "-") kg • HA: @(recentMetric.HuyetApTamThu?.ToString() ?? "-")/@(recentMetric.HuyetApTamTruong?.ToString() ?? "-") • Nhịp tim: @(recentMetric.NhipTim?.ToString() ?? "-")</p>
+        }
+        else
+        {
+            <p class="text-body-md text-on-surface-variant italic">Chưa có dữ liệu sinh hiệu tự đo.</p>
+        }
+        <p class="text-caption text-outline italic mt-1">Chưa có dữ liệu xét nghiệm chức năng gan/thận (creatinine/eGFR/AST/ALT) trong hệ thống.</p>
+    </div>
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md">
+        <h4 class="text-caption font-bold text-on-surface-variant uppercase tracking-wider mb-1">Bệnh nhân</h4>
+        <p class="text-body-md">@patientAgeYears tuổi • @Model.Patient.GioiTinh • Nhóm máu @Model.Patient.NhomMau</p>
+        @if (patientAgeYears < 15)
+        {
+            <p class="text-caption text-error font-semibold mt-1">Bệnh nhi dưới 15 tuổi - bắt buộc nhập cân nặng trước khi kê đơn.</p>
+        }
+    </div>
+</div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
     <!-- Left panel: Form input EMR (2 cols) -->
@@ -44,27 +94,27 @@
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-unit-md">
                     <div class="space-y-unit-xs">
                         <label class="text-caption font-semibold text-on-surface-variant md:min-h-12 flex items-end">Huyết áp (mmHg)</label>
-                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
                                name="huyetAp" placeholder="Ví dụ: 120/80" type="text" />
                     </div>
                     <div class="space-y-unit-xs">
                         <label class="text-caption font-semibold text-on-surface-variant md:min-h-12 flex items-end">Nhịp tim (l/ph)</label>
-                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
                                name="nhipTim" placeholder="Ví dụ: 75" type="number" />
                     </div>
                     <div class="space-y-unit-xs">
                         <label class="text-caption font-semibold text-on-surface-variant md:min-h-12 flex items-end">Nhiệt độ (°C)</label>
-                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
                                name="nhietDo" placeholder="36.5" type="number" step="0.1" />
                     </div>
                     <div class="space-y-unit-xs">
-                        <label class="text-caption font-semibold text-on-surface-variant md:min-h-12 flex items-end">Cân nặng (kg)</label>
-                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        <label class="text-caption font-semibold text-on-surface-variant md:min-h-12 flex items-end">Cân nặng (kg) @(patientAgeYears < 15 ? "*" : "")</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
                                id="weight" name="canNang" placeholder="60.5" type="number" step="0.1" oninput="calculateBMI()" />
                     </div>
                     <div class="space-y-unit-xs">
                         <label class="text-caption font-semibold text-on-surface-variant md:min-h-12 flex items-end">Chiều cao (cm)</label>
-                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
                                id="height" name="chieuCao" placeholder="170" type="number" step="0.5" oninput="calculateBMI()" />
                     </div>
                 </div>
@@ -78,36 +128,80 @@
                 <h3 class="font-title-lg text-title-lg text-primary font-bold flex items-center gap-1">
                     <span class="material-symbols-outlined">clinical_notes</span> Chẩn đoán y khoa
                 </h3>
-                
+
                 <div class="space-y-unit-xs">
                     <label class="block text-caption font-semibold text-on-surface-variant">Triệu chứng lâm sàng phát hiện <span class="text-error">*</span></label>
-                    <textarea class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                    <textarea class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
                               name="trieuChung" rows="2" placeholder="Ghi nhận triệu chứng lâm sàng cụ thể..." required></textarea>
                 </div>
 
                 <div class="space-y-unit-xs">
                     <label class="block text-caption font-semibold text-on-surface-variant">Chẩn đoán bệnh cuối cùng <span class="text-error">*</span></label>
-                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus font-semibold" 
+                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus font-semibold"
                            name="chanDoan" placeholder="Nhập tên bệnh hoặc chẩn đoán lâm sàng..." required type="text" />
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
                     <div class="space-y-unit-xs">
                         <label class="block text-caption font-semibold text-on-surface-variant">Chỉ định cận lâm sàng (CLS) nếu có</label>
-                        <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
                                name="chiDinhCls" placeholder="Ví dụ: Siêu âm ổ bụng, xét nghiệm máu" type="text" />
                     </div>
                     <div class="space-y-unit-xs">
                         <label class="block text-caption font-semibold text-on-surface-variant">Kết quả cận lâm sàng (CLS) nếu có</label>
-                        <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                        <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
                                name="ketQuaCls" placeholder="Kết quả cận lâm sàng đã thực hiện..." type="text" />
                     </div>
                 </div>
 
-                <div class="space-y-unit-xs">
-                    <label class="block text-caption font-semibold text-on-surface-variant">Lời dặn &amp; Hẹn tái khám</label>
-                    <textarea class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
-                              name="loiDan" rows="2" placeholder="Chế độ nghỉ ngơi, hẹn ngày tái khám..."></textarea>
+                <div class="space-y-unit-xs border border-outline-variant rounded-lg p-unit-md bg-surface-container-low/20">
+                    <div class="flex items-center justify-between gap-unit-sm flex-wrap">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Chỉ định CLS có cấu trúc (tùy chọn - tạo phiếu chỉ định, kết quả sẽ vào hộp thư "Kết quả cận lâm sàng" của bạn)</label>
+                        @if (clsBundles.Any())
+                        {
+                            <select id="clsBundleSelect" class="px-3 py-1.5 bg-surface border border-outline-variant rounded-lg text-caption">
+                                <option value="">-- Áp dụng nhanh một bộ --</option>
+                                @foreach (var b in clsBundles)
+                                {
+                                    <option value="@b.Id" data-services="@string.Join(",", b.DichVuIds)">@b.TenBo</option>
+                                }
+                            </select>
+                        }
+                    </div>
+                    @if (clsCatalog.Any())
+                    {
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-x-unit-md gap-y-2 max-h-56 overflow-y-auto custom-scrollbar pt-2">
+                            @foreach (var group in clsCatalogGroups)
+                            {
+                                <div class="col-span-2 md:col-span-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider pt-1 first:pt-0">@NhomCLSLabel(group.Key)</div>
+                                @foreach (var s in group)
+                                {
+                                    <label class="flex items-center gap-2 text-body-md">
+                                        <input type="checkbox" class="cls-service-checkbox rounded text-primary h-4 w-4" value="@s.Id" onchange="updateClsOrderJson()" />
+                                        @s.TenDichVu
+                                    </label>
+                                }
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-caption text-on-surface-variant italic pt-2">Chưa có dịch vụ CLS nào trong danh mục.</p>
+                    }
+                    <input type="hidden" id="clsOrderJson" name="clsOrderJson" value="[]" />
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Lời dặn</label>
+                        <textarea class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                  name="loiDan" rows="2" placeholder="Chế độ nghỉ ngơi, sinh hoạt..."></textarea>
+                    </div>
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Ngày hẹn tái khám</label>
+                        <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                               name="ngayHenTaiKham" type="date" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    </div>
                 </div>
             </div>
 
@@ -117,31 +211,58 @@
                     <span class="material-symbols-outlined">medication</span> Kê đơn thuốc điện tử
                 </h3>
 
-                <!-- Drug Selector row -->
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-unit-sm items-end bg-surface-container-low/20 p-unit-sm rounded-lg border border-outline-variant/40">
-                    <div class="md:col-span-5 space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant">Chọn thuốc trong danh mục</label>
-                        <select class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="medSelector">
-                            <option value="">-- Chọn thuốc --</option>
-                            @foreach (var med in medicines)
-                            {
-                                <option value="@med.Id" data-name="@med.TenThuoc" data-unit="@med.DonViTinh" data-price="@med.Gia">@med.TenThuoc (Còn: @med.TonKho @med.DonViTinh)</option>
-                            }
+                <!-- Drug search -->
+                <div class="relative">
+                    <label class="block text-caption font-semibold text-on-surface-variant mb-1">Tìm thuốc theo tên hoặc hoạt chất</label>
+                    <input class="w-full px-4 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="drugSearchInput" placeholder="Vd: Paracetamol, Amoxicillin..." autocomplete="off" />
+                    <div id="drugSearchResults" class="hidden absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg max-h-80 overflow-y-auto z-40"></div>
+                </div>
+
+                <div id="selectedMedicineInfo" class="hidden p-unit-sm bg-surface-container-low/30 border border-outline-variant/40 rounded-lg text-caption"></div>
+
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-unit-sm">
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Liều/lần</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="doseAmount" type="number" step="0.5" min="0.5" value="1" oninput="updateEstimatedQty()" />
+                    </div>
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Số lần/ngày</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="doseTimesPerDay" type="number" min="1" value="2" oninput="updateEstimatedQty()" />
+                    </div>
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Đường dùng</label>
+                        <select class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="doseRoute">
+                            <option>Uống</option>
+                            <option>Tiêm</option>
+                            <option>Bôi ngoài da</option>
+                            <option>Nhỏ mắt/mũi</option>
+                            <option>Khác</option>
                         </select>
                     </div>
-                    <div class="md:col-span-2 space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant">Số lượng</label>
-                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="medQty" type="number" min="1" value="10" />
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Thời điểm dùng</label>
+                        <select class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="doseTiming">
+                            <option value="">-- Không chỉ định --</option>
+                            <option>Trước ăn sáng</option>
+                            <option>Sau ăn sáng</option>
+                            <option>Trước ăn trưa</option>
+                            <option>Sau ăn trưa</option>
+                            <option>Trước ăn tối</option>
+                            <option>Sau ăn tối</option>
+                            <option>Bất kỳ lúc nào</option>
+                        </select>
                     </div>
-                    <div class="md:col-span-4 space-y-unit-xs">
-                        <label class="block text-caption font-semibold text-on-surface-variant">Cách dùng (Liều dùng)</label>
-                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="medInstructions" placeholder="Uống 2 lần/ngày, sau ăn" type="text" />
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant">Số ngày dùng</label>
+                        <input class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="doseDays" type="number" min="1" value="5" oninput="updateEstimatedQty()" />
                     </div>
-                    <div class="md:col-span-1">
-                        <button type="button" class="w-full bg-primary text-white py-2 rounded-lg font-label-md hover:bg-primary-container transition-all" onclick="addMedicineRow()">
-                            Thêm
-                        </button>
-                    </div>
+                </div>
+
+                <div class="flex items-center justify-between gap-unit-md">
+                    <p class="text-caption text-on-surface-variant" id="estimatedQtyDisplay">Số lượng ước tính: -</p>
+                    <button type="button" class="bg-primary text-white px-unit-lg py-2 rounded-lg font-label-md hover:bg-primary-container transition-all" onclick="addMedicineRow()">
+                        Thêm vào đơn
+                    </button>
                 </div>
 
                 <!-- Prescription Table -->
@@ -150,8 +271,8 @@
                     <thead>
                         <tr class="border-b border-outline-variant font-semibold text-on-surface-variant">
                             <th class="py-2">Tên thuốc</th>
-                            <th class="py-2">Số lượng</th>
-                            <th class="py-2">Liều dùng</th>
+                            <th class="py-2">SL ước tính</th>
+                            <th class="py-2">Hướng dẫn sử dụng</th>
                             <th class="py-2 text-right">Thao tác</th>
                         </tr>
                     </thead>
@@ -206,7 +327,7 @@
                 </div>
                 <div>
                     <span class="text-caption text-on-surface-variant block">Ngày sinh / Giới tính</span>
-                    <span>@Model.Patient.NgaySinh.ToString("dd/MM/yyyy") (@(DateTime.Today.Year - Model.Patient.NgaySinh.Year) tuổi) • @Model.Patient.GioiTinh</span>
+                    <span>@Model.Patient.NgaySinh.ToString("dd/MM/yyyy") (@patientAgeYears tuổi) • @Model.Patient.GioiTinh</span>
                 </div>
                 <div>
                     <span class="text-caption text-on-surface-variant block">Nhóm máu / Mã thẻ BHYT</span>
@@ -221,7 +342,7 @@
 
         <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
             <h3 class="font-label-md text-on-surface uppercase tracking-wider mb-unit-md font-bold text-primary">Lịch sử khám tại viện</h3>
-            
+
             <div class="space-y-unit-md max-h-[350px] overflow-y-auto custom-scrollbar">
                 @if (!historyExams.Any())
                 {
@@ -246,8 +367,30 @@
     </div>
 </div>
 
+<!-- Modal cảnh báo an toàn kê đơn (dùng chung cho HardBlock đỏ / MustConfirm vàng) -->
+<div id="safetyModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-unit-lg space-y-unit-md" id="safetyModalPanel">
+        <h3 id="safetyModalTitle" class="font-title-lg text-title-lg font-bold flex items-center gap-2">
+            <span class="material-symbols-outlined" id="safetyModalIcon">warning</span>
+            <span id="safetyModalTitleText">Cảnh báo an toàn kê đơn</span>
+        </h3>
+        <ul id="safetyModalList" class="text-body-md space-y-2 list-disc pl-4 max-h-60 overflow-y-auto"></ul>
+        <div class="space-y-unit-xs">
+            <label class="block text-caption font-semibold text-on-surface-variant">Lý do ghi đè cảnh báo (bắt buộc)</label>
+            <textarea id="safetyModalReason" class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md" rows="2" placeholder="Vd: Đã hội chẩn, bệnh nhân được theo dõi sát..."></textarea>
+        </div>
+        <div class="flex justify-end gap-unit-sm">
+            <button type="button" class="px-unit-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-low" onclick="cancelSafetyOverride()">Hủy, không thêm thuốc</button>
+            <button type="button" class="px-unit-md py-2 rounded-lg bg-error text-white font-semibold" id="safetyModalConfirmBtn" onclick="confirmSafetyOverride()">Tiếp tục dù đã cảnh báo</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
+        const patientId = @Model.Patient.Id;
+        const patientAgeYears = @patientAgeYears;
+
         // BMI Calculation
         function calculateBMI() {
             const weight = parseFloat(document.getElementById('weight').value);
@@ -270,119 +413,293 @@
             }
         }
 
-        // Prescription State Management
-        let prescriptionItems = [];
+        // ---- Chỉ định CLS có cấu trúc ----
+        function updateClsOrderJson() {
+            const ids = Array.from(document.querySelectorAll('.cls-service-checkbox:checked')).map(cb => parseInt(cb.value, 10));
+            const bundleSelect = document.getElementById('clsBundleSelect');
+            const boChiDinhCLSId = bundleSelect && bundleSelect.value ? parseInt(bundleSelect.value, 10) : null;
+            document.getElementById('clsOrderJson').value = JSON.stringify({ DichVuCLSIds: ids, BoChiDinhCLSId: boChiDinhCLSId, GhiChu: null });
+        }
+        (function () {
+            const bundleSelect = document.getElementById('clsBundleSelect');
+            if (!bundleSelect) return;
+            bundleSelect.addEventListener('change', function () {
+                const selected = this.options[this.selectedIndex];
+                const services = (selected.getAttribute('data-services') || '').split(',').filter(Boolean).map(Number);
+                document.querySelectorAll('.cls-service-checkbox').forEach(cb => {
+                    cb.checked = services.includes(parseInt(cb.value, 10));
+                });
+                updateClsOrderJson();
+            });
+        })();
 
-        function renderPrescriptionTable() {
+        function antiForgeryFormData() {
+            const fd = new FormData();
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) fd.append('__RequestVerificationToken', token.value);
+            return fd;
+        }
+
+        // ---- Tìm kiếm thuốc ----
+        let selectedMedicine = null;
+        (function () {
+            const input = document.getElementById('drugSearchInput');
+            const resultsBox = document.getElementById('drugSearchResults');
+            let debounceTimer = null;
+
+            input.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                selectedMedicine = null;
+                document.getElementById('selectedMedicineInfo').classList.add('hidden');
+                const q = input.value.trim();
+                if (q.length < 2) { resultsBox.classList.add('hidden'); resultsBox.innerHTML = ''; return; }
+                debounceTimer = setTimeout(() => runSearch(q), 300);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!resultsBox.contains(e.target) && e.target !== input) resultsBox.classList.add('hidden');
+            });
+
+            async function runSearch(q) {
+                const resp = await fetch('/Doctor/Exam/SearchMedicines?q=' + encodeURIComponent(q));
+                const data = await resp.json();
+                if (!data.success || data.items.length === 0) {
+                    resultsBox.innerHTML = '<div class="p-3 text-caption text-on-surface-variant">Không tìm thấy thuốc.</div>';
+                    resultsBox.classList.remove('hidden');
+                    return;
+                }
+                resultsBox.innerHTML = data.items.map(item => {
+                    const stockLabel = item.outOfStock
+                        ? '<span class="text-error font-semibold">Hết hàng</span>'
+                        : `<span class="text-secondary font-semibold">Còn ${item.stock} ${item.unit}</span>`;
+                    const bhyt = item.coBaoHiemYTe ? '<span class="text-primary text-[10px] font-bold border border-primary rounded px-1 ml-1">BHYT</span>' : '';
+                    let altHtml = '';
+                    if (item.outOfStock && item.alternatives && item.alternatives.length > 0) {
+                        altHtml = '<div class="text-caption text-on-surface-variant mt-1">Gợi ý cùng hoạt chất còn hàng: ' +
+                            item.alternatives.map(a => `${a.name} (${a.stock})`).join(', ') + '</div>';
+                    }
+                    return `<div class="px-4 py-2.5 border-b border-outline-variant last:border-b-0 hover:bg-surface-container-low cursor-pointer ${item.outOfStock ? 'opacity-60' : ''}"
+                                 data-item='${JSON.stringify(item).replace(/'/g, "&apos;")}'>
+                                <div class="font-semibold text-on-surface">${item.name}${bhyt}</div>
+                                <div class="text-caption text-on-surface-variant">${item.ingredient}${item.strength ? ' - ' + item.strength : ''} • ${stockLabel} • ${Number(item.price).toLocaleString('vi-VN')}đ</div>
+                                ${altHtml}
+                            </div>`;
+                }).join('');
+                resultsBox.querySelectorAll('[data-item]').forEach(el => {
+                    el.addEventListener('click', () => {
+                        selectedMedicine = JSON.parse(el.getAttribute('data-item').replace(/&apos;/g, "'"));
+                        input.value = selectedMedicine.name;
+                        resultsBox.classList.add('hidden');
+                        const info = document.getElementById('selectedMedicineInfo');
+                        info.classList.remove('hidden');
+                        info.innerHTML = `Hoạt chất: <strong>${selectedMedicine.ingredient}</strong>${selectedMedicine.strength ? ' (' + selectedMedicine.strength + ')' : ''} • Đơn vị: ${selectedMedicine.unit} • Giá: ${Number(selectedMedicine.price).toLocaleString('vi-VN')}đ${selectedMedicine.coBaoHiemYTe ? ' • Có BHYT chi trả' : ''}`;
+                        updateEstimatedQty();
+                    });
+                });
+                resultsBox.classList.remove('hidden');
+            }
+        })();
+
+        function updateEstimatedQty() {
+            const display = document.getElementById('estimatedQtyDisplay');
+            if (!selectedMedicine) { display.textContent = 'Số lượng ước tính: -'; return; }
+            const amount = parseFloat(document.getElementById('doseAmount').value) || 0;
+            const times = parseInt(document.getElementById('doseTimesPerDay').value) || 0;
+            const days = parseInt(document.getElementById('doseDays').value) || 0;
+            const qty = Math.ceil(amount * times * days);
+            display.textContent = `Số lượng ước tính: ${qty} ${selectedMedicine.unit} (server sẽ tính lại chính xác khi lưu)`;
+        }
+
+        // ---- Danh sách thuốc đang kê + kiểm tra an toàn ----
+        let prescriptionItems = [];
+        let acknowledgedCategories = new Set();
+        let overrideReasonText = '';
+        let pendingItem = null; // dòng đang chờ xác nhận cảnh báo trước khi thêm chính thức
+
+        function buildCandidateLines(items) {
+            return items.map(i => ({
+                MedicineId: i.medicineId,
+                LieuMoiLan: i.doseAmount,
+                SoLanMoiNgay: i.timesPerDay,
+                SoNgayDung: i.days
+            }));
+        }
+
+        async function checkSafety(items) {
+            const fd = antiForgeryFormData();
+            fd.append('patientId', patientId);
+            const weight = document.getElementById('weight').value;
+            if (weight) fd.append('canNangKg', weight);
+            fd.append('linesJson', JSON.stringify(buildCandidateLines(items)));
+            const resp = await fetch('/Doctor/Exam/CheckSafety', { method: 'POST', body: fd });
+            if (!resp.ok) return { warnings: [] };
+            return await resp.json();
+        }
+
+        function renderPrescriptionTable(softNudgesByMedicineId) {
             const tbody = document.querySelector('#presTable tbody');
             const emptyRow = document.getElementById('emptyPresRow');
-
-            // Remove existing rows except header
-            const rows = tbody.querySelectorAll('tr:not(#emptyPresRow)');
-            rows.forEach(r => r.remove());
+            tbody.querySelectorAll('tr:not(#emptyPresRow)').forEach(r => r.remove());
 
             if (prescriptionItems.length === 0) {
                 emptyRow.classList.remove('hidden');
-                document.getElementById('presJson').value = "[]";
+                document.getElementById('presJson').value = '[]';
                 return;
             }
-
             emptyRow.classList.add('hidden');
 
             prescriptionItems.forEach((item, index) => {
+                const instructions = `${item.route} ${item.doseAmount} ${item.unit}/lần, ${item.timesPerDay} lần/ngày${item.timing ? ', ' + item.timing : ''}, dùng trong ${item.days} ngày`;
+                const nudges = (softNudgesByMedicineId && softNudgesByMedicineId[item.medicineId]) || [];
+                const nudgeHtml = nudges.length > 0
+                    ? `<div class="text-caption text-tertiary mt-1">${nudges.join('; ')}</div>`
+                    : '';
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-surface-container-low transition-colors";
+                tr.className = 'hover:bg-surface-container-low transition-colors align-top';
                 tr.innerHTML = `
                     <td class="py-3 font-semibold text-on-surface">${item.name}</td>
-                    <td class="py-3 font-bold">${item.qty} ${item.unit}</td>
-                    <td class="py-3 text-on-surface-variant text-caption">${item.instructions}</td>
+                    <td class="py-3 font-bold">~${item.estimatedQty} ${item.unit}</td>
+                    <td class="py-3 text-on-surface-variant text-caption">${instructions}${nudgeHtml}</td>
                     <td class="py-3 text-right">
-                        <div class="hms-action-wrap">
-                            <button type="button" class="hms-action-trigger" aria-label="Mở menu thao tác" aria-haspopup="menu" aria-expanded="false"><span class="material-symbols-outlined">more_vert</span></button>
-                            <div class="hms-action-menu" role="menu">
-                                <button type="button" class="hms-action-item hms-action-item-danger" role="menuitem" onclick="removeMedicineRow(${index})"><span class="material-symbols-outlined">delete</span>Xóa thuốc</button>
-                            </div>
-                        </div>
+                        <button type="button" class="text-error hover:underline text-caption font-semibold" onclick="removeMedicineRow(${index})">Xóa</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // Update hidden json input field
-            document.getElementById('presJson').value = JSON.stringify(prescriptionItems.map(i => ({
-                MedicineId: i.medicineId,
-                Qty: i.qty,
-                Instructions: i.instructions
-            })));
+            document.getElementById('presJson').value = JSON.stringify({
+                Lines: prescriptionItems.map(i => ({
+                    MedicineId: i.medicineId,
+                    LieuMoiLan: i.doseAmount,
+                    SoLanMoiNgay: i.timesPerDay,
+                    DuongDung: i.route,
+                    ThoiDiemDung: i.timing || null,
+                    SoNgayDung: i.days,
+                    HuongDanSuDungOverride: null
+                })),
+                AcknowledgedCategories: Array.from(acknowledgedCategories),
+                OverrideReason: overrideReasonText || null
+            });
+        }
+
+        function showSafetyModal(warnings, onConfirm) {
+            const hasHard = warnings.some(w => w.tier === 'HardBlock');
+            const panel = document.getElementById('safetyModalPanel');
+            const icon = document.getElementById('safetyModalIcon');
+            const titleText = document.getElementById('safetyModalTitleText');
+            const confirmBtn = document.getElementById('safetyModalConfirmBtn');
+
+            panel.classList.toggle('border-error', hasHard);
+            icon.className = 'material-symbols-outlined ' + (hasHard ? 'text-error' : 'text-tertiary');
+            icon.textContent = hasHard ? 'gpp_maybe' : 'warning';
+            titleText.textContent = hasHard ? 'Cảnh báo an toàn nghiêm trọng - cần xác nhận' : 'Cảnh báo an toàn - cần xác nhận trước khi tiếp tục';
+            confirmBtn.className = 'px-unit-md py-2 rounded-lg text-white font-semibold ' + (hasHard ? 'bg-error' : 'bg-tertiary');
+
+            document.getElementById('safetyModalList').innerHTML = warnings.map(w => `<li>${w.message}</li>`).join('');
+            document.getElementById('safetyModalReason').value = overrideReasonText;
+            document.getElementById('safetyModal').classList.remove('hidden');
+            window.__safetyModalOnConfirm = onConfirm;
+        }
+
+        function cancelSafetyOverride() {
+            document.getElementById('safetyModal').classList.add('hidden');
+            pendingItem = null;
+            window.__safetyModalOnConfirm = null;
+        }
+
+        function confirmSafetyOverride() {
+            const reason = document.getElementById('safetyModalReason').value.trim();
+            if (!reason) {
+                showGlobalToast('Thiếu lý do', 'Vui lòng nhập lý do ghi đè cảnh báo.', 'error');
+                return;
+            }
+            overrideReasonText = reason;
+            document.getElementById('safetyModal').classList.add('hidden');
+            if (window.__safetyModalOnConfirm) window.__safetyModalOnConfirm();
+            window.__safetyModalOnConfirm = null;
         }
 
         async function addMedicineRow() {
-            const selector = document.getElementById('medSelector');
-            const selectedOption = selector.options[selector.selectedIndex];
-            const qtyInput = document.getElementById('medQty');
-            const instInput = document.getElementById('medInstructions');
+            if (!selectedMedicine) {
+                showGlobalToast('Lỗi nhập liệu', 'Vui lòng tìm và chọn thuốc trong danh mục.', 'error');
+                return;
+            }
+            const doseAmount = parseFloat(document.getElementById('doseAmount').value);
+            const timesPerDay = parseInt(document.getElementById('doseTimesPerDay').value);
+            const days = parseInt(document.getElementById('doseDays').value);
+            const route = document.getElementById('doseRoute').value;
+            const timing = document.getElementById('doseTiming').value;
 
-            if (!selector.value) {
-                showGlobalToast('Lỗi nhập liệu', 'Vui lòng chọn thuốc trong danh mục.', 'error');
+            if (!(doseAmount > 0) || !(timesPerDay > 0) || !(days > 0)) {
+                showGlobalToast('Lỗi nhập liệu', 'Vui lòng điền đầy đủ liều/lần, số lần/ngày và số ngày dùng hợp lệ.', 'error');
+                return;
+            }
+            if (prescriptionItems.some(i => i.medicineId === selectedMedicine.id)) {
+                showGlobalToast('Thuốc đã tồn tại', 'Thuốc này đã được kê trong đơn. Xóa dòng cũ nếu muốn kê lại với liều khác.', 'warning');
+                return;
+            }
+            if (patientAgeYears < 15 && !document.getElementById('weight').value) {
+                showGlobalToast('Thiếu cân nặng', 'Bắt buộc nhập cân nặng cho bệnh nhân dưới 15 tuổi trước khi kê đơn.', 'error');
                 return;
             }
 
-            const medicineId = parseInt(selector.value);
-            const qty = parseInt(qtyInput.value);
-            const instructions = instInput.value.trim();
+            const candidate = {
+                medicineId: selectedMedicine.id,
+                name: selectedMedicine.name,
+                unit: selectedMedicine.unit,
+                doseAmount, timesPerDay, days, route, timing,
+                estimatedQty: Math.ceil(doseAmount * timesPerDay * days)
+            };
 
-            if (qty <= 0) {
-                showGlobalToast('Lỗi nhập liệu', 'Số lượng thuốc phải lớn hơn 0.', 'error');
-                return;
+            const trialItems = [...prescriptionItems, candidate];
+            const { warnings } = await checkSafety(trialItems);
+            const unacknowledged = (warnings || []).filter(w => w.requiresAcknowledgement && !acknowledgedCategories.has(w.category));
+
+            const finishAdd = () => {
+                prescriptionItems = trialItems;
+                const softNudges = {};
+                (warnings || []).filter(w => !w.requiresAcknowledgement).forEach(w => {
+                    [w.relatedMedicineIdA, w.relatedMedicineIdB].filter(Boolean).forEach(id => {
+                        softNudges[id] = softNudges[id] || [];
+                        softNudges[id].push(w.message);
+                    });
+                });
+                renderPrescriptionTable(softNudges);
+                resetDrugPicker();
+                showGlobalToast('Thành công', 'Đã thêm thuốc vào đơn.', 'success');
+            };
+
+            if (unacknowledged.length > 0) {
+                showSafetyModal(unacknowledged, () => {
+                    unacknowledged.forEach(w => acknowledgedCategories.add(w.category));
+                    finishAdd();
+                });
+            } else {
+                finishAdd();
             }
+        }
 
-            if (!instructions) {
-                showGlobalToast('Lỗi nhập liệu', 'Vui lòng điền hướng dẫn cách sử dụng.', 'error');
-                return;
-            }
-
-            // Check if drug already in list
-            if (prescriptionItems.some(item => item.medicineId === medicineId)) {
-                showGlobalToast('Thuốc đã tồn tại', 'Thuốc này đã được kê trong đơn. Bạn có thể xóa đi và thêm lại số lượng mới.', 'warning');
-                return;
-            }
-
-            // Background safety checks: Allergy & Inventory Check
-            const response = await fetch(`/Doctor/Exam/CheckAllergiesAndStock?patientId=@Model.Patient.Id&medicineId=${medicineId}&qty=${qty}`, {
-                method: 'POST'
-            });
-            const data = await response.json();
-
-            if (data.success && data.hasWarning) {
-                // Warning modal prompt override
-                const confirmOverride = confirm(`${data.message}\n\nBạn có chắc chắn muốn ghi đè (Override) cảnh báo này và tiếp tục kê thuốc?`);
-                if (!confirmOverride) {
-                    return; // Abort add
-                }
-            }
-
-            // Add item
-            prescriptionItems.push({
-                medicineId: medicineId,
-                name: selectedOption.getAttribute('data-name'),
-                unit: selectedOption.getAttribute('data-unit'),
-                qty: qty,
-                instructions: instructions
-            });
-
-            renderPrescriptionTable();
-
-            // Clear input rows
-            selector.value = "";
-            qtyInput.value = "10";
-            instInput.value = "";
-
-            showGlobalToast('Thành công', 'Đã thêm thuốc vào đơn.', 'success');
+        function resetDrugPicker() {
+            selectedMedicine = null;
+            document.getElementById('drugSearchInput').value = '';
+            document.getElementById('selectedMedicineInfo').classList.add('hidden');
+            document.getElementById('doseAmount').value = 1;
+            document.getElementById('doseTimesPerDay').value = 2;
+            document.getElementById('doseDays').value = 5;
+            document.getElementById('doseTiming').value = '';
+            updateEstimatedQty();
         }
 
         function removeMedicineRow(index) {
             prescriptionItems.splice(index, 1);
             renderPrescriptionTable();
         }
+
+        document.getElementById('sessionForm').addEventListener('submit', function (event) {
+            if (patientAgeYears < 15 && prescriptionItems.length > 0 && !document.getElementById('weight').value) {
+                event.preventDefault();
+                showGlobalToast('Thiếu cân nặng', 'Bắt buộc nhập cân nặng cho bệnh nhân dưới 15 tuổi trước khi kê đơn.', 'error');
+            }
+        });
     </script>
 }

@@ -20,12 +20,16 @@
                     || (item.Route == "/Doctor/Queue" && currentController.Equals("Exam", StringComparison.OrdinalIgnoreCase));
 
                 <a class="sidebar-link flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(isActive ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-                   href="@item.Route" data-tooltip="@item.Label">
+                   href="@item.Route" data-tooltip="@item.Label" data-module-key="@item.ModuleKey">
                     <span class="material-symbols-outlined shrink-0" style="font-variation-settings: 'FILL' 1;">@item.Icon</span>
                     <span class="sidebar-link-label font-body-md text-body-md flex-1 truncate">@item.Label</span>
                     @if (item.BadgeCount.HasValue)
                     {
                         <span class="sidebar-badge shrink-0 min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-error text-white text-[10px] font-bold">@(item.BadgeCount > 9 ? "9+" : item.BadgeCount.ToString())</span>
+                    }
+                    else if (!string.IsNullOrEmpty(item.StaticBadgeText))
+                    {
+                        <span class="sidebar-badge shrink-0 px-1.5 h-5 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant text-[9px] font-bold whitespace-nowrap">@item.StaticBadgeText</span>
                     }
                 </a>
             }
