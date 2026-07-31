@@ -1,6 +1,6 @@
 # Cấu trúc MVC và nghiệp vụ HMS
 
-Tài liệu này phản ánh cấu trúc thực tế của repository `QuanLyBenhVien` sau khi rà soát ngày 17/07/2026. Đây là ứng dụng ASP.NET Core MVC server-rendered: Razor View là frontend, Controller là điểm nhận request/nghiệp vụ điều phối, EF Core là lớp truy cập dữ liệu.
+Tài liệu này phản ánh cấu trúc thực tế của repository `QuanLyBenhVien` sau khi rà soát lại ngày 31/07/2026 (lần rà soát trước: 17/07/2026 — số lượng controller/entity đã tăng đáng kể từ đó). Đây là ứng dụng ASP.NET Core MVC server-rendered: Razor View là frontend, Controller là điểm nhận request/nghiệp vụ điều phối, EF Core là lớp truy cập dữ liệu, có thêm 1 SignalR Hub cho phần realtime của bác sĩ.
 
 ## 1. Bố cục repository
 
@@ -8,25 +8,35 @@ Tài liệu này phản ánh cấu trúc thực tế của repository `QuanLyBen
 QuanLyBenhVien/
 ├── Areas/
 │   ├── Admin/
-│   │   ├── Controllers/  # Dashboard, Appointments, Doctors, Staff, Patients,
-│   │   │                  # Departments, Medicines, Invoices, Reports, Logs, Settings
+│   │   ├── Controllers/  # Dashboard, Appointments, Departments, Doctors, Invoices,
+│   │   │                  # Logs, Medicines, News, Patients, Reports, Settings, Staff
 │   │   └── Views/<Controller>/
 │   ├── Doctor/
-│   │   ├── Controllers/  # Dashboard, Queue, Exam, History, Stats, Chat
+│   │   ├── Controllers/  # Dashboard, Queue, Exam, History, Notification, Stats,
+│   │   │                  # Chat, Consultation, Inpatient, LabResults,
+│   │   │                  # PendingSignatures, Prescriptions, Profile, Schedule, Surgery
+│   │   │                  # (9 controller cuối chỉ là khung UI, chưa có nghiệp vụ thật)
 │   │   └── Views/<Controller>/
 │   └── Patient/
-│       ├── Controllers/  # Dashboard, Book, Record, Payment, Notification
+│       ├── Controllers/  # Dashboard, Book, Appointments, Account, Documents,
+│       │                  # Notification, Payment, Record, LabResults, Support
+│       │                  # (LabResults chỉ là khung UI)
 │       └── Views/<Controller>/
 ├── Controllers/          # HomeController, AuthController
+├── Hubs/                 # DoctorDashboardHub — SignalR, chỉ dùng cho Doctor
+├── Services/             # AppointmentSlotService, HospitalSettingsProvider,
+│                          # DoctorDashboardNotifier, ExcelExportService,
+│                          # IEmailSender/ISmsSender + bản mock
 ├── Models/
 │   ├── Entities/         # Entity EF Core, namespace QuanLyBenhVien.Models
 │   └── ViewModels/       # Model trung gian cho form/hiển thị
 ├── Data/                 # ApplicationDbContext, DbSeeder
 ├── Migrations/           # Migration và model snapshot EF Core
-├── Helpers/              # Hash mật khẩu, lịch làm việc bác sĩ
+├── Helpers/              # Hash mật khẩu, lịch làm việc bác sĩ, ma trận phân quyền menu,
+│                          # policy khôi phục mật khẩu, bộ lọc bắt buộc đổi mật khẩu
 ├── Views/Shared/         # Layout Admin/Doctor/Patient và partial dùng chung
 ├── wwwroot/              # CSS, JS, ảnh, thư viện frontend
-├── Program.cs            # DI, middleware, authentication, session, route
+├── Program.cs            # DI, middleware, authentication, session, SignalR, route
 ├── appsettings*.json     # Cấu hình môi trường
 ├── Dockerfile            # Build container
 └── render.yaml           # Deploy Render
@@ -39,7 +49,7 @@ QuanLyBenhVien/
 - Controller root dùng view tại `Views/<Controller>`, ví dụ `AuthController` dùng `Views/Auth`.
 - Route Area: `/Admin/{controller}/{action}`, `/Doctor/{controller}/{action}`, `/Patient/{controller}/{action}`.
 - Route root: `/{controller}/{action}`.
-- Ẩn menu chỉ là trải nghiệm giao diện; mọi action vẫn phải kiểm tra quyền và phạm vi sở hữu ở server.
+- Ẩn menu chỉ là trải nghiệm giao diện (`ModulePermissionFilter` bật/tắt theo `RolePermission`, fail-open nếu chưa cấu hình); mọi action vẫn phải kiểm tra quyền và phạm vi sở hữu ở server.
 
 ### Pipeline request
 
@@ -57,36 +67,44 @@ flowchart LR
     AC --> DB[ApplicationDbContext]
     DC --> DB
     PC --> DB
+    DC -.push tín hiệu rỗng.-> H[DoctorDashboardHub]
+    H -.SignalR.-> V2
 ```
 
 ## 3. Đối chiếu controller và view
 
 | Phạm vi | Controller hiện có | View hiện có |
 |---|---|---|
-| Root | `HomeController`, `AuthController` | `Views/Home/*`, `Views/Auth/*` |
-| Admin | `Dashboard`, `Appointments`, `Doctors`, `Staff`, `Patients`, `Departments`, `Medicines`, `Invoices`, `Reports`, `Logs`, `Settings` | Có thư mục view tương ứng; có `Create/Edit/Details`, `Batches/ReceiveBatch`, `Reports/Index` theo module. |
-| Doctor | `Dashboard`, `Queue`, `Exam`, `History`, `Stats`, `Chat` | `Queue/Index`, `Exam/Session`, `History/Index`, `History/RecordDetails` và các `Index`. |
-| Patient | `Dashboard`, `Book`, `Record`, `Payment`, `Notification` | `Record/Index`, `Health`, `Dependents`, `PrescriptionDetails`; `Payment/Index`, `Details`, `Simulate` và các `Index`. |
+| Root | `HomeController`, `AuthController` | `Views/Home/*` (trang công khai), `Views/Auth/*` (đăng nhập/đăng ký/khôi phục mật khẩu 4 bước) |
+| Admin | `Dashboard`, `Appointments`, `Departments`, `Doctors`, `Invoices`, `Logs`, `Medicines`, `News`, `Patients`, `Reports`, `Settings`, `Staff` | Mỗi controller có thư mục view riêng; có `Create/Edit/Details`, `Batches/ReceiveBatch/Receipts`, `PermissionMatrix` (Staff). |
+| Doctor | `Dashboard`, `Queue`, `Exam`, `History`, `Notification`, `Stats`, `Chat`, `Consultation`, `Inpatient`, `LabResults`, `PendingSignatures`, `Prescriptions`, `Profile`, `Schedule`, `Surgery` | `Dashboard/Index` + 2 partial (`_QueueSection`, `_ActionRequiredSection`) dùng chung cho tải trang lẫn SignalR; `Queue/Index`, `Exam/Session`, `History/Index`, `History/RecordDetails`; 9 controller còn lại chỉ có `Index.cshtml` khung trống. |
+| Patient | `Dashboard`, `Book`, `Appointments`, `Account`, `Documents`, `Notification`, `Payment`, `Record`, `LabResults`, `Support` | `Book/Index`, `Appointments/Index+Reschedule`, `Record/Index+Health+Dependents+PrescriptionDetails`, `Payment/Index+Details+Simulate`; `LabResults/Index` là khung trống. |
 
 Các điểm đã rà soát và khớp:
 
 - `ReportsController` đã có `Areas/Admin/Views/Reports/Index.cshtml`.
-- `Patient/Record` đã có luồng sổ khám điện tử và tài liệu khám trước.
+- `Patient/Record` đã có luồng sổ khám điện tử và tài liệu khám trước; `Patient/Documents` tách riêng khỏi `Record` để `ModulePermissionFilter` bật/tắt độc lập theo tên controller.
 - `Doctor/Queue` và `Doctor/Exam/Session` có thể hiển thị tài liệu của bệnh nhân đã có lịch với bác sĩ.
-- Layout tách theo vai trò tại `Views/Shared/_AdminLayout.cshtml`, `_DoctorLayout.cshtml`, `_PatientLayout.cshtml`.
+- Layout tách theo vai trò tại `Views/Shared/_AdminLayout.cshtml`, `_DoctorLayout.cshtml`, `_PatientLayout.cshtml`; sidebar dựng từ registry cấu hình (`DoctorMenuRegistry`, `PatientMenuRegistry`) chứ không hard-code trong layout.
+- Nhiều controller trong `Areas/Doctor` (Chat, Consultation, Inpatient, LabResults, PendingSignatures, Prescriptions, Profile, Schedule, Surgery) và `Areas/Patient/LabResults` **chỉ là khung UI đặt chỗ**, chưa gắn nghiệp vụ/entity thật — không nhầm là đã hoàn thiện.
 
 ## 4. Entity và dữ liệu
 
-`ApplicationDbContext` hiện có 20 DbSet:
+`ApplicationDbContext` hiện có 28 DbSet:
 
 | Nhóm | DbSet | Nghiệp vụ |
 |---|---|---|
-| Tài khoản | `User`, `Doctor`, `Patient` | Tài khoản, hồ sơ bác sĩ và bệnh nhân. |
+| Tài khoản | `User`, `Doctor`, `Patient` | Tài khoản, hồ sơ bác sĩ và bệnh nhân (`User` có thêm `SecurityStamp`, `PhaiDoiMatKhau`, `MatKhauTamHetHan` phục vụ thu hồi phiên/mật khẩu tạm). |
 | Danh mục | `Department`, `Service` | Khoa, dịch vụ và giá. |
 | Lịch/khám | `Appointment`, `ExaminationRecord`, `PatientDocument` | Lịch hẹn, phiếu khám điện tử, giấy tờ khám bệnh nhân tải lên. |
 | Thuốc | `Medicine`, `MedicineBatch`, `Prescription`, `PrescriptionDetail` | Danh mục thuốc, lô, đơn và chi tiết đơn. |
+| Nhập kho | `Supplier`, `GoodsReceipt`, `GoodsReceiptDetail` | Nhà cung cấp, phiếu nhập kho có quy trình duyệt và chi tiết. |
 | Tài chính | `Invoice`, `InvoiceDetail` | Hóa đơn và các dòng phí. |
+| Sức khỏe & tiền sử | `FamilyHistory`, `Immunization`, `PatientHealthMetric` | Tiền sử gia đình, tiêm chủng, chỉ số sức khỏe tự đo (Sổ sức khỏe bệnh nhân). |
+| Nội dung | `Article` | Tin tức đăng trên trang chủ công khai. |
 | Hỗ trợ | `Review`, `Notification`, `AuditLog`, `Dependent`, `DoctorWorkSchedule` | Đánh giá, thông báo, audit, người phụ thuộc, lịch làm việc. |
+| Phân quyền | `RolePermission` | Bật/tắt từng module theo vai trò (Ma trận phân quyền của Admin). |
+| Khôi phục mật khẩu | `PasswordResetRequest` | Lưu hash OTP/reset-token, đếm giới hạn tần suất theo IP/tài khoản — không lưu mã/token dạng gốc. |
 
 ### Quan hệ chính
 
@@ -106,44 +124,83 @@ erDiagram
     MEDICINE ||--o{ MEDICINE_BATCH : "có lô"
     EXAMINATION_RECORD ||--o| INVOICE : "phát sinh"
     INVOICE ||--|{ INVOICE_DETAIL : "gồm"
+    USER ||--o{ PASSWORD_RESET_REQUEST : "yêu cầu khôi phục"
 ```
 
-## 5. Nghiệp vụ theo vai trò
+### Ma trận quyền dữ liệu
 
-### Admin
+| Resource | Admin | Doctor | Patient |
+|---|---|---|---|
+| Appointment | Toàn bộ | Chỉ lịch được phân công | Chỉ của chính mình |
+| ExaminationRecord | Quản lý theo phạm vi | Tạo/cập nhật lịch được phân công | Chỉ xem của chính mình |
+| PatientDocument | Quản lý theo phân quyền | Chỉ khi có lịch khám liên quan | Tự tải lên/xem/xóa |
+| Prescription | Xem lại | Tạo từ phiếu khám | Chỉ xem của chính mình |
+| Invoice | Quản lý/đối soát | Xem hóa đơn liên quan | Xem/thanh toán của chính mình |
+| Medicine/Batch | Quản lý tồn kho/FEFO | Chỉ kiểm tra tồn kho khi kê đơn | Không truy cập |
+| AuditLog | Xem/quản lý | Tự sinh theo hành động | Không truy cập |
+| PasswordResetRequest | Khởi tạo cho nhân sự (gửi link/mật khẩu tạm) | Không truy cập | Tự phục vụ (ẩn danh tới khi xác thực) |
 
-- Dashboard: theo dõi lịch khám, nhân sự, bệnh nhân, doanh thu, tồn kho và audit log.
-- Appointments: xác nhận, dời, hủy lịch; lưu trạng thái và lý do.
-- Doctors/Staff: quản lý tài khoản, hồ sơ chuyên môn, khoa, chức vụ và lịch làm việc.
-- Patients: tra cứu hồ sơ, lịch sử khám, đơn thuốc, tài liệu và hóa đơn; không xóa cứng hồ sơ đã phát sinh.
-- Departments: quản lý khoa và dịch vụ; danh sách khoa/dịch vụ có cuộn độc lập trên desktop.
-- Medicines: quản lý thuốc, lô, hạn dùng, nhập kho; xuất theo FEFO và không để tồn âm nếu không có override hợp lệ.
-- Invoices: kiểm tra hóa đơn, dòng phí, trạng thái thanh toán và đối soát.
-- Reports: báo cáo theo dữ liệu hiện có; PDF/Excel nâng cao là phạm vi mở rộng.
-- Logs/Settings: audit thao tác nhạy cảm và cấu hình tham số vận hành.
+## 5. Luồng chính theo từng khu vực (Area)
 
-### Bác sĩ
+### Root — `Controllers/` (dùng chung, không thuộc Area)
 
-- Dashboard/Queue: chỉ xem lịch được phân công.
-- Queue: xem lý do khám, dị ứng, tiền sử, chỉ số gần nhất, lịch sử và tài liệu bệnh nhân cung cấp.
-- Exam: lập phiếu khám gắn với lịch, nhập triệu chứng/sinh hiệu/chẩn đoán/chỉ định/kết quả/lời dặn.
-- Prescription: kiểm tra dị ứng, tương tác và tồn kho trước khi kê; trừ lô theo FEFO trong transaction.
-- History/Stats: xem lịch sử bệnh nhân trong phạm vi được phân công và thống kê hoạt động cá nhân.
-- Chat: tư vấn hỗ trợ, không thay thế phiếu khám chính thức.
+- **`AuthController`** — `Login`/`Register`/`VerifyOtp` (đăng ký, OTP demo cố định `123456`); luồng **Khôi phục mật khẩu 4 bước**: `ForgotPassword` (bước 1, chống dò tài khoản + captcha khi vượt ngưỡng IP) → `VerifyResetCode` (bước 2, mã 6 số, giới hạn 5 lần sai) → `ResendResetCode` (AJAX, cooldown + giới hạn số lần) → `SetNewPassword` (bước 3, từ chối trùng mật khẩu cũ) → `ResetPasswordConfirmation` (bước 4); `ForcedPasswordChange` (`[Authorize]`, bắt buộc đổi khi tài khoản dùng mật khẩu tạm do Admin cấp); `Logout`, `AccessDenied`.
+- **`HomeController`** — trang công khai chưa đăng nhập: `Index`, `News`/`NewsDetail`, `Doctors` (danh sách bác sĩ công khai), `Specialities`, `Pricing`, `Guide`, `Testimonials`, `Privacy`/`About`/`Features`/`Contact`, `Error`.
 
-### Bệnh nhân
+### Admin — `Areas/Admin/Controllers/`
 
-- Book: chọn khoa, bác sĩ, ngày và slot; hệ thống kiểm tra lịch làm việc, ngày nghỉ và xung đột.
-- Dashboard: xem lịch sắp tới, thông báo, đơn thuốc và hóa đơn của chính mình.
-- Record: xem sổ khám điện tử, sức khỏe, đơn thuốc, người phụ thuộc và tải giấy tờ cũ.
-- Payment: xem/thanh toán hóa đơn của chính mình; lỗi hoặc timeout giữ trạng thái chưa thanh toán.
-- Notification: nhận xác nhận lịch, dời/hủy, nhắc lịch và cập nhật thanh toán.
+- **`DashboardController.Index`** — tổng quan lịch khám, nhân sự, bệnh nhân, doanh thu, tồn kho, audit log.
+- **`AppointmentsController`** — `Index` (lọc theo ngày/trạng thái), `Export` (Excel), `Details`, `Confirm`/`Cancel` (POST, đẩy tín hiệu `QueueUpdated` cho bác sĩ liên quan).
+- **`DepartmentsController`** — CRUD khoa (`CreateDepartment`/`EditDepartment`/`DeleteDepartment`) và dịch vụ theo khoa (`CreateService`/`EditService`/`DeleteService`).
+- **`DoctorsController`** — `Index`/`Export`/`Details`, `Create` (tạo tài khoản bác sĩ), `Edit`, `ToggleStatus` (khóa/mở tài khoản).
+- **`InvoicesController`** — `Index`/`Export`/`Details`, `PayCounter` (thanh toán tại quầy).
+- **`LogsController.Index`** — xem `AuditLog`, lọc theo vai trò/hành động.
+- **`MedicinesController`** — `Index`/`Batches` (kho thuốc); quy trình phiếu nhập kho: `ReceiveBatch`/`SaveDraft`/`SubmitReceipt` → `ApproveReceipt`/`RejectReceipt`/`CancelReceipt`; `Receipts`/`ReceiptDetails`/`PrintReceipt`/`PrintInspectionRecord`; `SearchMedicinesForReceipt` và `CheckExistingLot` (AJAX combobox).
+- **`NewsController`** — `Index`/`Create`/`Edit`/`TogglePublish`/`Delete` bài viết tin tức trang chủ.
+- **`PatientsController`** — `Index`/`Export`/`Details`, `DownloadDocument`, `UpdateAllergy`, `RevealSensitive` (AJAX, hiện đầy đủ CCCD/SĐT, có ghi audit log vì xem dữ liệu người khác), `Edit`, `AddDependent`, `UploadDocument`, `AddFamilyHistory`, `AddImmunization`, `CreateAppointment` (đặt lịch hộ), `UploadAvatar`.
+- **`ReportsController`** — `Index` (báo cáo theo khoảng ngày), `Export`.
+- **`SettingsController.Index`** — cấu hình chung bệnh viện (qua `HospitalSettingsProvider`, dùng lại ở `Patient/Support`).
+- **`StaffController`** — `Index`/`Export`/`Details`/`Create`/`Edit`/`ToggleStatus`; **`SendResetLink`**/**`IssueTempPassword`** (2 công cụ duy nhất để giúp nhân sự lấy lại mật khẩu — Admin không bao giờ tự đặt mật khẩu cố định cho người khác); `PermissionMatrix`/`SavePermissionMatrix` (ma trận bật/tắt module theo vai trò).
 
-## 6. Luồng sổ khám điện tử và giấy tờ khám trước
+### Doctor — `Areas/Doctor/Controllers/`
+
+- **`DashboardController`** — `Index` (trang tổng quan, **có realtime** — xem mục 6); `QueueSection`/`ActionRequiredSection` (partial dùng chung cho tải trang lẫn làm mới qua SignalR); `Incomplete` (hồ sơ chưa hoàn thiện); **`CallNextPatient`** (POST, "gọi bệnh nhân tiếp theo", khóa slot atomic, trả JSON `redirectUrl`).
+- **`QueueController.Index`** — hàng đợi khám theo ngày + panel chi tiết bệnh nhân được chọn; `DownloadPatientDocument`. **Không** nghe SignalR — chỉ làm mới khi điều hướng/tải lại.
+- **`ExamController.Session`** — màn hình khám bệnh; `CheckAllergiesAndStock` (AJAX, cảnh báo dị ứng/tồn kho khi kê đơn); `CompleteSession` (POST, hoàn tất khám, đẩy tín hiệu `QueueUpdated` + `ActionRequiredUpdated`).
+- **`HistoryController`** — `QuickSearch` (AJAX tìm bệnh nhân, dùng ở thanh tìm kiếm topbar); `BreakTheGlass` (POST, ghi log truy cập ngoài phạm vi); `Index`, `RecordDetails`.
+- **`NotificationController`** — `Index`, `UnreadCount` (AJAX, badge chuông), `MarkAsRead`/`MarkAllAsRead`.
+- **`StatsController.Index`** — thống kê hoạt động cá nhân bác sĩ.
+- **`ChatController.Index`** — danh sách "liên hệ" từng khám — **chỉ là UI tĩnh**, chưa có backend nhắn tin/SignalR thật.
+- **`ConsultationController`, `InpatientController`, `LabResultsController`, `PendingSignaturesController`, `PrescriptionsController`, `ProfileController`, `ScheduleController`, `SurgeryController`** — mỗi controller chỉ có `Index() => View()`, là khung UI/placeholder chưa gắn nghiệp vụ.
+
+### Patient — `Areas/Patient/Controllers/`
+
+- **`DashboardController.Index`** — tổng quan (lịch hẹn sắp tới, lượt khám gần đây, công nợ, thuốc đang dùng, nhắc tái khám theo heuristic bệnh mạn tính) — render server-side, không realtime.
+- **`BookController`** — `Index` (form đặt lịch); `GetDoctors`/`GetSlots` (AJAX, JSON bác sĩ/slot theo khoa); `ConfirmBooking` (**POST form thường**, không phải JSON — dùng `TempData`+`Redirect`, cuối cùng đẩy tín hiệu `QueueUpdated`).
+- **`AppointmentsController`** — `Index`, `Reschedule` (đổi lịch, mốc chặn 24h trước giờ hẹn), `Cancel` (bắt buộc lý do).
+- **`AccountController`** — `Index` (hồ sơ & bảo mật), `ChangePassword`.
+- **`DocumentsController`** — `Index`, `UploadDocument`, `DownloadDocument`, `DeleteDocument` (tách riêng khỏi `Record` để bật/tắt độc lập qua `ModulePermissionFilter`).
+- **`NotificationController`** — `Index`, `MarkAsRead`/`MarkAllAsRead` (không có `UnreadCount`/SignalR như bên Doctor).
+- **`PaymentController`** — `Index`, `Details`, `Simulate` (mô phỏng thanh toán), `PaymentCallback`, `SendEmailReceipt` (AJAX, mock gửi biên lai).
+- **`RecordController`** — `Index` (sổ khám), `PrescriptionDetails`, `Health` (chỉ số sức khỏe), `AddHealthMetric`, `Dependents`/`AddDependent`, `GetReview`/`SubmitReview` (đánh giá bác sĩ, AJAX).
+- **`LabResultsController.Index`** — khung UI đặt chỗ, chưa có dữ liệu kết quả xét nghiệm có cấu trúc.
+- **`SupportController.Index`** — trang hỗ trợ tĩnh, đọc địa chỉ/hotline từ `HospitalSettingsProvider`.
+
+## 6. Realtime — SignalR (chỉ riêng Doctor)
+
+Toàn app chỉ có **1 hub**: `Hubs/DoctorDashboardHub.cs` (`[Authorize(Roles="Doctor")]`, map tại `/hubs/doctor-dashboard` trong `Program.cs`). **Patient và Admin không có SignalR.**
+
+- Hub chỉ gửi **tín hiệu rỗng** (không kèm dữ liệu) qua `Services/DoctorDashboardNotifier.cs`: `QueueUpdated`, `ActionRequiredUpdated`, `NotificationCountChanged`. Client nhận tín hiệu rồi tự gọi lại đúng action AJAX tương ứng để lấy dữ liệu mới — không có kênh serialize dữ liệu thứ hai.
+- Kết nối mở 1 lần dùng chung ở `Views/Shared/_DoctorLayout.cshtml` (`window.doctorHubConnection`), mọi trang Doctor đều thừa hưởng; badge chuông thông báo tự cập nhật ở mọi trang.
+- Riêng `Areas/Doctor/Views/Dashboard/Index.cshtml` gắn thêm listener cho `QueueUpdated`/`ActionRequiredUpdated` để làm mới 2 partial hàng đợi/việc cần làm mà không cần F5.
+- **Giới hạn quan trọng**: trang `Doctor/Queue` (màn hình khám theo hàng đợi đầy đủ) không nghe hub — chỉ `Dashboard/Index` mới thực sự "sống". Toàn bộ phía Patient (kể cả "Lịch hẹn sắp tới") là render tĩnh, phải tải lại trang mới thấy thay đổi do phía khác (bác sĩ/Admin) gây ra.
+- Không có `setInterval`/polling nào trong toàn bộ app — mọi cập nhật "gần như realtime" đều đi qua đúng 1 hub này.
+
+## 7. Luồng sổ khám điện tử và giấy tờ khám trước
 
 ```mermaid
 flowchart LR
-    P[Bệnh nhân] -->|Upload PDF/JPG/PNG <= 10MB| U[Patient/Record/UploadDocument]
+    P[Bệnh nhân] -->|Upload PDF/JPG/PNG <= 10MB| U[Patient/Documents/UploadDocument]
     U -->|Kiểm tra sở hữu + metadata| F[(App_Data/patient-documents)]
     U --> D[(TaiLieuBenhNhan)]
     P -->|Đặt lịch| A[Appointment]
@@ -165,11 +222,11 @@ Quy tắc cụ thể:
 5. Action download phải kiểm tra quyền trước khi trả file.
 6. Tài liệu là nguồn tham khảo; bác sĩ vẫn phải đối chiếu với triệu chứng, khám hiện tại và dữ liệu chuyên môn.
 
-## 7. Luồng khám khép kín
+## 8. Luồng khám khép kín
 
 ```text
 Đăng nhập
-  → Bệnh nhân đặt Appointment
+  → Bệnh nhân đặt Appointment (Patient/Book/ConfirmBooking)
   → Admin xác nhận hoặc điều phối
   → Bác sĩ mở Queue/Exam
   → Xem hồ sơ + sổ khám + giấy tờ cũ
@@ -178,134 +235,48 @@ Quy tắc cụ thể:
   → Xuất MedicineBatch theo FEFO
   → Tạo Invoice/InvoiceDetail
   → Thanh toán tại quầy hoặc online
-  → Notification + AuditLog
+  → Notification (server-side) + tín hiệu SignalR cho Dashboard bác sĩ + AuditLog
 ```
 
 Mọi luồng nhạy cảm phải kiểm tra quyền tại server. Các bước khám–kê đơn–trừ kho–lập hóa đơn cần transaction; callback thanh toán và thao tác có thể retry phải idempotent.
 
-## 8. FE, BE và hạ tầng
+## 9. FE, BE và hạ tầng
 
 ### Frontend
 
 - Razor Views trong `Views` và `Areas/*/Views`.
-- Layout theo vai trò trong `Views/Shared`.
+- Layout theo vai trò trong `Views/Shared`, sidebar dựng động từ registry (`DoctorMenuRegistry`/`PatientMenuRegistry`) chứ không hard-code.
 - CSS/JS chung trong `wwwroot/css/site.css`, `wwwroot/js/site.js`.
-- Một số action trả JSON cho AJAX, ví dụ lấy bác sĩ/slot và gửi biên lai.
+- Một số action trả JSON cho AJAX (bác sĩ/slot đặt lịch, gửi biên lai, gửi lại mã OTP khôi phục mật khẩu...) — không có project Web API riêng, đây là "API" gần nhất của hệ thống.
+- 1 kết nối SignalR dùng chung cho toàn bộ trang Doctor (xem mục 6).
 
 ### Backend
 
 - Controller nhận request, kiểm tra authorization, điều phối query/command và trả View/JSON.
 - `ApplicationDbContext` quản lý DbSet, quan hệ và ràng buộc.
 - `DbSeeder` tạo dữ liệu demo và đồng bộ dữ liệu cục bộ theo hướng idempotent.
-- `Migrations` lưu thay đổi schema; thay entity phải tạo migration.
-- `Helpers` chỉ chứa logic dùng chung như hash mật khẩu và lịch bác sĩ.
+- `Migrations` lưu thay đổi schema; thay entity phải tạo migration. Lưu ý: `Program.cs` dùng `EnsureCreated()` cho SQL Server/MySQL (không tự áp migration cho DB đã tồn tại — cần khối SQL "tạo nếu chưa có" riêng) và `Migrate()` cho SQLite.
+- `Helpers` chứa logic dùng chung: hash mật khẩu (`HashHelper`, PBKDF2 có migrate ngầm từ SHA-256 cũ), lịch bác sĩ, ma trận phân quyền menu, policy/bộ lọc khôi phục mật khẩu.
+- `Services` chứa dịch vụ dùng chung qua DI: `AppointmentSlotService` (kiểm tra/giữ slot dùng chung cho đặt mới và đổi lịch), `HospitalSettingsProvider`, `DoctorDashboardNotifier` (gọi hub), `IEmailSender`/`ISmsSender` (hiện là bản mock, ghi log thay vì gửi thật).
 
 ### Deploy
 
 - `Dockerfile` build/publish ứng dụng .NET.
 - `render.yaml` khai báo web service Render và health check `/`.
-- SQLite production cần persistent disk nếu muốn giữ dữ liệu sau khi container được tạo lại.
+- SQLite production cần persistent disk nếu muốn giữ dữ liệu và khóa Data Protection sau khi container được tạo lại — nếu không, mỗi lần redeploy sẽ làm mất khóa mã hoá antiforgery/cookie đăng nhập của phiên cũ.
 
-## 9. Quy tắc cập nhật cấu trúc
+## 10. Quy tắc cập nhật cấu trúc
 
 1. Thêm entity: cập nhật model, `ApplicationDbContext`, migration, seeder và tài liệu này.
-2. Thêm module: tạo controller đúng Area, view đúng thư mục, route và phân quyền server.
+2. Thêm module: tạo controller đúng Area, view đúng thư mục, route và phân quyền server; nếu cần bật/tắt độc lập qua Ma trận phân quyền thì phải là controller riêng (không gộp chung với controller khác).
 3. Thêm file bệnh nhân: lưu ngoài `wwwroot`, giới hạn loại/dung lượng, download qua action có quyền.
 4. Không hard-code giá, slot, lịch làm việc, ngưỡng kho hoặc template thông báo trong View.
 5. Không xóa cứng lịch sử khám, đơn thuốc, hóa đơn hoặc hồ sơ y tế đã phát sinh.
-6. Sau thay đổi chạy build/test phù hợp và cập nhật `timelines/DD-MM-YYYY.md`.
+6. Không lưu OTP/mật khẩu/token dạng gốc trong DB hay trong `AuditLog`.
+7. Sau thay đổi chạy build/test phù hợp và cập nhật `timelines/DD-MM-YYYY.md`.
 
-## 10. Kết quả rà soát
+## 11. Kết quả rà soát
 
-Tài liệu cũ đã được vẽ lại theo cấu trúc thực tế. Các điểm lệch chính đã được sửa là: bổ sung `PatientDocument` và bảng `TaiLieuBenhNhan`, cập nhật số DbSet thành 20, ghi nhận Reports đã có View, liệt kê đầy đủ các view con của Patient Record/Payment, mô tả luồng phân quyền tài liệu và cập nhật cấu hình Docker/Render.
-# ﾄ訴盻ノ b蘯｣n thi蘯ｿt k蘯ｿ chi ti盻ｿt
+**Lần rà soát 31/07/2026**: số controller thực tế đã tăng mạnh so với lần trước (Admin 6→12, Doctor 6→15, Patient 5→10) — phần lớn controller mới bên Doctor là khung UI chưa gắn nghiệp vụ, cần nêu rõ để không hiểu nhầm là đã hoàn thiện. Bổ sung mục 5 "Luồng chính theo từng khu vực" liệt kê đầy đủ controller + action theo đúng code hiện tại; bổ sung mục 6 mô tả cơ chế realtime (SignalR chỉ có ở Doctor Dashboard, không có polling); cập nhật số DbSet 20→28 (thêm `Article`, `FamilyHistory`, `Immunization`, `PatientHealthMetric`, `RolePermission`, `Supplier`, `GoodsReceipt`, `GoodsReceiptDetail`, `PasswordResetRequest`); thêm `Hubs/` và `Services/` vào bố cục repository; dọn phần nội dung bị lỗi encoding (mojibake) trùng lặp ở cuối tài liệu cũ, giữ lại và viết sạch phần Ma trận quyền dữ liệu vì chưa có ở nơi khác.
 
-## Sﾆ｡ ﾄ妥・ki蘯ｿn trﾃｺc theo l盻>p
-
-```mermaid
-flowchart TB
-    Client[Admin / Doctor / Patient Razor UI] --> Route[Routing + Area]
-    Route --> Auth[Session + Authentication + Authorization]
-    Auth --> Controller[Area Controllers]
-    Controller --> VM[ViewModels + validation]
-    Controller --> Context[ApplicationDbContext]
-    Context --> Entity[EF Core Entities]
-    Context --> DB[(SQLite)]
-    Controller --> View[Razor Views + Layout]
-    Controller --> Files[Private patient documents]
-```
-
-## Sﾆ｡ ﾄ妥・module theo vai trﾃｲ
-
-```mermaid
-flowchart LR
-    Admin[Admin Dashboard] --> A1[Appointments]
-    Admin --> A2[Doctors / Staff / Departments]
-    Admin --> A3[Patients]
-    Admin --> A4[Medicines / Batches]
-    Admin --> A5[Invoices / Reports / Logs]
-
-    Doctor[Doctor Dashboard] --> D1[Queue]
-    D1 --> D2[Exam Session]
-    D2 --> D3[History + PatientDocument]
-    D2 --> D4[ExaminationRecord]
-    D4 --> D5[Prescription + FEFO]
-    D4 --> D6[Invoice]
-
-    Patient[Patient Dashboard] --> P1[Book Appointment]
-    Patient --> P2[Medical Record]
-    P2 --> P3[Health / Prescription / Documents]
-    Patient --> P4[Payment / Notification]
-```
-
-## Sﾆ｡ ﾄ妥・lu盻渡g khﾃ｡m
-
-```mermaid
-sequenceDiagram
-    actor P as Patient
-    participant B as BookController
-    participant DB as Database
-    participant D as Doctor Exam
-    participant F as Private Files
-    P->>B: Ch盻肱 khoa, bﾃ｡c sﾄｩ, slot
-    B->>DB: Check schedule + conflict
-    B->>DB: Create Appointment
-    D->>DB: Load assigned appointment
-    D->>F: Read authorized old documents
-    D->>DB: Save ExaminationRecord
-    D->>DB: Save Prescription + Invoice
-    DB-->>P: Notification + medical result
-```
-
-## Sﾆ｡ ﾄ妥・tﾃi li盻㎡ b盻㌻h nhﾃ｢n
-
-```mermaid
-flowchart TD
-    Upload[Patient uploads PDF/JPG/PNG] --> Check[Check ownership, type, size <= 10MB]
-    Check --> Store[Save outside wwwroot with GUID name]
-    Store --> Meta[Save PatientDocument metadata]
-    Meta --> Scope{Doctor has related appointment?}
-    Scope -->|Yes| Read[Doctor Queue / Exam can view or download]
-    Scope -->|No| Deny[403 / no data disclosure]
-    Read --> Diagnosis[Reference only; doctor records current diagnosis]
-```
-
-## Ma tr蘯ｭn quy盻］ d盻ｯ li盻㎡
-
-| Resource | Admin | Doctor | Patient |
-|---|---|---|---|
-| Appointment | Toﾃn b盻・ | Assigned only | Own only |
-| ExaminationRecord | Manage by scope | Create/update assigned | View own |
-| PatientDocument | Manage by permission | Related appointment only | Own upload/view/delete |
-| Prescription | Review | Create from exam | View own |
-| Invoice | Manage/reconcile | Related invoice view | Own payment/retry |
-| Medicine/Batch | Manage stock/FEFO | Check stock | No access |
-| AuditLog | View/manage | Generated by actions | No access |
-
-## Cﾃ｡c ﾄ訴㌻ nh蘯ｭy c蘯｣m
-
-1. Controller ph蘯｣i ki盻ノ tra role vﾃ ownership phﾃｭa server; ẩn menu khﾃｴng ph蘯｣i lﾃ b蘯｣o m蘯ｭt.
-2. Hoﾃn t蘯･t khﾃ｡m, kﾃｪ ﾄ柁｡n, tr盻ｫ kho vﾃ t蘯｡o hﾃｳa ﾄ柁｡n ph蘯｣i dﾃｹng transaction.
-3. Thanh toﾃ｡n online ph蘯｣i xﾃ｡c th盻ｱc callback vﾃ idempotent; fail/timeout gi盻ｯ hﾃｳa ﾄ柁｡n chﾆｰa thanh toﾃ｡n.
-4. Tﾃi li盻㎡ y t蘯ｿ lﾆｰu private, download qua action cﾃｳ authorization vﾃ khﾃｴng ﾄ黛ｻ・URL tﾄｩnh.
-5. Thay ﾄ黛ｻ品 entity ph蘯｣i c蘯ｭp nh蘯ｭt DbContext, migration, seeder vﾃ tﾃi li盻㎡.
+**Lần rà soát 17/07/2026** (trước đó): bổ sung `PatientDocument` và bảng `TaiLieuBenhNhan`, cập nhật số DbSet thành 20, ghi nhận Reports đã có View, liệt kê đầy đủ các view con của Patient Record/Payment, mô tả luồng phân quyền tài liệu và cập nhật cấu hình Docker/Render.
