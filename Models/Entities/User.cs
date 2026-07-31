@@ -58,6 +58,24 @@ namespace QuanLyBenhVien.Models
         // sách vai trò/ràng buộc CHECK đã có.
         public bool DuocDuyetPhieuNhapKho { get; set; } = false;
 
+        // Đổi mỗi khi mật khẩu tài khoản này thay đổi (tự phục vụ hoặc do
+        // Admin) - phiên đăng nhập cũ mang claim SecurityStamp cũ sẽ bị
+        // SecurityStampCookieValidator từ chối ở lần request kế tiếp, tức
+        // "thu hồi toàn bộ phiên" ngay lập tức. Default ngay trên property để
+        // mọi nơi khởi tạo User (kể cả DbSeeder) tự có stamp riêng không cần sửa.
+        [Required]
+        [StringLength(64)]
+        public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
+
+        // Bắt đổi mật khẩu ở lần đăng nhập kế tiếp - dùng cho mật khẩu tạm do
+        // Admin cấp (StaffController.IssueTempPassword).
+        public bool PhaiDoiMatKhau { get; set; } = false;
+
+        // Hạn của mật khẩu tạm do Admin cấp (null nếu không phải mật khẩu tạm).
+        // Cần cột riêng vì nhánh cấp mật khẩu tạm không tạo hàng
+        // YeuCauKhoiPhucMatKhau nào để lưu hạn ở đó.
+        public DateTime? MatKhauTamHetHan { get; set; }
+
         // Navigation properties
         public virtual Doctor? DoctorProfile { get; set; }
         public virtual Patient? PatientProfile { get; set; }

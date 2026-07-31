@@ -29,15 +29,19 @@ builder.Logging.AddDebug();
 
 // Add services to the container.
 builder.Services.AddScoped<QuanLyBenhVien.Helpers.ModulePermissionFilter>();
+builder.Services.AddScoped<QuanLyBenhVien.Helpers.ForcePasswordChangeFilter>();
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.AddService<QuanLyBenhVien.Helpers.ModulePermissionFilter>();
+    options.Filters.AddService<QuanLyBenhVien.Helpers.ForcePasswordChangeFilter>();
 });
 builder.Services.AddScoped<QuanLyBenhVien.Services.ExcelExportService>();
 builder.Services.AddScoped<DoctorDashboardNotifier>();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<QuanLyBenhVien.Services.HospitalSettingsProvider>();
 builder.Services.AddScoped<QuanLyBenhVien.Services.AppointmentSlotService>();
+builder.Services.AddScoped<QuanLyBenhVien.Services.IEmailSender, QuanLyBenhVien.Services.MockEmailSender>();
+builder.Services.AddScoped<QuanLyBenhVien.Services.ISmsSender, QuanLyBenhVien.Services.MockSmsSender>();
 
 // Previously defaulted to Path.GetTempPath() ("%TEMP%\QuanLyBenhVien\..."):
 // the OS temp folder is expected to be cleared at any time (disk cleanup,
@@ -135,6 +139,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LogoutPath = "/Auth/Logout";
         options.AccessDeniedPath = "/Auth/AccessDenied";
         options.ExpireTimeSpan = TimeSpan.FromHours(2);
+        options.Events.OnValidatePrincipal = QuanLyBenhVien.Helpers.SecurityStampCookieValidator.ValidateAsync;
     });
 
 // Register Session Services
@@ -166,6 +171,51 @@ using (var scope = app.Services.CreateScope())
         if (usesModelCreation)
         {
             context.Database.EnsureCreated();
+
+            // EnsureCreated() only builds schema when the database doesn't exist
+            // yet - it is a no-op against the real, already-existing SQL Server
+            // database, so the new password-reset table/columns added below
+            // would otherwise never reach it. Idempotent (checked with
+            // IF NOT EXISTS/COL_LENGTH), safe to also run against a freshly
+            // created database where EnsureCreated already added them.
+            if (context.Database.IsSqlServer())
+            {
+                context.Database.ExecuteSqlRaw(@"
+                IF COL_LENGTH('NguoiDung','SecurityStamp') IS NULL
+                    ALTER TABLE NguoiDung ADD SecurityStamp NVARCHAR(64) NOT NULL DEFAULT '';
+                IF COL_LENGTH('NguoiDung','PhaiDoiMatKhau') IS NULL
+                    ALTER TABLE NguoiDung ADD PhaiDoiMatKhau BIT NOT NULL DEFAULT 0;
+                IF COL_LENGTH('NguoiDung','MatKhauTamHetHan') IS NULL
+                    ALTER TABLE NguoiDung ADD MatKhauTamHetHan DATETIME2 NULL;
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'YeuCauKhoiPhucMatKhau')
+                BEGIN
+                    CREATE TABLE YeuCauKhoiPhucMatKhau (
+                        Id INT NOT NULL CONSTRAINT PK_YeuCauKhoiPhucMatKhau PRIMARY KEY IDENTITY,
+                        NguoiDungId INT NULL,
+                        IpAddress NVARCHAR(50) NOT NULL,
+                        KhoiTaoBoi NVARCHAR(20) NOT NULL,
+                        Kenh NVARCHAR(10) NULL,
+                        MaXacNhanHash NVARCHAR(200) NULL,
+                        ThoiHanMa DATETIME2 NULL,
+                        SoLanNhapSai INT NOT NULL DEFAULT 0,
+                        MaDaDung BIT NOT NULL DEFAULT 0,
+                        SoLanGuiLai INT NOT NULL DEFAULT 0,
+                        LanGuiGanNhatLuc DATETIME2 NULL,
+                        ResetTokenHash NVARCHAR(200) NULL,
+                        ThoiHanResetToken DATETIME2 NULL,
+                        ResetTokenDaDung BIT NOT NULL DEFAULT 0,
+                        NgayTao DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        CONSTRAINT FK_YeuCauKhoiPhucMatKhau_NguoiDung_NguoiDungId
+                            FOREIGN KEY (NguoiDungId) REFERENCES NguoiDung (Id),
+                        CONSTRAINT CK_YeuCauKhoiPhucMatKhau_KhoiTaoBoi CHECK (KhoiTaoBoi IN ('TuPhucVu','Admin')),
+                        CONSTRAINT CK_YeuCauKhoiPhucMatKhau_Kenh CHECK (Kenh IS NULL OR Kenh IN ('Email','Sdt'))
+                    );
+                    CREATE INDEX IX_YeuCauKhoiPhucMatKhau_NguoiDungId_NgayTao ON YeuCauKhoiPhucMatKhau (NguoiDungId, NgayTao);
+                    CREATE INDEX IX_YeuCauKhoiPhucMatKhau_IpAddress_NgayTao ON YeuCauKhoiPhucMatKhau (IpAddress, NgayTao);
+                    CREATE INDEX IX_YeuCauKhoiPhucMatKhau_ResetTokenHash ON YeuCauKhoiPhucMatKhau (ResetTokenHash);
+                END");
+            }
         }
         else
         {

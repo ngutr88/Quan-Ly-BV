@@ -36,6 +36,7 @@ namespace QuanLyBenhVien.Data
         public DbSet<Supplier> Suppliers { get; set; } = null!;
         public DbSet<GoodsReceipt> GoodsReceipts { get; set; } = null!;
         public DbSet<GoodsReceiptDetail> GoodsReceiptDetails { get; set; } = null!;
+        public DbSet<PasswordResetRequest> PasswordResetRequests { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -535,6 +536,21 @@ namespace QuanLyBenhVien.Data
             modelBuilder.Entity<GoodsReceipt>().Property(r => r.NgayNhap).HasDefaultValueSql(NowSql());
             modelBuilder.Entity<GoodsReceipt>().Property(r => r.NgayTao).HasDefaultValueSql(NowSql());
             modelBuilder.Entity<Supplier>().Property(s => s.NgayTao).HasDefaultValueSql(NowSql());
+
+            // Đếm theo IP và theo tài khoản trong cửa sổ 1 giờ (giới hạn tần suất
+            // + CAPTCHA), tra ResetTokenHash khi bấm link đặt lại mật khẩu.
+            modelBuilder.Entity<PasswordResetRequest>(e =>
+            {
+                e.HasIndex(r => new { r.NguoiDungId, r.NgayTao });
+                e.HasIndex(r => new { r.IpAddress, r.NgayTao });
+                e.HasIndex(r => r.ResetTokenHash);
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_YeuCauKhoiPhucMatKhau_KhoiTaoBoi", "KhoiTaoBoi IN ('TuPhucVu','Admin')");
+                    t.HasCheckConstraint("CK_YeuCauKhoiPhucMatKhau_Kenh", "Kenh IS NULL OR Kenh IN ('Email','Sdt')");
+                });
+            });
+            modelBuilder.Entity<PasswordResetRequest>().Property(r => r.NgayTao).HasDefaultValueSql(NowSql());
         }
     }
 }

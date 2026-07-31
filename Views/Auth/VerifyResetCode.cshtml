@@ -1,0 +1,172 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Nhập mã xác nhận";
+}
+
+<div class="bg-surface min-h-screen flex flex-col items-center justify-center p-margin-mobile">
+    <main class="w-full max-w-[480px] flex flex-col items-center py-unit-xl">
+        <header class="text-center mb-unit-lg">
+            <div class="inline-flex items-center justify-center bg-primary rounded-full w-14 h-14 mb-unit-md text-white">
+                <span class="material-symbols-outlined text-headline-lg">mark_email_read</span>
+            </div>
+            <h1 class="font-headline-md text-primary font-bold tracking-tight">Nhập mã xác nhận</h1>
+            <p class="font-body-md text-on-surface-variant mt-unit-sm">
+                Mã đã gửi đến <strong class="text-on-surface">@ViewBag.MaskedTarget</strong>
+            </p>
+        </header>
+
+        @await Html.PartialAsync("_PasswordResetStepIndicator", 2)
+
+        <div class="glass-card w-full rounded-xl p-unit-lg shadow-sm">
+            <form id="verify-code-form" action="/Auth/VerifyResetCode" method="POST" class="space-y-unit-md" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="code" name="code" />
+                <div class="flex justify-center gap-2" id="otp-boxes">
+                    @for (var i = 0; i < 6; i++)
+                    {
+                        <input type="text" inputmode="numeric" autocomplete="@(i == 0 ? "one-time-code" : "off")" maxlength="1"
+                               class="otp-box w-12 h-14 text-center text-title-lg font-bold bg-surface border border-outline-variant rounded-lg input-focus" />
+                    }
+                </div>
+                <p id="code-error" class="text-caption text-error text-center hidden"></p>
+                <p class="text-caption text-on-surface-variant text-center">
+                    Mã có hiệu lực trong <span id="countdown" class="font-bold text-on-surface">05:00</span>
+                </p>
+
+                <button id="verify-submit" class="w-full bg-primary text-on-primary font-body-lg font-semibold py-3 rounded-lg hover:bg-primary-container transition-all active:scale-[0.98] flex items-center justify-center gap-unit-sm shadow-md" type="submit">
+                    <span id="verify-submit-label">Xác nhận</span>
+                    <span class="material-symbols-outlined">verified</span>
+                </button>
+            </form>
+
+            <div class="mt-unit-lg pt-unit-md border-t border-outline-variant text-center space-y-2">
+                <button id="resend-button" type="button" class="text-primary font-bold hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed" disabled>
+                    Gửi lại mã
+                </button>
+                <p id="resend-remaining-note" class="text-caption text-on-surface-variant"></p>
+                <p class="text-body-md text-on-surface-variant">
+                    <a class="text-primary font-bold hover:underline" href="/Auth/ForgotPassword">Dùng email/SĐT khác</a>
+                </p>
+            </div>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+<script>
+    (function () {
+        const boxes = Array.from(document.querySelectorAll('.otp-box'));
+        const hiddenCode = document.getElementById('code');
+        const form = document.getElementById('verify-code-form');
+        const codeError = document.getElementById('code-error');
+        const submitButton = document.getElementById('verify-submit');
+        const submitLabel = document.getElementById('verify-submit-label');
+
+        function syncHidden() {
+            hiddenCode.value = boxes.map(b => b.value).join('');
+        }
+
+        boxes.forEach((box, index) => {
+            box.addEventListener('input', () => {
+                box.value = box.value.replace(/\D/g, '').slice(0, 1);
+                if (box.value && index < boxes.length - 1) boxes[index + 1].focus();
+                syncHidden();
+            });
+            box.addEventListener('keydown', (event) => {
+                if (event.key === 'Backspace' && !box.value && index > 0) {
+                    boxes[index - 1].focus();
+                }
+            });
+            box.addEventListener('paste', (event) => {
+                event.preventDefault();
+                const digits = (event.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, boxes.length).split('');
+                digits.forEach((digit, i) => { if (boxes[i]) boxes[i].value = digit; });
+                syncHidden();
+                const nextEmpty = boxes.findIndex(b => !b.value);
+                (nextEmpty === -1 ? boxes[boxes.length - 1] : boxes[nextEmpty]).focus();
+            });
+        });
+        if (boxes[0]) boxes[0].focus();
+
+        form.addEventListener('submit', (event) => {
+            syncHidden();
+            if (hiddenCode.value.length !== 6) {
+                event.preventDefault();
+                codeError.textContent = 'Vui lòng nhập đủ 6 chữ số.';
+                codeError.classList.remove('hidden');
+                return;
+            }
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-70', 'cursor-not-allowed');
+            submitLabel.textContent = 'Đang xác nhận...';
+        });
+
+        // Đếm ngược hiệu lực mã (mốc do server tính, tránh lệch giờ máy khách)
+        const expiresAt = @ViewBag.ExpiresAtUnixMs;
+        const countdownEl = document.getElementById('countdown');
+        function tickCountdown() {
+            const remainingMs = expiresAt - Date.now();
+            if (remainingMs <= 0) {
+                countdownEl.textContent = '00:00';
+                return;
+            }
+            const totalSeconds = Math.floor(remainingMs / 1000);
+            const mm = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+            const ss = String(totalSeconds % 60).padStart(2, '0');
+            countdownEl.textContent = `${mm}:${ss}`;
+            setTimeout(tickCountdown, 1000);
+        }
+        tickCountdown();
+
+        // Gửi lại mã - khóa trong thời gian cooldown, tối đa 3 lần/phiên
+        const resendButton = document.getElementById('resend-button');
+        const resendNote = document.getElementById('resend-remaining-note');
+        let resendRemaining = @ViewBag.ResendRemaining;
+        let cooldownSeconds = @ViewBag.ResendCooldownSeconds;
+
+        function updateResendNote() {
+            resendNote.textContent = resendRemaining > 0
+                ? `Còn ${resendRemaining} lần gửi lại trong phiên này.`
+                : 'Bạn đã dùng hết số lần gửi lại mã.';
+        }
+        updateResendNote();
+
+        function tickResendCooldown() {
+            if (cooldownSeconds > 0) {
+                resendButton.disabled = true;
+                resendButton.textContent = `Gửi lại mã (${cooldownSeconds}s)`;
+                cooldownSeconds--;
+                setTimeout(tickResendCooldown, 1000);
+            } else {
+                resendButton.disabled = resendRemaining <= 0;
+                resendButton.textContent = resendRemaining > 0 ? 'Gửi lại mã' : 'Đã hết lượt gửi lại';
+            }
+        }
+        tickResendCooldown();
+
+        resendButton.addEventListener('click', async () => {
+            resendButton.disabled = true;
+            try {
+                const tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
+                const fd = new FormData();
+                if (tokenInput) fd.append('__RequestVerificationToken', tokenInput.value);
+                const response = await fetch('/Auth/ResendResetCode', { method: 'POST', body: fd });
+                const data = await response.json();
+                if (data.success) {
+                    showGlobalToast('Đã gửi lại mã', data.message, 'success');
+                    resendRemaining = data.remaining;
+                    cooldownSeconds = data.cooldownSeconds;
+                    updateResendNote();
+                    tickResendCooldown();
+                } else {
+                    showGlobalToast('Không thể gửi lại mã', data.message, 'error');
+                    resendButton.disabled = resendRemaining <= 0;
+                }
+            } catch (e) {
+                showGlobalToast('Lỗi', 'Không thể gửi lại mã lúc này.', 'error');
+                resendButton.disabled = false;
+            }
+        });
+    })();
+</script>
+}

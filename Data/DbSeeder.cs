@@ -1984,10 +1984,9 @@ namespace QuanLyBenhVien.Data
                     changed = true;
                 }
 
-                var expectedHash = HashHelper.HashPassword(demo.Password);
-                if (user.MatKhauHash != expectedHash || user.VaiTro != demo.Role || user.TrangThai != "Active")
+                if (!HashHelper.VerifyPassword(demo.Password, user.MatKhauHash) || user.VaiTro != demo.Role || user.TrangThai != "Active")
                 {
-                    user.MatKhauHash = expectedHash;
+                    user.MatKhauHash = HashHelper.HashPassword(demo.Password);
                     user.VaiTro = demo.Role;
                     user.TrangThai = "Active";
                     changed = true;

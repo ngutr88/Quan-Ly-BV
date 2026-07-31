@@ -19,11 +19,13 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly QuanLyBenhVien.Services.ExcelExportService _excel;
+        private readonly QuanLyBenhVien.Services.IEmailSender _emailSender;
 
-        public StaffController(ApplicationDbContext context, QuanLyBenhVien.Services.ExcelExportService excel)
+        public StaffController(ApplicationDbContext context, QuanLyBenhVien.Services.ExcelExportService excel, QuanLyBenhVien.Services.IEmailSender emailSender)
         {
             _context = context;
             _excel = excel;
+            _emailSender = emailSender;
         }
 
         // GET: Admin/Staff
@@ -401,33 +403,118 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Admin/Staff/ResetPassword/5
+        // POST: Admin/Staff/SendResetLink/5
+        //
+        // Nhân sự bị chặn tự phục vụ ở /Auth/ForgotPassword (xem AuthController) -
+        // đây là 1 trong 2 công cụ duy nhất Admin có để giúp họ lấy lại mật
+        // khẩu. Tái dùng đúng bảng YeuCauKhoiPhucMatKhau của luồng bệnh nhân,
+        // bỏ qua toàn bộ cột OTP (đi thẳng vào ResetTokenHash) vì việc Admin
+        // xác nhận đúng người đã đóng vai trò bước xác thực thứ 2.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResetPassword(int id, string newPassword)
+        public async Task<IActionResult> SendResetLink(int id)
         {
-            if (string.IsNullOrEmpty(newPassword))
-            {
-                TempData["ErrorMessage"] = "Mật khẩu mới không được để trống.";
-                return RedirectToAction(nameof(Details), new { id = id });
-            }
-
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user == null) return NotFound();
 
-            user.MatKhauHash = HashHelper.HashPassword(newPassword);
+            var rawToken = GenerateResetToken();
+            _context.PasswordResetRequests.Add(new PasswordResetRequest
+            {
+                NguoiDungId = user.Id,
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1",
+                KhoiTaoBoi = "Admin",
+                Kenh = null,
+                ResetTokenHash = HashResetToken(rawToken),
+                ThoiHanResetToken = DateTime.Now.AddMinutes(10)
+            });
+
+            _context.AuditLogs.Add(new AuditLog
+            {
+                NguoiDungId = GetCurrentUserId(),
+                HanhDong = "Gửi link đặt lại mật khẩu cho nhân sự",
+                ChiTiet = $"Gửi link đặt lại mật khẩu cho nhân sự {user.HoTen} (ID: {user.Id})."
+            });
+            await _context.SaveChangesAsync();
+
+            var resetUrl = Url.Action("SetNewPassword", "Auth", new { area = "", token = rawToken }, Request.Scheme);
+            await _emailSender.SendAsync(user.Email, "Đặt lại mật khẩu MediFlow HMS",
+                $"Quản trị viên đã yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Bấm vào liên kết sau trong 10 phút để đặt mật khẩu mới: {resetUrl}");
+
+            TempData["SuccessMessage"] = $"Đã gửi link đặt lại mật khẩu tới email của nhân sự {user.HoTen}.";
+            return RedirectToAction(nameof(Details), new { id = id });
+        }
+
+        // POST: Admin/Staff/IssueTempPassword/5
+        //
+        // Sinh mật khẩu ngẫu nhiên, KHÔNG cho Admin gõ/chọn mật khẩu cố định
+        // cho người khác - mật khẩu tạm chỉ hiển thị MỘT LẦN cho Admin ngay sau
+        // khi sinh (giống tiền lệ hiển thị OTP demo một lần) để truyền lại cho
+        // nhân sự qua điện thoại/trực tiếp, có hạn 24h và bắt đổi ở lần đăng
+        // nhập kế tiếp.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> IssueTempPassword(int id)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null) return NotFound();
+
+            var tempPassword = GenerateTempPassword();
+            user.MatKhauHash = HashHelper.HashPassword(tempPassword);
+            user.PhaiDoiMatKhau = true;
+            user.MatKhauTamHetHan = DateTime.Now.AddHours(24);
+            user.SecurityStamp = Guid.NewGuid().ToString("N");
             _context.Entry(user).State = EntityState.Modified;
 
             _context.AuditLogs.Add(new AuditLog
             {
                 NguoiDungId = GetCurrentUserId(),
-                HanhDong = "Đặt lại mật khẩu nhân sự",
-                ChiTiet = $"Đặt lại mật khẩu mới cho nhân sự {user.HoTen} (ID: {user.Id})."
+                HanhDong = "Cấp mật khẩu tạm cho nhân sự",
+                ChiTiet = $"Cấp mật khẩu tạm (hạn 24 giờ, bắt buộc đổi ở lần đăng nhập kế tiếp) cho nhân sự {user.HoTen} (ID: {user.Id})."
             });
 
             await _context.SaveChangesAsync();
-            TempData["SuccessMessage"] = $"Đã đặt lại mật khẩu thành công cho nhân sự {user.HoTen}.";
+            TempData["SuccessMessage"] = $"Đã cấp mật khẩu tạm cho nhân sự {user.HoTen}: {tempPassword} (hiệu lực 24 giờ, bắt buộc đổi ở lần đăng nhập kế tiếp). Vui lòng truyền lại mật khẩu này cho nhân sự - hệ thống sẽ không hiển thị lại.";
             return RedirectToAction(nameof(Details), new { id = id });
+        }
+
+        private static string GenerateResetToken()
+        {
+            var raw = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+            return raw.Replace('+', '-').Replace('/', '_').TrimEnd('=');
+        }
+
+        private static string HashResetToken(string rawToken)
+        {
+            using var sha = System.Security.Cryptography.SHA256.Create();
+            return Convert.ToBase64String(sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(rawToken)));
+        }
+
+        private static string GenerateTempPassword()
+        {
+            // 12 ký tự CSPRNG, đảm bảo có đủ hoa/thường/số để tự thỏa chính sách
+            // mật khẩu ngay từ đầu (không phụ thuộc PhaiDoiMatKhau redirect kịp lúc).
+            const string upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            const string lower = "abcdefghijkmnpqrstuvwxyz";
+            const string digits = "23456789";
+            const string all = upper + lower + digits;
+
+            var chars = new char[12];
+            chars[0] = upper[System.Security.Cryptography.RandomNumberGenerator.GetInt32(upper.Length)];
+            chars[1] = lower[System.Security.Cryptography.RandomNumberGenerator.GetInt32(lower.Length)];
+            chars[2] = digits[System.Security.Cryptography.RandomNumberGenerator.GetInt32(digits.Length)];
+            for (var i = 3; i < chars.Length; i++)
+            {
+                chars[i] = all[System.Security.Cryptography.RandomNumberGenerator.GetInt32(all.Length)];
+            }
+
+            // Xáo trộn để 3 ký tự đầu không luôn cố định hoa/thường/số.
+            for (var i = chars.Length - 1; i > 0; i--)
+            {
+                var j = System.Security.Cryptography.RandomNumberGenerator.GetInt32(i + 1);
+                (chars[i], chars[j]) = (chars[j], chars[i]);
+            }
+
+            return new string(chars);
         }
 
         // GET: Admin/Staff/PermissionMatrix
