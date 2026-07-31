@@ -196,7 +196,47 @@ Toàn app chỉ có **1 hub**: `Hubs/DoctorDashboardHub.cs` (`[Authorize(Roles="
 - **Giới hạn quan trọng**: trang `Doctor/Queue` (màn hình khám theo hàng đợi đầy đủ) không nghe hub — chỉ `Dashboard/Index` mới thực sự "sống". Toàn bộ phía Patient (kể cả "Lịch hẹn sắp tới") là render tĩnh, phải tải lại trang mới thấy thay đổi do phía khác (bác sĩ/Admin) gây ra.
 - Không có `setInterval`/polling nào trong toàn bộ app — mọi cập nhật "gần như realtime" đều đi qua đúng 1 hub này.
 
-## 7. Luồng sổ khám điện tử và giấy tờ khám trước
+## 7. API / Endpoint JSON (AJAX)
+
+Không có project Web API riêng, không có prefix route `/api/...`, không có `[ApiController]` nào trong repo. Các action trả `Json(...)` nằm xen lẫn trong CÙNG các controller MVC bình thường (một controller vừa có action trả `View()` vừa có action trả `Json()`) — đây là "API" gần nhất của hệ thống. Danh sách đầy đủ, nhóm theo controller:
+
+### Admin
+
+| Action | Trả về | Gọi từ |
+|---|---|---|
+| `MedicinesController.SearchMedicinesForReceipt` | JSON danh sách thuốc cho combobox | `$.ajax` tại `ReceiveBatch.cshtml` |
+| `MedicinesController.CheckExistingLot` | JSON kiểm tra trùng số lô | `$.getJSON` tại `ReceiveBatch.cshtml` |
+| `MedicinesController.SaveDraft`/`SubmitReceipt` | `Json(result)` | Luồng POST-redirect thường, **không** phải fetch AJAX |
+| `PatientsController.RevealSensitive` | JSON CCCD/SĐT đầy đủ (có ghi `AuditLog`) | `fetch` tại `Patients/Details.cshtml` |
+
+### Doctor
+
+| Action | Trả về | Gọi từ |
+|---|---|---|
+| `DashboardController.CallNextPatient` | JSON `{success, appointmentId, redirectUrl}` | `fetch` tại `Dashboard/Index.cshtml` |
+| `ExamController.CheckAllergiesAndStock` | JSON cảnh báo dị ứng/tồn kho khi kê đơn | `fetch` tại `Exam/Session.cshtml` |
+| `HistoryController.QuickSearch` | JSON kết quả tìm bệnh nhân nhanh | `fetch` tại `_DoctorLayout.cshtml` (thanh tìm kiếm topbar) |
+| `HistoryController.BreakTheGlass` | JSON xác nhận đã ghi log truy cập ngoài phạm vi | `fetch` tại `_DoctorLayout.cshtml` |
+| `NotificationController.UnreadCount`/`MarkAsRead`/`MarkAllAsRead` | JSON badge/trạng thái đã đọc | `fetch` tại `_DoctorLayout.cshtml`, `Notification/Index.cshtml` |
+
+### Patient
+
+| Action | Trả về | Gọi từ |
+|---|---|---|
+| `BookController.GetDoctors`/`GetSlots` | JSON bác sĩ/slot giờ trống theo khoa | `fetch` tại `Book/Index.cshtml`, `Appointments/Reschedule.cshtml` |
+| `NotificationController.MarkAsRead`/`MarkAllAsRead` | JSON trạng thái đã đọc | `fetch` tại `Notification/Index.cshtml` |
+| `PaymentController.SendEmailReceipt` | JSON xác nhận gửi biên lai (mock) | `fetch` tại `Payment/Index.cshtml` |
+| `RecordController.AddDependent`/`GetReview`/`SubmitReview` | JSON kết quả thêm người thân/đánh giá | `fetch` tại `Record/Dependents.cshtml`, `Record/Index.cshtml` |
+
+### Root
+
+| Action | Trả về | Gọi từ |
+|---|---|---|
+| `AuthController.ResendResetCode` | JSON gửi lại mã OTP khôi phục mật khẩu (cooldown + giới hạn số lần) | `fetch` tại `Views/Auth/VerifyResetCode.cshtml` |
+
+**Dễ nhầm là API nhưng thực chất không phải**: `Patient/Book/ConfirmBooking` và bước xác thực mã (`Auth/VerifyResetCode` POST) trông giống endpoint AJAX nhưng là **POST form thường** — dùng `TempData` + `Redirect`, trả `View()`/`RedirectToAction()`, không trả `Json`.
+
+## 8. Luồng sổ khám điện tử và giấy tờ khám trước
 
 ```mermaid
 flowchart LR
@@ -222,7 +262,7 @@ Quy tắc cụ thể:
 5. Action download phải kiểm tra quyền trước khi trả file.
 6. Tài liệu là nguồn tham khảo; bác sĩ vẫn phải đối chiếu với triệu chứng, khám hiện tại và dữ liệu chuyên môn.
 
-## 8. Luồng khám khép kín
+## 9. Luồng khám khép kín
 
 ```text
 Đăng nhập
@@ -240,14 +280,14 @@ Quy tắc cụ thể:
 
 Mọi luồng nhạy cảm phải kiểm tra quyền tại server. Các bước khám–kê đơn–trừ kho–lập hóa đơn cần transaction; callback thanh toán và thao tác có thể retry phải idempotent.
 
-## 9. FE, BE và hạ tầng
+## 10. FE, BE và hạ tầng
 
 ### Frontend
 
 - Razor Views trong `Views` và `Areas/*/Views`.
 - Layout theo vai trò trong `Views/Shared`, sidebar dựng động từ registry (`DoctorMenuRegistry`/`PatientMenuRegistry`) chứ không hard-code.
 - CSS/JS chung trong `wwwroot/css/site.css`, `wwwroot/js/site.js`.
-- Một số action trả JSON cho AJAX (bác sĩ/slot đặt lịch, gửi biên lai, gửi lại mã OTP khôi phục mật khẩu...) — không có project Web API riêng, đây là "API" gần nhất của hệ thống.
+- Một số action trả JSON cho AJAX — xem danh sách đầy đủ ở mục 7.
 - 1 kết nối SignalR dùng chung cho toàn bộ trang Doctor (xem mục 6).
 
 ### Backend
@@ -265,7 +305,7 @@ Mọi luồng nhạy cảm phải kiểm tra quyền tại server. Các bước 
 - `render.yaml` khai báo web service Render và health check `/`.
 - SQLite production cần persistent disk nếu muốn giữ dữ liệu và khóa Data Protection sau khi container được tạo lại — nếu không, mỗi lần redeploy sẽ làm mất khóa mã hoá antiforgery/cookie đăng nhập của phiên cũ.
 
-## 10. Quy tắc cập nhật cấu trúc
+## 11. Quy tắc cập nhật cấu trúc
 
 1. Thêm entity: cập nhật model, `ApplicationDbContext`, migration, seeder và tài liệu này.
 2. Thêm module: tạo controller đúng Area, view đúng thư mục, route và phân quyền server; nếu cần bật/tắt độc lập qua Ma trận phân quyền thì phải là controller riêng (không gộp chung với controller khác).
@@ -275,8 +315,8 @@ Mọi luồng nhạy cảm phải kiểm tra quyền tại server. Các bước 
 6. Không lưu OTP/mật khẩu/token dạng gốc trong DB hay trong `AuditLog`.
 7. Sau thay đổi chạy build/test phù hợp và cập nhật `timelines/DD-MM-YYYY.md`.
 
-## 11. Kết quả rà soát
+## 12. Kết quả rà soát
 
-**Lần rà soát 31/07/2026**: số controller thực tế đã tăng mạnh so với lần trước (Admin 6→12, Doctor 6→15, Patient 5→10) — phần lớn controller mới bên Doctor là khung UI chưa gắn nghiệp vụ, cần nêu rõ để không hiểu nhầm là đã hoàn thiện. Bổ sung mục 5 "Luồng chính theo từng khu vực" liệt kê đầy đủ controller + action theo đúng code hiện tại; bổ sung mục 6 mô tả cơ chế realtime (SignalR chỉ có ở Doctor Dashboard, không có polling); cập nhật số DbSet 20→28 (thêm `Article`, `FamilyHistory`, `Immunization`, `PatientHealthMetric`, `RolePermission`, `Supplier`, `GoodsReceipt`, `GoodsReceiptDetail`, `PasswordResetRequest`); thêm `Hubs/` và `Services/` vào bố cục repository; dọn phần nội dung bị lỗi encoding (mojibake) trùng lặp ở cuối tài liệu cũ, giữ lại và viết sạch phần Ma trận quyền dữ liệu vì chưa có ở nơi khác.
+**Lần rà soát 31/07/2026**: số controller thực tế đã tăng mạnh so với lần trước (Admin 6→12, Doctor 6→15, Patient 5→10) — phần lớn controller mới bên Doctor là khung UI chưa gắn nghiệp vụ, cần nêu rõ để không hiểu nhầm là đã hoàn thiện. Bổ sung mục 5 "Luồng chính theo từng khu vực" liệt kê đầy đủ controller + action theo đúng code hiện tại; bổ sung mục 6 mô tả cơ chế realtime (SignalR chỉ có ở Doctor Dashboard, không có polling); bổ sung mục 7 liệt kê đầy đủ mọi endpoint JSON/AJAX trong app và xác nhận không có project Web API riêng; cập nhật số DbSet 20→28 (thêm `Article`, `FamilyHistory`, `Immunization`, `PatientHealthMetric`, `RolePermission`, `Supplier`, `GoodsReceipt`, `GoodsReceiptDetail`, `PasswordResetRequest`); thêm `Hubs/` và `Services/` vào bố cục repository; dọn phần nội dung bị lỗi encoding (mojibake) trùng lặp ở cuối tài liệu cũ, giữ lại và viết sạch phần Ma trận quyền dữ liệu vì chưa có ở nơi khác.
 
 **Lần rà soát 17/07/2026** (trước đó): bổ sung `PatientDocument` và bảng `TaiLieuBenhNhan`, cập nhật số DbSet thành 20, ghi nhận Reports đã có View, liệt kê đầy đủ các view con của Patient Record/Payment, mô tả luồng phân quyền tài liệu và cập nhật cấu hình Docker/Render.
