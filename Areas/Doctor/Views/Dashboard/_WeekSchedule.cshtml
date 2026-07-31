@@ -1,0 +1,50 @@
+@model List<QuanLyBenhVien.Models.ViewModels.WeekDayViewModel>
+@{
+    var dayNames = new[] { "Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy" };
+}
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30">
+        <h3 class="font-title-lg text-title-lg font-bold text-primary flex items-center gap-1">
+            <span class="material-symbols-outlined text-[20px]">calendar_view_week</span>
+            Lịch tuần
+        </h3>
+    </div>
+
+    <div class="divide-y divide-outline-variant">
+        @foreach (var day in Model)
+        {
+            var dayName = dayNames[(int)day.Date.DayOfWeek];
+
+            <a href="/Doctor/Queue?date=@day.Date.ToString("yyyy-MM-dd")"
+               class="flex items-center gap-unit-sm px-unit-md py-3 hover:bg-surface-container-low transition-colors @(day.IsToday ? "bg-primary-container/10" : "")">
+                <div class="w-14 shrink-0 text-center">
+                    <div class="text-[10px] uppercase font-bold @(day.IsToday ? "text-primary" : "text-on-surface-variant")">@dayName</div>
+                    <div class="text-title-md font-bold @(day.IsToday ? "text-primary" : "text-on-surface")">@day.Date.ToString("dd/MM")</div>
+                </div>
+                <div class="min-w-0 flex-1">
+                    @if (day.AppointmentCount > 0)
+                    {
+                        <p class="text-body-md font-semibold text-on-surface">@day.AppointmentCount ca hẹn</p>
+                    }
+                    else
+                    {
+                        <p class="text-body-md text-on-surface-variant">Không có lịch hẹn</p>
+                    }
+                    @if (day.ShiftLabels.Count > 0)
+                    {
+                        <p class="text-caption text-on-surface-variant truncate">@string.Join(" · ", day.ShiftLabels)</p>
+                    }
+                    else
+                    {
+                        <p class="text-caption text-outline">Không có ca trực</p>
+                    }
+                </div>
+                @if (day.IsToday)
+                {
+                    <span class="px-1.5 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold shrink-0">Hôm nay</span>
+                }
+            </a>
+        }
+    </div>
+</div>

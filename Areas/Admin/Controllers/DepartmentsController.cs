@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBenhVien.Data;
 using QuanLyBenhVien.Models;
+using QuanLyBenhVien.Helpers;
 using System.Security.Claims;
+using static QuanLyBenhVien.Helpers.DoctorDisplayHelper;
 
 namespace QuanLyBenhVien.Areas.Admin.Controllers
 {
@@ -275,16 +277,5 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
             return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
         }
 
-        private static string FormatDoctorName(QuanLyBenhVien.Models.Doctor doctor)
-        {
-            var fullName = doctor.User?.HoTen?.Trim() ?? string.Empty;
-            if (fullName.StartsWith("BS.", StringComparison.OrdinalIgnoreCase))
-            {
-                fullName = fullName[3..].TrimStart();
-            }
-
-            var degree = doctor.HocVi?.Trim().TrimEnd('.') ?? string.Empty;
-            return string.IsNullOrEmpty(degree) ? fullName : $"{degree}. {fullName}";
-        }
     }
 }

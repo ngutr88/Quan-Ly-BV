@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Lịch làm việc";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Lịch làm việc",
+        Subtitle = "Lịch tuần/tháng cá nhân, đăng ký nghỉ phép và đề xuất đổi ca.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
+        CurrentCrumb = "Lịch làm việc"
+    };
+
+    var comingSoon = new ComingSoonViewModel
+    {
+        Icon = "calendar_month",
+        Message = "Tính năng đang được phát triển.",
+        SubMessage = "Trang lịch tuần/tháng kèm quy trình xin nghỉ/đổi ca sẽ được xây dựng ở một đợt riêng."
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_ComingSoon" model="comingSoon" />

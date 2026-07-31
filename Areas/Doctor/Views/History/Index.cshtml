@@ -2,16 +2,16 @@
 
 @{
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
-    ViewData["Title"] = "Lịch sử điều trị";
+    ViewData["Title"] = "Bệnh nhân của tôi";
     var searchString = ViewBag.SearchString as string;
     var records = Model.ToList();
 
     var header = new PageHeaderViewModel
     {
-        Title = "Lịch sử điều trị đã khám",
+        Title = "Bệnh nhân của tôi",
         Subtitle = "Tra cứu và xem lại các hồ sơ bệnh án, đơn thuốc và hóa đơn bạn đã hoàn thành.",
         Breadcrumbs = new[] { new BreadcrumbItem("Bác sĩ", "/Doctor/Dashboard") },
-        CurrentCrumb = "Lịch sử điều trị"
+        CurrentCrumb = "Bệnh nhân của tôi"
     };
 }
 

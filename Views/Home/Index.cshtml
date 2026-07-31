@@ -328,7 +328,7 @@
                         <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3 text-xl font-black">
                             @(string.IsNullOrEmpty(doc.User.HoTen) ? "?" : doc.User.HoTen.Trim().Split(' ').Last()[0].ToString().ToUpper())
                         </div>
-                        <h4 class="font-bold text-on-surface">@doc.HocVi. @doc.User.HoTen</h4>
+                        <h4 class="font-bold text-on-surface">@FormatDoctorName(doc)</h4>
                         <p class="text-caption text-primary font-semibold mt-0.5">@doc.ChuyenKhoa</p>
                         <p class="text-caption text-on-surface-variant mt-1">@doc.Department.TenKhoa</p>
                         <div class="mt-3 pt-3 border-t border-outline-variant/50 flex items-center justify-center gap-1 text-caption text-on-surface-variant">

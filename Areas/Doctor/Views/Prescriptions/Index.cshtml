@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Kê đơn & Y lệnh";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Kê đơn & Y lệnh",
+        Subtitle = "Danh sách đơn đã kê, đơn bị dược phản hồi, và mẫu đơn cá nhân.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
+        CurrentCrumb = "Kê đơn & Y lệnh"
+    };
+
+    var comingSoon = new ComingSoonViewModel
+    {
+        Icon = "medication",
+        Message = "Tính năng đang được phát triển.",
+        SubMessage = "Việc kê đơn hiện vẫn thực hiện trong phiên khám bệnh — trang tổng hợp riêng này sẽ được xây ở đợt sau."
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_ComingSoon" model="comingSoon" />

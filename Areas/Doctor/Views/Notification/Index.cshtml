@@ -1,0 +1,168 @@
+@model List<QuanLyBenhVien.Areas.Doctor.Controllers.NotificationViewModel>
+@{
+    ViewData["Title"] = "Thông báo";
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    var activeFilter = ViewBag.ActiveFilter as string ?? "All";
+    var unreadCount = ViewBag.UnreadCount as int? ?? 0;
+}
+
+@Html.AntiForgeryToken()
+
+@section Styles {
+    <style>
+        .unread-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0056B3;
+            border-radius: 50%;
+            transition: opacity 0.3s ease;
+        }
+    </style>
+}
+
+@functions {
+    public string FormatRelativeTime(DateTime dateTime)
+    {
+        var span = DateTime.Now - dateTime;
+        if (span.TotalMinutes < 1) return "Vừa xong";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes} phút trước";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours} giờ trước";
+        if (span.TotalDays < 2) return "Hôm qua";
+        return dateTime.ToString("dd/MM/yyyy HH:mm");
+    }
+}
+
+<div class="w-full">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-unit-lg border-b border-outline-variant pb-unit-md">
+        <div>
+            <h1 class="hms-page-title">Thông báo</h1>
+            <p class="text-body-md font-body-md text-on-surface-variant" id="unread-count-text">
+                @if (unreadCount > 0)
+                {
+                    <text>Bạn có @unreadCount thông báo chưa đọc</text>
+                }
+                else
+                {
+                    <text>Bạn không có thông báo chưa đọc nào</text>
+                }
+            </p>
+        </div>
+        <div class="flex items-center gap-unit-md">
+            @if (unreadCount > 0)
+            {
+                <button onclick="markAllAsRead()" class="flex items-center gap-2 px-4 py-2 text-primary hover:bg-surface-container transition-colors rounded-lg font-medium text-label-md">
+                    <span class="material-symbols-outlined text-[20px]">done_all</span>
+                    <span>Đánh dấu tất cả đã đọc</span>
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="hms-horizontal-scroll custom-scrollbar flex items-center gap-2 mb-unit-lg pb-2 scroll-smooth"
+         role="region" aria-label="Bộ lọc loại thông báo" tabindex="0">
+        <a href="?type=All" class="flex-none whitespace-nowrap px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "All" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Tất cả</a>
+        <a href="?type=LichKham" class="flex-none whitespace-nowrap px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "LichKham" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Lịch khám</a>
+        <a href="?type=HeThong" class="flex-none whitespace-nowrap px-5 py-2 text-label-md font-label-md rounded-full shadow-sm @(activeFilter == "HeThong" ? "bg-primary text-on-primary font-bold" : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container transition-colors")">Hệ thống</a>
+    </div>
+
+    <div class="space-y-unit-sm">
+        @if (!Model.Any())
+        {
+            <div class="bg-white border border-outline-variant p-unit-xl rounded-xl text-center shadow-sm flex flex-col items-center justify-center min-h-[420px]">
+                <span class="material-symbols-outlined text-[48px] text-outline mb-2">notifications_off</span>
+                <p class="text-body-lg font-semibold text-on-surface-variant">Không có thông báo nào</p>
+                <p class="text-caption text-outline">Bạn sẽ nhận được thông báo khi có lịch hẹn mới hoặc thay đổi trên lịch khám của mình.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                string iconName = "notifications_active";
+                string colorClass = "bg-tertiary-fixed text-tertiary-container";
+                string primaryBtnText = "Xem chi tiết";
+                string targetUrl = "/Doctor/Dashboard";
+
+                if (item.Category.Equals("LichKham", StringComparison.OrdinalIgnoreCase))
+                {
+                    iconName = "calendar_today";
+                    colorClass = "bg-primary-fixed text-primary";
+                    primaryBtnText = "Xem lịch";
+                    targetUrl = "/Doctor/Dashboard";
+                }
+
+                <div class="group relative bg-white border border-outline-variant p-unit-md flex gap-unit-md hover:bg-surface-container-low transition-all duration-200 rounded-xl shadow-sm" id="notification-@item.Id">
+                    <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-xl @colorClass">
+                        <span class="material-symbols-outlined">@iconName</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="text-body-lg font-semibold text-on-surface @(!item.DaDoc ? "font-bold text-primary" : "")">@item.Title</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-caption text-on-surface-variant">@FormatRelativeTime(item.NgayGui)</span>
+                                @if (!item.DaDoc)
+                                {
+                                    <div class="unread-dot" id="dot-@item.Id"></div>
+                                }
+                            </div>
+                        </div>
+                        <p class="text-body-md text-on-surface-variant mb-unit-md">@item.Body</p>
+                        <div class="flex gap-unit-sm">
+                            <button onclick="handleNotificationClick(@item.Id, '@targetUrl')" class="bg-primary text-on-primary px-4 py-2 text-label-md font-label-md rounded-lg hover:opacity-90 transition-opacity">
+                                @primaryBtnText
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function antiForgeryFormData() {
+            const fd = new FormData();
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) fd.append('__RequestVerificationToken', token.value);
+            return fd;
+        }
+
+        function handleNotificationClick(id, targetUrl) {
+            fetch('/Doctor/Notification/MarkAsRead/' + id, {
+                method: 'POST',
+                body: antiForgeryFormData()
+            }).then(function () {
+                window.location.href = targetUrl;
+            }).catch(function () {
+                window.location.href = targetUrl;
+            });
+        }
+
+        function markAllAsRead() {
+            fetch('/Doctor/Notification/MarkAllAsRead', {
+                method: 'POST',
+                body: antiForgeryFormData()
+            })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    document.querySelectorAll('.unread-dot').forEach(function (dot) {
+                        dot.style.opacity = '0';
+                        setTimeout(function () { dot.remove(); }, 300);
+                    });
+
+                    var unreadText = document.getElementById('unread-count-text');
+                    if (unreadText) unreadText.innerText = 'Bạn không có thông báo chưa đọc nào';
+
+                    var headerBadge = document.getElementById('doctor-notification-badge');
+                    if (headerBadge) headerBadge.remove();
+
+                    var markAllBtn = document.querySelector('button[onclick="markAllAsRead()"]');
+                    if (markAllBtn) markAllBtn.remove();
+                }
+            })
+            .catch(function (err) { console.error('Error marking all read:', err); });
+        }
+    </script>
+}

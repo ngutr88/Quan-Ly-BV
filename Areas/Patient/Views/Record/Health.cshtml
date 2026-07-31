@@ -80,8 +80,8 @@
 </section>
 <section class="health-panel hidden" data-panel="documents">
     <div class="bg-white rounded-xl border border-outline-variant p-4">
-        @if (!documents.Any()) { <div class="hms-empty"><span class="material-symbols-outlined">folder_open</span><h3>Chưa có tài liệu sức khỏe</h3><a href="/Patient/Record" class="hms-btn hms-btn-primary mt-3">Tải tài liệu lên</a></div> }
-        else { <div class="space-y-2">@foreach(var doc in documents){<a href="/Patient/Record/DownloadDocument/@doc.Id" target="_blank" class="flex items-center gap-2 p-3 border rounded-lg hover:border-primary"><span class="material-symbols-outlined">description</span><span class="font-semibold">@doc.TenTaiLieu</span><span class="ml-auto text-xs">@doc.NgayTaiLen.ToString("dd/MM/yyyy")</span></a>}</div> }
+        @if (!documents.Any()) { <div class="hms-empty"><span class="material-symbols-outlined">folder_open</span><h3>Chưa có tài liệu sức khỏe</h3><a href="/Patient/Documents" class="hms-btn hms-btn-primary mt-3">Tải tài liệu lên</a></div> }
+        else { <div class="space-y-2">@foreach(var doc in documents){<a href="/Patient/Documents/DownloadDocument/@doc.Id" target="_blank" class="flex items-center gap-2 p-3 border rounded-lg hover:border-primary"><span class="material-symbols-outlined">description</span><span class="font-semibold">@doc.TenTaiLieu</span><span class="ml-auto text-xs">@doc.NgayTaiLen.ToString("dd/MM/yyyy")</span></a>}</div> }
     </div>
 </section>
 

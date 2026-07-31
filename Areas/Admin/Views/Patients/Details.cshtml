@@ -924,7 +924,7 @@
                         <option value="">-- Chọn khoa trước --</option>
                         @foreach (var doc in allDoctors)
                         {
-                            <option value="@doc.Id" data-khoa="@doc.KhoaId" class="hidden">@doc.HocVi @doc.User.HoTen (@doc.ChuyenKhoa)</option>
+                            <option value="@doc.Id" data-khoa="@doc.KhoaId" class="hidden">@FormatDoctorName(doc) (@doc.ChuyenKhoa)</option>
                         }
                     </select>
                 </div>

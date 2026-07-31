@@ -26,8 +26,9 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         }
 
         // GET: Doctor/Queue
-        public async Task<IActionResult> Index(int? id)
+        public async Task<IActionResult> Index(int? id, DateTime? date = null)
         {
+            var viewDate = (date ?? DateTime.Today).Date;
             var currentUserId = GetCurrentUserId();
             var doctor = await _context.Doctors
                 .Include(d => d.User)
@@ -43,10 +44,10 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
 
             if (doctor == null) return NotFound("Bác sĩ không tồn tại trong hệ thống.");
 
-            // Today's Queue list (excluding canceled)
+            // Queue list for the selected date (defaults to today), excluding canceled
             var queue = await _context.Appointments
                 .Include(a => a.Patient.User)
-                .Where(a => a.BacSiId == doctor.Id && a.ThoiGian.Date == DateTime.Today && a.TrangThai != "DaHuy")
+                .Where(a => a.BacSiId == doctor.Id && a.ThoiGian.Date == viewDate && a.TrangThai != "DaHuy")
                 .OrderBy(a => a.ThoiGian)
                 .ToListAsync();
 
@@ -82,6 +83,7 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             }
 
             ViewBag.DoctorProfile = doctor;
+            ViewBag.SelectedDate = viewDate;
             ViewBag.Queue = queue;
             ViewBag.SelectedAppointment = selectedApp;
             ViewBag.LastRecord = lastRecord;

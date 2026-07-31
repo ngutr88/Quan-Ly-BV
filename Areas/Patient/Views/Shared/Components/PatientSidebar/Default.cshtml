@@ -1,0 +1,38 @@
+@model List<QuanLyBenhVien.Areas.Patient.ViewComponents.PatientSidebarGroupViewModel>
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+
+    (string Controller, string Action) RouteParts(string route)
+    {
+        var parts = route.Trim('/').Split('/');
+        var controller = parts.Length >= 2 ? parts[1] : string.Empty;
+        var action = parts.Length >= 3 ? parts[2] : "Index";
+        return (controller, action);
+    }
+}
+
+<nav class="flex-1 px-unit-sm space-y-1 overflow-y-auto custom-scrollbar" id="patient-sidebar-nav">
+    @foreach (var group in Model)
+    {
+        <div class="pt-unit-md first:pt-0">
+            <p class="sidebar-group-label px-unit-md pb-1 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider opacity-70">@group.Label</p>
+            @foreach (var item in group.Items)
+            {
+                var (routeController, routeAction) = RouteParts(item.Route);
+                var isActive = currentController.Equals(routeController, StringComparison.OrdinalIgnoreCase)
+                    && currentAction.Equals(routeAction, StringComparison.OrdinalIgnoreCase);
+
+                <a class="sidebar-link flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(isActive ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
+                   href="@item.Route" data-tooltip="@item.Label">
+                    <span class="material-symbols-outlined shrink-0" style="font-variation-settings: 'FILL' 1;">@item.Icon</span>
+                    <span class="sidebar-link-label font-body-md text-body-md flex-1 truncate">@item.Label</span>
+                    @if (item.BadgeCount.HasValue)
+                    {
+                        <span class="sidebar-badge shrink-0 min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-error text-white text-[10px] font-bold">@(item.BadgeCount > 9 ? "9+" : item.BadgeCount.ToString())</span>
+                    }
+                </a>
+            }
+        </div>
+    }
+</nav>

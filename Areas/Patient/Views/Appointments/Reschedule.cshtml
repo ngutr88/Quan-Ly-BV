@@ -1,0 +1,94 @@
+@model QuanLyBenhVien.Models.Appointment
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Đổi lịch khám";
+
+    var maxDate = ViewBag.BookingMaxDate as DateTime? ?? DateTime.Today.AddDays(14);
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Đổi lịch khám",
+        Subtitle = $"Lịch hẹn hiện tại: {Model.ThoiGian:HH:mm dd/MM/yyyy} với {(Model.Doctor != null ? FormatDoctorName(Model.Doctor) : "N/A")}",
+        Breadcrumbs = new[] { new BreadcrumbItem("Trang chủ", "/Patient/Dashboard"), new BreadcrumbItem("Lịch hẹn của tôi", "/Patient/Appointments") },
+        CurrentCrumb = "Đổi lịch khám"
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg max-w-xl">
+    <form method="POST" action="/Patient/Appointments/Reschedule/@Model.Id" class="space-y-unit-md">
+        @Html.AntiForgeryToken()
+
+        <div>
+            <label class="hms-field-label" for="bookingDate">Chọn ngày mới</label>
+            <input id="bookingDate" name="bookingDate" type="date" required
+                   min="@DateTime.Today.ToString("yyyy-MM-dd")" max="@maxDate.ToString("yyyy-MM-dd")"
+                   class="w-full border border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface"
+                   onchange="loadSlots()" />
+        </div>
+
+        <div>
+            <label class="hms-field-label">Chọn khung giờ mới</label>
+            <div id="slots-container" class="flex flex-wrap gap-2 mt-1">
+                <p id="slots-info" class="text-caption text-on-surface-variant">Chọn ngày để xem khung giờ còn trống.</p>
+            </div>
+            <input type="hidden" id="selectedTime" name="bookingTime" required />
+        </div>
+
+        <div class="flex gap-unit-sm pt-unit-sm">
+            <button type="submit" class="hms-btn hms-btn-primary" id="submitBtn" disabled>
+                <span class="material-symbols-outlined">check_circle</span> Xác nhận đổi lịch
+            </button>
+            <a href="/Patient/Appointments" class="hms-btn hms-btn-secondary">Hủy bỏ</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        const doctorId = @Model.BacSiId;
+
+        function loadSlots() {
+            const date = document.getElementById('bookingDate').value;
+            const container = document.getElementById('slots-container');
+            const submitBtn = document.getElementById('submitBtn');
+            document.getElementById('selectedTime').value = '';
+            submitBtn.disabled = true;
+
+            if (!date) {
+                container.innerHTML = '<p id="slots-info" class="text-caption text-on-surface-variant">Chọn ngày để xem khung giờ còn trống.</p>';
+                return;
+            }
+
+            container.innerHTML = '<p class="text-caption text-on-surface-variant">Đang tải khung giờ...</p>';
+
+            fetch(`/Patient/Book/GetSlots?doctorId=${doctorId}&date=${date}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success || !data.slots || data.slots.length === 0) {
+                        container.innerHTML = `<p class="text-caption text-error">${data.message || 'Không còn khung giờ trống trong ngày này.'}</p>`;
+                        return;
+                    }
+
+                    container.innerHTML = '';
+                    data.slots.forEach(s => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'slot-pill-btn hms-btn hms-btn-secondary hms-btn-sm';
+                        btn.innerText = s.label;
+                        btn.onclick = function () {
+                            document.querySelectorAll('.slot-pill-btn').forEach(b => b.classList.remove('hms-btn-primary'));
+                            btn.classList.add('hms-btn-primary');
+                            document.getElementById('selectedTime').value = s.time;
+                            submitBtn.disabled = false;
+                        };
+                        container.appendChild(btn);
+                    });
+                })
+                .catch(() => {
+                    container.innerHTML = '<p class="text-caption text-error">Không thể tải khung giờ. Vui lòng thử lại.</p>';
+                });
+        }
+    </script>
+}

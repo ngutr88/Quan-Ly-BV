@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Kết quả khám & Xét nghiệm";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Kết quả khám & Xét nghiệm",
+        Subtitle = "Kết quả xét nghiệm và chẩn đoán hình ảnh của bạn.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Trang chủ", "/Patient/Dashboard") },
+        CurrentCrumb = "Kết quả khám & Xét nghiệm"
+    };
+
+    var comingSoon = new ComingSoonViewModel
+    {
+        Icon = "biotech",
+        Message = "Tính năng đang được phát triển.",
+        SubMessage = "Hệ thống chưa lưu kết quả xét nghiệm/CĐHA dạng có cấu trúc — sẽ được xây dựng ở một đợt riêng."
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_ComingSoon" model="comingSoon" />

@@ -14,6 +14,7 @@
     List<QuanLyBenhVien.Models.Dependent>();
 
     var preselectedDeptId = ViewBag.PreselectedDeptId as int?;
+    var preselectedDoctorId = ViewBag.PreselectedDoctorId as int?;
 }
 
 @section Styles {
@@ -241,6 +242,10 @@
 
 @section Scripts {
     <script>
+        // Carried over from the "nhắc tái khám" card on the homepage, which
+        // pre-fills both the department (existing feature) and the same doctor.
+        const preselectedDoctorId = @(preselectedDoctorId?.ToString() ?? "null");
+
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const depName = urlParams.get('dependent');
@@ -366,6 +371,11 @@
                 });
 
                 docSelector.disabled = false;
+
+                if (preselectedDoctorId && doctors.some(d => d.id === preselectedDoctorId)) {
+                    docSelector.value = preselectedDoctorId;
+                    checkSlotsTrigger();
+                }
             } catch (error) {
                 docSelector.innerHTML = '<option value="">Không thể tải danh sách bác sĩ</option>';
                 document.getElementById('slots-info').innerText = 'Không thể kết nối để tải bác sĩ. Vui lòng thử lại.';

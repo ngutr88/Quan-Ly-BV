@@ -1,0 +1,12 @@
+@model QuanLyBenhVien.Models.ViewModels.ComingSoonViewModel
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="p-unit-xl text-center min-h-[280px] flex flex-col items-center justify-center">
+        <span class="material-symbols-outlined text-[48px] text-outline mb-2">@Model.Icon</span>
+        <p class="text-body-lg font-semibold text-on-surface-variant">@Model.Message</p>
+        @if (!string.IsNullOrWhiteSpace(Model.SubMessage))
+        {
+            <p class="text-caption text-outline mt-1 max-w-md">@Model.SubMessage</p>
+        }
+    </div>
+</div>

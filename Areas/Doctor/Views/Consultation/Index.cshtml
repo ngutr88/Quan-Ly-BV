@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Hội chẩn";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Hội chẩn",
+        Subtitle = "Lời mời hội chẩn, biên bản chờ ký, và lịch sử tham gia.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
+        CurrentCrumb = "Hội chẩn"
+    };
+
+    var comingSoon = new ComingSoonViewModel
+    {
+        Icon = "groups",
+        Message = "Tính năng đang được phát triển.",
+        SubMessage = "Hệ thống chưa có quy trình mời/tham gia hội chẩn liên khoa — sẽ được xây dựng ở một đợt riêng."
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_ComingSoon" model="comingSoon" />

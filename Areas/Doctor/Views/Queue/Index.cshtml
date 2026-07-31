@@ -8,6 +8,8 @@
     var historyExams = ViewBag.HistoryExams as List<QuanLyBenhVien.Models.ExaminationRecord> ?? new List<QuanLyBenhVien.Models.ExaminationRecord>();
     var selectedHasRecord = ViewBag.SelectedHasRecord is true;
     var patientDocuments = ViewBag.PatientDocuments as List<QuanLyBenhVien.Models.PatientDocument> ?? new List<QuanLyBenhVien.Models.PatientDocument>();
+    var viewDate = ViewBag.SelectedDate as DateTime? ?? DateTime.Today;
+    var isViewingToday = viewDate == DateTime.Today;
 
     // Split queue into Morning and Afternoon sessions
     var morningQueue = queue.Where(a => a.ThoiGian.Hour < 13).ToList();
@@ -22,11 +24,11 @@
     <section class="lg:w-[400px] flex flex-col gap-unit-md min-w-0 shrink-0">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-headline-md font-headline-md text-on-surface font-bold">Lịch khám hôm nay</h2>
+                <h2 class="text-headline-md font-headline-md text-on-surface font-bold">@(isViewingToday ? "Lịch khám hôm nay" : "Lịch khám ngày " + viewDate.ToString("dd/MM/yyyy"))</h2>
                 <p class="text-body-md text-on-surface-variant font-medium">Tổng cộng: @queue.Count bệnh nhân</p>
             </div>
             <div class="bg-primary/10 text-primary px-2.5 py-1 rounded-lg text-caption font-bold">
-                @DateTime.Today.ToString("dd/MM/yyyy")
+                @viewDate.ToString("dd/MM/yyyy")
             </div>
         </div>
         
@@ -170,11 +172,15 @@
                     </div>
                 </div>
                 <div class="flex gap-unit-md">
-                    @if (selectedApp.TrangThai == "DaXacNhan" || selectedApp.TrangThai == "DangKham")
+                    @if ((selectedApp.TrangThai == "DaXacNhan" || selectedApp.TrangThai == "DangKham") && isViewingToday)
                     {
                         <a href="/Doctor/Exam/Session/@selectedApp.Id" class="bg-primary text-white hover:bg-primary-container px-unit-lg py-2.5 rounded-xl font-semibold shadow-sm flex items-center gap-1 active:scale-95 transition-all">
                             <span class="material-symbols-outlined text-[20px]">clinical_notes</span> Bắt đầu khám
                         </a>
+                    }
+                    else if ((selectedApp.TrangThai == "DaXacNhan" || selectedApp.TrangThai == "DangKham") && !isViewingToday)
+                    {
+                        <span class="px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-caption font-semibold">Chỉ có thể bắt đầu khám đúng ngày hẹn</span>
                     }
                     else if (selectedApp.TrangThai == "HoanThanh" && selectedHasRecord)
                     {

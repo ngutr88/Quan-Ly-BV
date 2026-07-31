@@ -1807,8 +1807,8 @@ namespace QuanLyBenhVien.Data
                     },
                     new Appointment
                     {
-                        BenhNhanId = context.Patients.Skip(1).First().Id, // Patient 2
-                        BacSiId = context.Doctors.Skip(1).First().Id, // Doctor 2
+                        BenhNhanId = context.Patients.OrderBy(p => p.Id).Skip(1).First().Id, // Patient 2
+                        BacSiId = context.Doctors.OrderBy(d => d.Id).Skip(1).First().Id, // Doctor 2
                         ThoiGian = DateTime.Now.AddHours(2), // Today soon!
                         TrangThai = "ChoXacNhan",
                         LyDoKham = "Bé bị sốt cao kèm ho khan từ tối qua.",

@@ -495,7 +495,7 @@
             dateCreatedFormatted = i.NgayTao.ToString("dd/MM/yyyy HH:mm"),
             datePaidFormatted = i.NgayThanhToan.HasValue ? i.NgayThanhToan.Value.ToString("dd/MM/yyyy HH:mm") : "N/A",
             transactionId = i.MaGiaoDich ?? "N/A",
-            doctorName = i.ExaminationRecord?.Appointment?.Doctor?.User?.HoTen ?? "N/A",
+            doctorName = i.ExaminationRecord?.Appointment?.Doctor != null ? FormatDoctorName(i.ExaminationRecord.Appointment.Doctor) : "N/A",
             departmentName = i.ExaminationRecord?.Appointment?.Doctor?.Department?.TenKhoa ?? "N/A",
             examDateFormatted = i.ExaminationRecord?.NgayKham.ToString("dd/MM/yyyy") ?? "N/A",
             appointmentCode = "LK-" + (i.ExaminationRecord?.LichKhamId.ToString("D5") ?? "00000"),

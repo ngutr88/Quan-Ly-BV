@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Hồ sơ chờ ký";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Hồ sơ chờ ký",
+        Subtitle = "Bệnh án ra viện, kết quả, biên bản, đơn thuốc chờ ký số — gom một nơi.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
+        CurrentCrumb = "Hồ sơ chờ ký"
+    };
+
+    var comingSoon = new ComingSoonViewModel
+    {
+        Icon = "draw",
+        Message = "Tính năng đang được phát triển.",
+        SubMessage = "Hệ thống chưa có hạ tầng chữ ký số/khái niệm \"đã ký\" — sẽ được xây dựng ở một đợt riêng."
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_ComingSoon" model="comingSoon" />

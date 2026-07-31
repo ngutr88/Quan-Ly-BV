@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Bệnh nhân nội trú";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Bệnh nhân nội trú",
+        Subtitle = "Danh sách buồng/giường bác sĩ phụ trách.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
+        CurrentCrumb = "Bệnh nhân nội trú"
+    };
+
+    var comingSoon = new ComingSoonViewModel
+    {
+        Icon = "bed",
+        Message = "Chưa có bác sĩ nào được phân công buồng bệnh trong hệ thống hiện tại.",
+        SubMessage = "Trang này sẽ hiển thị bệnh nhân nội trú theo buồng/giường khi module quản lý nội trú được xây dựng."
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_ComingSoon" model="comingSoon" />

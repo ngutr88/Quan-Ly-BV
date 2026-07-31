@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Lịch phẫu thuật";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Lịch phẫu thuật",
+        Subtitle = "Lịch mổ, hồ sơ duyệt mổ, và tường trình phẫu thuật chờ hoàn thiện.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
+        CurrentCrumb = "Lịch phẫu thuật"
+    };
+
+    var comingSoon = new ComingSoonViewModel
+    {
+        Icon = "local_hospital",
+        Message = "Tính năng đang được phát triển.",
+        SubMessage = "Hệ thống chưa có module quản lý lịch mổ — sẽ được xây dựng ở một đợt riêng."
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_ComingSoon" model="comingSoon" />

@@ -2,68 +2,53 @@
     Layout = "_Layout";
 }
 
+@Html.AntiForgeryToken()
+
 <div id="doctor-portal" class="staff-portal doctor-portal text-on-surface overflow-hidden flex h-screen w-full max-w-full">
     <button id="doctor-sidebar-backdrop" type="button" aria-label="Đóng menu"
-            class="hidden md:hidden fixed inset-0 bg-on-background/40 z-40"
+            class="hidden lg:hidden fixed inset-0 bg-on-background/40 z-40"
             onclick="closeDoctorSidebar()"></button>
 
     <!-- Side Navigation Bar -->
-    <aside id="doctor-sidebar" class="staff-sidebar fixed md:relative inset-y-0 left-0 -translate-x-full md:translate-x-0 transition-transform duration-200 ease-out w-[280px] max-w-[85vw] h-screen bg-surface-container-lowest border-r border-outline-variant flex flex-col py-unit-lg shrink-0 z-50">
+    <aside id="doctor-sidebar" class="staff-sidebar fixed lg:relative inset-y-0 left-0 -translate-x-full lg:translate-x-0 transition-[transform,width] duration-200 ease-out w-[280px] max-w-[85vw] h-screen bg-surface-container-lowest border-r border-outline-variant flex flex-col py-unit-lg shrink-0 z-50">
+        <script>
+            // Applied inline (before nav renders) to avoid a flash of the
+            // expanded sidebar before the deferred layout scripts run.
+            if (window.innerWidth >= 1024 && localStorage.getItem('doctorSidebarCollapsed') === '1') {
+                document.currentScript.closest('#doctor-sidebar').classList.add('sidebar-collapsed');
+            }
+        </script>
         <button type="button" aria-label="Đóng menu" onclick="closeDoctorSidebar()"
-                class="md:hidden absolute top-4 right-3 w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high">
+                class="lg:hidden absolute top-4 right-3 w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high">
             <span class="material-symbols-outlined">close</span>
         </button>
         <!-- Logo -->
         <div class="px-unit-lg mb-unit-xl">
             <a href="/Doctor/Dashboard" class="flex items-center gap-unit-md group">
-                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform shrink-0">
                     <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">medical_services</span>
                 </div>
-                <div>
+                <div class="sidebar-collapsible-label">
                     <h1 class="font-headline-md text-headline-md font-bold text-primary leading-tight">MediFlow HMS</h1>
                     <p class="text-caption text-on-surface-variant">Khu vực bác sĩ</p>
                 </div>
             </a>
         </div>
 
-        <nav class="flex-1 px-unit-sm space-y-1 overflow-y-auto custom-scrollbar">
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Doctor/Dashboard">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-                <span class="font-body-md text-body-md">Bảng điều khiển</span>
-            </a>
-
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Queue" || ViewContext.RouteData.Values["controller"]?.ToString() == "Exam" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Doctor/Queue">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">patient_list</span>
-                <span class="font-body-md text-body-md">Lịch khám hôm nay</span>
-            </a>
-
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "History" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Doctor/History">
-                <span class="material-symbols-outlined">history_edu</span>
-                <span class="font-body-md text-body-md">Lịch sử điều trị</span>
-            </a>
-
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Stats" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Doctor/Stats">
-                <span class="material-symbols-outlined">analytics</span>
-                <span class="font-body-md text-body-md">Thống kê cá nhân</span>
-            </a>
-
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Chat" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Doctor/Chat">
-                <span class="material-symbols-outlined">forum</span>
-                <span class="font-body-md text-body-md">Tin nhắn tư vấn</span>
-            </a>
-        </nav>
+        @await Component.InvokeAsync("DoctorSidebar")
 
         <!-- Bottom actions -->
         <div class="px-unit-sm mt-auto space-y-1 border-t border-outline-variant pt-unit-sm">
-            <a class="flex items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded-lg transition-colors font-medium"
-               href="/Auth/Logout">
-                <span class="material-symbols-outlined">logout</span>
-                <span class="font-body-md text-body-md">Đăng xuất</span>
+            <button type="button" id="doctor-sidebar-collapse-toggle" onclick="toggleDoctorSidebarCollapse()"
+                    class="hidden lg:flex w-full items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded-lg transition-colors font-medium sidebar-bottom-link"
+                    data-tooltip="Mở rộng menu">
+                <span class="material-symbols-outlined shrink-0">chevron_left</span>
+                <span class="font-body-md text-body-md sidebar-collapsible-label">Thu gọn menu</span>
+            </button>
+            <a class="flex items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded-lg transition-colors font-medium sidebar-bottom-link"
+               href="/Auth/Logout" data-tooltip="Đăng xuất">
+                <span class="material-symbols-outlined shrink-0">logout</span>
+                <span class="font-body-md text-body-md sidebar-collapsible-label">Đăng xuất</span>
             </a>
         </div>
     </aside>
@@ -74,13 +59,14 @@
         <header class="staff-topbar h-16 w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-margin-mobile md:px-unit-lg gap-unit-sm md:gap-unit-md shrink-0 z-30">
             <div class="flex items-center gap-unit-lg flex-1">
                 <button type="button" aria-label="Mở menu bác sĩ" onclick="openDoctorSidebar()"
-                        class="md:hidden w-10 h-10 flex items-center justify-center rounded-lg text-primary hover:bg-surface-container-high shrink-0">
+                        class="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg text-primary hover:bg-surface-container-high shrink-0">
                     <span class="material-symbols-outlined">menu</span>
                 </button>
-                <div class="relative w-80 hidden md:block">
+                <div class="relative w-80 hidden lg:block" id="doctor-search-wrap">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-                    <input class="w-full pl-10 pr-4 py-2 bg-surface-container rounded-lg border-none focus:ring-2 focus:ring-primary text-body-md"
-                           placeholder="Tìm kiếm bệnh nhân..." type="text" />
+                    <input id="doctor-search-input" class="w-full pl-10 pr-4 py-2 bg-surface-container rounded-lg border-none focus:ring-2 focus:ring-primary text-body-md"
+                           placeholder="Tìm kiếm bệnh nhân..." type="text" autocomplete="off" />
+                    <div id="doctor-search-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg max-h-96 overflow-y-auto z-50"></div>
                 </div>
             </div>
 
@@ -91,9 +77,9 @@
                     <span class="text-body-md" id="doctor-date">--</span>
                 </div>
                 <!-- Notification Bell -->
-                <button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all relative">
+                <a id="doctor-notification-bell" href="/Doctor/Notification" class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all relative">
                     <span class="material-symbols-outlined">notifications</span>
-                </button>
+                </a>
                 <div class="h-8 w-px bg-outline-variant"></div>
                 <!-- User Profile -->
                 <div class="flex items-center gap-unit-sm hover:bg-surface-container-high p-1 pr-3 rounded-lg transition-all cursor-pointer">
@@ -121,8 +107,156 @@
 </div>
 
 @section Scripts {
+    <script src="~/lib/signalr/signalr.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
     <script>
+        // Shared antiforgery helper for AJAX POSTs anywhere in the Doctor area.
+        function antiForgeryFormData() {
+            const fd = new FormData();
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) fd.append('__RequestVerificationToken', token.value);
+            return fd;
+        }
+
+        // Single shared SignalR connection - the dashboard page and this
+        // layout's notification bell both listen on window.doctorHubConnection
+        // instead of opening a connection each.
+        (function () {
+            if (typeof signalR === 'undefined') return;
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/doctor-dashboard')
+                .withAutomaticReconnect()
+                .build();
+            window.doctorHubConnection = connection;
+            connection.on('NotificationCountChanged', refreshDoctorNotificationBadge);
+            connection.start().catch(function (err) { console.error('Lỗi kết nối SignalR:', err); });
+        })();
+
+        function refreshDoctorNotificationBadge() {
+            fetch('/Doctor/Notification/UnreadCount')
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    const bell = document.getElementById('doctor-notification-bell');
+                    if (!bell) return;
+                    let badge = document.getElementById('doctor-notification-badge');
+                    if (!data.count || data.count <= 0) {
+                        if (badge) badge.remove();
+                        return;
+                    }
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.id = 'doctor-notification-badge';
+                        badge.className = 'absolute top-1 right-1 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-error text-white text-[10px] font-bold leading-none';
+                        bell.appendChild(badge);
+                    }
+                    badge.textContent = data.count > 9 ? '9+' : data.count;
+                })
+                .catch(function () { /* bell badge is best-effort */ });
+        }
+        document.addEventListener('DOMContentLoaded', refreshDoctorNotificationBadge);
+
+        // Topbar quick search - scoped to this doctor's own patients
+        // (Doctor/History/QuickSearch), with a break-the-glass prompt for
+        // out-of-scope matches.
+        (function () {
+            const input = document.getElementById('doctor-search-input');
+            const resultsBox = document.getElementById('doctor-search-results');
+            if (!input || !resultsBox) return;
+
+            let debounceTimer = null;
+
+            input.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                const q = input.value.trim();
+                if (q.length < 2) {
+                    resultsBox.classList.add('hidden');
+                    resultsBox.innerHTML = '';
+                    return;
+                }
+                debounceTimer = setTimeout(function () { runSearch(q); }, 300);
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!resultsBox.contains(e.target) && e.target !== input) {
+                    resultsBox.classList.add('hidden');
+                }
+            });
+
+            function runSearch(q) {
+                fetch('/Doctor/History/QuickSearch?q=' + encodeURIComponent(q))
+                    .then(function (r) { return r.json(); })
+                    .then(renderResults)
+                    .catch(function () { resultsBox.classList.add('hidden'); });
+            }
+
+            function escapeHtml(s) {
+                const div = document.createElement('div');
+                div.textContent = s == null ? '' : s;
+                return div.innerHTML;
+            }
+
+            function renderResults(items) {
+                if (!items || items.length === 0) {
+                    resultsBox.innerHTML = '<div class="p-3 text-caption text-on-surface-variant">Không tìm thấy bệnh nhân.</div>';
+                    resultsBox.classList.remove('hidden');
+                    return;
+                }
+
+                resultsBox.innerHTML = items.map(function (item) {
+                    if (item.inScope) {
+                        return '<a href="/Doctor/History?searchString=' + encodeURIComponent(item.patientName) +
+                            '" class="block px-4 py-2.5 hover:bg-surface-container-low border-b border-outline-variant last:border-b-0">' +
+                            '<div class="font-semibold text-on-surface">' + escapeHtml(item.patientName) + '</div>' +
+                            '<div class="text-caption text-on-surface-variant">' + escapeHtml(item.phone) + '</div></a>';
+                    }
+
+                    return '<div class="px-4 py-2.5 border-b border-outline-variant last:border-b-0 flex items-center justify-between gap-2">' +
+                        '<div class="min-w-0"><div class="font-semibold text-on-surface-variant truncate">' + escapeHtml(item.patientName) + '</div>' +
+                        '<div class="text-caption text-outline flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">lock</span> Ngoài phạm vi</div></div>' +
+                        '<button type="button" class="shrink-0 text-caption text-primary font-semibold hover:underline" ' +
+                        'data-patient-id="' + item.patientId + '" data-latest-lich-kham-id="' + (item.latestLichKhamId ?? '') + '" data-patient-name="' + escapeHtml(item.patientName) + '">' +
+                        'Yêu cầu truy cập</button></div>';
+                }).join('');
+
+                resultsBox.querySelectorAll('button[data-patient-id]').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        const latest = btn.dataset.latestLichKhamId;
+                        requestBreakTheGlass(btn.dataset.patientId, latest ? parseInt(latest, 10) : null, btn.dataset.patientName);
+                    });
+                });
+
+                resultsBox.classList.remove('hidden');
+            }
+        })();
+
+        function requestBreakTheGlass(patientId, latestLichKhamId, patientName) {
+            if (!latestLichKhamId) {
+                alert(patientName + ' chưa có hồ sơ khám nào để xem.');
+                return;
+            }
+            const reason = prompt('Nhập lý do truy cập hồ sơ của ' + patientName + ' (bắt buộc, sẽ được ghi vào nhật ký hệ thống):');
+            if (reason === null) return;
+            if (reason.trim().length < 5) {
+                alert('Lý do truy cập cần tối thiểu 5 ký tự.');
+                return;
+            }
+
+            const fd = antiForgeryFormData();
+            fd.append('patientId', patientId);
+            fd.append('reason', reason.trim());
+
+            fetch('/Doctor/History/BreakTheGlass', { method: 'POST', body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        window.location.href = '/Doctor/History/RecordDetails/' + latestLichKhamId + '?breakGlass=true';
+                    } else {
+                        alert(data.message || 'Không thể ghi nhận yêu cầu truy cập.');
+                    }
+                })
+                .catch(function () { alert('Có lỗi xảy ra, vui lòng thử lại.'); });
+        }
+
         function openDoctorSidebar() {
             document.getElementById('doctor-sidebar')?.classList.add('mobile-sidebar-open');
             document.getElementById('doctor-sidebar-backdrop')?.classList.remove('hidden');
@@ -136,8 +270,21 @@
         }
 
         window.addEventListener('resize', () => {
-            if (window.innerWidth >= 768) closeDoctorSidebar();
+            if (window.innerWidth >= 1024) closeDoctorSidebar();
         });
+
+        // Desktop-only (lg:+) collapse-to-icon-only, remembered per browser
+        // via localStorage. Orthogonal to the mobile drawer above - collapsing
+        // a full-screen slide-over drawer to icon-only would hurt tap targets,
+        // so this never applies below the lg: breakpoint.
+        function toggleDoctorSidebarCollapse() {
+            const sidebar = document.getElementById('doctor-sidebar');
+            if (!sidebar) return;
+            const collapsed = sidebar.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('doctorSidebarCollapsed', collapsed ? '1' : '0');
+            const toggle = document.getElementById('doctor-sidebar-collapse-toggle');
+            if (toggle) toggle.dataset.tooltip = collapsed ? 'Mở rộng menu' : 'Thu gọn menu';
+        }
 
         // Live date display for doctor topbar
         (function () {
@@ -167,9 +314,51 @@
             color: #ba1a1a !important;
         }
 
-        @@media (max-width: 767px) {
+        @@media (max-width: 1023px) {
             #doctor-sidebar.mobile-sidebar-open {
                 transform: translateX(0) !important;
+            }
+        }
+
+        @@media (min-width: 1024px) {
+            #doctor-sidebar.sidebar-collapsed {
+                width: 76px !important;
+            }
+
+            #doctor-sidebar.sidebar-collapsed .sidebar-collapsible-label,
+            #doctor-sidebar.sidebar-collapsed .sidebar-group-label,
+            #doctor-sidebar.sidebar-collapsed .sidebar-link-label {
+                display: none !important;
+            }
+
+            #doctor-sidebar.sidebar-collapsed .sidebar-link,
+            #doctor-sidebar.sidebar-collapsed .sidebar-bottom-link {
+                justify-content: center;
+            }
+
+            #doctor-sidebar.sidebar-collapsed #doctor-sidebar-collapse-toggle .material-symbols-outlined {
+                transform: rotate(180deg);
+            }
+
+            #doctor-sidebar [data-tooltip] {
+                position: relative;
+            }
+
+            #doctor-sidebar.sidebar-collapsed [data-tooltip]:hover::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                left: calc(100% + 10px);
+                top: 50%;
+                transform: translateY(-50%);
+                background: #1b2426;
+                color: #fff;
+                padding: 5px 10px;
+                border-radius: 6px;
+                font-size: 12px;
+                white-space: nowrap;
+                z-index: 60;
+                pointer-events: none;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
             }
         }
     </style>

@@ -1,0 +1,60 @@
+@model List<QuanLyBenhVien.Models.PatientDocument>
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Tài liệu của tôi";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Tài liệu của tôi",
+        Subtitle = "Giấy ra viện, giấy nghỉ ốm, hoặc hồ sơ khám nơi khác — bác sĩ phụ trách lịch hẹn của bạn có thể xem trước khi khám.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Trang chủ", "/Patient/Dashboard") },
+        CurrentCrumb = "Tài liệu của tôi"
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+
+<section class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+        <div>
+            <h3 class="text-title-lg font-bold text-on-surface flex items-center gap-2"><span class="material-symbols-outlined text-primary">upload_file</span> Tải tài liệu lên</h3>
+            <p class="text-body-md text-on-surface-variant mt-1">Chỉ hỗ trợ PDF/JPG/PNG, tối đa 10MB mỗi file.</p>
+        </div>
+        <form method="post" action="/Patient/Documents/UploadDocument" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
+            @Html.AntiForgeryToken()
+            <input type="text" name="tenTaiLieu" placeholder="Tên tài liệu" class="border border-outline-variant rounded-lg px-3 py-2 text-sm" />
+            <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required class="max-w-[220px] text-sm" />
+            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary-container">Tải lên</button>
+        </form>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            @foreach (var document in Model)
+            {
+                <div class="flex items-center justify-between gap-3 border border-outline-variant rounded-xl p-3">
+                    <div class="min-w-0">
+                        <p class="font-semibold truncate">@document.TenTaiLieu</p>
+                        <p class="text-xs text-on-surface-variant">@document.NgayTaiLen.ToString("dd/MM/yyyy HH:mm") · @(document.KichThuoc / 1024) KB</p>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <a href="/Patient/Documents/DownloadDocument/@document.Id" target="_blank" class="p-2 text-primary hover:bg-primary/10 rounded-lg" title="Xem tài liệu">
+                            <span class="material-symbols-outlined">visibility</span>
+                        </a>
+                        <form method="post" action="/Patient/Documents/DeleteDocument/@document.Id">
+                            @Html.AntiForgeryToken()
+                            <button class="p-2 text-error hover:bg-error/10 rounded-lg" title="Xóa tài liệu">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p class="text-body-md text-on-surface-variant italic">Chưa có tài liệu nào được tải lên.</p>
+    }
+</section>

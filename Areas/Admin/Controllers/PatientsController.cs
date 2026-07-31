@@ -22,12 +22,14 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ExcelExportService _excel;
         private readonly IWebHostEnvironment _environment;
+        private readonly DoctorDashboardNotifier _notifier;
 
-        public PatientsController(ApplicationDbContext context, ExcelExportService excel, IWebHostEnvironment environment)
+        public PatientsController(ApplicationDbContext context, ExcelExportService excel, IWebHostEnvironment environment, DoctorDashboardNotifier notifier)
         {
             _context = context;
             _excel = excel;
             _environment = environment;
+            _notifier = notifier;
         }
 
         // GET: Admin/Patients
@@ -480,7 +482,17 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
 
             LogPatientAudit(patientId, "Đặt lịch hẹn", $"Đặt lịch hẹn cho bệnh nhân BN-{patientId:D4} với bác sĩ {doctor.User.HoTen} vào lúc {appointmentTime:HH:mm dd/MM/yyyy}.");
 
+            _context.Notifications.Add(new Notification
+            {
+                NguoiDungId = doctor.NguoiDungId,
+                NoiDung = $"[LichKham] Lịch hẹn mới|Bệnh nhân {patient.User.HoTen} vừa được đặt lịch khám vào lúc {appointmentTime:HH:mm dd/MM/yyyy}.",
+                NgayGui = DateTime.Now,
+                DaDoc = false
+            });
+
             await _context.SaveChangesAsync();
+            await _notifier.NotifyQueueUpdatedAsync(bacSiId);
+            await _notifier.NotifyNotificationCountChangedAsync(bacSiId);
             TempData["SuccessMessage"] = "Đã tạo lịch hẹn.";
             return RedirectToAction(nameof(Details), new { id = patientId });
         }

@@ -45,19 +45,33 @@ public static class ModulePermissionRegistry
     {
         new("Doctor.Dashboard", "Bảng điều khiển"),
         new("Doctor.Queue", "Lịch khám hôm nay"),
+        new("Doctor.Inpatient", "Bệnh nhân nội trú"),
+        new("Doctor.LabResults", "Kết quả cận lâm sàng"),
         new("Doctor.Exam", "Phiên khám bệnh"),
-        new("Doctor.History", "Lịch sử điều trị"),
+        new("Doctor.History", "Bệnh nhân của tôi"),
+        new("Doctor.Prescriptions", "Kê đơn & Y lệnh"),
+        new("Doctor.Consultation", "Hội chẩn"),
+        new("Doctor.Surgery", "Lịch phẫu thuật"),
+        new("Doctor.PendingSignatures", "Hồ sơ chờ ký"),
+        new("Doctor.Schedule", "Lịch làm việc"),
         new("Doctor.Stats", "Thống kê cá nhân"),
-        new("Doctor.Chat", "Tin nhắn tư vấn")
+        new("Doctor.Chat", "Tin nhắn tư vấn"),
+        new("Doctor.Notification", "Thông báo"),
+        new("Doctor.Profile", "Hồ sơ & Cài đặt")
     };
 
     public static readonly IReadOnlyList<ModuleInfo> PatientModules = new List<ModuleInfo>
     {
         new("Patient.Dashboard", "Trang chủ"),
         new("Patient.Book", "Đặt lịch khám"),
-        new("Patient.Record", "Đơn thuốc & Bệnh án"),
+        new("Patient.Appointments", "Lịch hẹn của tôi"),
+        new("Patient.LabResults", "Kết quả khám & Xét nghiệm"),
+        new("Patient.Record", "Lịch sử khám & Đơn thuốc"),
+        new("Patient.Documents", "Tài liệu của tôi"),
         new("Patient.Payment", "Thanh toán hóa đơn"),
-        new("Patient.Notification", "Thông báo cá nhân")
+        new("Patient.Notification", "Thông báo"),
+        new("Patient.Account", "Tài khoản & Bảo mật"),
+        new("Patient.Support", "Hỗ trợ")
     };
 
     public static readonly IReadOnlyDictionary<string, IReadOnlyList<ModuleInfo>> ModulesByRole =

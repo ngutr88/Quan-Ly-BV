@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBenhVien.Data;
 using QuanLyBenhVien.Models;
+using QuanLyBenhVien.Services;
 using System.Text.Json;
 using System.Security.Claims;
 
@@ -17,10 +18,12 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
     public class ExamController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly DoctorDashboardNotifier _notifier;
 
-        public ExamController(ApplicationDbContext context)
+        public ExamController(ApplicationDbContext context, DoctorDashboardNotifier notifier)
         {
             _context = context;
+            _notifier = notifier;
         }
 
         // GET: /Doctor/Exam/Session/5
@@ -43,6 +46,7 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                 appointment.TrangThai = "DangKham";
                 _context.Entry(appointment).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
+                await _notifier.NotifyQueueUpdatedAsync(doctorId);
             }
 
             // Fetch patient medical history (past exams)
@@ -333,6 +337,9 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             await _context.SaveChangesAsync();
 
             await transaction.CommitAsync();
+
+            await _notifier.NotifyQueueUpdatedAsync(doctorId);
+            await _notifier.NotifyActionRequiredUpdatedAsync(doctorId);
 
             TempData["SuccessMessage"] = $"Đã hoàn tất ca khám cho bệnh nhân {appointment.Patient.User.HoTen}. Đơn thuốc và hóa đơn đã được khởi tạo thành công.";
             return RedirectToAction("Index", "Queue");

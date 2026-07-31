@@ -1,22 +1,13 @@
-@model IEnumerable<QuanLyBenhVien.Models.Appointment>
+@model QuanLyBenhVien.Models.ViewModels.PatientDashboardViewModel
+@inject QuanLyBenhVien.Services.HospitalSettingsProvider HospitalSettingsProvider
 
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
     ViewData["Title"] = "Trang chủ Bệnh nhân";
 
-    var patient = ViewBag.Patient as QuanLyBenhVien.Models.Patient;
-    var recentPres = ViewBag.RecentPres as List<QuanLyBenhVien.Models.Prescription> ?? new List<QuanLyBenhVien.Models.Prescription>();
-    var unpaidInvoices = ViewBag.UnpaidInvoices as List<QuanLyBenhVien.Models.Invoice> ?? new List<QuanLyBenhVien.Models.Invoice>();
-    var notifications = ViewBag.RecentNotifications as List<QuanLyBenhVien.Models.Notification> ?? new List<QuanLyBenhVien.Models.Notification>();
-    var nextApp = ViewBag.NextAppointment as QuanLyBenhVien.Models.Appointment;
-    var vitals = ViewBag.LatestVitals as QuanLyBenhVien.Models.ExaminationRecord;
-
-    var upcoming = Model.ToList();
-    var unpaidCount = (int)(ViewBag.UnpaidCount ?? 0);
-    var unpaidAmount = (decimal)(ViewBag.UnpaidAmount ?? 0m);
-    var totalVisits = (int)(ViewBag.TotalVisits ?? 0);
-    var lastVisit = ViewBag.LastVisit as DateTime?;
-    var unread = (int)(ViewBag.UnreadNotifications ?? 0);
+    var patient = Model.Patient;
+    var nextApp = Model.NextAppointment;
+    var hospitalSettings = HospitalSettingsProvider.Load();
 
     var hour = DateTime.Now.Hour;
     var greeting = hour < 11 ? "Chào buổi sáng" : hour < 14 ? "Chào buổi trưa" : hour < 18 ? "Chào buổi chiều" : "Chào buổi tối";
@@ -29,20 +20,32 @@
         var parts = text.Split('|', 2);
         return parts.Length == 2 ? (parts[0].Trim(), parts[1].Trim()) : (text, "");
     }
+
+    // Masks all but the first 4 and last 2 characters, e.g. "GD4797920102" ->
+    // "GD47•••••02". Patients view only their own field here (unlike Admin's
+    // RevealSensitive, which audits access because staff view someone else's
+    // data) so this needs no server round-trip to reveal.
+    string MaskBhyt(string raw)
+    {
+        if (raw.Length <= 6) return raw;
+        return raw[..4] + new string('•', raw.Length - 6) + raw[^2..];
+    }
 }
+
+@Html.AntiForgeryToken()
 
 <!-- Greeting -->
 <div class="mb-unit-lg">
     <p class="text-body-md text-on-surface-variant">@greeting,</p>
     <div class="flex flex-wrap items-center gap-3 mt-1">
-        <h1 class="hms-page-title">@patient?.User.HoTen</h1>
+        <h1 class="hms-page-title">@patient.User.HoTen</h1>
         <span class="hms-badge hms-badge-info">
             <span class="material-symbols-outlined">badge</span>
-            BN-@patient?.Id.ToString("D4")
+            BN-@patient.Id.ToString("D4")
         </span>
-        @if (!string.IsNullOrWhiteSpace(patient?.NhomMau))
+        @if (!string.IsNullOrWhiteSpace(patient.NhomMau))
         {
-            <span class="hms-badge hms-badge-danger">
+            <span class="hms-badge hms-badge-neutral">
                 <span class="material-symbols-outlined">water_drop</span>
                 Nhóm máu @patient.NhomMau
             </span>
@@ -56,6 +59,9 @@
     var isConfirmed = nextApp.TrangThai != "ChoXacNhan";
     var daysAway = (nextApp.ThoiGian.Date - DateTime.Today).Days;
     var whenLabel = daysAway == 0 ? "Hôm nay" : daysAway == 1 ? "Ngày mai" : $"Còn {daysAway} ngày";
+    var terminal = new[] { "HoanThanh", "DaHuy", "DangKham", "VangMat" };
+    var canChange = !terminal.Contains(nextApp.TrangThai) && (nextApp.ThoiGian - DateTime.Now) >= TimeSpan.FromHours(24);
+    var mapsUrl = "https://www.google.com/maps/search/?api=1&query=" + Uri.EscapeDataString(hospitalSettings.DiaChi);
 
     <div class="patient-hero rounded-2xl p-unit-lg mb-unit-lg text-white shadow-md">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-unit-lg">
@@ -73,7 +79,7 @@
                 <div class="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-body-md">
                     <div>
                         <p class="opacity-75 text-caption">Bác sĩ</p>
-                        <p class="font-semibold">@(nextApp.Doctor != null ? nextApp.Doctor.User.HoTen : "Sẽ được phân công")</p>
+                        <p class="font-semibold">@(nextApp.Doctor != null ? FormatDoctorName(nextApp.Doctor) : "Sẽ được phân công")</p>
                     </div>
                     <div>
                         <p class="opacity-75 text-caption">Chuyên khoa</p>
@@ -84,6 +90,14 @@
                         <p class="font-semibold">@(nextApp.Doctor != null ? nextApp.Doctor.Department.ViTri : "Sảnh chờ tầng 1")</p>
                     </div>
                 </div>
+
+                @if (daysAway <= 2)
+                {
+                    <div class="mt-3 flex items-start gap-2 bg-white/15 rounded-xl px-3 py-2 max-w-lg">
+                        <span class="material-symbols-outlined text-[18px] mt-0.5">checklist</span>
+                        <p class="text-caption">Nhớ mang theo thẻ BHYT và CCCD khi đến khám.</p>
+                    </div>
+                }
             </div>
 
             <div class="flex flex-col items-start lg:items-end gap-2 shrink-0">
@@ -91,13 +105,28 @@
                     <span class="material-symbols-outlined">@(isConfirmed ? "verified" : "schedule")</span>
                     @(isConfirmed ? "Đã xác nhận" : "Chờ xác nhận")
                 </span>
-                <a href="/Patient/Record" class="patient-hero-btn">
-                    <span class="material-symbols-outlined">description</span> Xem hồ sơ khám
-                </a>
                 @if (!isConfirmed)
                 {
-                    <p class="text-caption opacity-80 max-w-[240px] lg:text-right">Nhân viên sẽ liên hệ qua điện thoại để xác nhận lịch.</p>
+                    <p class="text-caption opacity-80 max-w-[240px] lg:text-right">Nhân viên sẽ gọi xác nhận trong vòng 24 giờ.</p>
                 }
+
+                <div class="flex flex-wrap gap-2 justify-end">
+                    <a href="/Patient/Record" class="patient-hero-btn">
+                        <span class="material-symbols-outlined">description</span> Xem hồ sơ khám
+                    </a>
+                    <a href="@mapsUrl" target="_blank" rel="noopener" class="patient-hero-btn">
+                        <span class="material-symbols-outlined">directions</span> Chỉ đường
+                    </a>
+                    @if (canChange)
+                    {
+                        <a href="/Patient/Appointments/Reschedule/@nextApp.Id" class="patient-hero-btn">
+                            <span class="material-symbols-outlined">edit_calendar</span> Đổi lịch
+                        </a>
+                        <button type="button" class="patient-hero-btn" onclick="confirmCancelHero(@nextApp.Id)">
+                            <span class="material-symbols-outlined">event_busy</span> Hủy lịch
+                        </button>
+                    }
+                </div>
             </div>
         </div>
     </div>
@@ -121,15 +150,36 @@ else
     </div>
 }
 
+<!-- Proactive follow-up reminder (A5) -->
+@if (Model.FollowUpReminder != null)
+{
+    var fu = Model.FollowUpReminder;
+    <div id="followup-reminder-card" class="patient-alert mb-unit-lg" style="align-items:flex-start;">
+        <span class="material-symbols-outlined patient-alert-icon">event_repeat</span>
+        <div class="min-w-0 flex-1">
+            <p class="font-bold text-on-surface">Đã đến lúc tái khám định kỳ</p>
+            <p class="text-body-md text-on-surface-variant">
+                Đặt lịch tái khám với <strong>@fu.DoctorName</strong> (@fu.DepartmentName) để theo dõi tình trạng sức khỏe của bạn.
+            </p>
+            <div class="flex flex-wrap gap-2 mt-2">
+                <a href="/Patient/Book?deptId=@fu.DepartmentId&amp;doctorId=@fu.DoctorId" class="hms-btn hms-btn-primary hms-btn-sm">
+                    <span class="material-symbols-outlined">event_upcoming</span> Đặt lịch tái khám
+                </a>
+                <button type="button" class="hms-btn hms-btn-secondary hms-btn-sm" onclick="snoozeFollowUpReminder(@patient.Id)">Để sau</button>
+            </div>
+        </div>
+    </div>
+}
+
 <!-- Outstanding balance alert -->
-@if (unpaidCount > 0)
+@if (Model.UnpaidInvoiceCount > 0)
 {
     <a href="/Patient/Payment" class="patient-alert mb-unit-lg">
         <span class="material-symbols-outlined patient-alert-icon">receipt_long</span>
         <div class="min-w-0 flex-1">
-            <p class="font-bold text-on-surface">Bạn có @unpaidCount hóa đơn chưa thanh toán</p>
+            <p class="font-bold text-on-surface">Bạn có @Model.UnpaidInvoiceCount hóa đơn chưa thanh toán</p>
             <p class="text-body-md text-on-surface-variant">
-                Tổng cộng <strong class="text-error">@unpaidAmount.ToString("N0") ₫</strong> — thanh toán trực tuyến 24/7.
+                Tổng cộng <strong class="text-error">@Model.UnpaidInvoiceAmount.ToString("N0") ₫</strong> — thanh toán trực tuyến 24/7.
             </p>
         </div>
         <span class="hms-btn hms-btn-primary shrink-0">
@@ -138,44 +188,37 @@ else
     </a>
 }
 
-<!-- At-a-glance -->
+<!-- At-a-glance (3 cards - "Kết quả mới chưa xem" omitted, no structured lab-result data exists yet) -->
 <div class="hms-stat-grid">
     <div class="hms-stat">
         <div class="hms-stat-icon hms-stat-icon-primary"><span class="material-symbols-outlined">event_upcoming</span></div>
         <div class="hms-stat-body">
             <p class="hms-stat-label">Lịch hẹn sắp tới</p>
-            <p class="hms-stat-value">@upcoming.Count</p>
+            <!-- Always the true total, not the count shown below the hero card
+                 (which skips the appointment already shown in the hero) - keep
+                 this as-is if revisiting, it is intentional, not an off-by-one. -->
+            <p class="hms-stat-value">@Model.UpcomingAppointments.Count</p>
         </div>
     </div>
     <div class="hms-stat">
-        <div class="hms-stat-icon hms-stat-icon-success"><span class="material-symbols-outlined">history</span></div>
+        <div class="hms-stat-icon hms-stat-icon-success"><span class="material-symbols-outlined">medication</span></div>
         <div class="hms-stat-body">
-            <p class="hms-stat-label">Lượt khám đã hoàn tất</p>
-            <p class="hms-stat-value">@totalVisits</p>
-            @if (lastVisit.HasValue)
-            {
-                <p class="hms-stat-hint">Gần nhất @lastVisit.Value.ToString("dd/MM/yyyy")</p>
-            }
+            <p class="hms-stat-label">Thuốc đang sử dụng</p>
+            <p class="hms-stat-value">@Model.ActivePrescriptionCount</p>
+            <p class="hms-stat-hint">Đơn kê trong 30 ngày qua</p>
         </div>
     </div>
     <div class="hms-stat">
-        <div class="hms-stat-icon @(unpaidCount > 0 ? "hms-stat-icon-danger" : "hms-stat-icon-success")">
+        <div class="hms-stat-icon @(Model.UnpaidInvoiceCount > 0 ? "hms-stat-icon-danger" : "hms-stat-icon-success")">
             <span class="material-symbols-outlined">payments</span>
         </div>
         <div class="hms-stat-body">
             <p class="hms-stat-label">Hóa đơn chưa thanh toán</p>
-            <p class="hms-stat-value">@unpaidCount</p>
-            @if (unpaidCount > 0)
+            <p class="hms-stat-value">@Model.UnpaidInvoiceCount</p>
+            @if (Model.UnpaidInvoiceCount > 0)
             {
-                <p class="hms-stat-hint">@unpaidAmount.ToString("N0") ₫</p>
+                <p class="hms-stat-hint">@Model.UnpaidInvoiceAmount.ToString("N0") ₫</p>
             }
-        </div>
-    </div>
-    <div class="hms-stat">
-        <div class="hms-stat-icon hms-stat-icon-warn"><span class="material-symbols-outlined">notifications</span></div>
-        <div class="hms-stat-body">
-            <p class="hms-stat-label">Thông báo chưa đọc</p>
-            <p class="hms-stat-value">@unread</p>
         </div>
     </div>
 </div>
@@ -187,10 +230,10 @@ else
         <strong class="patient-action-title">Đặt lịch hẹn</strong>
         <span class="patient-action-sub">Chọn bác sĩ &amp; giờ khám</span>
     </a>
-    <a href="/Patient/Record" class="patient-action">
-        <span class="material-symbols-outlined patient-action-icon">clinical_notes</span>
-        <strong class="patient-action-title">Đơn thuốc &amp; bệnh án</strong>
-        <span class="patient-action-sub">Tra cứu lịch sử điều trị</span>
+    <a href="/Patient/Appointments" class="patient-action">
+        <span class="material-symbols-outlined patient-action-icon">event_note</span>
+        <strong class="patient-action-title">Lịch hẹn của tôi</strong>
+        <span class="patient-action-sub">Xem, đổi, hủy lịch</span>
     </a>
     <a href="/Patient/Payment" class="patient-action">
         <span class="material-symbols-outlined patient-action-icon">payments</span>
@@ -205,33 +248,23 @@ else
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-unit-lg">
-    <!-- Left: schedule + prescriptions -->
+    <!-- Left: schedule + recent visits -->
     <div class="lg:col-span-2 space-y-unit-lg">
-        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
-            <div class="flex items-center justify-between p-unit-lg pb-unit-md">
-                <h2 class="hms-section-title">
-                    <span class="material-symbols-outlined">calendar_month</span> Lịch hẹn khám sắp tới
-                </h2>
-                <a href="/Patient/Book" class="hms-btn hms-btn-secondary hms-btn-sm">
-                    <span class="material-symbols-outlined">add</span> Đặt thêm
-                </a>
-            </div>
+        @if (Model.UpcomingAppointments.Count >= 2)
+        {
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+                <div class="flex items-center justify-between p-unit-lg pb-unit-md">
+                    <h2 class="hms-section-title">
+                        <span class="material-symbols-outlined">calendar_month</span> Lịch hẹn khám sắp tới
+                    </h2>
+                    <a href="/Patient/Appointments" class="hms-btn hms-btn-secondary hms-btn-sm">
+                        Xem tất cả <span class="material-symbols-outlined">chevron_right</span>
+                    </a>
+                </div>
 
-            <div class="px-unit-lg pb-unit-lg space-y-unit-md">
-                @if (upcoming.Count == 0)
-                {
-                    <div class="hms-empty">
-                        <div class="hms-empty-icon"><span class="material-symbols-outlined">event_busy</span></div>
-                        <p class="hms-empty-title">Chưa có lịch khám sắp diễn ra</p>
-                        <p class="hms-empty-text">Đăng ký lịch khám để được ưu tiên chọn bác sĩ và khung giờ mong muốn.</p>
-                        <a href="/Patient/Book" class="hms-btn hms-btn-primary mt-2">
-                            <span class="material-symbols-outlined">add_circle</span> Đăng ký lịch khám
-                        </a>
-                    </div>
-                }
-                else
-                {
-                    @foreach (var app in upcoming)
+                <div class="px-unit-lg pb-unit-lg space-y-unit-md">
+                    @* Skip index 0 - it is already shown in the hero card above. *@
+                    @foreach (var app in Model.UpcomingAppointments.Skip(1))
                     {
                         <div class="patient-appt">
                             <div class="patient-appt-date">
@@ -252,7 +285,7 @@ else
                                     }
                                 </div>
                                 <p class="text-body-md text-on-surface mt-1 font-medium">
-                                    @(app.Doctor != null ? app.Doctor.User.HoTen : "Hệ thống tự động phân công")
+                                    @(app.Doctor != null ? FormatDoctorName(app.Doctor) : "Hệ thống tự động phân công")
                                 </p>
                                 <p class="text-caption text-on-surface-variant">
                                     @(app.Doctor != null ? app.Doctor.Department.TenKhoa : "Phòng tiếp đón chung")
@@ -261,14 +294,14 @@ else
                             </div>
                         </div>
                     }
-                }
+                </div>
             </div>
-        </div>
+        }
 
         <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
             <div class="flex items-center justify-between p-unit-lg pb-unit-md">
                 <h2 class="hms-section-title">
-                    <span class="material-symbols-outlined">medication</span> Đơn thuốc gần đây
+                    <span class="material-symbols-outlined">history</span> Lượt khám gần đây
                 </h2>
                 <a href="/Patient/Record" class="hms-btn hms-btn-secondary hms-btn-sm">
                     Xem tất cả <span class="material-symbols-outlined">chevron_right</span>
@@ -276,27 +309,37 @@ else
             </div>
 
             <div class="px-unit-lg pb-unit-lg space-y-unit-sm">
-                @if (recentPres.Count == 0)
+                @if (Model.RecentVisits.Count == 0)
                 {
                     <div class="hms-empty">
-                        <div class="hms-empty-icon"><span class="material-symbols-outlined">prescriptions</span></div>
-                        <p class="hms-empty-title">Chưa có đơn thuốc nào</p>
-                        <p class="hms-empty-text">Đơn thuốc bác sĩ kê sau mỗi lần khám sẽ được lưu tại đây.</p>
+                        <div class="hms-empty-icon"><span class="material-symbols-outlined">history_toggle_off</span></div>
+                        <p class="hms-empty-title">Chưa có lượt khám nào</p>
+                        <p class="hms-empty-text">Lịch sử các lần khám sẽ được lưu tại đây sau mỗi lần bác sĩ hoàn tất hồ sơ.</p>
                     </div>
                 }
                 else
                 {
-                    @foreach (var pres in recentPres)
+                    @foreach (var visit in Model.RecentVisits)
                     {
-                        <a href="/Patient/Record/PrescriptionDetails/@pres.PhieuKhamId" class="patient-pres">
-                            <span class="material-symbols-outlined patient-pres-icon">pill</span>
+                        var record = visit.Record;
+                        <!-- Diagnosis is intentionally NOT shown here - shoulder-surfing
+                             privacy risk on a shared homepage view; full clinical detail
+                             lives behind the click-through to the record. -->
+                        <a href="/Patient/Record" class="patient-pres">
+                            <span class="material-symbols-outlined patient-pres-icon">clinical_notes</span>
                             <div class="min-w-0 flex-1">
-                                <p class="text-body-md font-semibold text-on-surface">@pres.ExaminationRecord.ChanDoan</p>
-                                <p class="text-caption text-on-surface-variant">
-                                    @pres.NgayKe.ToString("dd/MM/yyyy")
-                                    @if (pres.ExaminationRecord.Appointment.Doctor != null)
+                                <p class="text-body-md font-semibold text-on-surface">
+                                    @record.NgayKham.ToString("dd/MM/yyyy")
+                                    @if (record.Appointment.Doctor != null)
                                     {
-                                        <span> • BS @pres.ExaminationRecord.Appointment.Doctor.User.HoTen</span>
+                                        <span class="font-normal"> • @FormatDoctorName(record.Appointment.Doctor)</span>
+                                    }
+                                </p>
+                                <p class="text-caption text-on-surface-variant">
+                                    @(record.Appointment.Doctor != null ? record.Appointment.Doctor.Department.TenKhoa : "N/A")
+                                    @if (visit.PrescriptionMedicineCount > 0)
+                                    {
+                                        <span class="hms-badge hms-badge-neutral ml-1">Có đơn thuốc · @visit.PrescriptionMedicineCount loại</span>
                                     }
                                 </p>
                             </div>
@@ -319,24 +362,36 @@ else
                 <div class="patient-field">
                     <dt>Thẻ BHYT</dt>
                     <dd>
-                        @if (string.IsNullOrWhiteSpace(patient?.SoBHYT))
+                        @if (string.IsNullOrWhiteSpace(patient.SoBHYT))
                         {
                             <span class="hms-badge hms-badge-neutral">Chưa cập nhật</span>
                         }
                         else
                         {
-                            <span class="font-mono font-semibold">@patient.SoBHYT</span>
+                            <button type="button" id="bhyt-toggle" class="font-mono font-semibold bg-transparent border-0 p-0 cursor-pointer text-on-surface"
+                                    data-full="@patient.SoBHYT" data-masked="@MaskBhyt(patient.SoBHYT)"
+                                    onclick="toggleBhytReveal()" title="Bấm để hiện đầy đủ">
+                                <span id="bhyt-value">@MaskBhyt(patient.SoBHYT)</span>
+                                <span class="material-symbols-outlined text-[16px] align-middle text-on-surface-variant">visibility</span>
+                            </button>
+                            @if (patient.NgayHetHanBHYT.HasValue)
+                            {
+                                var expired = patient.NgayHetHanBHYT.Value.Date < DateTime.Today;
+                                <span class="hms-badge @(expired ? "hms-badge-danger" : "hms-badge-ok") ml-1">
+                                    @(expired ? "Hết hạn" : "Còn hạn đến") @patient.NgayHetHanBHYT.Value.ToString("dd/MM/yyyy")
+                                </span>
+                            }
                         }
                     </dd>
                 </div>
                 <div class="patient-field">
                     <dt>Ngày sinh</dt>
-                    <dd>@patient?.NgaySinh.ToString("dd/MM/yyyy") • @patient?.GioiTinh</dd>
+                    <dd>@patient.NgaySinh.ToString("dd/MM/yyyy") • @patient.GioiTinh</dd>
                 </div>
                 <div class="patient-field">
                     <dt>Dị ứng</dt>
                     <dd>
-                        @if (string.IsNullOrWhiteSpace(patient?.DiUng))
+                        @if (string.IsNullOrWhiteSpace(patient.DiUng))
                         {
                             <span class="text-on-surface-variant">Không ghi nhận</span>
                         }
@@ -350,12 +405,13 @@ else
                 </div>
                 <div class="patient-field">
                     <dt>Tiền sử bệnh</dt>
-                    <dd>@(string.IsNullOrWhiteSpace(patient?.TienSuBenh) ? "Không ghi nhận" : patient.TienSuBenh)</dd>
+                    <dd>@(string.IsNullOrWhiteSpace(patient.TienSuBenh) ? "Không ghi nhận" : patient.TienSuBenh)</dd>
                 </div>
             </dl>
 
-            @if (vitals != null)
+            @if (Model.LatestVitals != null)
             {
+                var vitals = Model.LatestVitals;
                 <p class="text-label-md text-on-surface-variant uppercase tracking-wider mt-unit-lg mb-2">
                     Chỉ số gần nhất — @vitals.NgayKham.ToString("dd/MM/yyyy")
                 </p>
@@ -401,20 +457,20 @@ else
                 <h2 class="hms-section-title">
                     <span class="material-symbols-outlined">notifications</span> Thông báo
                 </h2>
-                @if (unread > 0)
+                @if (Model.UnreadNotificationCount > 0)
                 {
-                    <span class="hms-badge hms-badge-danger">@unread mới</span>
+                    <span class="hms-badge hms-badge-danger">@Model.UnreadNotificationCount mới</span>
                 }
             </div>
 
-            @if (notifications.Count == 0)
+            @if (Model.RecentNotifications.Count == 0)
             {
                 <p class="text-body-md text-on-surface-variant text-center py-4">Chưa có thông báo nào.</p>
             }
             else
             {
                 <div class="space-y-2">
-                    @foreach (var note in notifications)
+                    @foreach (var note in Model.RecentNotifications)
                     {
                         var parsed = SplitNotification(note.NoiDung);
                         <a href="/Patient/Notification" class="patient-note @(note.DaDoc ? "" : "patient-note-unread")">
@@ -422,7 +478,7 @@ else
                                 <p class="text-body-md font-semibold text-on-surface">@parsed.title</p>
                                 @if (!string.IsNullOrEmpty(parsed.body))
                                 {
-                                    <p class="text-caption text-on-surface-variant line-clamp-2">@parsed.body</p>
+                                    <p class="text-caption text-on-surface-variant line-clamp-3">@parsed.body</p>
                                 }
                                 <p class="text-[11px] text-outline mt-0.5">@note.NgayGui.ToString("HH:mm dd/MM/yyyy")</p>
                             </div>
@@ -437,3 +493,58 @@ else
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function toggleBhytReveal() {
+            const btn = document.getElementById('bhyt-toggle');
+            const valueSpan = document.getElementById('bhyt-value');
+            const showingFull = valueSpan.dataset.showingFull === '1';
+            valueSpan.innerText = showingFull ? btn.dataset.masked : btn.dataset.full;
+            valueSpan.dataset.showingFull = showingFull ? '0' : '1';
+        }
+
+        function antiForgeryFormData() {
+            const fd = new FormData();
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) fd.append('__RequestVerificationToken', token.value);
+            return fd;
+        }
+
+        function confirmCancelHero(id) {
+            if (!confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) return;
+            const reason = prompt('Vui lòng nhập lý do hủy lịch:');
+            if (reason === null) return;
+            if (reason.trim().length === 0) {
+                alert('Vui lòng nhập lý do hủy lịch.');
+                return;
+            }
+
+            const fd = antiForgeryFormData();
+            fd.append('lyDoHuy', reason.trim());
+
+            fetch('/Patient/Appointments/Cancel/' + id, { method: 'POST', body: fd })
+                .then(function () { window.location.reload(); })
+                .catch(function () { alert('Có lỗi xảy ra, vui lòng thử lại.'); });
+        }
+
+        // "Để sau" - snoozes the follow-up card for 7 days, per-browser
+        // (no server-side dismissal table - low-stakes, self-expiring state).
+        function snoozeFollowUpReminder(patientId) {
+            const until = Date.now() + 7 * 24 * 60 * 60 * 1000;
+            localStorage.setItem('patientFollowUpDismissedUntil_' + patientId, String(until));
+            const card = document.getElementById('followup-reminder-card');
+            if (card) card.remove();
+        }
+
+        (function () {
+            const patientId = @patient.Id;
+            const key = 'patientFollowUpDismissedUntil_' + patientId;
+            const until = parseInt(localStorage.getItem(key) || '0', 10);
+            if (until && Date.now() < until) {
+                const card = document.getElementById('followup-reminder-card');
+                if (card) card.remove();
+            }
+        })();
+    </script>
+}

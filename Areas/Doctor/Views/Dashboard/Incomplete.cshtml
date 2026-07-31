@@ -1,0 +1,42 @@
+@model List<QuanLyBenhVien.Models.ViewModels.ActionRequiredItemViewModel>
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Hồ sơ chưa hoàn thiện";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Hồ sơ chưa hoàn thiện",
+        Subtitle = "Các ca khám đã hoàn tất trong 30 ngày gần nhất nhưng còn thiếu hồ sơ hoặc chẩn đoán.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
+        CurrentCrumb = "Hồ sơ chưa hoàn thiện"
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    @if (!Model.Any())
+    {
+        <div class="p-unit-xl text-center">
+            <span class="material-symbols-outlined text-[48px] text-outline mb-2">task_alt</span>
+            <p class="text-body-lg font-semibold text-on-surface-variant">Không có hồ sơ nào cần xử lý.</p>
+        </div>
+    }
+    else
+    {
+        <div class="divide-y divide-outline-variant">
+            @foreach (var item in Model)
+            {
+                <a href="/Doctor/History?searchString=@Uri.EscapeDataString(item.PatientName)"
+                   class="flex items-center gap-unit-md px-unit-md py-4 hover:bg-surface-container-low transition-colors">
+                    <span class="material-symbols-outlined text-[22px] text-error shrink-0">description</span>
+                    <div class="min-w-0 flex-1">
+                        <p class="font-semibold text-on-surface">@item.PatientName</p>
+                        <p class="text-caption text-on-surface-variant">@item.Reason · Lịch hẹn lúc @item.ThoiGian.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">chevron_right</span>
+                </a>
+            }
+        </div>
+    }
+</div>

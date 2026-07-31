@@ -110,6 +110,15 @@ namespace QuanLyBenhVien.Controllers
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
+            _context.AuditLogs.Add(new AuditLog
+            {
+                NguoiDungId = user.Id,
+                HanhDong = "Đăng nhập",
+                ChiTiet = $"{user.HoTen} ({user.VaiTro}) đăng nhập thành công.",
+                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1"
+            });
+            await _context.SaveChangesAsync();
+
             TempData["SuccessMessage"] = $"Đăng nhập thành công! Chào mừng {user.HoTen}.";
 
             // Honour where the visitor was heading (e.g. the booking page they
@@ -299,6 +308,19 @@ namespace QuanLyBenhVien.Controllers
         // GET: /Auth/Logout
         public async Task<IActionResult> Logout()
         {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim != null && int.TryParse(claim.Value, out var userId))
+            {
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    NguoiDungId = userId,
+                    HanhDong = "Đăng xuất",
+                    ChiTiet = $"{User.Identity?.Name} đăng xuất khỏi hệ thống.",
+                    IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1"
+                });
+                await _context.SaveChangesAsync();
+            }
+
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             TempData["SuccessMessage"] = "Bạn đã đăng xuất khỏi hệ thống.";
             return RedirectToAction("Index", "Home");

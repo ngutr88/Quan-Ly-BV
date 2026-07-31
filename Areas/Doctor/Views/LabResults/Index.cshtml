@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Kết quả cận lâm sàng";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Kết quả cận lâm sàng",
+        Subtitle = "Hộp thư kết quả xét nghiệm / chẩn đoán hình ảnh của bệnh nhân bạn chỉ định.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
+        CurrentCrumb = "Kết quả cận lâm sàng"
+    };
+
+    var comingSoon = new ComingSoonViewModel
+    {
+        Icon = "biotech",
+        Message = "Tính năng đang được phát triển.",
+        SubMessage = "Hệ thống chưa có kết quả xét nghiệm/CĐHA dạng có cấu trúc — sẽ được xây dựng ở một đợt riêng cùng quy trình nhập kết quả."
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_ComingSoon" model="comingSoon" />

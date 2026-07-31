@@ -1,148 +1,154 @@
-@model IEnumerable<QuanLyBenhVien.Models.Appointment>
+@model QuanLyBenhVien.Models.ViewModels.DoctorDashboardViewModel
+@using Microsoft.AspNetCore.Html
 
 @{
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
-    ViewData["Title"] = "Trang chủ Bác sĩ";
-    var doctor = ViewBag.DoctorProfile as QuanLyBenhVien.Models.Doctor;
-    var recordAppointmentIds = ViewBag.RecordAppointmentIds as HashSet<int> ?? new HashSet<int>();
+    ViewData["Title"] = "Bảng điều khiển";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Bảng điều khiển",
+        Subtitle = $"Xin chào, {FormatDoctorName(Model.Doctor)} — {Model.Doctor.Department?.TenKhoa}"
+    };
+
+    var tomorrow = DateTime.Today.AddDays(1);
+    var longWait = Model.LongestWaitMinutes.HasValue && Model.LongestWaitMinutes.Value > 30;
 }
 
-<!-- Welcome banner -->
-<div class="bg-gradient-to-r from-primary-fixed to-primary-fixed-dim rounded-2xl p-unit-lg text-on-primary-fixed mb-unit-lg shadow-sm">
-    <div class="flex items-center gap-unit-md">
-        <div class="w-14 h-14 bg-white/30 rounded-full flex items-center justify-center text-[32px]">
-            🩺
-        </div>
-        <div>
-            <h2 class="font-headline-lg font-bold">Xin chào, @doctor?.HocVi. @doctor?.User.HoTen!</h2>
-            <p class="text-body-md opacity-90">Hôm nay bạn có <strong>@ViewBag.TodayPending ca hẹn khám</strong> đang chờ phục vụ.</p>
-        </div>
-    </div>
-</div>
+@Html.AntiForgeryToken()
 
-<!-- Stats Grid -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-unit-md mb-unit-lg">
-    <div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm flex items-center gap-unit-md">
+<partial name="_PageHeader" model="header" />
+
+<!-- 4 thẻ hành động - snapshot tại thời điểm tải trang; số liệu chi tiết bên
+     dưới (hàng đợi, cần xử lý) tự cập nhật qua SignalR. -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-unit-md mb-unit-lg">
+    <a href="#queue-section" class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm hover:border-primary transition-colors flex items-center gap-unit-md">
         <span class="material-symbols-outlined text-[32px] text-primary">patient_list</span>
-        <div>
-            <span class="text-caption text-on-surface-variant block">Tổng ca hôm nay</span>
-            <strong class="text-headline-md text-on-surface">@ViewBag.TodayTotal ca hẹn</strong>
+        <div class="min-w-0">
+            <span class="text-caption text-on-surface-variant block">Ca khám hôm nay</span>
+            <strong class="text-title-lg text-on-surface block">@Model.TodayTotal ca</strong>
+            <span class="text-caption text-on-surface-variant">@Model.TodayCompleted đã khám · @Model.TodayWaiting đang chờ</span>
         </div>
-    </div>
-    
-    <div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm flex items-center gap-unit-md">
-        <span class="material-symbols-outlined text-[32px] text-primary">check_circle</span>
-        <div>
-            <span class="text-caption text-on-surface-variant block">Đã khám xong</span>
-            <strong class="text-headline-md text-primary">@ViewBag.TodayCompleted ca</strong>
+    </a>
+
+    <a href="#queue-section" class="bg-surface-container-lowest border @(longWait ? "border-tertiary" : "border-outline-variant") p-unit-md rounded-xl shadow-sm hover:border-primary transition-colors flex items-center gap-unit-md">
+        <span class="material-symbols-outlined text-[32px] @(longWait ? "text-tertiary" : "text-primary")">hourglass_top</span>
+        <div class="min-w-0">
+            <span class="text-caption text-on-surface-variant block">Đang chờ khám</span>
+            <strong class="text-title-lg @(longWait ? "text-tertiary" : "text-on-surface") block">@Model.TodayWaiting bệnh nhân</strong>
+            <span class="text-caption @(longWait ? "text-tertiary font-semibold" : "text-on-surface-variant")">
+                @(Model.LongestWaitMinutes.HasValue ? $"Chờ lâu nhất: {Model.LongestWaitMinutes} phút" : "Chưa có ai chờ")
+            </span>
         </div>
+    </a>
+
+    <a href="/Doctor/Queue?date=@tomorrow.ToString("yyyy-MM-dd")" class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm hover:border-primary transition-colors flex items-center gap-unit-md">
+        <span class="material-symbols-outlined text-[32px] text-primary">event_upcoming</span>
+        <div class="min-w-0">
+            <span class="text-caption text-on-surface-variant block">Lịch ngày mai</span>
+            <strong class="text-title-lg text-on-surface block">@Model.TomorrowTotal ca hẹn</strong>
+            <span class="text-caption text-on-surface-variant">@tomorrow.ToString("dd/MM/yyyy")</span>
+        </div>
+    </a>
+
+    <a href="/Doctor/Dashboard/Incomplete" class="bg-surface-container-lowest border @(Model.IncompleteRecordsCount > 0 ? "border-error" : "border-outline-variant") p-unit-md rounded-xl shadow-sm hover:border-primary transition-colors flex items-center gap-unit-md">
+        <span class="material-symbols-outlined text-[32px] @(Model.IncompleteRecordsCount > 0 ? "text-error" : "text-primary")">fact_check</span>
+        <div class="min-w-0">
+            <span class="text-caption text-on-surface-variant block">Hồ sơ chưa hoàn thiện</span>
+            <strong class="text-title-lg @(Model.IncompleteRecordsCount > 0 ? "text-error" : "text-on-surface") block">@Model.IncompleteRecordsCount hồ sơ</strong>
+            <span class="text-caption text-on-surface-variant">30 ngày gần nhất</span>
+        </div>
+    </a>
+</div>
+
+<!-- Bố cục 2 cột: trái ~65% hàng đợi, phải ~35% cần xử lý + lịch tuần -->
+<div class="flex flex-col gap-unit-lg xl:grid xl:grid-cols-[minmax(0,65fr)_minmax(0,35fr)] xl:items-start xl:gap-unit-lg">
+    <div id="queue-section">
+        <partial name="_QueueSection" model="Model" />
     </div>
 
-    <div class="bg-surface-container-lowest border border-outline-variant p-unit-md rounded-xl shadow-sm flex items-center gap-unit-md">
-        <span class="material-symbols-outlined text-[32px] text-tertiary">star</span>
-        <div>
-            <span class="text-caption text-on-surface-variant block">Đánh giá trung bình</span>
-            <strong class="text-headline-md text-tertiary">@ViewBag.AvgRating.ToString("F1") / 5.0</strong>
+    <div class="flex flex-col gap-unit-lg min-w-0">
+        <div id="action-required-section">
+            <partial name="_ActionRequiredSection" model="Model" />
         </div>
+
+        <!-- Sắp có - tĩnh, không nằm trong vòng làm mới SignalR vì không có
+             dữ liệu thật đứng sau (xem mục Backlog trong plan). -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-md shadow-sm">
+            <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-unit-sm">Sắp có</h4>
+            <ul class="space-y-2 text-body-md text-on-surface-variant">
+                <li class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-outline">biotech</span> Kết quả CLS mới về / chờ kết luận</li>
+                <li class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-outline">groups</span> Lời mời hội chẩn</li>
+                <li class="flex items-center gap-2"><span class="material-symbols-outlined text-[18px] text-outline">local_pharmacy</span> Đơn thuốc bị dược sĩ phản hồi</li>
+            </ul>
+        </div>
+
+        <partial name="_WeekSchedule" model="Model.Week" />
     </div>
 </div>
 
-<!-- Today's Queue Section -->
-@* Given a minimum height so a short or empty queue does not leave the lower
-   third of the dashboard blank; the space then sits inside the card. *@
-<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm min-h-[360px]">
-    <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30 flex justify-between items-center">
-        <h3 class="font-title-lg text-title-lg font-bold text-primary flex items-center gap-1">
-            <span class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></span>
-            Hàng đợi khám hôm nay
-        </h3>
-        <span class="text-caption text-on-surface-variant">Ngày: @DateTime.Today.ToString("dd/MM/yyyy")</span>
-    </div>
-    
-    <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Danh sách lịch khám hôm nay" tabindex="0">
-        <table class="w-full text-left text-body-md">
-            <thead>
-                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
-                    <th class="px-unit-md py-3">Thời gian</th>
-                    <th class="px-unit-md py-3">Bệnh nhân</th>
-                    <th class="px-unit-md py-3">Giới tính / Tuổi</th>
-                    <th class="px-unit-md py-3">Lý do / Triệu chứng khai báo</th>
-                    <th class="px-unit-md py-3">Trạng thái</th>
-                    <th class="px-unit-md py-3 text-right">Khám bệnh</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-outline-variant">
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="6" class="px-unit-md py-8 text-center text-on-surface-variant">Không có lịch khám nào trong hàng đợi ngày hôm nay.</td>
-                    </tr>
-                }
-                else
-                {
-                    @foreach (var app in Model)
-                    {
-                        var isCompleted = app.TrangThai == "HoanThanh";
-                        var isCanceled = app.TrangThai == "DaHuy";
-                        <tr class="hover:bg-surface-container-low transition-colors @(isCompleted ? "bg-secondary-container/5" : "")">
-                            <td class="px-unit-md py-4 font-bold text-primary">@app.ThoiGian.ToString("HH:mm")</td>
-                            <td class="px-unit-md py-4">
-                                <div class="font-semibold text-on-surface">@app.Patient.User.HoTen</div>
-                                <div class="text-caption text-on-surface-variant">SĐT: @app.Patient.User.Sdt</div>
-                            </td>
-                            <td class="px-unit-md py-4">
-                                <div>@app.Patient.GioiTinh</div>
-                                <div class="text-caption text-on-surface-variant">@(DateTime.Today.Year - app.Patient.NgaySinh.Year) tuổi</div>
-                            </td>
-                            <td class="px-unit-md py-4 max-w-[250px] truncate" title="@app.LyDoKham">@app.LyDoKham</td>
-                            <td class="px-unit-md py-4">
-                                @if (app.TrangThai == "ChoXacNhan")
-                                {
-                                    <span class="px-2 py-0.5 rounded-full bg-primary-container/20 text-primary-fixed-dim text-[11px] font-bold">Chờ duyệt</span>
-                                }
-                                else if (app.TrangThai == "DaXacNhan")
-                                {
-                                    <span class="px-2 py-0.5 rounded-full bg-tertiary-fixed/30 text-on-tertiary-fixed-variant text-[11px] font-bold">Đã check-in</span>
-                                }
-                                else if (app.TrangThai == "DangKham")
-                                {
-                                    <span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container text-[11px] font-bold">Đang khám</span>
-                                }
-                                else if (app.TrangThai == "HoanThanh" && recordAppointmentIds.Contains(app.Id))
-                                {
-                                    <span class="px-2 py-0.5 rounded-full bg-secondary/15 text-secondary text-[11px] font-bold">Đã hoàn thành</span>
-                                }
-                                else
-                                {
-                                    <span class="px-2 py-0.5 rounded-full bg-error-container text-error text-[11px] font-bold">Đã hủy</span>
-                                }
-                            </td>
-                            <td class="px-unit-md py-4 text-right">
-                                @if (app.TrangThai == "DaXacNhan" || app.TrangThai == "DangKham")
-                                {
-                                    <a href="/Doctor/Exam/Session/@app.Id" class="inline-flex items-center gap-0.5 bg-primary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-primary-container transition-all active:scale-95 font-semibold shadow-sm">
-                                        <span class="material-symbols-outlined text-[16px]">clinical_notes</span> Bắt đầu khám
-                                    </a>
-                                }
-                                else if (app.TrangThai == "HoanThanh")
-                                {
-                                    <span class="text-caption text-on-surface-variant">Hồ sơ đang đồng bộ</span>
-                                }
-                                else if (app.TrangThai == "HoanThanh")
-                                {
-                                    <a href="/Doctor/History/RecordDetails/@app.Id" class="inline-flex items-center gap-0.5 text-primary hover:underline font-semibold text-body-md">
-                                        Xem bệnh án
-                                    </a>
-                                }
-                                else
-                                {
-                                    <span class="text-caption text-on-surface-variant">Không khả dụng</span>
-                                }
-                            </td>
-                        </tr>
+@section Scripts {
+    <script>
+        function antiForgeryFormData() {
+            const fd = new FormData();
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) fd.append('__RequestVerificationToken', token.value);
+            return fd;
+        }
+
+        function refreshQueueSection() {
+            fetch('/Doctor/Dashboard/QueueSection')
+                .then(function (r) { return r.text(); })
+                .then(function (html) {
+                    const el = document.getElementById('queue-section');
+                    if (el) el.innerHTML = html;
+                })
+                .catch(function (err) { console.error('Không thể làm mới hàng đợi:', err); });
+        }
+
+        function refreshActionRequiredSection() {
+            fetch('/Doctor/Dashboard/ActionRequiredSection')
+                .then(function (r) { return r.text(); })
+                .then(function (html) {
+                    const el = document.getElementById('action-required-section');
+                    if (el) el.innerHTML = html;
+                })
+                .catch(function (err) { console.error('Không thể làm mới danh sách cần xử lý:', err); });
+        }
+
+        // "Gọi bệnh nhân tiếp theo" - phát ra từ _QueueSection, xử lý ở đây để
+        // dùng chung antiForgeryFormData() và luồng chuyển trang.
+        function callNextPatient(button) {
+            button.disabled = true;
+            fetch('/Doctor/Dashboard/CallNextPatient', { method: 'POST', body: antiForgeryFormData() })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        window.location.href = data.redirectUrl;
+                    } else {
+                        button.disabled = false;
+                        if (typeof showGlobalToast === 'function') {
+                            showGlobalToast('Không thể gọi bệnh nhân', data.message || 'Vui lòng thử lại.', 'warning');
+                        } else {
+                            alert(data.message || 'Vui lòng thử lại.');
+                        }
+                        refreshQueueSection();
                     }
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
+                })
+                .catch(function () {
+                    button.disabled = false;
+                });
+        }
+
+        // Lắng nghe kết nối SignalR dùng chung do _DoctorLayout thiết lập.
+        (function attachDashboardHubListeners() {
+            if (!window.doctorHubConnection) {
+                // Layout vừa mới bắt đầu kết nối - thử lại sau một nhịp ngắn.
+                setTimeout(attachDashboardHubListeners, 300);
+                return;
+            }
+            window.doctorHubConnection.on('QueueUpdated', refreshQueueSection);
+            window.doctorHubConnection.on('ActionRequiredUpdated', refreshActionRequiredSection);
+        })();
+    </script>
+}

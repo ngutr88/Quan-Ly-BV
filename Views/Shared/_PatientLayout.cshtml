@@ -4,11 +4,26 @@
     var currentPatientUserClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
     var currentPatientUserId = currentPatientUserClaim != null ? int.Parse(currentPatientUserClaim.Value) : 3;
     var unreadNotificationCount = _dbContext.Notifications.Count(n => n.NguoiDungId == currentPatientUserId && !n.DaDoc);
+
+    // Aggregate badge dot for the mobile bottom-nav "Menu" button, which opens
+    // the drawer holding Thanh toán/Thông báo/etc. rather than showing each of
+    // their individual badges cramped onto one button.
+    var currentPatientId = _dbContext.Patients.Where(p => p.NguoiDungId == currentPatientUserId).Select(p => p.Id).FirstOrDefault();
+    var unpaidInvoiceCountForBottomNav = _dbContext.Invoices.Count(i => i.ExaminationRecord.Appointment.BenhNhanId == currentPatientId && i.TrangThaiThanhToan == "ChuaThanhToan");
 }
 
 <div class="patient-shell text-on-surface overflow-hidden flex h-screen w-full max-w-full">
-    <!-- Side Navigation Bar (Desktop Only) -->
-    <aside class="patient-sidebar hidden md:flex flex-col w-[280px] h-screen bg-surface-container-lowest border-r border-outline-variant py-unit-lg shrink-0 z-50">
+    <button id="patient-sidebar-backdrop" type="button" aria-label="Đóng menu"
+            class="hidden md:hidden fixed inset-0 bg-on-background/40 z-40"
+            onclick="closePatientSidebar()"></button>
+
+    <!-- Side Navigation Bar (permanent at md:+, slide-in drawer below it) -->
+    <aside id="patient-sidebar" class="patient-sidebar fixed md:relative inset-y-0 left-0 -translate-x-full md:translate-x-0 transition-transform duration-200 ease-out flex flex-col w-[280px] h-screen bg-surface-container-lowest border-r border-outline-variant py-unit-lg shrink-0 z-50">
+        <button type="button" aria-label="Đóng menu" onclick="closePatientSidebar()"
+                class="md:hidden absolute top-4 right-3 w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+
         <!-- Logo -->
         <div class="px-unit-lg mb-unit-xl">
             <a href="/Patient/Dashboard" class="flex items-center gap-unit-md group">
@@ -22,50 +37,7 @@
             </a>
         </div>
 
-        <!-- Sidebar Navigation Menu -->
-        <nav class="flex-1 px-unit-sm space-y-1 overflow-y-auto custom-scrollbar">
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Patient/Dashboard">
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-                <span class="font-body-md text-body-md">Trang chủ</span>
-            </a>
-
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Book" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Patient/Book">
-                <span class="material-symbols-outlined">add_box</span>
-                <span class="font-body-md text-body-md">Đặt lịch khám</span>
-            </a>
-
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Record" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Patient/Record">
-                <span class="material-symbols-outlined">medical_information</span>
-                <span class="font-body-md text-body-md">Đơn thuốc &amp; Bệnh án</span>
-            </a>
-
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-colors active:scale-95 @(ViewContext.RouteData.Values["action"]?.ToString() == "Health" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Patient/Record/Health">
-                <span class="material-symbols-outlined">favorite</span>
-                <span class="font-body-md text-body-md">Hồ sơ sức khỏe</span>
-            </a>
-
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-colors active:scale-95 @(ViewContext.RouteData.Values["action"]?.ToString() == "Dependents" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Patient/Record/Dependents">
-                <span class="material-symbols-outlined">group</span>
-                <span class="font-body-md text-body-md">Hồ sơ người thân</span>
-            </a>
-
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Payment" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Patient/Payment">
-                <span class="material-symbols-outlined">receipt_long</span>
-                <span class="font-body-md text-body-md">Thanh toán hóa đơn</span>
-            </a>
-
-            <a class="flex items-center gap-unit-md px-unit-md py-3 rounded-lg transition-all cursor-pointer active:scale-95 @(ViewContext.RouteData.Values["controller"]?.ToString() == "Notification" ? "text-primary font-bold bg-primary-container/10" : "text-on-surface-variant hover:bg-surface-container-low")"
-               href="/Patient/Notification">
-                <span class="material-symbols-outlined">notifications</span>
-                <span class="font-body-md text-body-md">Thông báo cá nhân</span>
-            </a>
-        </nav>
+        @await Component.InvokeAsync("PatientSidebar")
 
         <!-- Bottom Actions -->
         <div class="px-unit-sm mt-auto space-y-1 border-t border-outline-variant pt-unit-sm">
@@ -80,16 +52,22 @@
     <!-- Main Content Area -->
     <main class="flex-1 min-w-0 max-w-full h-screen overflow-x-hidden overflow-y-auto flex flex-col">
         <!-- Top App Bar -->
-        <header class="patient-topbar h-16 w-full max-w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-3 md:px-unit-lg gap-1 sm:gap-unit-md shrink-0 z-40">
-            <!-- Brand Logo (Mobile Only) -->
-            <a href="/Patient/Dashboard" class="flex items-center gap-unit-sm group md:hidden">
-                <div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
-                    <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">medical_services</span>
-                </div>
-                <div class="flex flex-col">
-                    <span class="font-title-lg font-bold text-primary leading-tight">MediFlow</span>
-                </div>
-            </a>
+        <header class="patient-topbar h-16 w-full max-w-full sticky top-0 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex items-center justify-between px-3 md:px-unit-lg gap-1 sm:gap-unit-md shrink-0 z-30">
+            <div class="flex items-center gap-unit-sm md:hidden">
+                <button type="button" aria-label="Mở menu" onclick="openPatientSidebar()"
+                        class="w-9 h-9 flex items-center justify-center rounded-lg text-primary hover:bg-surface-container-high shrink-0">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <!-- Brand Logo (Mobile Only) -->
+                <a href="/Patient/Dashboard" class="flex items-center gap-unit-sm group">
+                    <div class="w-9 h-9 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
+                        <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-title-lg font-bold text-primary leading-tight">MediFlow</span>
+                    </div>
+                </a>
+            </div>
 
             <!-- Desktop Welcome Message -->
             <div class="hidden md:flex items-center gap-unit-sm text-on-surface-variant font-medium">
@@ -119,13 +97,6 @@
                     </div>
                     <span class="hidden sm:inline font-label-md text-label-md text-on-surface">@User.Identity?.Name</span>
                 </div>
-
-                <!-- Mobile logout is kept in the top bar because the desktop sidebar is hidden. -->
-                <a href="/Auth/Logout"
-                   class="md:hidden flex items-center justify-center p-2 rounded-full text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors"
-                   aria-label="Đăng xuất" title="Đăng xuất">
-                    <span class="material-symbols-outlined text-[24px]">logout</span>
-                </a>
             </div>
         </header>
 
@@ -146,40 +117,64 @@
         </footer>
     </main>
 
-    <!-- Mobile Navigation Tab Bar (Bottom) -->
+    <!-- Mobile Navigation Tab Bar (Bottom) - 4 primary links + a Menu button
+         that opens the drawer above for everything else (Sổ sức khỏe, Hồ sơ
+         người thân, Tài liệu, Thanh toán, Tài khoản, Hỗ trợ...). -->
     <nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface-container-lowest border-t border-outline-variant h-14 flex items-center justify-around z-40 shadow-lg">
-        <a href="/Patient/Dashboard" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "text-primary" : "text-on-surface-variant hover:text-primary")">
+        <a href="/Patient/Dashboard" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors min-w-[44px] min-h-[44px] justify-center @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "text-primary" : "text-on-surface-variant hover:text-primary")">
             <span class="material-symbols-outlined text-[22px]" style="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "font-variation-settings: 'FILL' 1;" : "")">home</span>
             <span class="text-[10px] font-semibold">Trang chủ</span>
         </a>
-        <a href="/Patient/Book" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Book" ? "text-primary" : "text-on-surface-variant hover:text-primary")">
+        <a href="/Patient/Book" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors min-w-[44px] min-h-[44px] justify-center @(ViewContext.RouteData.Values["controller"]?.ToString() == "Book" ? "text-primary" : "text-on-surface-variant hover:text-primary")">
             <span class="material-symbols-outlined text-[22px]" style="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Book" ? "font-variation-settings: 'FILL' 1;" : "")">add_box</span>
             <span class="text-[10px] font-semibold">Đặt lịch</span>
         </a>
-        <a href="/Patient/Record" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Record" ? "text-primary" : "text-on-surface-variant hover:text-primary")">
-            <span class="material-symbols-outlined text-[22px]" style="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Record" ? "font-variation-settings: 'FILL' 1;" : "")">medical_information</span>
-            <span class="text-[10px] font-semibold">Đơn thuốc</span>
+        <a href="/Patient/Appointments" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors min-w-[44px] min-h-[44px] justify-center @(ViewContext.RouteData.Values["controller"]?.ToString() == "Appointments" ? "text-primary" : "text-on-surface-variant hover:text-primary")">
+            <span class="material-symbols-outlined text-[22px]" style="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Appointments" ? "font-variation-settings: 'FILL' 1;" : "")">event_note</span>
+            <span class="text-[10px] font-semibold">Lịch hẹn</span>
         </a>
-        <a href="/Patient/Payment" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Payment" ? "text-primary" : "text-on-surface-variant hover:text-primary")">
-            <span class="material-symbols-outlined text-[22px]" style="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Payment" ? "font-variation-settings: 'FILL' 1;" : "")">receipt_long</span>
-            <span class="text-[10px] font-semibold">Hóa đơn</span>
+        <a href="/Patient/LabResults" class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors min-w-[44px] min-h-[44px] justify-center @(ViewContext.RouteData.Values["controller"]?.ToString() == "LabResults" ? "text-primary" : "text-on-surface-variant hover:text-primary")">
+            <span class="material-symbols-outlined text-[22px]" style="@(ViewContext.RouteData.Values["controller"]?.ToString() == "LabResults" ? "font-variation-settings: 'FILL' 1;" : "")">biotech</span>
+            <span class="text-[10px] font-semibold">Kết quả</span>
         </a>
-        <a href="/Patient/Notification" class="relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors @(ViewContext.RouteData.Values["controller"]?.ToString() == "Notification" ? "text-primary" : "text-on-surface-variant hover:text-primary")">
-            <span class="material-symbols-outlined text-[22px]" style="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Notification" ? "font-variation-settings: 'FILL' 1;" : "")">notifications</span>
-            @if (unreadNotificationCount > 0)
+        <button type="button" onclick="openPatientSidebar()" class="relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors min-w-[44px] min-h-[44px] justify-center text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-[22px]">menu</span>
+            @if (unreadNotificationCount > 0 || unpaidInvoiceCountForBottomNav > 0)
             {
-                <span class="absolute top-0 right-2 w-3.5 h-3.5 bg-error text-white font-semibold text-[9px] rounded-full flex items-center justify-center">
-                    @unreadNotificationCount
-                </span>
+                <span class="absolute top-0 right-2 w-2 h-2 bg-error rounded-full"></span>
             }
-            <span class="text-[10px] font-semibold">Thông báo</span>
-        </a>
+            <span class="text-[10px] font-semibold">Menu</span>
+        </button>
     </nav>
 </div>
 
 @section Scripts {
     @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        function openPatientSidebar() {
+            document.getElementById('patient-sidebar')?.classList.add('mobile-sidebar-open');
+            document.getElementById('patient-sidebar-backdrop')?.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function closePatientSidebar() {
+            document.getElementById('patient-sidebar')?.classList.remove('mobile-sidebar-open');
+            document.getElementById('patient-sidebar-backdrop')?.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) closePatientSidebar();
+        });
+    </script>
 }
 @section Styles {
     @await RenderSectionAsync("Styles", required: false)
+    <style>
+        @@media (max-width: 767px) {
+            #patient-sidebar.mobile-sidebar-open {
+                transform: translateX(0) !important;
+            }
+        }
+    </style>
 }

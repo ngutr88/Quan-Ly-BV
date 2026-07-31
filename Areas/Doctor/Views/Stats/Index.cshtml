@@ -14,7 +14,7 @@
     var statsHeader = new PageHeaderViewModel
     {
         Title = "Thống kê cá nhân",
-        Subtitle = $"Tổng quan hiệu suất khám bệnh của {doctor?.HocVi}. {doctor?.User.HoTen} — {doctor?.Department?.TenKhoa}",
+        Subtitle = $"Tổng quan hiệu suất khám bệnh của {(doctor != null ? FormatDoctorName(doctor) : string.Empty)} — {doctor?.Department?.TenKhoa}",
         Breadcrumbs = new[] { new BreadcrumbItem("Bác sĩ", "/Doctor/Dashboard") },
         CurrentCrumb = "Thống kê"
     };

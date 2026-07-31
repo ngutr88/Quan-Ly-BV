@@ -1,0 +1,165 @@
+@model QuanLyBenhVien.Models.ViewModels.DoctorDashboardViewModel
+@{
+    var hasCallable = Model.Queue.Any(q => q.Appointment.TrangThai == "DaXacNhan" || q.Appointment.TrangThai == "DangKham");
+    var tomorrow = DateTime.Today.AddDays(1);
+}
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm min-h-[360px]">
+    <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30 flex flex-wrap justify-between items-center gap-unit-sm">
+        <div>
+            <h3 class="font-title-lg text-title-lg font-bold text-primary flex items-center gap-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-primary animate-pulse"></span>
+                Hàng đợi khám hôm nay
+            </h3>
+            <p class="text-caption text-on-surface-variant mt-0.5">
+                @Model.TodayTotal ca · @Model.TodayCompleted đã khám · @Model.TodayWaiting đang chờ
+                @if (Model.LongestWaitMinutes.HasValue && Model.LongestWaitMinutes.Value > 0)
+                {
+                    <text> · chờ lâu nhất @Model.LongestWaitMinutes phút</text>
+                }
+            </p>
+        </div>
+        <div class="flex items-center gap-unit-sm">
+            <span class="text-caption text-on-surface-variant">Cập nhật lúc @Model.GeneratedAt.ToString("HH:mm")</span>
+            <button type="button" onclick="refreshQueueSection()" title="Làm mới"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[18px]">refresh</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="p-unit-md border-b border-outline-variant flex justify-end">
+        <button type="button" onclick="callNextPatient(this)" @(hasCallable ? "" : "disabled")
+                class="inline-flex items-center gap-1 bg-primary text-white px-unit-lg py-2.5 rounded-xl font-semibold shadow-sm active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100">
+            <span class="material-symbols-outlined text-[20px]">campaign</span>
+            Gọi bệnh nhân tiếp theo
+        </button>
+    </div>
+
+    @if (!Model.Queue.Any())
+    {
+        <div class="p-unit-xl text-center">
+            <span class="material-symbols-outlined text-[48px] text-outline mb-2">event_available</span>
+            <p class="text-body-lg font-semibold text-on-surface-variant mb-1">Không có lịch khám nào trong hàng đợi hôm nay.</p>
+
+            @if (Model.IncompleteRecordsCount > 0)
+            {
+                <a href="/Doctor/Dashboard/Incomplete" class="inline-flex items-center gap-1 mt-unit-sm text-primary font-semibold hover:underline">
+                    <span class="material-symbols-outlined text-[18px]">fact_check</span>
+                    Xử lý @Model.IncompleteRecordsCount hồ sơ chưa hoàn thiện
+                </a>
+            }
+
+            @if (Model.TomorrowTotal > 0)
+            {
+                <p class="text-caption text-on-surface-variant mt-unit-md">
+                    Ngày mai (@tomorrow.ToString("dd/MM/yyyy")) bạn có <a href="/Doctor/Queue?date=@tomorrow.ToString("yyyy-MM-dd")" class="text-primary font-semibold hover:underline">@Model.TomorrowTotal ca hẹn</a>.
+                </p>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Danh sách lịch khám hôm nay" tabindex="0">
+            <table class="w-full text-left text-body-md">
+                <thead>
+                    <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                        <th class="px-unit-md py-3">STT</th>
+                        <th class="px-unit-md py-3">Thời gian</th>
+                        <th class="px-unit-md py-3">Bệnh nhân</th>
+                        <th class="px-unit-md py-3">Giới tính / Tuổi</th>
+                        <th class="px-unit-md py-3">Lý do / Triệu chứng khai báo</th>
+                        <th class="px-unit-md py-3">Cảnh báo</th>
+                        <th class="px-unit-md py-3">Trạng thái</th>
+                        <th class="px-unit-md py-3 text-right">Khám bệnh</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant">
+                    @foreach (var row in Model.Queue)
+                    {
+                        var app = row.Appointment;
+                        var isClickable = app.TrangThai == "DaXacNhan" || app.TrangThai == "DangKham" || (app.TrangThai == "HoanThanh" && row.HasRecord);
+                        var targetUrl = app.TrangThai == "HoanThanh"
+                            ? $"/Doctor/History/RecordDetails/{app.Id}"
+                            : $"/Doctor/Exam/Session/{app.Id}";
+
+                        var statusClass = app.TrangThai switch
+                        {
+                            "ChoXacNhan" => "bg-surface-variant text-on-surface-variant",
+                            "DaXacNhan" => "bg-tertiary-fixed/30 text-on-tertiary-fixed-variant",
+                            "DangKham" => "bg-primary-container/20 text-primary-fixed-dim",
+                            "HoanThanh" => "bg-secondary/15 text-secondary",
+                            _ => "bg-error-container text-error"
+                        };
+                        var statusLabel = app.TrangThai switch
+                        {
+                            "ChoXacNhan" => "Chờ duyệt",
+                            "DaXacNhan" => "Chờ khám",
+                            "DangKham" => "Đang khám",
+                            "HoanThanh" => row.HasRecord ? "Hoàn tất" : "Chờ hồ sơ",
+                            _ => "Đã hủy"
+                        };
+
+                        <tr class="hover:bg-surface-container-low transition-colors @(app.TrangThai == "DangKham" ? "bg-primary-container/5" : "") @(isClickable ? "cursor-pointer" : "")"
+                            onclick="@(isClickable ? $"window.location.href='{targetUrl}'" : "")">
+                            <td class="px-unit-md py-4 font-bold text-on-surface-variant">@row.SttIndex</td>
+                            <td class="px-unit-md py-4 font-bold text-primary">@app.ThoiGian.ToString("HH:mm")</td>
+                            <td class="px-unit-md py-4">
+                                <div class="font-semibold text-on-surface flex items-center gap-1.5">
+                                    @app.Patient.User.HoTen
+                                    @if (row.IsReturningPatient)
+                                    {
+                                        <span class="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase">Tái khám</span>
+                                    }
+                                </div>
+                                <div class="text-caption text-on-surface-variant">SĐT: @app.Patient.User.Sdt</div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <div>@app.Patient.GioiTinh</div>
+                                <div class="text-caption text-on-surface-variant">@(DateTime.Today.Year - app.Patient.NgaySinh.Year) tuổi</div>
+                            </td>
+                            <td class="px-unit-md py-4 max-w-[220px] truncate" title="@app.LyDoKham">@app.LyDoKham</td>
+                            <td class="px-unit-md py-4">
+                                <div class="flex items-center gap-1">
+                                    @if (row.AllergyList.Count > 0)
+                                    {
+                                        <span class="material-symbols-outlined text-[20px] text-error" title="Dị ứng: @string.Join(", ", row.AllergyList)">warning</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(row.ImportantHistoryNote))
+                                    {
+                                        <span class="material-symbols-outlined text-[20px] text-tertiary" title="Tiền sử bệnh: @row.ImportantHistoryNote">history_toggle_off</span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="px-unit-md py-4">
+                                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold @statusClass">@statusLabel</span>
+                            </td>
+                            <td class="px-unit-md py-4 text-right" onclick="event.stopPropagation()">
+                                @if (app.TrangThai == "DaXacNhan" || app.TrangThai == "DangKham")
+                                {
+                                    <a href="/Doctor/Exam/Session/@app.Id" class="inline-flex items-center gap-0.5 bg-primary text-white px-3 py-1.5 rounded-lg text-label-md hover:bg-primary-container transition-all active:scale-95 font-semibold shadow-sm">
+                                        <span class="material-symbols-outlined text-[16px]">clinical_notes</span> @(app.TrangThai == "DangKham" ? "Tiếp tục khám" : "Bắt đầu khám")
+                                    </a>
+                                }
+                                else if (app.TrangThai == "HoanThanh" && row.HasRecord)
+                                {
+                                    <a href="/Doctor/History/RecordDetails/@app.Id" class="inline-flex items-center gap-0.5 text-primary hover:underline font-semibold text-body-md">
+                                        Xem bệnh án
+                                    </a>
+                                }
+                                else if (app.TrangThai == "HoanThanh")
+                                {
+                                    <span class="text-caption text-on-surface-variant">Hồ sơ đang đồng bộ</span>
+                                }
+                                else
+                                {
+                                    <span class="text-caption text-on-surface-variant">Không khả dụng</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

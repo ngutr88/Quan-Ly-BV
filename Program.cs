@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using QuanLyBenhVien.Data;
+using QuanLyBenhVien.Hubs;
+using QuanLyBenhVien.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseStaticWebAssets();
@@ -32,6 +34,10 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.AddService<QuanLyBenhVien.Helpers.ModulePermissionFilter>();
 });
 builder.Services.AddScoped<QuanLyBenhVien.Services.ExcelExportService>();
+builder.Services.AddScoped<DoctorDashboardNotifier>();
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<QuanLyBenhVien.Services.HospitalSettingsProvider>();
+builder.Services.AddScoped<QuanLyBenhVien.Services.AppointmentSlotService>();
 
 // Previously defaulted to Path.GetTempPath() ("%TEMP%\QuanLyBenhVien\..."):
 // the OS temp folder is expected to be cleared at any time (disk cleanup,
@@ -216,6 +222,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+app.MapHub<DoctorDashboardHub>("/hubs/doctor-dashboard");
 
 // Map Area Routing (must be placed before default route)
 app.MapControllerRoute(

@@ -1,0 +1,121 @@
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Tài khoản & Bảo mật";
+
+    var patient = ViewBag.Patient as QuanLyBenhVien.Models.Patient;
+    var loginHistory = ViewBag.LoginHistory as List<QuanLyBenhVien.Models.AuditLog> ?? new();
+    var accessLog = ViewBag.AccessLog as List<QuanLyBenhVien.Models.AuditLog> ?? new();
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Tài khoản & Bảo mật",
+        Subtitle = "Đổi mật khẩu, xem lịch sử đăng nhập và ai đã xem hồ sơ của bạn.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Trang chủ", "/Patient/Dashboard") },
+        CurrentCrumb = "Tài khoản & Bảo mật"
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-unit-lg">
+    <!-- Change password -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+        <h2 class="hms-section-title mb-unit-md"><span class="material-symbols-outlined">lock</span> Đổi mật khẩu</h2>
+        <form method="post" action="/Patient/Account/ChangePassword" class="space-y-unit-sm">
+            @Html.AntiForgeryToken()
+            <div>
+                <label class="hms-field-label" for="matKhauHienTai">Mật khẩu hiện tại</label>
+                <input type="password" id="matKhauHienTai" name="matKhauHienTai" required class="w-full border border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+            </div>
+            <div>
+                <label class="hms-field-label" for="matKhauMoi">Mật khẩu mới (tối thiểu 6 ký tự)</label>
+                <input type="password" id="matKhauMoi" name="matKhauMoi" required minlength="6" class="w-full border border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+            </div>
+            <div>
+                <label class="hms-field-label" for="xacNhanMatKhauMoi">Xác nhận mật khẩu mới</label>
+                <input type="password" id="xacNhanMatKhauMoi" name="xacNhanMatKhauMoi" required minlength="6" class="w-full border border-outline-variant rounded-lg text-body-md px-3 py-2 bg-surface" />
+            </div>
+            <button type="submit" class="hms-btn hms-btn-primary w-full mt-1">
+                <span class="material-symbols-outlined">check_circle</span> Cập nhật mật khẩu
+            </button>
+        </form>
+
+        <div class="mt-unit-lg pt-unit-md border-t border-outline-variant">
+            <p class="text-caption text-on-surface-variant">
+                Đăng nhập sinh trắc học / mã OTP khi đăng nhập: <span class="hms-badge hms-badge-neutral">Sắp có</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Login history -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+        <h2 class="hms-section-title mb-unit-md"><span class="material-symbols-outlined">history</span> Lịch sử đăng nhập</h2>
+        @if (loginHistory.Count == 0)
+        {
+            <p class="text-body-md text-on-surface-variant text-center py-4">Chưa có dữ liệu đăng nhập nào được ghi nhận.</p>
+        }
+        else
+        {
+            <div class="space-y-2 max-h-[360px] overflow-y-auto">
+                @foreach (var log in loginHistory)
+                {
+                    <div class="flex items-center justify-between gap-2 py-1.5 border-b border-outline-variant last:border-b-0">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px] @(log.HanhDong == "Đăng nhập" ? "text-secondary" : "text-on-surface-variant")">
+                                @(log.HanhDong == "Đăng nhập" ? "login" : "logout")
+                            </span>
+                            <span class="text-body-md text-on-surface">@log.HanhDong</span>
+                        </div>
+                        <span class="text-caption text-on-surface-variant">@log.ThoiGian.ToString("HH:mm dd/MM/yyyy")</span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- "Ai đã xem hồ sơ của tôi" -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm mt-unit-lg">
+    <h2 class="hms-section-title mb-unit-sm"><span class="material-symbols-outlined">visibility</span> Ai đã xem hồ sơ của tôi</h2>
+    <div class="patient-alert mb-unit-md" style="align-items:flex-start; cursor: default;">
+        <span class="material-symbols-outlined patient-alert-icon">info</span>
+        <p class="text-body-md text-on-surface-variant">
+            Danh sách dưới đây chỉ ghi nhận các lượt <strong>xem thông tin nhạy cảm</strong> hoặc truy cập <strong>ngoài phạm vi phụ trách thông thường</strong> (đã được nhân sự/bác sĩ xác nhận lý do). Đây <strong>không phải</strong> toàn bộ lượt truy cập hồ sơ — bác sĩ xem hồ sơ đúng phạm vi khi khám bệnh cho bạn hiện chưa được ghi lại ở đây.
+        </p>
+    </div>
+
+    @if (accessLog.Count == 0)
+    {
+        <p class="text-body-md text-on-surface-variant text-center py-4">Chưa có lượt truy cập nhạy cảm/ngoài phạm vi nào được ghi nhận.</p>
+    }
+    else
+    {
+        <div class="hms-table-scroll overflow-x-auto">
+            <table class="w-full text-left text-body-md">
+                <thead>
+                    <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                        <th class="px-3 py-2">Thời gian</th>
+                        <th class="px-3 py-2">Người truy cập</th>
+                        <th class="px-3 py-2">Loại truy cập</th>
+                        <th class="px-3 py-2">Lý do / Chi tiết</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant">
+                    @foreach (var log in accessLog)
+                    {
+                        <tr>
+                            <td class="px-3 py-2 text-caption text-on-surface-variant">@log.ThoiGian.ToString("HH:mm dd/MM/yyyy")</td>
+                            <td class="px-3 py-2">@(log.User != null ? log.User.HoTen : "N/A")</td>
+                            <td class="px-3 py-2">
+                                <span class="hms-badge @(log.HanhDong == "BreakTheGlass_XemHoSoBenhNhan" ? "hms-badge-warn" : "hms-badge-neutral")">
+                                    @(log.HanhDong == "BreakTheGlass_XemHoSoBenhNhan" ? "Truy cập ngoài phạm vi" : "Xem thông tin nhạy cảm")
+                                </span>
+                            </td>
+                            <td class="px-3 py-2 text-caption text-on-surface-variant">@log.ChiTiet</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

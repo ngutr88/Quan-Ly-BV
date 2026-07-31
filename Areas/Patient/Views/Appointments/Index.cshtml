@@ -1,0 +1,144 @@
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Lịch hẹn của tôi";
+
+    var upcoming = ViewBag.Upcoming as List<QuanLyBenhVien.Models.Appointment> ?? new();
+    var past = ViewBag.Past as List<QuanLyBenhVien.Models.Appointment> ?? new();
+    var cutoffHours = (int)(ViewBag.ChangeCutoffHours ?? 24);
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Lịch hẹn của tôi",
+        Subtitle = "Xem, đổi hoặc hủy lịch khám của bạn.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Trang chủ", "/Patient/Dashboard") },
+        CurrentCrumb = "Lịch hẹn của tôi"
+    };
+
+    bool CanChange(QuanLyBenhVien.Models.Appointment a)
+    {
+        var terminal = new[] { "HoanThanh", "DaHuy", "DangKham", "VangMat" };
+        return !terminal.Contains(a.TrangThai) && (a.ThoiGian - DateTime.Now) >= TimeSpan.FromHours(cutoffHours);
+    }
+}
+
+@Html.AntiForgeryToken()
+
+<partial name="_PageHeader" model="header" />
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden mb-unit-lg">
+    <div class="p-unit-lg pb-unit-md">
+        <h2 class="hms-section-title"><span class="material-symbols-outlined">event_upcoming</span> Sắp tới</h2>
+    </div>
+    <div class="px-unit-lg pb-unit-lg space-y-unit-md">
+        @if (upcoming.Count == 0)
+        {
+            <div class="hms-empty">
+                <div class="hms-empty-icon"><span class="material-symbols-outlined">event_busy</span></div>
+                <p class="hms-empty-title">Chưa có lịch khám sắp diễn ra</p>
+                <a href="/Patient/Book" class="hms-btn hms-btn-primary mt-2">
+                    <span class="material-symbols-outlined">add_circle</span> Đặt lịch khám
+                </a>
+            </div>
+        }
+        else
+        {
+            @foreach (var app in upcoming)
+            {
+                var changeable = CanChange(app);
+                <div class="patient-appt flex-wrap">
+                    <div class="patient-appt-date">
+                        <span class="patient-appt-day">@app.ThoiGian.ToString("dd")</span>
+                        <span class="patient-appt-month">Th@(app.ThoiGian.Month)</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <strong class="text-body-md text-on-surface">@app.ThoiGian.ToString("HH:mm")</strong>
+                            <span class="text-caption text-on-surface-variant">#LK-@app.Id.ToString("D4")</span>
+                            @if (app.TrangThai == "ChoXacNhan")
+                            {
+                                <span class="hms-badge hms-badge-warn"><span class="material-symbols-outlined">schedule</span> Chờ xác nhận</span>
+                            }
+                            else
+                            {
+                                <span class="hms-badge hms-badge-ok"><span class="material-symbols-outlined">check_circle</span> Đã xác nhận</span>
+                            }
+                        </div>
+                        <p class="text-body-md text-on-surface mt-1 font-medium">
+                            @(app.Doctor != null ? FormatDoctorName(app.Doctor) : "Hệ thống tự động phân công")
+                        </p>
+                        <p class="text-caption text-on-surface-variant">
+                            @(app.Doctor != null ? app.Doctor.Department.TenKhoa : "Phòng tiếp đón chung")
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        @if (changeable)
+                        {
+                            <a href="/Patient/Appointments/Reschedule/@app.Id" class="hms-btn hms-btn-secondary hms-btn-sm">
+                                <span class="material-symbols-outlined">edit_calendar</span> Đổi lịch
+                            </a>
+                            <button type="button" class="hms-btn hms-btn-sm hms-btn-danger" onclick="confirmCancel(@app.Id)">
+                                <span class="material-symbols-outlined">event_busy</span> Hủy lịch
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="text-caption text-on-surface-variant max-w-[160px] text-right">Gọi hotline để đổi/hủy (dưới @cutoffHours giờ trước hẹn)</span>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+    <div class="p-unit-lg pb-unit-md">
+        <h2 class="hms-section-title"><span class="material-symbols-outlined">history</span> Đã qua</h2>
+    </div>
+    <div class="px-unit-lg pb-unit-lg space-y-unit-sm">
+        @if (past.Count == 0)
+        {
+            <p class="text-body-md text-on-surface-variant text-center py-4">Chưa có lịch sử khám nào.</p>
+        }
+        else
+        {
+            @foreach (var app in past)
+            {
+                <div class="flex items-center justify-between gap-3 py-2 border-b border-outline-variant last:border-b-0">
+                    <div class="min-w-0">
+                        <p class="text-body-md text-on-surface font-medium">@app.ThoiGian.ToString("HH:mm dd/MM/yyyy") — @(app.Doctor != null ? FormatDoctorName(app.Doctor) : "N/A")</p>
+                    </div>
+                    <span class="hms-badge @(app.TrangThai == "DaHuy" ? "hms-badge-danger" : "hms-badge-neutral")">@(app.TrangThai == "DaHuy" ? "Đã hủy" : app.TrangThai == "HoanThanh" ? "Hoàn tất" : app.TrangThai)</span>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function antiForgeryFormData() {
+            const fd = new FormData();
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) fd.append('__RequestVerificationToken', token.value);
+            return fd;
+        }
+
+        function confirmCancel(id) {
+            if (!confirm('Bạn có chắc chắn muốn hủy lịch hẹn này?')) return;
+            const reason = prompt('Vui lòng nhập lý do hủy lịch:');
+            if (reason === null) return;
+            if (reason.trim().length === 0) {
+                alert('Vui lòng nhập lý do hủy lịch.');
+                return;
+            }
+
+            const fd = antiForgeryFormData();
+            fd.append('lyDoHuy', reason.trim());
+
+            fetch('/Patient/Appointments/Cancel/' + id, { method: 'POST', body: fd })
+                .then(function () { window.location.reload(); })
+                .catch(function () { alert('Có lỗi xảy ra, vui lòng thử lại.'); });
+        }
+    </script>
+}

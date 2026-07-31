@@ -17,11 +17,13 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly QuanLyBenhVien.Services.ExcelExportService _excel;
+        private readonly QuanLyBenhVien.Services.DoctorDashboardNotifier _notifier;
 
-        public AppointmentsController(ApplicationDbContext context, QuanLyBenhVien.Services.ExcelExportService excel)
+        public AppointmentsController(ApplicationDbContext context, QuanLyBenhVien.Services.ExcelExportService excel, QuanLyBenhVien.Services.DoctorDashboardNotifier notifier)
         {
             _context = context;
             _excel = excel;
+            _notifier = notifier;
         }
 
         // GET: Admin/Appointments
@@ -160,6 +162,7 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
             });
 
             await _context.SaveChangesAsync();
+            await _notifier.NotifyQueueUpdatedAsync(app.BacSiId);
             TempData["SuccessMessage"] = $"Đã xác nhận lịch hẹn #{id} thành công.";
             return RedirectToAction(nameof(Details), new { id = id });
         }
@@ -204,7 +207,28 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                 DaDoc = false
             });
 
+            if (app.BacSiId.HasValue)
+            {
+                var doctorUserId = await _context.Doctors
+                    .Where(d => d.Id == app.BacSiId.Value)
+                    .Select(d => (int?)d.NguoiDungId)
+                    .FirstOrDefaultAsync();
+
+                if (doctorUserId.HasValue)
+                {
+                    _context.Notifications.Add(new Notification
+                    {
+                        NguoiDungId = doctorUserId.Value,
+                        NoiDung = $"[LichKham] Lịch khám bị hủy|Lịch hẹn với BN {app.Patient.User.HoTen} vào lúc {app.ThoiGian:HH:mm dd/MM/yyyy} đã bị hủy. Lý do: {lyDoHuy}.",
+                        NgayGui = DateTime.Now,
+                        DaDoc = false
+                    });
+                }
+            }
+
             await _context.SaveChangesAsync();
+            await _notifier.NotifyQueueUpdatedAsync(app.BacSiId);
+            await _notifier.NotifyNotificationCountChangedAsync(app.BacSiId);
             TempData["SuccessMessage"] = $"Đã hủy lịch hẹn #{id}.";
             return RedirectToAction(nameof(Details), new { id = id });
         }

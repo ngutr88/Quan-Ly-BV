@@ -13,7 +13,7 @@
         <a href="/Admin/Doctors" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
             <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách bác sĩ
         </a>
-        <h2 class="font-headline-lg text-headline-lg text-on-surface">@Model.HocVi @Model.User.HoTen</h2>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">@FormatDoctorName(Model)</h2>
         <p class="text-body-md text-on-surface-variant">Chi tiết hồ sơ chuyên môn và lịch sử khám chữa bệnh.</p>
     </div>
     <div class="flex gap-unit-sm">
@@ -30,7 +30,7 @@
             <div class="w-24 h-24 rounded-full overflow-hidden bg-primary-fixed flex items-center justify-center text-primary font-bold text-[36px] mx-auto mb-unit-md border-4 border-surface-container">
                 @(string.IsNullOrWhiteSpace(Model.User.HoTen) ? "BS" : Model.User.HoTen.Trim().Split(' ').Last().Substring(0, 1).ToUpper())
             </div>
-            <h3 class="font-title-lg text-on-surface">@Model.HocVi. @Model.User.HoTen</h3>
+            <h3 class="font-title-lg text-on-surface">@FormatDoctorName(Model)</h3>
             <p class="text-caption text-on-surface-variant font-medium mt-unit-xs">@Model.ChuyenKhoa</p>
             <div class="mt-2 flex items-center justify-center gap-1.5">
                 @if (Model.ChucVu == "Trưởng khoa")

@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBenhVien.Data;
 using QuanLyBenhVien.Models;
+using QuanLyBenhVien.Services;
+using static QuanLyBenhVien.Helpers.DoctorDisplayHelper;
 
 namespace QuanLyBenhVien.Areas.Patient.Controllers
 {
@@ -18,15 +20,19 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
         private const int BookingHorizonDays = 14;
 
         private readonly ApplicationDbContext _context;
+        private readonly DoctorDashboardNotifier _notifier;
+        private readonly AppointmentSlotService _slotService;
 
-        public BookController(ApplicationDbContext context)
+        public BookController(ApplicationDbContext context, DoctorDashboardNotifier notifier, AppointmentSlotService slotService)
         {
             _context = context;
+            _notifier = notifier;
+            _slotService = slotService;
         }
 
         // GET: /Patient/Book
         [HttpGet]
-        public async Task<IActionResult> Index(int? deptId)
+        public async Task<IActionResult> Index(int? deptId, int? doctorId)
         {
             var patientUserId = GetCurrentUserId();
             var patient = await _context.Patients
@@ -37,9 +43,11 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
             ViewBag.Patient = patient;
             ViewBag.Departments = await _context.Departments.ToListAsync();
 
-            // Carries the department chosen on the public site through the login
-            // redirect, so the visitor does not have to pick it a second time.
+            // Carries the department (and, from the follow-up reminder card,
+            // the same doctor too) chosen elsewhere through to this form so the
+            // patient doesn't have to pick it a second time.
             ViewBag.PreselectedDeptId = deptId;
+            ViewBag.PreselectedDoctorId = doctorId;
             ViewBag.Dependents = await _context.Dependents
                 .Where(d => d.BenhNhanId == patient.Id)
                 .ToListAsync();
@@ -56,10 +64,10 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
                 .AsNoTracking()
                 .Include(d => d.User)
                 .Where(d => d.KhoaId == deptId && !d.DaXoa && d.User.TrangThai == "Active")
-                .Select(d => new { id = d.Id, name = $"{d.HocVi} {d.User.HoTen} ({d.ChuyenKhoa})" })
                 .ToListAsync();
 
-            return Json(doctors);
+            var result = doctors.Select(d => new { id = d.Id, name = $"{FormatDoctorName(d)} ({d.ChuyenKhoa})" });
+            return Json(result);
         }
 
         // GET: /Patient/Book/GetSlots?doctorId=5&date=2026-06-22
@@ -86,7 +94,7 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
                 return Json(new { success = false, message = dateValidation });
             }
 
-            var availableSlots = await GetAvailableSlotsAsync(doctorId, parsedDate.Date);
+            var availableSlots = await _slotService.GetAvailableSlotsAsync(doctorId, parsedDate.Date);
             if (!availableSlots.Any())
             {
                 return Json(new { success = false, message = "Bác sĩ không có ca làm việc hoặc slot trống trong ngày đã chọn." });
@@ -161,7 +169,7 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var availableSlots = await GetAvailableSlotsAsync(doctorId, bookingDate.Date);
+            var availableSlots = await _slotService.GetAvailableSlotsAsync(doctorId, bookingDate.Date);
             if (!availableSlots.Contains(bookingTime))
             {
                 TempData["ErrorMessage"] = "Khung giờ này không nằm trong lịch làm việc còn trống của bác sĩ.";
@@ -181,43 +189,13 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
 
             await using var transaction = await _context.Database.BeginTransactionAsync();
 
-            // Đối chiếu lại với ca làm việc đang áp dụng cho đúng khung giờ này để lấy
-            // SoBenhNhanToiDa, rồi so sánh với số lịch khám hiện có tại khung giờ đó.
-            // Việc này lặp lại kiểm tra đã làm ở GetAvailableSlotsAsync nhưng bên trong
-            // transaction để giảm rủi ro race-condition giữa hai lần đặt lịch gần nhau.
-            var dayOfWeek = (int)appointmentTime.DayOfWeek;
-            var slotSchedule = await _context.DoctorWorkSchedules
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.BacSiId == doctorId &&
-                    s.ThuTrongTuan == dayOfWeek &&
-                    s.DangHoatDong &&
-                    s.GioBatDau <= appointmentTime.TimeOfDay && appointmentTime.TimeOfDay < s.GioKetThuc &&
-                    (s.HieuLucTu == null || s.HieuLucTu.Value.Date <= appointmentTime.Date) &&
-                    (s.HieuLucDen == null || s.HieuLucDen.Value.Date >= appointmentTime.Date));
-
-            if (slotSchedule == null)
+            // Đối chiếu lại slot ngay bên trong transaction để giảm rủi ro
+            // race-condition giữa hai lần đặt lịch gần nhau (đã kiểm tra sơ bộ ở
+            // GetAvailableSlotsAsync phía trên, đây là lần kiểm tra "chốt" cuối cùng).
+            var slotValidation = await _slotService.ValidateSlotAsync(doctorId, appointmentTime, patient.Id);
+            if (!slotValidation.Success)
             {
-                TempData["ErrorMessage"] = "Bác sĩ không có ca làm việc phù hợp với khung giờ này. Vui lòng chọn lại.";
-                await transaction.RollbackAsync();
-                return RedirectToAction(nameof(Index));
-            }
-
-            var doctorSlotCount = await _context.Appointments
-                .CountAsync(a => a.BacSiId == doctorId && a.ThoiGian == appointmentTime && a.TrangThai != "DaHuy");
-
-            if (doctorSlotCount >= slotSchedule.SoBenhNhanToiDa)
-            {
-                TempData["ErrorMessage"] = "Khung giờ này đã đủ số bệnh nhân tối đa. Vui lòng chọn khung giờ khác.";
-                await transaction.RollbackAsync();
-                return RedirectToAction(nameof(Index));
-            }
-
-            var patientSlotTaken = await _context.Appointments
-                .AnyAsync(a => a.BenhNhanId == patient.Id && a.ThoiGian == appointmentTime && a.TrangThai != "DaHuy");
-
-            if (patientSlotTaken)
-            {
-                TempData["ErrorMessage"] = "Tài khoản của bạn đã có lịch khám trong cùng khung giờ này.";
+                TempData["ErrorMessage"] = slotValidation.ErrorMessage;
                 await transaction.RollbackAsync();
                 return RedirectToAction(nameof(Index));
             }
@@ -246,67 +224,22 @@ namespace QuanLyBenhVien.Areas.Patient.Controllers
                 NgayGui = DateTime.Now,
                 DaDoc = false
             });
+            _context.Notifications.Add(new Notification
+            {
+                NguoiDungId = doctor.NguoiDungId,
+                NoiDung = $"[LichKham] Lịch hẹn mới|Bệnh nhân {patient.User.HoTen} vừa đặt lịch khám vào lúc {appointmentTime:HH:mm dd/MM/yyyy}.",
+                NgayGui = DateTime.Now,
+                DaDoc = false
+            });
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
 
+            await _notifier.NotifyQueueUpdatedAsync(doctorId);
+            await _notifier.NotifyNotificationCountChangedAsync(doctorId);
+
             TempData["SuccessMessage"] = $"Đặt lịch thành công! Mã số hẹn của bạn là #LK-{app.Id.ToString("D4")}. Vui lòng chờ nhân viên xác nhận.";
             return RedirectToAction("Index", "Dashboard");
-        }
-
-        private async Task<IReadOnlyList<string>> GetAvailableSlotsAsync(int doctorId, DateTime date)
-        {
-            var dayOfWeek = (int)date.DayOfWeek;
-            // SQLite cannot reliably translate ordering by TimeSpan. Materialize the
-            // filtered rows first, then sort in memory to keep this endpoint responsive.
-            var schedules = (await _context.DoctorWorkSchedules
-                .AsNoTracking()
-                .Where(s => s.BacSiId == doctorId &&
-                            s.ThuTrongTuan == dayOfWeek &&
-                            s.DangHoatDong &&
-                            (s.HieuLucTu == null || s.HieuLucTu.Value.Date <= date.Date) &&
-                            (s.HieuLucDen == null || s.HieuLucDen.Value.Date >= date.Date))
-                .ToListAsync())
-                .OrderBy(s => s.GioBatDau)
-                .ToList();
-
-            if (!schedules.Any())
-            {
-                return Array.Empty<string>();
-            }
-
-            // Đếm số bệnh nhân đã đặt theo từng khung giờ (không chỉ có/không) để so
-            // sánh với SoBenhNhanToiDa của ca làm việc - một khung giờ có thể nhận
-            // nhiều bệnh nhân nếu ca cho phép.
-            var bookedCounts = (await _context.Appointments
-                .Where(a => a.BacSiId == doctorId &&
-                            a.ThoiGian.Date == date.Date &&
-                            a.TrangThai != "DaHuy")
-                .Select(a => a.ThoiGian.TimeOfDay)
-                .ToListAsync())
-                .GroupBy(t => t)
-                .ToDictionary(g => g.Key, g => g.Count());
-
-            var now = DateTime.Now;
-            var slots = new SortedSet<string>(StringComparer.Ordinal);
-
-            foreach (var schedule in schedules)
-            {
-                var duration = TimeSpan.FromMinutes(schedule.ThoiLuongKhamPhut);
-                for (var slot = schedule.GioBatDau; slot + duration <= schedule.GioKetThuc; slot += duration)
-                {
-                    var slotDateTime = date.Date.Add(slot);
-                    var bookedCount = bookedCounts.GetValueOrDefault(slot);
-                    if (slotDateTime <= now || bookedCount >= schedule.SoBenhNhanToiDa)
-                    {
-                        continue;
-                    }
-
-                    slots.Add(slot.ToString(@"hh\:mm"));
-                }
-            }
-
-            return slots.ToList();
         }
 
         private static string? ValidateBookingDate(DateTime date)

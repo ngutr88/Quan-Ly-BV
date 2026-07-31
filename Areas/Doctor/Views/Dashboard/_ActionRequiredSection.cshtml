@@ -1,0 +1,49 @@
+@model QuanLyBenhVien.Models.ViewModels.DoctorDashboardViewModel
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="p-unit-md border-b border-outline-variant bg-surface-container-low/30 flex justify-between items-center">
+        <h3 class="font-title-lg text-title-lg font-bold text-primary flex items-center gap-1">
+            <span class="material-symbols-outlined text-[20px]">fact_check</span>
+            Cần xử lý
+        </h3>
+        @if (Model.IncompleteRecordsCount > 0)
+        {
+            <span class="px-2 py-0.5 rounded-full bg-error-container text-error text-[11px] font-bold">@Model.IncompleteRecordsCount</span>
+        }
+    </div>
+
+    @if (Model.ActionRequired.Count == 0)
+    {
+        <div class="p-unit-lg text-center text-on-surface-variant">
+            <span class="material-symbols-outlined text-[36px] text-outline mb-1">task_alt</span>
+            <p class="text-body-md">Không có hồ sơ nào cần xử lý.</p>
+        </div>
+    }
+    else
+    {
+        <div class="divide-y divide-outline-variant">
+            <div class="px-unit-md pt-unit-sm pb-1">
+                <span class="text-caption text-on-surface-variant font-semibold uppercase tracking-wider">Hồ sơ chưa hoàn thiện</span>
+            </div>
+            @foreach (var item in Model.ActionRequired)
+            {
+                <a href="/Doctor/History?searchString=@Uri.EscapeDataString(item.PatientName)"
+                   class="flex items-center gap-unit-sm px-unit-md py-3 hover:bg-surface-container-low transition-colors">
+                    <span class="material-symbols-outlined text-[20px] text-error shrink-0">description</span>
+                    <div class="min-w-0 flex-1">
+                        <p class="font-semibold text-on-surface truncate">@item.PatientName</p>
+                        <p class="text-caption text-on-surface-variant">@item.Reason · @item.ThoiGian.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">chevron_right</span>
+                </a>
+            }
+        </div>
+
+        @if (Model.IncompleteRecordsCount > Model.ActionRequired.Count)
+        {
+            <div class="p-unit-sm border-t border-outline-variant text-center">
+                <a href="/Doctor/Dashboard/Incomplete" class="text-primary font-semibold text-label-md hover:underline">Xem tất cả (@Model.IncompleteRecordsCount)</a>
+            </div>
+        }
+    }
+</div>

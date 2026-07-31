@@ -1,0 +1,22 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Hồ sơ & Cài đặt";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Hồ sơ & Cài đặt",
+        Subtitle = "Thông tin hành nghề, chữ ký số, đổi mật khẩu và cài đặt thông báo.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
+        CurrentCrumb = "Hồ sơ & Cài đặt"
+    };
+
+    var comingSoon = new ComingSoonViewModel
+    {
+        Icon = "manage_accounts",
+        Message = "Tính năng đang được phát triển.",
+        SubMessage = "Trang quản lý thông tin hành nghề, chữ ký số và cài đặt thông báo sẽ được xây dựng ở một đợt riêng."
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+<partial name="_ComingSoon" model="comingSoon" />

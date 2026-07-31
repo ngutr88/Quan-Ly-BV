@@ -1,0 +1,73 @@
+@model QuanLyBenhVien.Models.HospitalSettings
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Hỗ trợ";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Hỗ trợ",
+        Subtitle = "Thông tin liên hệ và câu hỏi thường gặp.",
+        Breadcrumbs = new[] { new BreadcrumbItem("Trang chủ", "/Patient/Dashboard") },
+        CurrentCrumb = "Hỗ trợ"
+    };
+
+    var mapsUrl = "https://www.google.com/maps/search/?api=1&query=" + Uri.EscapeDataString(Model.DiaChi);
+
+    var faqs = new (string Question, string Answer)[]
+    {
+        ("Làm sao để đặt lịch khám?", "Vào mục \"Đặt lịch khám\" ở menu, chọn khoa, bác sĩ và khung giờ còn trống."),
+        ("Tôi có thể đổi hoặc hủy lịch hẹn không?", "Có, vào \"Lịch hẹn của tôi\" — chỉ áp dụng khi còn hơn 24 giờ trước giờ hẹn."),
+        ("Làm sao để thanh toán hóa đơn trực tuyến?", "Vào mục \"Thanh toán hóa đơn\", chọn hóa đơn cần thanh toán và làm theo hướng dẫn."),
+        ("Tôi quên mật khẩu, phải làm sao?", "Bấm \"Quên mật khẩu\" ở trang đăng nhập, hoặc liên hệ hotline bên dưới để được hỗ trợ.")
+    };
+}
+
+<partial name="_PageHeader" model="header" />
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-unit-lg">
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm space-y-unit-md">
+        <h2 class="hms-section-title"><span class="material-symbols-outlined">support_agent</span> Liên hệ</h2>
+
+        <a href="tel:@Model.Hotline.Replace(" ", "")" class="patient-action !items-start !text-left">
+            <span class="material-symbols-outlined patient-action-icon">call</span>
+            <strong class="patient-action-title">Hotline: @Model.Hotline</strong>
+            <span class="patient-action-sub">Bấm để gọi trên điện thoại</span>
+        </a>
+
+        <a href="tel:@Model.HotlineCapCuu.Replace(".", "")" class="patient-action !items-start !text-left">
+            <span class="material-symbols-outlined patient-action-icon">emergency</span>
+            <strong class="patient-action-title">Cấp cứu: @Model.HotlineCapCuu</strong>
+            <span class="patient-action-sub">Trường hợp khẩn cấp</span>
+        </a>
+
+        <div class="patient-field">
+            <dt>Email hỗ trợ</dt>
+            <dd><a href="mailto:@Model.EmailHoTro" class="text-primary hover:underline">@Model.EmailHoTro</a></dd>
+        </div>
+        <div class="patient-field">
+            <dt>Giờ làm việc</dt>
+            <dd>@Model.GioLamViec</dd>
+        </div>
+        <div class="patient-field">
+            <dt>Địa chỉ</dt>
+            <dd>@Model.DiaChi</dd>
+        </div>
+
+        <a href="@mapsUrl" target="_blank" rel="noopener" class="hms-btn hms-btn-primary w-full">
+            <span class="material-symbols-outlined">directions</span> Chỉ đường đến bệnh viện
+        </a>
+    </div>
+
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm">
+        <h2 class="hms-section-title mb-unit-md"><span class="material-symbols-outlined">quiz</span> Câu hỏi thường gặp</h2>
+        <div class="space-y-2">
+            @foreach (var faq in faqs)
+            {
+                <details class="border border-outline-variant rounded-lg p-3">
+                    <summary class="font-semibold text-on-surface cursor-pointer">@faq.Question</summary>
+                    <p class="text-body-md text-on-surface-variant mt-2">@faq.Answer</p>
+                </details>
+            }
+        </div>
+    </div>
+</div>
