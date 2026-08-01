@@ -24,12 +24,14 @@ public static class PatientMenuRegistry
 {
     public const string BadgeUnpaidInvoices = "UnpaidInvoices";
     public const string BadgeUnreadNotifications = "UnreadNotifications";
+    public const string BadgeUnreadMessages = "UnreadMessages";
 
     public static readonly IReadOnlyList<PatientMenuItem> Items = new List<PatientMenuItem>
     {
         new("Patient.Dashboard", "Trang chủ", "dashboard", "/Patient/Dashboard", PatientMenuGroups.HayDung),
         new("Patient.Book", "Đặt lịch khám", "add_box", "/Patient/Book", PatientMenuGroups.HayDung),
         new("Patient.Appointments", "Lịch hẹn của tôi", "event_note", "/Patient/Appointments", PatientMenuGroups.HayDung),
+        new("Patient.Chat", "Hỏi bác sĩ", "forum", "/Patient/Chat", PatientMenuGroups.HayDung, BadgeUnreadMessages),
         new("Patient.LabResults", "Kết quả khám & Xét nghiệm", "biotech", "/Patient/LabResults", PatientMenuGroups.HayDung),
         new("Patient.Record", "Lịch sử khám & Đơn thuốc", "medical_information", "/Patient/Record", PatientMenuGroups.HayDung),
 

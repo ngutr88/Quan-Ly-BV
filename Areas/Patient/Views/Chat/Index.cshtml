@@ -1,0 +1,415 @@
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Hỏi bác sĩ";
+    var hotline = ViewBag.HotlineCapCuu as string ?? "115";
+    var camKet = ViewBag.CamKetText as string ?? string.Empty;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="patient-chat-workspace flex flex-col md:flex-row h-[calc(100vh-140px)] md:h-[calc(100vh-120px)] bg-white border border-outline-variant rounded-2xl shadow-sm overflow-hidden">
+    <!-- Conversation list (full width on mobile until a thread is opened) -->
+    <section class="patient-chat-list w-full md:w-72 flex flex-col border-b md:border-b-0 md:border-r border-outline-variant shrink-0" id="patientConversationList">
+        <div class="p-4 border-b border-outline-variant flex items-center justify-between">
+            <h2 class="font-title-lg text-title-lg font-bold text-on-surface">Hỏi bác sĩ</h2>
+            <button type="button" onclick="openContactPicker()" class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center cursor-pointer" title="Đặt câu hỏi mới">
+                <span class="material-symbols-outlined text-[18px]">add</span>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto divide-y divide-outline-variant/60" id="conversationListItems">
+            <div class="p-6 text-center text-on-surface-variant italic">Đang tải...</div>
+        </div>
+    </section>
+
+    <!-- Thread pane -->
+    <section class="patient-chat-thread flex-1 flex-col min-w-0 hidden md:flex" id="patientChatThread">
+        <div class="flex-grow flex flex-col items-center justify-center p-unit-xl text-center" id="chatEmptyState">
+            <span class="material-symbols-outlined text-[64px] text-outline opacity-30 mb-2">forum</span>
+            <h4 class="text-headline-sm font-bold text-on-surface mb-2">Chưa chọn hội thoại</h4>
+            <p class="text-body-md text-on-surface-variant max-w-xs mx-auto">Chọn một hội thoại bên trái hoặc bấm "+" để đặt câu hỏi mới cho bác sĩ.</p>
+        </div>
+
+        <div class="hidden flex-col h-full" id="chatActiveArea">
+            <!-- Header -->
+            <div class="h-14 px-3 md:px-6 border-b border-outline-variant flex items-center gap-2 shrink-0 bg-surface-bright">
+                <button type="button" onclick="backToList()" class="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container cursor-pointer">
+                    <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                </button>
+                <div class="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold uppercase shrink-0" id="chatHeaderInitials"></div>
+                <div class="min-w-0">
+                    <h3 class="font-bold text-body-md text-on-surface truncate" id="chatHeaderName"></h3>
+                    <p class="text-[10px] text-on-surface-variant truncate" id="chatHeaderSub"></p>
+                </div>
+            </div>
+
+            <!-- Emergency banner + commitment line - always visible, never scrolls away -->
+            <div class="bg-error-container/30 px-3 md:px-6 py-2 border-b border-error/10 shrink-0">
+                <p class="text-[11px] font-bold text-on-error-container flex items-center gap-1">
+                    <span class="material-symbols-outlined text-error text-[16px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+                    LƯU Ý: Khung chat dùng để tư vấn chăm sóc sức khỏe từ xa, không thay thế cấp cứu khẩn cấp. Cấp cứu vui lòng gọi @hotline.
+                </p>
+                <p class="text-[10px] text-on-surface-variant mt-0.5">@camKet</p>
+            </div>
+
+            <div class="flex-1 p-3 md:p-6 overflow-y-auto flex flex-col gap-3 bg-[#fcfdff]" id="messageArea"></div>
+
+            <div class="p-3 border-t border-outline-variant bg-surface shrink-0">
+                <div class="flex flex-wrap gap-2 mb-2" id="attachmentPreviewBar"></div>
+                <div class="flex items-end gap-2">
+                    <button type="button" onclick="document.getElementById('chatFileInput').click()" class="p-2 text-on-surface-variant hover:text-primary cursor-pointer shrink-0" title="Đính kèm ảnh"><span class="material-symbols-outlined text-[20px]">image</span></button>
+                    <input type="file" id="chatFileInput" class="hidden" accept="image/jpeg,image/png,image/heic,image/heif" multiple onchange="handleFileSelection(event)" />
+                    <textarea id="chatInput" rows="1" onkeydown="handleChatKey(event)" class="flex-1 bg-surface-container-low border border-outline-variant rounded-xl px-3 py-2 text-body-md focus:ring-1 focus:ring-primary focus:outline-none resize-none" placeholder="Nhập câu hỏi... (Shift+Enter để xuống dòng)"></textarea>
+                    <button type="button" onclick="sendChatMessage()" id="sendMessageBtn" class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center shadow-md cursor-pointer shrink-0 disabled:opacity-50 disabled:pointer-events-none">
+                        <span class="material-symbols-outlined text-[20px]">send</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Contact picker modal -->
+<div class="hidden fixed inset-0 bg-on-background/40 z-[60] items-center justify-center p-4" id="contactPickerModal">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+        <div class="p-4 border-b border-outline-variant flex items-center justify-between">
+            <h3 class="font-bold text-title-md text-on-surface">Đặt câu hỏi cho bác sĩ</h3>
+            <button type="button" onclick="closeContactPicker()" class="text-on-surface-variant hover:text-on-surface cursor-pointer"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="p-3 border-b border-outline-variant">
+            <input type="text" id="contactSearchInput" oninput="searchContacts(this.value)" placeholder="Tìm bác sĩ..." class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md" />
+        </div>
+        <div class="flex-1 overflow-y-auto" id="contactPickerList"></div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div class="hidden fixed inset-0 bg-black/80 z-[70] items-center justify-center p-4" id="imageLightbox" onclick="closeLightbox()">
+    <img src="" id="lightboxImage" class="max-w-full max-h-full rounded-lg" />
+</div>
+
+@section Scripts {
+    <script src="~/lib/signalr/signalr.min.js"></script>
+    <script>
+        function antiForgeryFormData() {
+            const fd = new FormData();
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) fd.append('__RequestVerificationToken', token.value);
+            return fd;
+        }
+
+        let activeConversationId = null;
+        let activeDoctorId = null;
+        let activeDoctorKhoaId = null;
+        let pendingFiles = [];
+        let sending = false;
+
+        document.addEventListener('DOMContentLoaded', loadConversationList);
+
+        let chatHub = null;
+        (function () {
+            if (typeof signalR === 'undefined') return;
+            chatHub = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/consultation-chat')
+                .withAutomaticReconnect()
+                .build();
+
+            chatHub.on('MessageReceived', function (dto) {
+                if (dto.conversationId === activeConversationId) {
+                    appendMessageBubble(dto);
+                    scrollMessageAreaToBottom();
+                    chatHub.invoke('MarkAsRead', activeConversationId).catch(() => {});
+                }
+                loadConversationList();
+            });
+            chatHub.on('ConversationStatusChanged', function () { loadConversationList(); });
+            chatHub.start().catch(function (err) { console.error('Lỗi kết nối SignalR chat:', err); });
+        })();
+
+        function formatTime(iso) {
+            return new Date(iso).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : text;
+            return div.innerHTML;
+        }
+
+        function loadConversationList() {
+            fetch('/Patient/Chat/List')
+                .then(r => r.json())
+                .then(data => renderConversationList(data.items));
+        }
+
+        function renderConversationList(items) {
+            const container = document.getElementById('conversationListItems');
+            if (!items || items.length === 0) {
+                container.innerHTML = '<div class="p-6 text-center text-on-surface-variant italic">Chưa có hội thoại nào. Bấm "+" để đặt câu hỏi cho bác sĩ.</div>';
+                return;
+            }
+            container.innerHTML = items.map(item => `
+                <div onclick="openConversation(${item.conversationId})" class="p-4 flex gap-3 hover:bg-surface-container-low cursor-pointer transition-colors ${item.conversationId === activeConversationId ? 'bg-primary-container/10' : ''}">
+                    <div class="w-11 h-11 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold uppercase shrink-0">${item.doctorInitials}</div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-bold text-body-md text-on-surface truncate">${escapeHtml(item.doctorName)}</h3>
+                            <span class="text-[10px] text-on-surface-variant shrink-0">${formatTime(item.lastMessageAt)}</span>
+                        </div>
+                        <p class="text-caption text-on-surface-variant truncate">${escapeHtml(item.lastMessagePreview || 'Chưa có tin nhắn')}</p>
+                    </div>
+                    ${item.hasUnread ? '<span class="w-2.5 h-2.5 bg-error rounded-full shrink-0 self-center"></span>' : ''}
+                </div>`).join('');
+        }
+
+        function openConversation(conversationId) {
+            if (chatHub && activeConversationId) chatHub.invoke('LeaveConversation', activeConversationId).catch(() => {});
+            activeConversationId = conversationId;
+            pendingFiles = [];
+            renderAttachmentPreview();
+
+            fetch('/Patient/Chat/Thread?conversationId=' + conversationId)
+                .then(r => r.json())
+                .then(data => {
+                    activeDoctorId = data.doctor.id;
+                    activeDoctorKhoaId = data.doctor.khoaId;
+
+                    document.getElementById('chatEmptyState').classList.add('hidden');
+                    document.getElementById('chatActiveArea').classList.remove('hidden');
+                    document.getElementById('chatActiveArea').classList.add('flex');
+                    document.getElementById('chatHeaderInitials').textContent = data.doctor.initials;
+                    document.getElementById('chatHeaderName').textContent = data.doctor.name;
+                    document.getElementById('chatHeaderSub').textContent = data.doctor.chuyenKhoa || '';
+
+                    const area = document.getElementById('messageArea');
+                    area.innerHTML = '';
+                    data.messages.forEach(m => appendMessageBubble(m, true));
+                    scrollMessageAreaToBottom();
+
+                    if (chatHub) {
+                        chatHub.invoke('JoinConversation', conversationId).catch(() => {});
+                        chatHub.invoke('MarkAsRead', conversationId).catch(() => {});
+                    }
+                    loadConversationList();
+                    showMobileThread();
+                });
+        }
+
+        function showMobileThread() {
+            document.getElementById('patientConversationList').classList.add('hidden');
+            document.getElementById('patientConversationList').classList.add('md:flex');
+            document.getElementById('patientChatThread').classList.remove('hidden');
+            document.getElementById('patientChatThread').classList.add('flex');
+        }
+        function backToList() {
+            document.getElementById('patientConversationList').classList.remove('hidden');
+            document.getElementById('patientChatThread').classList.add('hidden');
+            document.getElementById('patientChatThread').classList.remove('flex');
+        }
+
+        function appendMessageBubble(m, skipScroll) {
+            const area = document.getElementById('messageArea');
+            const isPatient = m.vaiTro === 'Patient';
+            const isSystem = m.vaiTro === 'HeThong';
+            const attachmentsHtml = (m.attachments || []).map(a =>
+                `<img src="${a.url}" onclick="openLightbox('${a.url}')" class="w-24 h-24 object-cover rounded-lg cursor-pointer border border-outline-variant mt-1" alt="${escapeHtml(a.tenGoc)}" />`
+            ).join('');
+
+            let html;
+            if (isSystem) {
+                html = `
+                <div class="flex justify-center">
+                    <div class="bg-surface-container-low border border-outline-variant text-on-surface-variant text-caption px-4 py-2 rounded-xl max-w-[90%] text-center">
+                        <p>${escapeHtml(m.noiDung || '')}</p>
+                        <span class="text-[9px] block mt-1 opacity-70">${formatTime(m.thoiGianGui)}</span>
+                    </div>
+                </div>`;
+            } else if (isPatient) {
+                html = `
+                <div class="flex flex-col items-end gap-1">
+                    <div class="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-[85%] shadow-md text-body-md">
+                        ${m.noiDung ? `<p>${escapeHtml(m.noiDung)}</p>` : ''}
+                        <div class="flex flex-wrap gap-1">${attachmentsHtml}</div>
+                        <span class="text-[9px] text-white/80 mt-1.5 block text-right">${formatTime(m.thoiGianGui)}</span>
+                    </div>
+                </div>`;
+            } else {
+                const bookingButton = m.loai === 'MoiDatLich'
+                    ? `<a href="/Patient/Book?deptId=${activeDoctorKhoaId}&doctorId=${activeDoctorId}" class="mt-2 inline-flex items-center gap-1 bg-primary text-white text-caption font-bold px-3 py-1.5 rounded-lg"><span class="material-symbols-outlined text-[16px]">event_available</span>Đặt lịch khám ngay</a>`
+                    : '';
+                html = `
+                <div class="flex gap-3 max-w-[85%]">
+                    <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs uppercase shrink-0 self-end">${document.getElementById('chatHeaderInitials').textContent}</div>
+                    <div class="bg-surface-container-low border border-outline-variant p-3 rounded-2xl rounded-bl-none text-body-md text-on-surface shadow-sm">
+                        ${m.noiDung ? `<p>${escapeHtml(m.noiDung)}</p>` : ''}
+                        <div class="flex flex-wrap gap-1">${attachmentsHtml}</div>
+                        ${bookingButton}
+                        <span class="text-[9px] text-on-surface-variant mt-1.5 block">${formatTime(m.thoiGianGui)}</span>
+                    </div>
+                </div>`;
+            }
+            area.insertAdjacentHTML('beforeend', html);
+            if (!skipScroll) scrollMessageAreaToBottom();
+        }
+
+        function scrollMessageAreaToBottom() {
+            const area = document.getElementById('messageArea');
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function handleChatKey(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        function handleFileSelection(event) {
+            const files = Array.from(event.target.files || []);
+            if (pendingFiles.length + files.length > 5) {
+                alert('Chỉ được đính kèm tối đa 5 ảnh mỗi tin nhắn.');
+                event.target.value = '';
+                return;
+            }
+            Promise.all(files.map(compressImageIfPossible)).then(compressed => {
+                pendingFiles = pendingFiles.concat(compressed);
+                renderAttachmentPreview();
+            });
+            event.target.value = '';
+        }
+
+        function compressImageIfPossible(file) {
+            if (!/^image\/(jpeg|png)$/i.test(file.type)) return Promise.resolve(file);
+            return new Promise(resolve => {
+                const img = new Image();
+                const reader = new FileReader();
+                reader.onload = () => { img.src = reader.result; };
+                img.onload = () => {
+                    const maxDim = 1600;
+                    let { width, height } = img;
+                    if (width > maxDim || height > maxDim) {
+                        const scale = maxDim / Math.max(width, height);
+                        width = Math.round(width * scale);
+                        height = Math.round(height * scale);
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    canvas.toBlob(blob => {
+                        if (!blob) { resolve(file); return; }
+                        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                    }, 'image/jpeg', 0.8);
+                };
+                img.onerror = () => resolve(file);
+                reader.onerror = () => resolve(file);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderAttachmentPreview() {
+            const bar = document.getElementById('attachmentPreviewBar');
+            if (pendingFiles.length === 0) { bar.innerHTML = ''; return; }
+            bar.innerHTML = pendingFiles.map((f, i) => `
+                <span class="inline-flex items-center gap-1 bg-surface-container-high border border-outline-variant rounded-lg px-2 py-1 text-caption">
+                    ${escapeHtml(f.name)}
+                    <button type="button" onclick="removePendingFile(${i})" class="text-on-surface-variant hover:text-error cursor-pointer"><span class="material-symbols-outlined text-[14px]">close</span></button>
+                </span>`).join('');
+        }
+        function removePendingFile(index) {
+            pendingFiles.splice(index, 1);
+            renderAttachmentPreview();
+        }
+
+        function sendChatMessage() {
+            if (sending) return;
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text && pendingFiles.length === 0) return;
+            if (!activeConversationId && !activeDoctorId) return;
+
+            sending = true;
+            const sendBtn = document.getElementById('sendMessageBtn');
+            sendBtn.disabled = true;
+
+            const fd = antiForgeryFormData();
+            if (activeConversationId) fd.append('conversationId', activeConversationId);
+            else fd.append('doctorId', activeDoctorId);
+            fd.append('noiDung', text);
+            pendingFiles.forEach(f => fd.append('files', f));
+
+            fetch('/Patient/Chat/SendMessage', { method: 'POST', body: fd })
+                .then(r => { if (!r.ok) return r.json().then(e => Promise.reject(e)); return r.json(); })
+                .then(dto => {
+                    activeConversationId = dto.conversationId;
+                    input.value = '';
+                    pendingFiles = [];
+                    renderAttachmentPreview();
+                    if (chatHub) chatHub.invoke('JoinConversation', activeConversationId).catch(() => {});
+                })
+                .catch(err => alert(err && err.message ? err.message : 'Không gửi được tin nhắn.'))
+                .finally(() => { sending = false; sendBtn.disabled = false; });
+        }
+
+        function openContactPicker() {
+            document.getElementById('contactSearchInput').value = '';
+            document.getElementById('contactPickerModal').classList.remove('hidden');
+            document.getElementById('contactPickerModal').classList.add('flex');
+            searchContacts('');
+        }
+        function closeContactPicker() {
+            document.getElementById('contactPickerModal').classList.add('hidden');
+            document.getElementById('contactPickerModal').classList.remove('flex');
+        }
+        let contactSearchDebounce = null;
+        function searchContacts(term) {
+            clearTimeout(contactSearchDebounce);
+            contactSearchDebounce = setTimeout(() => {
+                fetch('/Patient/Chat/Contacts?search=' + encodeURIComponent(term || ''))
+                    .then(r => r.json())
+                    .then(data => renderContactPickerList(data.items));
+            }, 200);
+        }
+        function renderContactPickerList(items) {
+            const list = document.getElementById('contactPickerList');
+            if (!items || items.length === 0) {
+                list.innerHTML = '<div class="p-6 text-center text-on-surface-variant italic">Không tìm thấy bác sĩ.</div>';
+                return;
+            }
+            list.innerHTML = items.map(item => `
+                <div onclick="pickContact(${item.doctorId}, ${item.conversationId ?? 'null'})" class="p-3 flex items-center gap-3 hover:bg-surface-container-low cursor-pointer border-b border-outline-variant/60">
+                    <div class="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-caption uppercase">${item.initials}</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-body-md text-on-surface truncate">${escapeHtml(item.name)}</p>
+                        <p class="text-caption text-on-surface-variant truncate">${escapeHtml(item.chuyenKhoa || '')}</p>
+                    </div>
+                </div>`).join('');
+        }
+        function pickContact(doctorId, conversationId) {
+            closeContactPicker();
+            if (conversationId) { openConversation(conversationId); return; }
+            if (chatHub && activeConversationId) chatHub.invoke('LeaveConversation', activeConversationId).catch(() => {});
+            activeConversationId = null;
+            activeDoctorId = doctorId;
+            pendingFiles = [];
+            renderAttachmentPreview();
+            document.getElementById('chatEmptyState').classList.add('hidden');
+            document.getElementById('chatActiveArea').classList.remove('hidden');
+            document.getElementById('chatActiveArea').classList.add('flex');
+            document.getElementById('messageArea').innerHTML = '<p class="text-center text-on-surface-variant italic">Đặt câu hỏi đầu tiên cho bác sĩ bên dưới.</p>';
+            document.getElementById('chatHeaderName').textContent = 'Câu hỏi mới';
+            document.getElementById('chatHeaderInitials').textContent = '';
+            document.getElementById('chatHeaderSub').textContent = '';
+            showMobileThread();
+        }
+
+        function openLightbox(url) {
+            document.getElementById('lightboxImage').src = url;
+            document.getElementById('imageLightbox').classList.remove('hidden');
+            document.getElementById('imageLightbox').classList.add('flex');
+        }
+        function closeLightbox() {
+            document.getElementById('imageLightbox').classList.add('hidden');
+            document.getElementById('imageLightbox').classList.remove('flex');
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+    </script>
+}

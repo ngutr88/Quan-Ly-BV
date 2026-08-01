@@ -37,6 +37,8 @@ builder.Services.AddControllersWithViews(options =>
 });
 builder.Services.AddScoped<QuanLyBenhVien.Services.ExcelExportService>();
 builder.Services.AddScoped<DoctorDashboardNotifier>();
+builder.Services.AddScoped<ConsultationChatNotifier>();
+builder.Services.AddScoped<ConsultationChatService>();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<QuanLyBenhVien.Services.HospitalSettingsProvider>();
 builder.Services.AddScoped<QuanLyBenhVien.Services.AppointmentSlotService>();
@@ -491,6 +493,69 @@ using (var scope = app.Services.CreateScope())
                     );
                     CREATE INDEX IX_FileKetQuaCLS_KetQuaCLSId ON FileKetQuaCLS (KetQuaCLSId);
                 END");
+
+                // Tin nhắn tư vấn (Giai đoạn 1) - cùng lý do như các khối trên.
+                context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'HoiThoaiTuVan')
+                BEGIN
+                    CREATE TABLE HoiThoaiTuVan (
+                        Id INT NOT NULL CONSTRAINT PK_HoiThoaiTuVan PRIMARY KEY IDENTITY,
+                        BenhNhanId INT NOT NULL,
+                        BacSiId INT NOT NULL,
+                        TrangThai NVARCHAR(20) NOT NULL DEFAULT 'Moi',
+                        NgayTao DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        ThoiGianChoTraLoiTu DATETIME2 NULL,
+                        ThoiGianTinNhanCuoi DATETIME2 NULL,
+                        GhiChuKetLuan NVARCHAR(1000) NULL,
+                        NgayDong DATETIME2 NULL,
+                        DaGuiAutoReplyNgoaiGio BIT NOT NULL DEFAULT 0,
+                        CONSTRAINT CK_HoiThoaiTuVan_TrangThai CHECK (TrangThai IN ('Moi','DangXuLy','DaTraLoi','DaDong')),
+                        CONSTRAINT FK_HoiThoaiTuVan_BenhNhan_BenhNhanId FOREIGN KEY (BenhNhanId) REFERENCES BenhNhan (Id),
+                        CONSTRAINT FK_HoiThoaiTuVan_BacSi_BacSiId FOREIGN KEY (BacSiId) REFERENCES BacSi (Id)
+                    );
+                    CREATE UNIQUE INDEX IX_HoiThoaiTuVan_BenhNhanId_BacSiId ON HoiThoaiTuVan (BenhNhanId, BacSiId);
+                    CREATE INDEX IX_HoiThoaiTuVan_BacSiId ON HoiThoaiTuVan (BacSiId);
+                    CREATE INDEX IX_HoiThoaiTuVan_TrangThai ON HoiThoaiTuVan (TrangThai);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'TinNhanTuVan')
+                BEGIN
+                    CREATE TABLE TinNhanTuVan (
+                        Id INT NOT NULL CONSTRAINT PK_TinNhanTuVan PRIMARY KEY IDENTITY,
+                        HoiThoaiId INT NOT NULL,
+                        NguoiGuiId INT NULL,
+                        VaiTroNguoiGui NVARCHAR(20) NOT NULL,
+                        Loai NVARCHAR(20) NOT NULL DEFAULT 'Text',
+                        NoiDung NVARCHAR(2000) NULL,
+                        ThoiGianGui DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        DaXemBoiNguoiNhan BIT NOT NULL DEFAULT 0,
+                        NgayXem DATETIME2 NULL,
+                        CONSTRAINT CK_TinNhanTuVan_VaiTroNguoiGui CHECK (VaiTroNguoiGui IN ('Doctor','Patient','HeThong')),
+                        CONSTRAINT CK_TinNhanTuVan_Loai CHECK (Loai IN ('Text','MoiDatLich','TuDongPhanHoi')),
+                        CONSTRAINT FK_TinNhanTuVan_HoiThoaiTuVan_HoiThoaiId FOREIGN KEY (HoiThoaiId) REFERENCES HoiThoaiTuVan (Id) ON DELETE CASCADE,
+                        CONSTRAINT FK_TinNhanTuVan_NguoiDung_NguoiGuiId FOREIGN KEY (NguoiGuiId) REFERENCES NguoiDung (Id)
+                    );
+                    CREATE INDEX IX_TinNhanTuVan_HoiThoaiId_ThoiGianGui ON TinNhanTuVan (HoiThoaiId, ThoiGianGui);
+                    CREATE INDEX IX_TinNhanTuVan_HoiThoaiId_VaiTroNguoiGui_DaXemBoiNguoiNhan ON TinNhanTuVan (HoiThoaiId, VaiTroNguoiGui, DaXemBoiNguoiNhan);
+                    CREATE INDEX IX_TinNhanTuVan_NguoiGuiId ON TinNhanTuVan (NguoiGuiId);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'TepDinhKemTinNhan')
+                BEGIN
+                    CREATE TABLE TepDinhKemTinNhan (
+                        Id INT NOT NULL CONSTRAINT PK_TepDinhKemTinNhan PRIMARY KEY IDENTITY,
+                        TinNhanId INT NOT NULL,
+                        TenGoc NVARCHAR(260) NOT NULL,
+                        TenLuuTru NVARCHAR(260) NOT NULL,
+                        ContentType NVARCHAR(100) NOT NULL,
+                        KichThuoc BIGINT NOT NULL,
+                        ThuTu INT NOT NULL DEFAULT 0,
+                        NgayTaiLen DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        CONSTRAINT FK_TepDinhKemTinNhan_TinNhanTuVan_TinNhanId
+                            FOREIGN KEY (TinNhanId) REFERENCES TinNhanTuVan (Id) ON DELETE CASCADE
+                    );
+                    CREATE INDEX IX_TepDinhKemTinNhan_TinNhanId ON TepDinhKemTinNhan (TinNhanId);
+                END");
             }
         }
         else
@@ -550,6 +615,7 @@ app.UseAuthorization();
 app.MapStaticAssets();
 
 app.MapHub<DoctorDashboardHub>("/hubs/doctor-dashboard");
+app.MapHub<ConsultationChatHub>("/hubs/consultation-chat");
 
 // Map Area Routing (must be placed before default route)
 app.MapControllerRoute(

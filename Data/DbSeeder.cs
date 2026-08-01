@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using QuanLyBenhVien.Models;
@@ -18,10 +19,14 @@ namespace QuanLyBenhVien.Data
             SynchronizeCompletedAppointmentStates(context);
             SeedAdditionalRoleAccounts(context);
             SeedRoleOverviewDemoData(context);
+            SeedDoctorDailyQueueDemoData(context);
+            SeedHospitalWideActivityDemoData(context);
+            SeedConsultationChatDemoData(context);
             SeedRolePermissionDefaults(context);
             SeedGoodsReceiptDemoData(context);
             SeedPrescriptionSafetyDemoData(context);
             SeedLabCatalogAndDemoData(context);
+            SeedLabOrderDemoData(context);
 
             // Runs before the "complete dataset" shortcut below so existing
             // databases also pick up the public-site articles.
@@ -2317,6 +2322,150 @@ namespace QuanLyBenhVien.Data
             }
         }
 
+        // Phiếu chỉ định + kết quả CLS minh họa, gắn vào các phiếu khám lịch sử
+        // của bác sĩ demo (doctor@hms.com, Tim mạch) đã seed sẵn ở
+        // SeedRoleOverviewDemoData. Tính năng chỉ định CLS được thêm SAU khi
+        // các phiếu khám đó đã tồn tại, nên nếu không vá thêm ở đây thì trang
+        // "Kết quả CLS" của bác sĩ và trang quản lý CLS của Admin sẽ trống
+        // trơn khi demo.
+        private static void SeedLabOrderDemoData(ApplicationDbContext context)
+        {
+            const string localizedSeedAction = "Khởi tạo dữ liệu minh họa Cận lâm sàng";
+            const string seedDetail = "Khởi tạo phiếu chỉ định và kết quả CLS minh họa cho bác sĩ demo (Tim mạch).";
+
+            if (context.AuditLogs.Any(l => l.HanhDong == localizedSeedAction && l.ChiTiet == seedDetail))
+            {
+                return;
+            }
+
+            var doctor = context.Doctors.Include(d => d.User).FirstOrDefault(d => d.User.Email == "doctor@hms.com");
+            var adminUser = context.Users.FirstOrDefault(u => u.Email == "admin@hms.com");
+            if (doctor == null || adminUser == null)
+            {
+                return;
+            }
+
+            // Nhận diện đúng 8 phiếu khám do SeedRoleOverviewDemoData tạo qua
+            // LoiDan cố định của bộ đó, thay vì suy đoán theo thứ tự thời gian
+            // (bác sĩ demo còn có các phiếu khám khác seed ở nơi khác).
+            const string historicalLoiDan = "Uống thuốc đúng đơn, giảm muối, vận động nhẹ 30 phút mỗi ngày và tái khám đúng hẹn.";
+            var exams = context.ExaminationRecords
+                .Include(e => e.Appointment)
+                .Where(e => e.Appointment.BacSiId == doctor.Id && e.LoiDan == historicalLoiDan)
+                .OrderBy(e => e.NgayKham)
+                .ToList();
+
+            var catalog = context.LabServiceCatalogs.ToDictionary(s => s.MaDichVu, s => s.Id);
+            var requiredCodes = new[] { "ECG", "CTM", "CREA", "DHUYET", "XQ-NGUC" };
+            if (exams.Count < 8 || requiredCodes.Any(c => !catalog.ContainsKey(c)))
+            {
+                return;
+            }
+
+            var seq = 0;
+            string NextMaPhieu() => $"CLS-DEMO-{++seq:D4}";
+
+            LabOrder NewOrder(ExaminationRecord exam)
+            {
+                var order = new LabOrder
+                {
+                    MaPhieu = NextMaPhieu(),
+                    PhieuKhamId = exam.Id,
+                    BenhNhanId = exam.Appointment.BenhNhanId,
+                    BacSiChiDinhId = doctor.Id,
+                    NgayChiDinh = exam.NgayKham
+                };
+                context.LabOrders.Add(order);
+                context.SaveChanges();
+                return order;
+            }
+
+            LabOrderItem NewItem(LabOrder order, string code, string trangThai)
+            {
+                var item = new LabOrderItem
+                {
+                    PhieuChiDinhCLSId = order.Id,
+                    DichVuCLSId = catalog[code],
+                    TrangThai = trangThai
+                };
+                context.LabOrderItems.Add(item);
+                context.SaveChanges();
+                return item;
+            }
+
+            void AddResult(LabOrderItem item, DateTime resultTime, string ketLuan, bool coBatThuong, bool daXem)
+            {
+                context.LabResults.Add(new LabResult
+                {
+                    ChiTietPhieuChiDinhCLSId = item.Id,
+                    KetLuan = ketLuan,
+                    CoBatThuong = coBatThuong,
+                    NguoiThucHienId = adminUser.Id,
+                    NguoiDuyetTen = "KTV. Đặng Thị Thu",
+                    NgayTra = resultTime,
+                    DaXem = daXem,
+                    NgayXem = daXem ? resultTime.AddHours(3) : (DateTime?)null
+                });
+                context.SaveChanges();
+            }
+
+            // exams[0..7] theo thứ tự thời gian tăng dần: 128, 96, 65, 34, 12, 5, 3, 1 ngày trước.
+
+            // 128 ngày trước - đã có kết quả, bác sĩ đã xem (2 chỉ định)
+            var order0 = NewOrder(exams[0]);
+            AddResult(NewItem(order0, "ECG", "DaCoKetQua"), exams[0].NgayKham.AddHours(2),
+                "Nhịp xoang đều, tần số 74 lần/phút, không phát hiện bất thường ST-T.", false, true);
+            AddResult(NewItem(order0, "CTM", "DaCoKetQua"), exams[0].NgayKham.AddHours(4),
+                "Công thức máu trong giới hạn bình thường.", false, true);
+
+            // 96 ngày trước - đã hủy chỉ định
+            var order1 = NewOrder(exams[1]);
+            var item1 = NewItem(order1, "XQ-NGUC", "DaHuy");
+            item1.LyDoHuy = "Bệnh nhân đã chụp X-quang ngực tại phòng khám khác trong tuần, không cần chỉ định lại.";
+
+            // 65 ngày trước - đã có kết quả bình thường, bác sĩ đã xem
+            var order2 = NewOrder(exams[2]);
+            AddResult(NewItem(order2, "ECG", "DaCoKetQua"), exams[2].NgayKham.AddHours(2),
+                "Nhịp xoang, tần số dao động nhẹ theo nhịp thở, không cần can thiệp.", false, true);
+
+            // 34 ngày trước - đã có kết quả bất thường, bác sĩ đã xem và ghi chú
+            var order3 = NewOrder(exams[3]);
+            AddResult(NewItem(order3, "CREA", "DaCoKetQua"), exams[3].NgayKham.AddHours(3),
+                "Creatinine 1.3 mg/dL, tăng nhẹ so với bình thường, cần theo dõi chức năng thận liên quan tăng huyết áp.", true, true);
+            exams[3].GhiChuCLSCuaBacSi = "Đã tư vấn bệnh nhân điều chỉnh liều thuốc lợi tiểu và hẹn kiểm tra lại chức năng thận sau 2 tuần.";
+
+            // 12 ngày trước - đã có kết quả bình thường, CHƯA xem
+            var order4 = NewOrder(exams[4]);
+            AddResult(NewItem(order4, "ECG", "DaCoKetQua"), exams[4].NgayKham.AddHours(2),
+                "Nhịp xoang đều, không thay đổi so với lần khám trước, chức năng tim ổn định.", false, false);
+
+            // 5 ngày trước - đã có kết quả bất thường, CHƯA xem
+            var order5 = NewOrder(exams[5]);
+            AddResult(NewItem(order5, "ECG", "DaCoKetQua"), exams[5].NgayKham.AddHours(2),
+                "Nhịp xoang, ghi nhận ngoại tâm thu thất rải rác, phù hợp ngoại tâm thu lành tính đã ghi nhận trên lâm sàng.", true, false);
+
+            // 3 ngày trước - đang thực hiện, chưa có kết quả
+            var order6 = NewOrder(exams[6]);
+            var item6 = NewItem(order6, "DHUYET", "DangThucHien");
+            item6.NgayNhanThucHien = exams[6].NgayKham.AddHours(1);
+            item6.NguoiNhanId = adminUser.Id;
+
+            // 1 ngày trước - vừa chỉ định, chờ thực hiện
+            var order7 = NewOrder(exams[7]);
+            NewItem(order7, "CREA", "ChoThucHien");
+
+            context.SaveChanges();
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                NguoiDungId = null,
+                HanhDong = localizedSeedAction,
+                ChiTiet = seedDetail,
+                ThoiGian = DateTime.Now
+            });
+            context.SaveChanges();
+        }
+
         private static void SeedDefaultDoctorWorkSchedules(ApplicationDbContext context)
         {
             // First, update all doctors' LichLamViec description to a wide schedule to avoid "no schedule" errors
@@ -2726,40 +2875,15 @@ namespace QuanLyBenhVien.Data
 
             var now = DateTime.Now;
             var today = now.Date;
-            var todaySlots = new[]
-            {
-                (Hour: 8, Minute: 0, Status: "DaXacNhan", Reason: "Tái khám tim mạch và kiểm tra huyết áp."),
-                (Hour: 8, Minute: 30, Status: "ChoXacNhan", Reason: "Đau tức ngực nhẹ khi vận động."),
-                (Hour: 9, Minute: 0, Status: "DangKham", Reason: "Theo dõi rối loạn nhịp tim."),
-                (Hour: 9, Minute: 30, Status: "HoanThanh", Reason: "Khám sức khỏe tim mạch định kỳ."),
-                (Hour: 10, Minute: 0, Status: "DaXacNhan", Reason: "Kiểm tra kết quả điện tâm đồ."),
-                (Hour: 10, Minute: 30, Status: "VangMat", Reason: "Tái khám tăng huyết áp."),
-                (Hour: 14, Minute: 0, Status: "DaHuy", Reason: "Tư vấn chế độ dinh dưỡng tim mạch.")
-            };
 
-            var seededTodayAppointments = new List<Appointment>();
-            for (var index = 0; index < todaySlots.Length; index++)
-            {
-                var slot = todaySlots[index];
-                var appointmentTime = today.AddHours(slot.Hour).AddMinutes(slot.Minute);
-                if (context.Appointments.Any(a => a.BacSiId == doctor.Id && a.ThoiGian == appointmentTime))
-                {
-                    continue;
-                }
-
-                var appointment = new Appointment
-                {
-                    BenhNhanId = patients[index % patients.Count].Id,
-                    BacSiId = doctor.Id,
-                    ThoiGian = appointmentTime,
-                    TrangThai = slot.Status,
-                    LyDoKham = slot.Reason,
-                    NgayTao = today.AddDays(-2).AddHours(9 + index)
-                };
-                context.Appointments.Add(appointment);
-                seededTodayAppointments.Add(appointment);
-            }
-            context.SaveChanges();
+            // "Hôm nay" appointments used to be seeded right here, but this
+            // whole method only ever runs once (gated by the AuditLog check
+            // above) - the moment the app is reopened on a later calendar
+            // day, that slate silently becomes history and the doctor
+            // dashboard's "hôm nay" widgets go back to zero. Moved to
+            // SeedDoctorDailyQueueDemoData, which runs unconditionally on
+            // every startup and refreshes itself for whatever "today"
+            // actually is.
 
             var medicines = context.Medicines.OrderBy(m => m.Id).Take(4).ToList();
             var historicalSeeds = new[]
@@ -2911,6 +3035,416 @@ namespace QuanLyBenhVien.Data
                     ThoiGian = now
                 });
             context.SaveChanges();
+        }
+
+        // SeedRoleOverviewDemoData only ever runs once (gated by an AuditLog
+        // marker), so the "hôm nay"/"ngày mai" appointments it used to create
+        // would go stale the first time the app is opened on a different
+        // calendar day, leaving the doctor dashboard's today/tomorrow/queue
+        // widgets stuck at zero. This runs unconditionally on every startup
+        // and is idempotent per calendar day via the ThoiGian equality check
+        // below, so it keeps refreshing the demo doctor's queue for whatever
+        // "today" actually is without duplicating slots already seeded today.
+        private static void SeedDoctorDailyQueueDemoData(ApplicationDbContext context)
+        {
+            var doctor = context.Doctors.Include(d => d.User).FirstOrDefault(d => d.User.Email == "doctor@hms.com");
+            var patients = context.Patients.Include(p => p.User).OrderBy(p => p.Id).Take(8).ToList();
+            if (doctor == null || patients.Count < 3)
+            {
+                return;
+            }
+
+            var today = DateTime.Today;
+
+            var todaySlots = new[]
+            {
+                (Hour: 8, Minute: 0, Status: "DaXacNhan", Reason: "Tái khám tim mạch và kiểm tra huyết áp."),
+                (Hour: 8, Minute: 30, Status: "ChoXacNhan", Reason: "Đau tức ngực nhẹ khi vận động."),
+                (Hour: 9, Minute: 0, Status: "DangKham", Reason: "Theo dõi rối loạn nhịp tim."),
+                (Hour: 9, Minute: 30, Status: "HoanThanh", Reason: "Khám sức khỏe tim mạch định kỳ."),
+                (Hour: 10, Minute: 0, Status: "DaXacNhan", Reason: "Kiểm tra kết quả điện tâm đồ."),
+                (Hour: 10, Minute: 30, Status: "VangMat", Reason: "Tái khám tăng huyết áp."),
+                (Hour: 14, Minute: 0, Status: "DaHuy", Reason: "Tư vấn chế độ dinh dưỡng tim mạch.")
+            };
+
+            for (var index = 0; index < todaySlots.Length; index++)
+            {
+                var slot = todaySlots[index];
+                var appointmentTime = today.AddHours(slot.Hour).AddMinutes(slot.Minute);
+                if (context.Appointments.Any(a => a.BacSiId == doctor.Id && a.ThoiGian == appointmentTime))
+                {
+                    continue;
+                }
+
+                context.Appointments.Add(new Appointment
+                {
+                    BenhNhanId = patients[index % patients.Count].Id,
+                    BacSiId = doctor.Id,
+                    ThoiGian = appointmentTime,
+                    TrangThai = slot.Status,
+                    LyDoKham = slot.Reason,
+                    NgayTao = today.AddHours(7)
+                });
+            }
+
+            var tomorrow = today.AddDays(1);
+            var tomorrowSlots = new[]
+            {
+                (Hour: 8, Minute: 30, Status: "DaXacNhan", Reason: "Tái khám theo hẹn và đánh giá đáp ứng điều trị."),
+                (Hour: 9, Minute: 30, Status: "ChoXacNhan", Reason: "Khám tim mạch định kỳ.")
+            };
+
+            for (var index = 0; index < tomorrowSlots.Length; index++)
+            {
+                var slot = tomorrowSlots[index];
+                var appointmentTime = tomorrow.AddHours(slot.Hour).AddMinutes(slot.Minute);
+                if (context.Appointments.Any(a => a.BacSiId == doctor.Id && a.ThoiGian == appointmentTime))
+                {
+                    continue;
+                }
+
+                context.Appointments.Add(new Appointment
+                {
+                    BenhNhanId = patients[(index + 3) % patients.Count].Id,
+                    BacSiId = doctor.Id,
+                    ThoiGian = appointmentTime,
+                    TrangThai = slot.Status,
+                    LyDoKham = slot.Reason,
+                    NgayTao = today.AddHours(7)
+                });
+            }
+
+            context.SaveChanges();
+        }
+
+        // Dashboard Admin tổng hợp SỐ LIỆU TOÀN VIỆN (tỉ lệ khám thành công cả
+        // năm, doanh thu hôm nay/theo khoa, biểu đồ 7 ngày...), nhưng toàn bộ
+        // lịch khám/hóa đơn minh họa trước đây chỉ gắn với đúng 1 bác sĩ demo
+        // (doctor@hms.com, xem SeedDoctorDailyQueueDemoData) - trong khi DB có
+        // tới 200+ bác sĩ. Kết quả: mọi chỉ số toàn viện trông trống rỗng dù
+        // "về mặt kỹ thuật" đã có dữ liệu. Hàm này trải lịch khám + hóa đơn cho
+        // MỘT bác sĩ đại diện mỗi khoa, chạy lại mỗi lần khởi động (như
+        // SeedDoctorDailyQueueDemoData) và tự backfill lùi 14 ngày mỗi khi phát
+        // hiện thiếu, nên số liệu "hôm nay"/"7 ngày qua" không bao giờ lùi vào
+        // dĩ vãng như 2 khối seed lịch sử một-lần trước đó.
+        private static void SeedHospitalWideActivityDemoData(ApplicationDbContext context)
+        {
+            const int windowDays = 14; // đủ để lấp đầy biểu đồ "7 ngày qua" và có biên an toàn
+
+            var doctors = context.Doctors
+                .Where(d => d.User.Email != "doctor@hms.com") // giữ nguyên câu chuyện riêng của bác sĩ demo chính
+                .OrderBy(d => d.KhoaId).ThenBy(d => d.Id)
+                .AsEnumerable()
+                .GroupBy(d => d.KhoaId)
+                .Select(g => g.First())
+                .ToList();
+            var patients = context.Patients.OrderBy(p => p.Id).ToList();
+            if (doctors.Count == 0 || patients.Count < 5)
+            {
+                return;
+            }
+
+            var today = DateTime.Today;
+            var windowStart = today.AddDays(-windowDays);
+            var doctorIds = doctors.Select(d => d.Id).ToHashSet();
+
+            // Nạp trước toàn bộ slot đã tồn tại trong khung thời gian để kiểm
+            // tra idempotent trong bộ nhớ, tránh hàng trăm round-trip DB.
+            var existingSlots = context.Appointments
+                .Where(a => a.BacSiId != null && doctorIds.Contains(a.BacSiId.Value) && a.ThoiGian >= windowStart)
+                .Select(a => new { BacSiId = a.BacSiId!.Value, a.ThoiGian })
+                .AsEnumerable()
+                .Select(a => (a.BacSiId, a.ThoiGian))
+                .ToHashSet();
+
+            var slotTimes = new[] { (Hour: 9, Minute: 0), (Hour: 15, Minute: 0) };
+            var reasons = new[]
+            {
+                "Khám sức khỏe định kỳ.",
+                "Tái khám theo hẹn.",
+                "Tư vấn triệu chứng và kê đơn điều trị.",
+                "Theo dõi đáp ứng điều trị.",
+                "Khám chuyên khoa theo yêu cầu."
+            };
+
+            var patientCursor = 0;
+            var newAppointments = new List<Appointment>();
+
+            for (var dayOffset = -windowDays; dayOffset <= 0; dayOffset++)
+            {
+                var day = today.AddDays(dayOffset);
+                foreach (var doctor in doctors)
+                {
+                    foreach (var slot in slotTimes)
+                    {
+                        var slotTime = day.AddHours(slot.Hour).AddMinutes(slot.Minute);
+                        if (existingSlots.Contains((doctor.Id, slotTime))) continue;
+
+                        // Ngày đã qua: đa số Hoàn thành (~85%, đúng tỉ lệ khám
+                        // thành công thực tế của một bệnh viện đang hoạt động
+                        // tốt), rải rác Hủy/Vắng mặt. Riêng "hôm nay": cố định
+                        // ca sáng đã khám xong, ca chiều còn chờ - đúng hình
+                        // ảnh "một ngày làm việc đang diễn ra" thay vì đã xong hết.
+                        string trangThai;
+                        if (dayOffset == 0)
+                        {
+                            trangThai = slot.Hour < 12 ? "HoanThanh" : "DaXacNhan";
+                        }
+                        else
+                        {
+                            var bucket = (doctor.Id * 7 + dayOffset * 3 + slot.Hour) % 20;
+                            trangThai = bucket switch
+                            {
+                                < 17 => "HoanThanh", // 17/20 = 85%
+                                17 => "DaHuy",
+                                _ => "VangMat"
+                            };
+                        }
+
+                        var patient = patients[patientCursor % patients.Count];
+                        patientCursor++;
+
+                        var appointment = new Appointment
+                        {
+                            BenhNhanId = patient.Id,
+                            BacSiId = doctor.Id,
+                            ThoiGian = slotTime,
+                            TrangThai = trangThai,
+                            LyDoKham = reasons[Math.Abs(doctor.Id + dayOffset) % reasons.Length],
+                            NgayTao = slotTime.AddDays(-1)
+                        };
+                        context.Appointments.Add(appointment);
+                        newAppointments.Add(appointment);
+                        existingSlots.Add((doctor.Id, slotTime));
+                    }
+                }
+            }
+
+            if (newAppointments.Count == 0)
+            {
+                return;
+            }
+            context.SaveChanges(); // 1 round-trip: gán Id cho toàn bộ appointment mới
+
+            // Mỗi ca Hoàn thành BẮT BUỘC có phiếu khám, nếu không
+            // SynchronizeCompletedAppointmentStates() sẽ hạ về DaXacNhan ở lần
+            // khởi động kế tiếp (coi như "hoàn thành nhưng thiếu hồ sơ").
+            var completedAppointments = newAppointments.Where(a => a.TrangThai == "HoanThanh").ToList();
+            var examinationsByAppointmentId = new Dictionary<int, ExaminationRecord>();
+            foreach (var appointment in completedAppointments)
+            {
+                var examination = new ExaminationRecord
+                {
+                    LichKhamId = appointment.Id,
+                    TrieuChung = "Khám và tư vấn theo lịch hẹn.",
+                    ChanDoan = "Sức khỏe ổn định, tiếp tục theo dõi định kỳ.",
+                    LoiDan = "Tái khám đúng hẹn, giữ chế độ sinh hoạt và dùng thuốc theo chỉ định.",
+                    NgayKham = appointment.ThoiGian
+                };
+                context.ExaminationRecords.Add(examination);
+                examinationsByAppointmentId[appointment.Id] = examination;
+            }
+            context.SaveChanges(); // 1 round-trip: gán Id cho toàn bộ phiếu khám mới
+
+            // Hóa đơn đã thanh toán cùng ngày khám - đây là nguồn số liệu thật
+            // cho "Doanh thu hôm nay"/"theo khoa"/"7 ngày qua" trên Dashboard.
+            var feeOptions = new decimal[] { 250000m, 300000m, 350000m, 420000m, 480000m };
+            var feeIndex = 0;
+            var newInvoices = new List<Invoice>();
+            foreach (var appointment in completedAppointments)
+            {
+                var examination = examinationsByAppointmentId[appointment.Id];
+                var fee = feeOptions[feeIndex % feeOptions.Length];
+                feeIndex++;
+
+                var invoice = new Invoice
+                {
+                    PhieuKhamId = examination.Id,
+                    TongTien = fee,
+                    TrangThaiThanhToan = "DaThanhToan",
+                    PhuongThuc = feeIndex % 2 == 0 ? "TienMat" : "Online (VNPay)",
+                    MaGiaoDich = $"DEMO-ACT-{appointment.ThoiGian:yyyyMMdd}-{appointment.Id}",
+                    NgayTao = appointment.ThoiGian,
+                    NgayThanhToan = appointment.ThoiGian.AddMinutes(30)
+                };
+                context.Invoices.Add(invoice);
+                newInvoices.Add(invoice);
+            }
+            context.SaveChanges(); // 1 round-trip: gán Id cho toàn bộ hóa đơn mới
+
+            for (var i = 0; i < newInvoices.Count; i++)
+            {
+                context.InvoiceDetails.Add(new InvoiceDetail
+                {
+                    HoaDonId = newInvoices[i].Id,
+                    LoaiPhi = "Phí khám chuyên khoa",
+                    SoTien = newInvoices[i].TongTien
+                });
+            }
+            context.SaveChanges();
+        }
+
+        // Dữ liệu minh họa cho module Tin nhắn tư vấn - 5 hội thoại phủ đủ các
+        // trạng thái/tình huống chính để demo: chờ vượt SLA (màu cam), đang xử
+        // lý, đã trả lời (kèm ảnh đính kèm), đã đóng (kèm ghi chú kết luận), và
+        // một hội thoại có tin auto-reply ngoài giờ. Idempotent theo cặp
+        // (BenhNhanId, BacSiId) - khớp đúng unique index của Conversation nên
+        // an toàn khi Seed() chạy lại mỗi lần khởi động.
+        private static void SeedConsultationChatDemoData(ApplicationDbContext context)
+        {
+            var doctor = context.Doctors.Include(d => d.User).FirstOrDefault(d => d.User.Email == "doctor@hms.com");
+            var patients = context.Patients.Include(p => p.User).OrderBy(p => p.Id).Take(8).ToList();
+            if (doctor == null || patients.Count < 5)
+            {
+                return;
+            }
+
+            var now = DateTime.Now;
+
+            Conversation? NewConversationIfMissing(Patient patient)
+            {
+                if (context.Conversations.Any(c => c.BenhNhanId == patient.Id && c.BacSiId == doctor.Id))
+                {
+                    return null;
+                }
+                var conversation = new Conversation { BenhNhanId = patient.Id, BacSiId = doctor.Id, NgayTao = now.AddDays(-3) };
+                context.Conversations.Add(conversation);
+                context.SaveChanges();
+                return conversation;
+            }
+
+            ConversationMessage AddMessage(Conversation conversation, string vaiTro, int? nguoiGuiId, string noiDung, DateTime thoiGianGui, bool daXem = false, string loai = "Text")
+            {
+                var message = new ConversationMessage
+                {
+                    HoiThoaiId = conversation.Id,
+                    NguoiGuiId = nguoiGuiId,
+                    VaiTroNguoiGui = vaiTro,
+                    Loai = loai,
+                    NoiDung = noiDung,
+                    ThoiGianGui = thoiGianGui,
+                    DaXemBoiNguoiNhan = daXem,
+                    NgayXem = daXem ? thoiGianGui.AddMinutes(5) : (DateTime?)null
+                };
+                context.ConversationMessages.Add(message);
+                context.SaveChanges();
+                return message;
+            }
+
+            // 1) Moi - chờ ~30 giờ, vượt ngưỡng cam kết 24h mặc định (demo nhãn "chờ N giờ" tô cam)
+            var conv1Patient = patients[0];
+            var conv1 = NewConversationIfMissing(conv1Patient);
+            if (conv1 != null)
+            {
+                var t = now.AddHours(-30);
+                AddMessage(conv1, "Patient", conv1Patient.NguoiDungId,
+                    "Chào bác sĩ, tôi có một số thắc mắc về liều lượng dùng thuốc sau khi xuất viện hôm trước ạ.", t);
+                conv1.TrangThai = "Moi";
+                conv1.ThoiGianChoTraLoiTu = t;
+                conv1.ThoiGianTinNhanCuoi = t;
+                context.SaveChanges();
+            }
+
+            // 2) DangXuLy - bác sĩ đã mở nhưng chưa trả lời, chờ ~5 giờ
+            var conv2Patient = patients[1];
+            var conv2 = NewConversationIfMissing(conv2Patient);
+            if (conv2 != null)
+            {
+                var t = now.AddHours(-5);
+                AddMessage(conv2, "Patient", conv2Patient.NguoiDungId,
+                    "Bác sĩ ơi, vết mổ của tôi hơi sưng đỏ, có cần tái khám sớm không ạ?", t, daXem: true);
+                conv2.TrangThai = "DangXuLy";
+                conv2.ThoiGianChoTraLoiTu = t;
+                conv2.ThoiGianTinNhanCuoi = t;
+                context.SaveChanges();
+            }
+
+            // 3) DaTraLoi - đã qua lại vài lượt, tin đầu có ảnh đính kèm minh họa
+            var conv3Patient = patients[2];
+            var conv3 = NewConversationIfMissing(conv3Patient);
+            if (conv3 != null)
+            {
+                var t1 = now.AddHours(-20);
+                var t2 = now.AddHours(-19).AddMinutes(-30);
+                var t3 = now.AddHours(-19);
+                var patientMsg = AddMessage(conv3, "Patient", conv3Patient.NguoiDungId,
+                    "Kết quả xét nghiệm máu của tôi có vấn đề gì không bác sĩ?", t1, daXem: true);
+                SeedDemoChatAttachment(context, patientMsg);
+                AddMessage(conv3, "Doctor", doctor.NguoiDungId,
+                    "Chào anh/chị, bác sĩ đã xem kết quả, các chỉ số trong giới hạn bình thường, anh/chị yên tâm nhé.", t2, daXem: true);
+                AddMessage(conv3, "Patient", conv3Patient.NguoiDungId, "Dạ em cảm ơn bác sĩ ạ!", t3, daXem: true);
+                conv3.TrangThai = "DaTraLoi";
+                conv3.ThoiGianChoTraLoiTu = null;
+                conv3.ThoiGianTinNhanCuoi = t3;
+                context.SaveChanges();
+            }
+
+            // 4) DaDong - đã có ghi chú kết luận
+            var conv4Patient = patients[3];
+            var conv4 = NewConversationIfMissing(conv4Patient);
+            if (conv4 != null)
+            {
+                var t1 = now.AddDays(-2);
+                var t2 = now.AddDays(-2).AddMinutes(40);
+                AddMessage(conv4, "Patient", conv4Patient.NguoiDungId,
+                    "Bác sĩ ơi, tôi uống thuốc hạ áp xong thấy hơi chóng mặt, có bình thường không ạ?", t1, daXem: true);
+                AddMessage(conv4, "Doctor", doctor.NguoiDungId,
+                    "Đây là phản ứng thường gặp trong vài ngày đầu, anh/chị nên đo huyết áp và nghỉ ngơi, nếu chóng mặt kéo dài trên 3 ngày thì tái khám ngay nhé.", t2, daXem: true);
+                conv4.TrangThai = "DaDong";
+                conv4.ThoiGianChoTraLoiTu = null;
+                conv4.ThoiGianTinNhanCuoi = t2;
+                conv4.GhiChuKetLuan = "Đã tư vấn tác dụng phụ hạ áp thường gặp, dặn dò theo dõi tại nhà, hẹn tái khám nếu triệu chứng kéo dài.";
+                conv4.NgayDong = t2.AddMinutes(5);
+                context.SaveChanges();
+            }
+
+            // 5) Có tin auto-reply ngoài giờ (minh họa Loai=TuDongPhanHoi)
+            var conv5Patient = patients[4];
+            var conv5 = NewConversationIfMissing(conv5Patient);
+            if (conv5 != null)
+            {
+                var t = now.AddHours(-2);
+                AddMessage(conv5, "Patient", conv5Patient.NguoiDungId,
+                    "Bác sĩ ơi tôi bị đau đầu nhẹ, có cần uống thuốc gì không ạ?", t);
+                AddMessage(conv5, "HeThong", null, ConsultationChatConstants.AutoReplyOffHoursText, t.AddSeconds(2), loai: "TuDongPhanHoi");
+                conv5.TrangThai = "Moi";
+                conv5.ThoiGianChoTraLoiTu = t;
+                conv5.ThoiGianTinNhanCuoi = t.AddSeconds(2);
+                conv5.DaGuiAutoReplyNgoaiGio = true;
+                context.SaveChanges();
+            }
+        }
+
+        // File ảnh 1x1 hợp lệ ghi thật ra App_Data/chat-attachments để nút xem
+        // ảnh/lightbox trong demo có nội dung thật để tải, thay vì trỏ tới một
+        // file không tồn tại. Best-effort: seed dữ liệu khác không phụ thuộc
+        // vào việc ghi file này thành công.
+        private static void SeedDemoChatAttachment(ApplicationDbContext context, ConversationMessage message)
+        {
+            try
+            {
+                var storageRoot = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "chat-attachments");
+                Directory.CreateDirectory(storageRoot);
+                var storedName = $"{Guid.NewGuid():N}.png";
+                var bytes = Convert.FromBase64String(
+                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=");
+                File.WriteAllBytes(Path.Combine(storageRoot, storedName), bytes);
+
+                context.ConversationMessageAttachments.Add(new ConversationMessageAttachment
+                {
+                    TinNhanId = message.Id,
+                    TenGoc = "ket-qua-xet-nghiem.png",
+                    TenLuuTru = storedName,
+                    ContentType = "image/png",
+                    KichThuoc = bytes.Length,
+                    ThuTu = 0
+                });
+                context.SaveChanges();
+            }
+            catch
+            {
+                // Demo-only best-effort.
+            }
         }
     }
 }

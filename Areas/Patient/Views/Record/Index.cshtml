@@ -77,7 +77,7 @@
                     <div class="flex items-start gap-4 min-w-0 flex-grow">
                         <!-- Date Badge & Initial -->
                         <div class="w-12 h-12 rounded-2xl doc-avatar flex items-center justify-center shrink-0 text-primary font-bold text-lg border border-sky-100">
-                            @(record.Appointment.Doctor != null ? record.Appointment.Doctor.User.HoTen[0].ToString().ToUpper() : "BS")
+                            @(record.Appointment.Doctor != null ? QuanLyBenhVien.Helpers.NameInitialsHelper.GetInitials(record.Appointment.Doctor.User.HoTen) : "BS")
                         </div>
                         <!-- Diagnosis & Details -->
                         <div class="min-w-0 flex-grow space-y-1">

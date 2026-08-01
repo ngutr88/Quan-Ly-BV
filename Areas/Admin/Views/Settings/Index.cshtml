@@ -150,6 +150,74 @@
         </div>
     </div>
 
+    <!-- Card 4: Consultation Chat Business Hours -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm p-unit-lg">
+        <h3 class="font-title-lg text-title-lg text-primary border-b border-outline-variant pb-2 mb-unit-md flex items-center gap-2">
+            <span class="material-symbols-outlined">forum</span>
+            Tư vấn trực tuyến (Tin nhắn tư vấn)
+        </h3>
+        <p class="text-caption text-on-surface-variant mb-unit-md">Áp dụng cho dòng cam kết thời gian phản hồi hiển thị với bệnh nhân và thời điểm kích hoạt tin nhắn tự động trả lời ngoài giờ.</p>
+
+        @{
+            var vietnameseDayLabels = new Dictionary<System.DayOfWeek, string>
+            {
+                [System.DayOfWeek.Monday] = "Thứ Hai",
+                [System.DayOfWeek.Tuesday] = "Thứ Ba",
+                [System.DayOfWeek.Wednesday] = "Thứ Tư",
+                [System.DayOfWeek.Thursday] = "Thứ Năm",
+                [System.DayOfWeek.Friday] = "Thứ Sáu",
+                [System.DayOfWeek.Saturday] = "Thứ Bảy",
+                [System.DayOfWeek.Sunday] = "Chủ Nhật"
+            };
+        }
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-unit-md">
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant uppercase">Giờ bắt đầu *</label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                       name="TuVanGioBatDau" value="@Model.TuVanGioBatDau" required type="time" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant uppercase">Giờ kết thúc *</label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                       name="TuVanGioKetThuc" value="@Model.TuVanGioKetThuc" required type="time" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant uppercase">Áp dụng từ thứ *</label>
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" name="TuVanNgayApDungTu" required>
+                    @foreach (var day in vietnameseDayLabels)
+                    {
+                        <option value="@day.Key" selected="@(Model.TuVanNgayApDungTu == day.Key)">@day.Value</option>
+                    }
+                </select>
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant uppercase">Đến thứ *</label>
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" name="TuVanNgayApDungDen" required>
+                    @foreach (var day in vietnameseDayLabels)
+                    {
+                        <option value="@day.Key" selected="@(Model.TuVanNgayApDungDen == day.Key)">@day.Value</option>
+                    }
+                </select>
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant uppercase">Cam kết phản hồi từ (giờ) *</label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                       name="TuVanCamKetPhanHoiTuGio" value="@Model.TuVanCamKetPhanHoiTuGio" min="1" max="168" required type="number" />
+            </div>
+
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant uppercase">Cam kết phản hồi đến (giờ) *</label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                       name="TuVanCamKetPhanHoiDenGio" value="@Model.TuVanCamKetPhanHoiDenGio" min="1" max="168" required type="number" />
+            </div>
+        </div>
+    </div>
+
     <!-- Actions -->
     <div class="flex items-center gap-unit-md pt-4">
         <button type="submit" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">

@@ -66,6 +66,7 @@ public static class ModulePermissionRegistry
         new("Patient.Dashboard", "Trang chủ"),
         new("Patient.Book", "Đặt lịch khám"),
         new("Patient.Appointments", "Lịch hẹn của tôi"),
+        new("Patient.Chat", "Hỏi bác sĩ"),
         new("Patient.LabResults", "Kết quả khám & Xét nghiệm"),
         new("Patient.Record", "Lịch sử khám & Đơn thuốc"),
         new("Patient.Documents", "Tài liệu của tôi"),

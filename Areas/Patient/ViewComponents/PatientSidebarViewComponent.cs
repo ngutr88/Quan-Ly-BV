@@ -38,6 +38,7 @@ namespace QuanLyBenhVien.Areas.Patient.ViewComponents
 
             int? unpaidInvoiceCount = null;
             int? unreadNotificationCount = null;
+            int? unreadMessageCount = null;
             if (patient != null)
             {
                 var unpaid = await _context.Invoices
@@ -46,6 +47,11 @@ namespace QuanLyBenhVien.Areas.Patient.ViewComponents
 
                 var unread = await NotificationCountHelper.GetUnreadCountAsync(_context, userId);
                 if (unread > 0) unreadNotificationCount = unread;
+
+                // Chỉ server-render (mỗi request) - Giai đoạn 1 chưa có SignalR
+                // 2 chiều phía Patient, khác với badge phía Doctor.
+                var unreadMessages = await ChatUnreadCountHelper.GetUnreadCountForPatientAsync(_context, patient.Id);
+                if (unreadMessages > 0) unreadMessageCount = unreadMessages;
             }
 
             var groups = new List<PatientSidebarGroupViewModel>();
@@ -66,6 +72,7 @@ namespace QuanLyBenhVien.Areas.Patient.ViewComponents
                     {
                         PatientMenuRegistry.BadgeUnpaidInvoices => unpaidInvoiceCount,
                         PatientMenuRegistry.BadgeUnreadNotifications => unreadNotificationCount,
+                        PatientMenuRegistry.BadgeUnreadMessages => unreadMessageCount,
                         _ => null
                     };
 

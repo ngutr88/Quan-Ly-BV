@@ -43,5 +43,15 @@ namespace QuanLyBenhVien.Services
             if (!doctorId.HasValue) return Task.CompletedTask;
             return _hub.Clients.Group(DoctorDashboardHub.GroupName(doctorId.Value)).SendAsync("LabResultsUpdated");
         }
+
+        // Chat có hub riêng (ConsultationChatHub) cho cửa sổ chat đang mở, vì
+        // nó cần payload thật + nhóm theo hội thoại. Signal này chỉ phục vụ
+        // badge/danh sách hội thoại phía bác sĩ khi KHÔNG có cửa sổ chat nào
+        // đang mở - tái dùng đúng convention "signal rồi refetch" sẵn có ở đây.
+        public Task NotifyChatUpdatedAsync(int? doctorId)
+        {
+            if (!doctorId.HasValue) return Task.CompletedTask;
+            return _hub.Clients.Group(DoctorDashboardHub.GroupName(doctorId.Value)).SendAsync("ChatUpdated");
+        }
     }
 }

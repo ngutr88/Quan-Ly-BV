@@ -38,7 +38,7 @@
         @await Component.InvokeAsync("DoctorSidebar")
 
         <!-- Bottom actions -->
-        <div class="px-unit-sm mt-auto space-y-1 border-t border-outline-variant pt-unit-sm">
+        <div id="doctor-sidebar-bottom" class="px-unit-sm mt-auto space-y-1 border-t border-outline-variant pt-unit-sm">
             <button type="button" id="doctor-sidebar-collapse-toggle" onclick="toggleDoctorSidebarCollapse()"
                     class="hidden lg:flex w-full items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded-lg transition-colors font-medium sidebar-bottom-link"
                     data-tooltip="Mở rộng menu">
@@ -78,7 +78,7 @@
                 <!-- User Profile -->
                 <div class="flex items-center gap-unit-sm hover:bg-surface-container-high p-1 pr-3 rounded-lg transition-all cursor-pointer">
                     <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-body-md">
-                        @(User.Identity?.Name?.Length > 0 ? User.Identity.Name[0].ToString().ToUpper() : "B")
+                        @(User.Identity?.Name?.Length > 0 ? QuanLyBenhVien.Helpers.NameInitialsHelper.GetInitials(User.Identity.Name) : "B")
                     </div>
                     <div class="hidden lg:block text-left">
                         <p class="font-label-md text-label-md text-on-surface leading-none">@User.Identity?.Name</p>
@@ -124,6 +124,7 @@
             window.doctorHubConnection = connection;
             connection.on('NotificationCountChanged', refreshDoctorNotificationBadge);
             connection.on('LabResultsUpdated', refreshDoctorLabResultsBadge);
+            connection.on('ChatUpdated', refreshDoctorChatBadge);
             connection.start().catch(function (err) { console.error('Lỗi kết nối SignalR:', err); });
         })();
 
@@ -175,6 +176,30 @@
                 .catch(function () { /* sidebar badge is best-effort */ });
         }
 
+        // Badge "Tin nhắn tư vấn" - cùng khuôn refreshDoctorLabResultsBadge ở
+        // trên. Trang Doctor/Chat/Index tự thêm listener riêng cho ChatUpdated
+        // để làm mới danh sách hội thoại bên trong trang đó (xem view đó).
+        function refreshDoctorChatBadge() {
+            fetch('/Doctor/Chat/UnreadCount')
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    const link = document.querySelector('a[data-module-key="Doctor.Chat"]');
+                    if (!link) return;
+                    let badge = link.querySelector('.sidebar-badge');
+                    if (!data.count || data.count <= 0) {
+                        if (badge) badge.remove();
+                        return;
+                    }
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'sidebar-badge shrink-0 min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-error text-white text-[10px] font-bold';
+                        link.appendChild(badge);
+                    }
+                    badge.textContent = data.count > 9 ? '9+' : data.count;
+                })
+                .catch(function () { /* sidebar badge is best-effort */ });
+        }
+
         function openDoctorSidebar() {
             document.getElementById('doctor-sidebar')?.classList.add('mobile-sidebar-open');
             document.getElementById('doctor-sidebar-backdrop')?.classList.remove('hidden');
@@ -202,7 +227,25 @@
             localStorage.setItem('doctorSidebarCollapsed', collapsed ? '1' : '0');
             const toggle = document.getElementById('doctor-sidebar-collapse-toggle');
             if (toggle) toggle.dataset.tooltip = collapsed ? 'Mở rộng menu' : 'Thu gọn menu';
+            syncDoctorSidebarNavPadding();
         }
+
+        // Lỗi tồn đọng nhiều sprint: mục cuối cùng trong nav ("Thông báo")
+        // từng bị khối "Thu gọn menu/Đăng xuất" che vì padding-bottom cố định
+        // ở site.css (1.5rem) nhỏ hơn chiều cao THẬT của khối đó (2 dòng +
+        // viền + đệm ≈ hơn gấp 4 lần 1.5rem). Đo chiều cao thật bằng JS và áp
+        // đúng bằng đó cho padding-bottom của nav, thay vì đoán một con số
+        // tĩnh - tự đúng kể cả khi khối cố định phía dưới đổi nội dung sau này.
+        function syncDoctorSidebarNavPadding() {
+            const nav = document.getElementById('doctor-sidebar-nav');
+            const bottom = document.getElementById('doctor-sidebar-bottom');
+            if (!nav || !bottom) return;
+            const height = bottom.getBoundingClientRect().height;
+            nav.style.paddingBottom = height + 'px';
+            nav.style.scrollPaddingBottom = height + 'px';
+        }
+        document.addEventListener('DOMContentLoaded', syncDoctorSidebarNavPadding);
+        window.addEventListener('resize', syncDoctorSidebarNavPadding);
 
         // Live date display for doctor topbar
         (function () {

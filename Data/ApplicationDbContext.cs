@@ -48,6 +48,9 @@ namespace QuanLyBenhVien.Data
         public DbSet<LabOrderItem> LabOrderItems { get; set; } = null!;
         public DbSet<LabResult> LabResults { get; set; } = null!;
         public DbSet<LabResultFile> LabResultFiles { get; set; } = null!;
+        public DbSet<Conversation> Conversations { get; set; } = null!;
+        public DbSet<ConversationMessage> ConversationMessages { get; set; } = null!;
+        public DbSet<ConversationMessageAttachment> ConversationMessageAttachments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -690,6 +693,63 @@ namespace QuanLyBenhVien.Data
                 .HasForeignKey(f => f.KetQuaCLSId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<LabResultFile>().Property(f => f.NgayTaiLen).HasDefaultValueSql(NowSql());
+
+            // ================================================================
+            // Tin nhắn tư vấn (Giai đoạn 1: lưu trữ + realtime, chưa mã hoá nội
+            // dung - xem Models/Entities/Consultation.cs)
+            // ================================================================
+            modelBuilder.Entity<Conversation>(e =>
+            {
+                e.HasOne(c => c.Patient)
+                    .WithMany()
+                    .HasForeignKey(c => c.BenhNhanId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(c => c.Doctor)
+                    .WithMany()
+                    .HasForeignKey(c => c.BacSiId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // Mô hình B: đúng một hội thoại cho mỗi cặp bác sĩ-bệnh nhân,
+                // "mở lại" bằng cách đổi TrangThai chứ không tạo dòng mới.
+                e.HasIndex(c => new { c.BenhNhanId, c.BacSiId }).IsUnique();
+                e.HasIndex(c => c.TrangThai);
+
+                e.ToTable(t => t.HasCheckConstraint("CK_HoiThoaiTuVan_TrangThai",
+                    "TrangThai IN ('Moi','DangXuLy','DaTraLoi','DaDong')"));
+            });
+            modelBuilder.Entity<Conversation>().Property(c => c.NgayTao).HasDefaultValueSql(NowSql());
+
+            modelBuilder.Entity<ConversationMessage>(e =>
+            {
+                e.HasOne(m => m.HoiThoai)
+                    .WithMany(c => c.TinNhan)
+                    .HasForeignKey(m => m.HoiThoaiId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(m => m.NguoiGui)
+                    .WithMany()
+                    .HasForeignKey(m => m.NguoiGuiId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasIndex(m => new { m.HoiThoaiId, m.ThoiGianGui });
+                // Đếm badge "chưa xem" theo phía nhận.
+                e.HasIndex(m => new { m.HoiThoaiId, m.VaiTroNguoiGui, m.DaXemBoiNguoiNhan });
+
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_TinNhanTuVan_VaiTroNguoiGui", "VaiTroNguoiGui IN ('Doctor','Patient','HeThong')");
+                    t.HasCheckConstraint("CK_TinNhanTuVan_Loai", "Loai IN ('Text','MoiDatLich','TuDongPhanHoi')");
+                });
+            });
+            modelBuilder.Entity<ConversationMessage>().Property(m => m.ThoiGianGui).HasDefaultValueSql(NowSql());
+
+            modelBuilder.Entity<ConversationMessageAttachment>()
+                .HasOne(a => a.TinNhan)
+                .WithMany(m => m.TepDinhKem)
+                .HasForeignKey(a => a.TinNhanId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<ConversationMessageAttachment>().Property(a => a.NgayTaiLen).HasDefaultValueSql(NowSql());
         }
     }
 }

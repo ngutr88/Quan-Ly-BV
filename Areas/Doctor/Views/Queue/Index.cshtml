@@ -164,7 +164,7 @@
             <div class="p-unit-lg bg-surface border-b border-outline-variant flex justify-between items-center">
                 <div class="flex items-center gap-unit-md">
                     <div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-2xl uppercase">
-                        @selectedApp.Patient.User.HoTen.Substring(0, Math.Min(2, selectedApp.Patient.User.HoTen.Length))
+                        @QuanLyBenhVien.Helpers.NameInitialsHelper.GetInitials(selectedApp.Patient.User.HoTen)
                     </div>
                     <div>
                         <h3 class="text-headline-md font-headline-md font-bold text-on-surface">@selectedApp.Patient.User.HoTen</h3>

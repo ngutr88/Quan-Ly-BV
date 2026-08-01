@@ -45,10 +45,14 @@ namespace QuanLyBenhVien.Areas.Doctor.ViewComponents
             }
 
             int? unreadLabResults = null;
+            int? unreadMessages = null;
             if (doctor != null)
             {
-                var count = await LabResultsCountHelper.GetUnreadCountAsync(_context, doctor.Id);
-                if (count > 0) unreadLabResults = count;
+                var labCount = await LabResultsCountHelper.GetUnreadCountAsync(_context, doctor.Id);
+                if (labCount > 0) unreadLabResults = labCount;
+
+                var messageCount = await ChatUnreadCountHelper.GetUnreadCountForDoctorAsync(_context, doctor.Id);
+                if (messageCount > 0) unreadMessages = messageCount;
             }
 
             var labelByKey = ModulePermissionRegistry.DoctorModules.ToDictionary(m => m.Key, m => m.Label);
@@ -77,7 +81,8 @@ namespace QuanLyBenhVien.Areas.Doctor.ViewComponents
                     var badgeValues = new Dictionary<string, int?>
                     {
                         [DoctorMenuRegistry.BadgeUnreadNotifications] = unreadNotifications,
-                        [DoctorMenuRegistry.BadgeUnreadLabResults] = unreadLabResults
+                        [DoctorMenuRegistry.BadgeUnreadLabResults] = unreadLabResults,
+                        [DoctorMenuRegistry.BadgeUnreadMessages] = unreadMessages
                     };
                     var badge = item.BadgeSourceKey != null && badgeValues.TryGetValue(item.BadgeSourceKey, out var v) ? v : null;
 

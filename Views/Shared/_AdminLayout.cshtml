@@ -212,7 +212,7 @@
                 <!-- User Profile -->
                 <div class="flex items-center gap-unit-sm hover:bg-surface-container-high p-1 pr-3 rounded-lg transition-all cursor-pointer">
                     <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-body-md">
-                        @(User.Identity?.Name?.Length > 0 ? User.Identity.Name[0].ToString().ToUpper() : "A")
+                        @(User.Identity?.Name?.Length > 0 ? QuanLyBenhVien.Helpers.NameInitialsHelper.GetInitials(User.Identity.Name) : "A")
                     </div>
                     <div class="hidden lg:block text-left">
                         <p class="font-label-md text-label-md text-on-surface leading-none">@User.Identity?.Name</p>

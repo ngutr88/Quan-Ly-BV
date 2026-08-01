@@ -23,6 +23,7 @@ public static class DoctorMenuRegistry
 {
     public const string BadgeUnreadNotifications = "UnreadNotifications";
     public const string BadgeUnreadLabResults = "UnreadLabResults";
+    public const string BadgeUnreadMessages = "UnreadMessages";
 
     public static readonly IReadOnlyList<DoctorMenuItem> Items = new List<DoctorMenuItem>
     {
@@ -38,7 +39,7 @@ public static class DoctorMenuRegistry
         new("Doctor.PendingSignatures", "draw", "/Doctor/PendingSignatures", DoctorMenuGroups.HoSoChuyenMon),
 
         new("Doctor.Schedule", "calendar_month", "/Doctor/Schedule", DoctorMenuGroups.LichVaGiaoTiep),
-        new("Doctor.Chat", "forum", "/Doctor/Chat", DoctorMenuGroups.LichVaGiaoTiep),
+        new("Doctor.Chat", "forum", "/Doctor/Chat", DoctorMenuGroups.LichVaGiaoTiep, BadgeSourceKey: BadgeUnreadMessages),
         new("Doctor.Notification", "notifications", "/Doctor/Notification", DoctorMenuGroups.LichVaGiaoTiep, BadgeSourceKey: BadgeUnreadNotifications),
 
         new("Doctor.Stats", "analytics", "/Doctor/Stats", DoctorMenuGroups.CaNhan),

@@ -13,5 +13,15 @@ namespace QuanLyBenhVien.Models
         public int NguongCanhBaoTonKho { get; set; } = 50; // Threshold alert for low stock medicines
         public int ThueVat { get; set; } = 8; // VAT rate %
         public bool BatTatThongBao { get; set; } = true; // Switch to turn notifications on/off
+
+        // Giờ hành chính riêng cho kênh Tin nhắn tư vấn - tách khỏi GioLamViec
+        // (chuỗi tự do, không parse được) vì auto-reply ngoài giờ và dòng cam
+        // kết phản hồi cần giờ/thứ có cấu trúc để so sánh được.
+        public string TuVanGioBatDau { get; set; } = "07:30";
+        public string TuVanGioKetThuc { get; set; } = "17:00";
+        public System.DayOfWeek TuVanNgayApDungTu { get; set; } = System.DayOfWeek.Monday;
+        public System.DayOfWeek TuVanNgayApDungDen { get; set; } = System.DayOfWeek.Saturday;
+        public int TuVanCamKetPhanHoiTuGio { get; set; } = 24;
+        public int TuVanCamKetPhanHoiDenGio { get; set; } = 48;
     }
 }

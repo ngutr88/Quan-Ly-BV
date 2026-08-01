@@ -40,7 +40,7 @@
         @await Component.InvokeAsync("PatientSidebar")
 
         <!-- Bottom Actions -->
-        <div class="px-unit-sm mt-auto space-y-1 border-t border-outline-variant pt-unit-sm">
+        <div id="patient-sidebar-bottom" class="px-unit-sm mt-auto space-y-1 border-t border-outline-variant pt-unit-sm">
             <a class="flex items-center gap-unit-md px-unit-md py-3 text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface rounded-lg transition-colors font-medium"
                href="/Auth/Logout">
                 <span class="material-symbols-outlined">logout</span>
@@ -93,7 +93,7 @@
                 <!-- Static User Profile (dropdown removed as it is redundant) -->
                 <div class="flex items-center gap-unit-sm p-1 px-2 rounded-lg">
                     <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-body-md">
-                        @(User.Identity?.Name?.Length > 0 ? User.Identity.Name[0].ToString().ToUpper() : "B")
+                        @(User.Identity?.Name?.Length > 0 ? QuanLyBenhVien.Helpers.NameInitialsHelper.GetInitials(User.Identity.Name) : "B")
                     </div>
                     <span class="hidden sm:inline font-label-md text-label-md text-on-surface">@User.Identity?.Name</span>
                 </div>
@@ -166,6 +166,21 @@
         window.addEventListener('resize', () => {
             if (window.innerWidth >= 768) closePatientSidebar();
         });
+
+        // Cùng lý do/khắc phục như syncDoctorSidebarNavPadding() bên khu vực
+        // bác sĩ: padding-bottom tĩnh ở site.css nhỏ hơn chiều cao thật của
+        // khối "Đăng xuất" cố định phía dưới, khiến mục cuối cùng của nav bị
+        // che. Đo thật bằng JS thay vì đoán một con số tĩnh.
+        function syncPatientSidebarNavPadding() {
+            const nav = document.getElementById('patient-sidebar-nav');
+            const bottom = document.getElementById('patient-sidebar-bottom');
+            if (!nav || !bottom) return;
+            const height = bottom.getBoundingClientRect().height;
+            nav.style.paddingBottom = height + 'px';
+            nav.style.scrollPaddingBottom = height + 'px';
+        }
+        document.addEventListener('DOMContentLoaded', syncPatientSidebarNavPadding);
+        window.addEventListener('resize', syncPatientSidebarNavPadding);
     </script>
 }
 @section Styles {

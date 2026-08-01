@@ -1,11 +1,10 @@
+@using QuanLyBenhVien.Helpers
 @{
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
     ViewData["Title"] = "Tin nhắn tư vấn";
     var doctor = ViewBag.DoctorProfile as QuanLyBenhVien.Models.Doctor;
-    var contacts = ViewBag.Contacts as List<QuanLyBenhVien.Models.Patient> ?? new List<QuanLyBenhVien.Models.Patient>();
 }
 
-<!-- 3-Column Message Layout -->
 <div class="doctor-chat-workspace flex h-[calc(100vh-160px)] bg-white border border-outline-variant rounded-2xl shadow-sm -m-unit-sm custom-scrollbar"
      role="region" aria-label="Không gian tư vấn ba cột" tabindex="0">
     <!-- Left Column: Conversation List -->
@@ -13,259 +12,601 @@
         <div class="p-4 border-b border-outline-variant space-y-3 bg-surface-container-low/35">
             <div class="flex items-center justify-between">
                 <h2 class="font-title-lg text-title-lg font-bold text-on-surface">Tin nhắn tư vấn</h2>
-                <span class="bg-primary-container text-on-primary-container px-2 py-0.5 rounded text-caption font-bold">@contacts.Count Hội thoại</span>
+                <button type="button" onclick="openContactPicker()" class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:scale-105 transition-transform cursor-pointer" title="Bắt đầu hội thoại mới">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                </button>
             </div>
-            <div class="flex gap-1 overflow-x-auto pb-1 custom-scrollbar">
-                <button class="whitespace-nowrap px-3 py-1 bg-primary text-white text-[11px] font-semibold rounded-full">Tất cả</button>
-                <button class="whitespace-nowrap px-3 py-1 bg-surface-container text-on-surface-variant text-[11px] font-semibold rounded-full hover:bg-surface-container-high transition-colors">Chưa đọc</button>
+            <div class="flex gap-1 overflow-x-auto pb-1 custom-scrollbar" id="chatFilterTabs">
+                <button data-filter="ChuaXuLy" class="chat-filter-btn whitespace-nowrap px-3 py-1 bg-primary text-white text-[11px] font-semibold rounded-full">Chưa xử lý</button>
+                <button data-filter="DangXuLy" class="chat-filter-btn whitespace-nowrap px-3 py-1 bg-surface-container text-on-surface-variant text-[11px] font-semibold rounded-full hover:bg-surface-container-high transition-colors">Đang xử lý</button>
+                <button data-filter="DaDong" class="chat-filter-btn whitespace-nowrap px-3 py-1 bg-surface-container text-on-surface-variant text-[11px] font-semibold rounded-full hover:bg-surface-container-high transition-colors">Đã đóng</button>
+                <button data-filter="TatCa" class="chat-filter-btn whitespace-nowrap px-3 py-1 bg-surface-container text-on-surface-variant text-[11px] font-semibold rounded-full hover:bg-surface-container-high transition-colors">Tất cả</button>
             </div>
         </div>
-        
-        <div class="flex-1 overflow-y-auto chat-scroll divide-y divide-outline-variant/60 custom-scrollbar">
-            @if (!contacts.Any())
-            {
-                <div class="p-4 text-center text-on-surface-variant text-body-md italic">
-                    Chưa có liên hệ tư vấn nào.
-                </div>
-            }
-            else
-            {
-                @for (int i = 0; i < contacts.Count; i++)
-                {
-                    var contact = contacts[i];
-                    var isFirst = i == 0;
-                    
-                    <div onclick="selectContact('@contact.Id', '@contact.User.HoTen', '@contact.GioiTinh', '@(DateTime.Today.Year - contact.NgaySinh.Year) tuổi', '@(string.IsNullOrEmpty(contact.DiUng) ? "Không" : contact.DiUng)', '@(string.IsNullOrEmpty(contact.TienSuBenh) ? "Không" : contact.TienSuBenh)', '@contact.NhomMau')" 
-                         class="p-4 hover:bg-surface-container-low cursor-pointer transition-colors group @(isFirst ? "bg-primary-container/10 border-r-4 border-primary" : "") contact-item"
-                         data-id="@contact.Id">
-                        <div class="flex gap-3">
-                            <div class="relative shrink-0">
-                                <div class="w-11 h-11 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold uppercase">
-                                    @contact.User.HoTen.Substring(0, Math.Min(2, contact.User.HoTen.Length))
-                                </div>
-                                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-secondary rounded-full border-2 border-white"></span>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-start mb-0.5">
-                                    <h3 class="font-bold text-body-md text-on-surface truncate group-hover:text-primary transition-colors">@contact.User.HoTen</h3>
-                                    <span class="text-[10px] text-on-surface-variant">10:45</span>
-                                </div>
-                                <p class="text-caption text-on-surface-variant truncate font-medium">Bác sĩ ơi, tôi cần tư vấn thêm về đơn thuốc...</p>
-                            </div>
-                        </div>
-                    </div>
-                }
-            }
+
+        <div class="flex-1 overflow-y-auto chat-scroll divide-y divide-outline-variant/60 custom-scrollbar" id="conversationList">
+            <div class="p-6 text-center text-on-surface-variant text-body-md italic">Đang tải...</div>
         </div>
     </section>
 
     <!-- Center Column: Chat Window -->
-    <section class="chat-message-pane flex-1 flex flex-col bg-white min-w-0">
-        @if (contacts.Any())
-        {
-            var activeContact = contacts.First();
+    <section class="chat-message-pane flex-1 flex flex-col bg-white min-w-0" id="chatWindow">
+        <div class="flex-grow flex flex-col items-center justify-center p-unit-xl text-center" id="chatEmptyState">
+            <span class="material-symbols-outlined text-[80px] text-outline opacity-30 mb-2">mail</span>
+            <h4 class="text-headline-md font-headline-md text-on-surface mb-2 font-bold">Chưa chọn hội thoại</h4>
+            <p class="text-body-lg text-on-surface-variant max-w-md mx-auto">Chọn một hội thoại bên trái, hoặc bấm "+" để bắt đầu hội thoại mới.</p>
+        </div>
+
+        <div class="hidden flex-col h-full" id="chatActiveArea">
             <!-- Chat Header -->
             <div class="h-16 px-6 border-b border-outline-variant flex items-center justify-between shadow-sm shrink-0 bg-surface-bright">
                 <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold uppercase" id="chatHeaderInitials">
-                            @activeContact.User.HoTen.Substring(0, Math.Min(2, activeContact.User.HoTen.Length))
-                        </div>
-                        <span class="absolute bottom-0 right-0 w-2 h-2 bg-secondary rounded-full border-2 border-white"></span>
-                    </div>
+                    <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold uppercase" id="chatHeaderInitials"></div>
                     <div>
-                        <h3 class="font-bold text-body-lg text-on-surface" id="chatHeaderName">@activeContact.User.HoTen</h3>
-                        <p class="text-[10px] text-secondary flex items-center gap-1"><span class="w-1.5 h-1.5 bg-secondary rounded-full"></span> Đang trực tuyến</p>
+                        <h3 class="font-bold text-body-lg text-on-surface" id="chatHeaderName"></h3>
+                        <p class="text-[10px] text-on-surface-variant" id="chatHeaderStatus"></p>
                     </div>
                 </div>
-                <div class="flex gap-2 text-primary">
-                    <button class="p-2 hover:bg-surface-container rounded-full transition-colors cursor-pointer"><span class="material-symbols-outlined text-[20px]">videocam</span></button>
-                    <button class="p-2 hover:bg-surface-container rounded-full transition-colors cursor-pointer"><span class="material-symbols-outlined text-[20px]">call</span></button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="openCloseConversationModal()" class="px-3 py-1.5 border border-outline-variant rounded-lg text-caption font-bold text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer" id="closeConversationBtn">
+                        Đóng hội thoại
+                    </button>
                 </div>
             </div>
-            
+
             <!-- Warning Banner -->
             <div class="bg-error-container/30 px-6 py-2 flex items-center gap-2 border-b border-error/10 shrink-0">
                 <span class="material-symbols-outlined text-error text-[18px]" style="font-variation-settings: 'FILL' 1;">warning</span>
                 <p class="text-[11px] font-bold text-on-error-container">LƯU Ý: Khung chat dùng để tư vấn chăm sóc sức khỏe từ xa, không thay thế cấp cứu khẩn cấp.</p>
             </div>
-            
+
             <!-- Message Area -->
-            <div class="flex-1 p-6 overflow-y-auto chat-scroll flex flex-col gap-4 bg-[#fcfdff] custom-scrollbar" id="messageArea">
-                <!-- Patient Message -->
-                <div class="flex gap-3 max-w-[85%]">
-                    <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs uppercase shrink-0 self-end">
-                        Th
-                    </div>
-                    <div class="bg-surface-container-low border border-outline-variant p-3 rounded-2xl rounded-bl-none text-body-md text-on-surface shadow-sm">
-                        <p>Chào bác sĩ, tôi có một số thắc mắc về liều lượng dùng thuốc sau khi xuất viện hôm trước ạ.</p>
-                        <span class="text-[9px] text-on-surface-variant mt-1.5 block">10:42</span>
-                    </div>
-                </div>
-                
-                <!-- Doctor Response -->
-                <div class="flex flex-col items-end gap-1">
-                    <div class="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-[85%] shadow-md text-body-md">
-                        <p>Chào anh/chị, bác sĩ đã nhận được câu hỏi. Anh/chị vui lòng cho biết tình trạng sức khỏe hiện tại và loại thuốc đang thắc mắc nhé.</p>
-                        <span class="text-[9px] text-white/80 mt-1.5 block text-right">10:45</span>
-                    </div>
-                    <div class="flex items-center gap-1 text-[9px] text-on-surface-variant px-1">
-                        <span>Đã xem</span>
-                        <span class="material-symbols-outlined text-[12px] text-secondary">done_all</span>
-                    </div>
-                </div>
-            </div>
-            
+            <div class="flex-1 p-6 overflow-y-auto chat-scroll flex flex-col gap-4 bg-[#fcfdff] custom-scrollbar" id="messageArea"></div>
+            <div class="px-6 pb-1 text-caption text-on-surface-variant italic hidden" id="typingIndicator">Bệnh nhân đang nhập...</div>
+
             <!-- Footer Input -->
             <div class="p-4 border-t border-outline-variant bg-surface shrink-0">
-                <div class="flex gap-2 overflow-x-auto pb-3 custom-scrollbar">
-                    <button class="flex-none px-3 py-1 bg-surface-container-high border border-outline-variant rounded-lg text-caption font-bold text-primary hover:bg-primary-container/10 transition-colors cursor-pointer">Xin vui lòng tái khám đúng lịch</button>
-                    <button class="flex-none px-3 py-1 bg-surface-container-high border border-outline-variant rounded-lg text-caption font-bold text-primary hover:bg-primary-container/10 transition-colors cursor-pointer">Hãy uống thuốc đủ liều lượng</button>
-                </div>
+                <div class="flex gap-2 overflow-x-auto pb-3 custom-scrollbar" id="quickReplyBar"></div>
+                <div class="flex flex-wrap gap-2 mb-2" id="attachmentPreviewBar"></div>
                 <div class="flex items-center gap-3">
                     <div class="flex gap-1 text-on-surface-variant">
-                        <button class="p-2 hover:text-primary transition-colors cursor-pointer"><span class="material-symbols-outlined text-[20px]">add_circle</span></button>
-                        <button class="p-2 hover:text-primary transition-colors cursor-pointer"><span class="material-symbols-outlined text-[20px]">image</span></button>
+                        <button type="button" onclick="document.getElementById('chatFileInput').click()" class="p-2 hover:text-primary transition-colors cursor-pointer" title="Đính kèm ảnh"><span class="material-symbols-outlined text-[20px]">image</span></button>
+                        <button type="button" onclick="sendInviteBooking()" class="p-2 hover:text-primary transition-colors cursor-pointer" title="Mời đặt lịch khám"><span class="material-symbols-outlined text-[20px]">event_available</span></button>
+                        <input type="file" id="chatFileInput" class="hidden" accept="image/jpeg,image/png,image/heic,image/heif" multiple onchange="handleFileSelection(event)" />
                     </div>
                     <div class="flex-1">
-                        <input type="text" id="chatInput" onkeydown="handleChatKey(event)" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2 text-body-md focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none" placeholder="Nhập tin nhắn tư vấn và nhấn Enter..." />
+                        <textarea id="chatInput" rows="1" onkeydown="handleChatKey(event)" class="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-2 text-body-md focus:ring-1 focus:ring-primary focus:border-primary focus:outline-none resize-none" placeholder="Nhập tin nhắn tư vấn và nhấn Enter... (Shift+Enter để xuống dòng)"></textarea>
                     </div>
-                    <button onclick="sendChatMessage()" class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0">
+                    <button type="button" onclick="sendChatMessage()" id="sendMessageBtn" class="bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer shrink-0 disabled:opacity-50 disabled:pointer-events-none">
                         <span class="material-symbols-outlined text-[20px]">send</span>
                     </button>
                 </div>
             </div>
-        }
-        else
-        {
-            <div class="flex-grow flex flex-col items-center justify-center p-unit-xl text-center">
-                <span class="material-symbols-outlined text-[80px] text-outline opacity-30 mb-2">mail</span>
-                <h4 class="text-headline-md font-headline-md text-on-surface mb-2 font-bold">Chưa chọn hội thoại</h4>
-                <p class="text-body-lg text-on-surface-variant max-w-md mx-auto">Các tin nhắn hỗ trợ tư vấn sức khỏe bệnh nhân sẽ hiển thị tại đây.</p>
-            </div>
-        }
+        </div>
     </section>
 
     <!-- Right Column: Patient Panel -->
-    <section class="chat-patient-pane w-80 bg-surface border-l border-outline-variant overflow-y-auto custom-scrollbar shrink-0 flex flex-col">
-        @if (contacts.Any())
-        {
-            var activeContact = contacts.First();
-            <div class="p-6 flex flex-col items-center text-center border-b border-outline-variant">
-                <div class="w-24 h-24 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-4xl uppercase shadow-md mb-3 border-4 border-white" id="panelInitials">
-                    @activeContact.User.HoTen.Substring(0, Math.Min(2, activeContact.User.HoTen.Length))
+    <section class="chat-patient-pane w-80 bg-surface border-l border-outline-variant overflow-y-auto custom-scrollbar shrink-0 flex-col hidden" id="patientPanel">
+        <div class="p-6 flex flex-col items-center text-center border-b border-outline-variant">
+            <div class="w-24 h-24 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-4xl uppercase shadow-md mb-3 border-4 border-white" id="panelInitials"></div>
+            <h3 class="font-bold text-title-lg text-on-surface" id="panelName"></h3>
+            <p class="text-body-md text-on-surface-variant" id="panelAgeGender"></p>
+            <div class="mt-4 w-full grid grid-cols-2 gap-2">
+                <div class="bg-surface-container-low p-2 rounded-lg border border-outline-variant">
+                    <p class="text-[9px] uppercase text-on-surface-variant font-bold">Nhóm máu</p>
+                    <p class="font-bold text-body-md text-on-surface" id="panelBloodType"></p>
                 </div>
-                <h3 class="font-bold text-title-lg text-on-surface" id="panelName">@activeContact.User.HoTen</h3>
-                <p class="text-body-md text-on-surface-variant" id="panelAgeGender">@(DateTime.Today.Year - activeContact.NgaySinh.Year) tuổi • @activeContact.GioiTinh</p>
-                <div class="mt-4 w-full grid grid-cols-2 gap-2">
-                    <div class="bg-surface-container-low p-2 rounded-lg border border-outline-variant">
-                        <p class="text-[9px] uppercase text-on-surface-variant font-bold">Nhóm máu</p>
-                        <p class="font-bold text-body-md text-on-surface" id="panelBloodType">@activeContact.NhomMau</p>
-                    </div>
-                    <div class="bg-surface-container-low p-2 rounded-lg border border-outline-variant">
-                        <p class="text-[9px] uppercase text-on-surface-variant font-bold">BHYT</p>
-                        <p class="font-bold text-body-md text-on-surface truncate" id="panelBHYT">@(string.IsNullOrEmpty(activeContact.SoBHYT) ? "Không" : activeContact.SoBHYT)</p>
-                    </div>
+                <div class="bg-surface-container-low p-2 rounded-lg border border-outline-variant">
+                    <p class="text-[9px] uppercase text-on-surface-variant font-bold">BHYT</p>
+                    <p class="font-bold text-body-md text-on-surface truncate" id="panelBHYT"></p>
                 </div>
             </div>
-            
-            <div class="p-6 space-y-6 flex-1">
-                <!-- Allergy Warning -->
-                <div class="bg-error-container text-on-error-container p-4 rounded-xl border-l-4 border-error flex gap-3 shadow-sm">
-                    <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
-                    <div>
-                        <p class="text-[10px] font-extrabold uppercase">Cảnh báo dị ứng</p>
-                        <p class="font-bold text-body-md text-error" id="panelAllergies">@(string.IsNullOrEmpty(activeContact.DiUng) ? "Không có" : activeContact.DiUng)</p>
-                    </div>
-                </div>
-                
-                <!-- History Summary -->
-                <div class="bg-surface-container-low border border-outline-variant rounded-xl p-4 space-y-3">
-                    <h4 class="font-bold text-body-md text-on-surface flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-[18px] text-primary">history</span> Tiền sử bệnh lý
-                    </h4>
-                    <p class="text-body-md text-on-surface-variant" id="panelHistory">
-                        @(string.IsNullOrEmpty(activeContact.TienSuBenh) ? "Không có tiền sử bệnh lý phức tạp." : activeContact.TienSuBenh)
-                    </p>
+        </div>
+
+        <div class="p-6 space-y-6 flex-1">
+            <div class="bg-error-container text-on-error-container p-4 rounded-xl border-l-4 border-error flex gap-3 shadow-sm">
+                <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+                <div>
+                    <p class="text-[10px] font-extrabold uppercase">Cảnh báo dị ứng</p>
+                    <p class="font-bold text-body-md text-error" id="panelAllergies"></p>
                 </div>
             </div>
-        }
+
+            <div class="bg-surface-container-low border border-outline-variant rounded-xl p-4 space-y-3">
+                <h4 class="font-bold text-body-md text-on-surface flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px] text-primary">history</span> Tiền sử bệnh lý
+                </h4>
+                <p class="text-body-md text-on-surface-variant" id="panelHistory"></p>
+            </div>
+        </div>
     </section>
+</div>
+
+<!-- Contact picker modal -->
+<div class="hidden fixed inset-0 bg-on-background/40 z-[60] flex items-center justify-center p-4" id="contactPickerModal">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+        <div class="p-4 border-b border-outline-variant flex items-center justify-between">
+            <h3 class="font-bold text-title-md text-on-surface">Bắt đầu hội thoại mới</h3>
+            <button type="button" onclick="closeContactPicker()" class="text-on-surface-variant hover:text-on-surface cursor-pointer"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="p-3 border-b border-outline-variant">
+            <input type="text" id="contactSearchInput" oninput="searchContacts(this.value)" placeholder="Tìm bệnh nhân..." class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md" />
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scrollbar" id="contactPickerList"></div>
+    </div>
+</div>
+
+<!-- Close conversation modal -->
+<div class="hidden fixed inset-0 bg-on-background/40 z-[60] flex items-center justify-center p-4" id="closeConversationModal">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+        <h3 class="font-bold text-title-md text-on-surface">Đóng hội thoại</h3>
+        <p class="text-body-md text-on-surface-variant">Ghi chú kết luận ngắn (bắt buộc):</p>
+        <textarea id="closeConversationNote" rows="3" class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md"></textarea>
+        <p class="text-caption text-error hidden" id="closeConversationError"></p>
+        <div class="flex justify-end gap-2">
+            <button type="button" onclick="closeCloseConversationModal()" class="px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container cursor-pointer">Hủy</button>
+            <button type="button" onclick="confirmCloseConversation()" class="px-4 py-2 rounded-lg bg-primary text-white font-bold cursor-pointer">Xác nhận đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div class="hidden fixed inset-0 bg-black/80 z-[70] items-center justify-center p-4" id="imageLightbox" onclick="closeLightbox()">
+    <img src="" id="lightboxImage" class="max-w-full max-h-full rounded-lg" />
 </div>
 
 @section Scripts {
     <script>
-        function selectContact(id, name, gender, age, allergies, history, blood) {
-            // Update Active Contact highlight
-            document.querySelectorAll('.contact-item').forEach(item => {
-                item.classList.remove('bg-primary-container/10', 'border-r-4', 'border-primary');
-                item.classList.add('border-b', 'border-outline-variant/60');
+        const quickReplies = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ConsultationChatConstants.DoctorQuickReplies));
+        const inviteBookingUrl = '/Patient/Book?deptId=@(doctor?.KhoaId)&doctorId=@(doctor?.Id)';
+        let activeConversationId = null;
+        let activePatientId = null;
+        let activeFilter = 'ChuaXuLy';
+        let pendingFiles = [];
+        let sending = false;
+        let typingTimeout = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.chat-filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => setActiveFilter(btn.dataset.filter));
             });
-            const selectedItem = document.querySelector(`.contact-item[data-id="${id}"]`);
-            if (selectedItem) {
-                selectedItem.classList.add('bg-primary-container/10', 'border-r-4', 'border-primary');
-                selectedItem.classList.remove('border-b', 'border-outline-variant/60');
+            renderQuickReplies();
+            loadConversationList();
+        });
+
+        // ===== SignalR (chat riêng, khác window.doctorHubConnection dùng cho badge) =====
+        let chatHub = null;
+        (function () {
+            if (typeof signalR === 'undefined') return;
+            chatHub = new signalR.HubConnectionBuilder()
+                .withUrl('/hubs/consultation-chat')
+                .withAutomaticReconnect()
+                .build();
+
+            chatHub.on('MessageReceived', function (dto) {
+                if (dto.conversationId === activeConversationId) {
+                    appendMessageBubble(dto);
+                    scrollMessageAreaToBottom();
+                    chatHub.invoke('MarkAsRead', activeConversationId).catch(() => {});
+                }
+                loadConversationList();
+            });
+            chatHub.on('TypingReceived', function (conversationId) {
+                if (conversationId !== activeConversationId) return;
+                const indicator = document.getElementById('typingIndicator');
+                indicator.classList.remove('hidden');
+                clearTimeout(window._typingHideTimeout);
+                window._typingHideTimeout = setTimeout(() => indicator.classList.add('hidden'), 3000);
+            });
+            chatHub.on('MessagesRead', function (conversationId) {
+                if (conversationId !== activeConversationId) return;
+                document.querySelectorAll('#messageArea .msg-seen-tag').forEach(el => el.classList.remove('hidden'));
+            });
+            chatHub.on('ConversationStatusChanged', function (data) {
+                if (data.conversationId === activeConversationId) {
+                    document.getElementById('chatHeaderStatus').textContent = statusLabel(data.trangThai);
+                }
+                loadConversationList();
+            });
+            chatHub.start().catch(function (err) { console.error('Lỗi kết nối SignalR chat:', err); });
+        })();
+
+        function setActiveFilter(filter) {
+            activeFilter = filter;
+            document.querySelectorAll('.chat-filter-btn').forEach(btn => {
+                const isActive = btn.dataset.filter === filter;
+                btn.classList.toggle('bg-primary', isActive);
+                btn.classList.toggle('text-white', isActive);
+                btn.classList.toggle('bg-surface-container', !isActive);
+                btn.classList.toggle('text-on-surface-variant', !isActive);
+            });
+            loadConversationList();
+        }
+
+        function statusLabel(trangThai) {
+            switch (trangThai) {
+                case 'Moi': return 'Chưa xử lý';
+                case 'DangXuLy': return 'Đang xử lý';
+                case 'DaTraLoi': return 'Đã trả lời';
+                case 'DaDong': return 'Đã đóng';
+                default: return trangThai;
             }
+        }
 
-            // Update Header
-            document.getElementById('chatHeaderName').innerText = name;
-            const initials = name.substring(0, Math.Min(2, name.Length)).toUpperCase();
-            document.getElementById('chatHeaderInitials').innerText = initials;
+        function formatTime(iso) {
+            const d = new Date(iso);
+            return d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        }
 
-            // Update Panel Details
-            document.getElementById('panelName').innerText = name;
-            document.getElementById('panelInitials').innerText = initials;
-            document.getElementById('panelAgeGender').innerText = `${age} • ${gender}`;
-            document.getElementById('panelAllergies').innerText = allergies;
-            document.getElementById('panelHistory').innerText = history;
-            document.getElementById('panelBloodType').innerText = blood;
+        function loadConversationList() {
+            fetch('/Doctor/Chat/List?filter=' + encodeURIComponent(activeFilter))
+                .then(r => r.json())
+                .then(data => renderConversationList(data.items))
+                .catch(() => {});
+        }
 
-            // Clear input
-            document.getElementById('chatInput').value = '';
+        function renderConversationList(items) {
+            const container = document.getElementById('conversationList');
+            if (!items || items.length === 0) {
+                container.innerHTML = '<div class="p-6 text-center text-on-surface-variant text-body-md italic">Không có hội thoại nào.</div>';
+                return;
+            }
+            container.innerHTML = items.map(item => {
+                const isActive = item.conversationId === activeConversationId;
+                const waitBadge = item.waitingHours != null
+                    ? `<span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold ${item.isOverdue ? 'bg-error-container text-error' : 'bg-secondary-container text-on-secondary-container'}">chờ ${item.waitingHours} giờ</span>`
+                    : '';
+                return `
+                <div onclick="openConversation(${item.conversationId})"
+                     class="p-4 hover:bg-surface-container-low cursor-pointer transition-colors group contact-item ${isActive ? 'bg-primary-container/10 border-r-4 border-primary' : ''}"
+                     data-id="${item.conversationId}">
+                    <div class="flex gap-3">
+                        <div class="w-11 h-11 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold uppercase shrink-0">${item.patientInitials}</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start mb-0.5">
+                                <h3 class="font-bold text-body-md text-on-surface truncate">${escapeHtml(item.patientName)}</h3>
+                                <span class="text-[10px] text-on-surface-variant shrink-0">${formatTime(item.lastMessageAt)}</span>
+                            </div>
+                            <p class="text-caption text-on-surface-variant truncate font-medium">${escapeHtml(item.lastMessagePreview || 'Chưa có tin nhắn')}</p>
+                            ${waitBadge}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
 
-            // Reset Message area
+        function openConversation(conversationId) {
+            if (chatHub && activeConversationId) {
+                chatHub.invoke('LeaveConversation', activeConversationId).catch(() => {});
+            }
+            activeConversationId = conversationId;
+            activePatientId = null;
+            pendingFiles = [];
+            renderAttachmentPreview();
+
+            fetch('/Doctor/Chat/Thread?conversationId=' + conversationId)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('chatEmptyState').classList.add('hidden');
+                    document.getElementById('chatActiveArea').classList.remove('hidden');
+                    document.getElementById('chatActiveArea').classList.add('flex');
+                    document.getElementById('patientPanel').classList.remove('hidden');
+                    document.getElementById('patientPanel').classList.add('flex');
+
+                    document.getElementById('chatHeaderInitials').textContent = data.patient.initials;
+                    document.getElementById('chatHeaderName').textContent = data.patient.name;
+                    document.getElementById('chatHeaderStatus').textContent = statusLabel(data.trangThai);
+                    document.getElementById('closeConversationBtn').classList.toggle('hidden', data.trangThai === 'DaDong');
+
+                    document.getElementById('panelInitials').textContent = data.patient.initials;
+                    document.getElementById('panelName').textContent = data.patient.name;
+                    document.getElementById('panelAgeGender').textContent = `${data.patient.age} tuổi • ${data.patient.gender}`;
+                    document.getElementById('panelBloodType').textContent = data.patient.bloodType || 'Không rõ';
+                    document.getElementById('panelBHYT').textContent = data.patient.bhyt || 'Không có';
+                    document.getElementById('panelAllergies').textContent = data.patient.allergies || 'Không có';
+                    document.getElementById('panelHistory').textContent = data.patient.history || 'Không có tiền sử bệnh lý phức tạp.';
+
+                    const area = document.getElementById('messageArea');
+                    area.innerHTML = '';
+                    data.messages.forEach(m => appendMessageBubble(m, true));
+                    scrollMessageAreaToBottom();
+
+                    if (chatHub) {
+                        chatHub.invoke('JoinConversation', conversationId).catch(() => {});
+                        chatHub.invoke('MarkAsRead', conversationId).catch(() => {});
+                    }
+                    loadConversationList();
+                });
+        }
+
+        function appendMessageBubble(m, skipScroll) {
             const area = document.getElementById('messageArea');
-            area.innerHTML = `
+            const isDoctor = m.vaiTro === 'Doctor';
+            const isSystem = m.vaiTro === 'HeThong';
+            const attachmentsHtml = (m.attachments || []).map(a =>
+                `<img src="${a.url}" onclick="openLightbox('${a.url}')" class="w-28 h-28 object-cover rounded-lg cursor-pointer border border-outline-variant mt-1" alt="${escapeHtml(a.tenGoc)}" />`
+            ).join('');
+
+            let html;
+            if (isSystem) {
+                html = `
+                <div class="flex justify-center">
+                    <div class="bg-surface-container-low border border-outline-variant text-on-surface-variant text-caption px-4 py-2 rounded-xl max-w-[85%] text-center">
+                        <p>${escapeHtml(m.noiDung || '')}</p>
+                        <span class="text-[9px] block mt-1 opacity-70">${formatTime(m.thoiGianGui)}</span>
+                    </div>
+                </div>`;
+            } else if (isDoctor) {
+                const bookingButton = m.loai === 'MoiDatLich'
+                    ? `<a href="${inviteBookingUrl}" target="_blank" class="mt-2 inline-flex items-center gap-1 bg-white text-primary text-caption font-bold px-3 py-1.5 rounded-lg hover:bg-white/90 transition-colors"><span class="material-symbols-outlined text-[16px]">event_available</span>Đặt lịch khám ngay</a>`
+                    : '';
+                html = `
+                <div class="flex flex-col items-end gap-1">
+                    <div class="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-[85%] shadow-md text-body-md">
+                        ${m.noiDung ? `<p>${escapeHtml(m.noiDung)}</p>` : ''}
+                        <div class="flex flex-wrap gap-1">${attachmentsHtml}</div>
+                        ${bookingButton}
+                        <span class="text-[9px] text-white/80 mt-1.5 block text-right">${formatTime(m.thoiGianGui)}</span>
+                    </div>
+                    <div class="flex items-center gap-1 text-[9px] text-on-surface-variant px-1 msg-seen-tag ${m.daXem ? '' : 'hidden'}">
+                        <span>Đã xem</span>
+                        <span class="material-symbols-outlined text-[12px] text-secondary">done_all</span>
+                    </div>
+                </div>`;
+            } else {
+                html = `
                 <div class="flex gap-3 max-w-[85%]">
                     <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs uppercase shrink-0 self-end">
-                        ${initials}
+                        ${document.getElementById('chatHeaderInitials').textContent}
                     </div>
                     <div class="bg-surface-container-low border border-outline-variant p-3 rounded-2xl rounded-bl-none text-body-md text-on-surface shadow-sm">
-                        <p>Chào bác sĩ, tôi có một số thắc mắc về liều lượng dùng thuốc sau khi xuất viện hôm trước ạ.</p>
-                        <span class="text-[9px] text-on-surface-variant mt-1.5 block">10:42</span>
+                        ${m.noiDung ? `<p>${escapeHtml(m.noiDung)}</p>` : ''}
+                        <div class="flex flex-wrap gap-1">${attachmentsHtml}</div>
+                        <span class="text-[9px] text-on-surface-variant mt-1.5 block">${formatTime(m.thoiGianGui)}</span>
                     </div>
-                </div>
-            `;
+                </div>`;
+            }
+            area.insertAdjacentHTML('beforeend', html);
+            if (!skipScroll) scrollMessageAreaToBottom();
+        }
+
+        function scrollMessageAreaToBottom() {
+            const area = document.getElementById('messageArea');
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text == null ? '' : text;
+            return div.innerHTML;
         }
 
         function handleChatKey(event) {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
                 sendChatMessage();
             }
         }
 
-        function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            if (!message) return;
-
-            const area = document.getElementById('messageArea');
-            const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-
-            const msgHtml = `
-                <div class="flex flex-col items-end gap-1">
-                    <div class="bg-primary text-white p-3 rounded-2xl rounded-br-none max-w-[85%] shadow-md text-body-md">
-                        <p>${message}</p>
-                        <span class="text-[9px] text-white/80 mt-1.5 block text-right">${time}</span>
-                    </div>
-                    <div class="flex items-center gap-1 text-[9px] text-on-surface-variant px-1">
-                        <span>Đã gửi</span>
-                    </div>
-                </div>
-            `;
-            area.insertAdjacentHTML('beforeend', msgHtml);
-            input.value = '';
-            area.scrollTop = area.scrollHeight;
+        function renderQuickReplies() {
+            const bar = document.getElementById('quickReplyBar');
+            bar.innerHTML = quickReplies.map((text, i) =>
+                `<button type="button" onclick="useQuickReply(${i})" class="flex-none px-3 py-1 bg-surface-container-high border border-outline-variant rounded-lg text-caption font-bold text-primary hover:bg-primary-container/10 transition-colors cursor-pointer">${escapeHtml(text.length > 40 ? text.substring(0, 40) + '…' : text)}</button>`
+            ).join('');
         }
+
+        function useQuickReply(index) {
+            const input = document.getElementById('chatInput');
+            input.value = quickReplies[index];
+            input.focus();
+        }
+
+        function handleFileSelection(event) {
+            const files = Array.from(event.target.files || []);
+            if (pendingFiles.length + files.length > 5) {
+                alert('Chỉ được đính kèm tối đa 5 ảnh mỗi tin nhắn.');
+                event.target.value = '';
+                return;
+            }
+            Promise.all(files.map(compressImageIfPossible)).then(compressed => {
+                pendingFiles = pendingFiles.concat(compressed);
+                renderAttachmentPreview();
+            });
+            event.target.value = '';
+        }
+
+        // Nén ảnh phía client (jpg/png) qua canvas trước khi upload - giảm
+        // băng thông/dung lượng lưu trữ. Bỏ qua heic vì trình duyệt không
+        // decode được heic vào <img>/canvas một cách đáng tin cậy.
+        function compressImageIfPossible(file) {
+            if (!/^image\/(jpeg|png)$/i.test(file.type)) return Promise.resolve(file);
+            return new Promise(resolve => {
+                const img = new Image();
+                const reader = new FileReader();
+                reader.onload = () => { img.src = reader.result; };
+                img.onload = () => {
+                    const maxDim = 1600;
+                    let { width, height } = img;
+                    if (width > maxDim || height > maxDim) {
+                        const scale = maxDim / Math.max(width, height);
+                        width = Math.round(width * scale);
+                        height = Math.round(height * scale);
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width; canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    canvas.toBlob(blob => {
+                        if (!blob) { resolve(file); return; }
+                        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                    }, 'image/jpeg', 0.8);
+                };
+                img.onerror = () => resolve(file);
+                reader.onerror = () => resolve(file);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderAttachmentPreview() {
+            const bar = document.getElementById('attachmentPreviewBar');
+            if (pendingFiles.length === 0) { bar.innerHTML = ''; return; }
+            bar.innerHTML = pendingFiles.map((f, i) => `
+                <span class="inline-flex items-center gap-1 bg-surface-container-high border border-outline-variant rounded-lg px-2 py-1 text-caption">
+                    ${escapeHtml(f.name)}
+                    <button type="button" onclick="removePendingFile(${i})" class="text-on-surface-variant hover:text-error cursor-pointer"><span class="material-symbols-outlined text-[14px]">close</span></button>
+                </span>`).join('');
+        }
+
+        function removePendingFile(index) {
+            pendingFiles.splice(index, 1);
+            renderAttachmentPreview();
+        }
+
+        function sendChatMessage() {
+            if (sending) return; // chống gửi trùng khi double-click / mạng chậm
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text && pendingFiles.length === 0) return;
+            if (!activeConversationId && !activePatientId) return;
+
+            sending = true;
+            const sendBtn = document.getElementById('sendMessageBtn');
+            sendBtn.disabled = true;
+
+            const fd = antiForgeryFormData();
+            if (activeConversationId) fd.append('conversationId', activeConversationId);
+            else fd.append('patientId', activePatientId);
+            fd.append('noiDung', text);
+            pendingFiles.forEach(f => fd.append('files', f));
+
+            fetch('/Doctor/Chat/SendMessage', { method: 'POST', body: fd })
+                .then(r => { if (!r.ok) return r.json().then(e => Promise.reject(e)); return r.json(); })
+                .then(dto => {
+                    activeConversationId = dto.conversationId;
+                    input.value = '';
+                    pendingFiles = [];
+                    renderAttachmentPreview();
+                    if (chatHub) chatHub.invoke('JoinConversation', activeConversationId).catch(() => {});
+                })
+                .catch(err => alert(err && err.message ? err.message : 'Không gửi được tin nhắn.'))
+                .finally(() => { sending = false; sendBtn.disabled = false; });
+        }
+
+        function sendInviteBooking() {
+            if (!activeConversationId) { alert('Chỉ dùng được sau khi hội thoại đã tồn tại - hãy gửi một tin nhắn trước.'); return; }
+            fetch('/Doctor/Chat/InviteBooking', { method: 'POST', body: (() => { const fd = antiForgeryFormData(); fd.append('conversationId', activeConversationId); return fd; })() })
+                .then(r => r.json())
+                .catch(() => alert('Không gửi được lời mời đặt lịch.'));
+        }
+
+        let typingSendThrottle = null;
+        document.addEventListener('input', function (e) {
+            if (e.target && e.target.id === 'chatInput' && chatHub && activeConversationId) {
+                if (typingSendThrottle) return;
+                chatHub.invoke('NotifyTyping', activeConversationId).catch(() => {});
+                typingSendThrottle = setTimeout(() => { typingSendThrottle = null; }, 2000);
+            }
+        });
+
+        // ===== Đóng hội thoại =====
+        function openCloseConversationModal() {
+            document.getElementById('closeConversationNote').value = '';
+            document.getElementById('closeConversationError').classList.add('hidden');
+            document.getElementById('closeConversationModal').classList.remove('hidden');
+            document.getElementById('closeConversationModal').classList.add('flex');
+        }
+        function closeCloseConversationModal() {
+            document.getElementById('closeConversationModal').classList.add('hidden');
+            document.getElementById('closeConversationModal').classList.remove('flex');
+        }
+        function confirmCloseConversation() {
+            const note = document.getElementById('closeConversationNote').value.trim();
+            if (note.length < 5) {
+                const err = document.getElementById('closeConversationError');
+                err.textContent = 'Vui lòng nhập ghi chú kết luận (tối thiểu 5 ký tự).';
+                err.classList.remove('hidden');
+                return;
+            }
+            const fd = antiForgeryFormData();
+            fd.append('conversationId', activeConversationId);
+            fd.append('ghiChuKetLuan', note);
+            fetch('/Doctor/Chat/Close', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) { alert(data.message || 'Không đóng được hội thoại.'); return; }
+                    closeCloseConversationModal();
+                    document.getElementById('chatHeaderStatus').textContent = statusLabel(data.trangThai);
+                    document.getElementById('closeConversationBtn').classList.add('hidden');
+                    loadConversationList();
+                });
+        }
+
+        // ===== Bắt đầu hội thoại mới =====
+        function openContactPicker() {
+            document.getElementById('contactSearchInput').value = '';
+            document.getElementById('contactPickerModal').classList.remove('hidden');
+            document.getElementById('contactPickerModal').classList.add('flex');
+            searchContacts('');
+        }
+        function closeContactPicker() {
+            document.getElementById('contactPickerModal').classList.add('hidden');
+            document.getElementById('contactPickerModal').classList.remove('flex');
+        }
+        let contactSearchDebounce = null;
+        function searchContacts(term) {
+            clearTimeout(contactSearchDebounce);
+            contactSearchDebounce = setTimeout(() => {
+                fetch('/Doctor/Chat/Contacts?search=' + encodeURIComponent(term || ''))
+                    .then(r => r.json())
+                    .then(data => renderContactPickerList(data.items));
+            }, 200);
+        }
+        function renderContactPickerList(items) {
+            const list = document.getElementById('contactPickerList');
+            if (!items || items.length === 0) {
+                list.innerHTML = '<div class="p-6 text-center text-on-surface-variant italic">Không tìm thấy bệnh nhân.</div>';
+                return;
+            }
+            list.innerHTML = items.map(item => `
+                <div onclick="pickContact(${item.patientId}, ${item.conversationId ?? 'null'})" class="p-3 flex items-center gap-3 hover:bg-surface-container-low cursor-pointer border-b border-outline-variant/60">
+                    <div class="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-caption uppercase">${item.initials}</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-body-md text-on-surface truncate">${escapeHtml(item.name)}</p>
+                        <p class="text-caption text-on-surface-variant">${item.hasConversation ? 'Đã có hội thoại' : 'Chưa có hội thoại'}</p>
+                    </div>
+                </div>`).join('');
+        }
+        function pickContact(patientId, conversationId) {
+            closeContactPicker();
+            if (conversationId) {
+                openConversation(conversationId);
+                return;
+            }
+            if (chatHub && activeConversationId) chatHub.invoke('LeaveConversation', activeConversationId).catch(() => {});
+            activeConversationId = null;
+            activePatientId = patientId;
+            pendingFiles = [];
+            renderAttachmentPreview();
+            document.getElementById('chatEmptyState').classList.add('hidden');
+            document.getElementById('chatActiveArea').classList.remove('hidden');
+            document.getElementById('chatActiveArea').classList.add('flex');
+            document.getElementById('patientPanel').classList.add('hidden');
+            document.getElementById('patientPanel').classList.remove('flex');
+            document.getElementById('messageArea').innerHTML = '<p class="text-center text-on-surface-variant italic">Bắt đầu cuộc trò chuyện mới - gửi tin nhắn đầu tiên bên dưới.</p>';
+            document.getElementById('chatHeaderName').textContent = 'Hội thoại mới';
+            document.getElementById('chatHeaderInitials').textContent = '';
+            document.getElementById('chatHeaderStatus').textContent = '';
+            document.getElementById('closeConversationBtn').classList.add('hidden');
+        }
+
+        function openLightbox(url) {
+            document.getElementById('lightboxImage').src = url;
+            document.getElementById('imageLightbox').classList.remove('hidden');
+            document.getElementById('imageLightbox').classList.add('flex');
+        }
+        function closeLightbox() {
+            document.getElementById('imageLightbox').classList.add('hidden');
+            document.getElementById('imageLightbox').classList.remove('flex');
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
     </script>
 }
