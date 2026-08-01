@@ -25,6 +25,16 @@
         -webkit-appearance: auto;
         accent-color: #0b5cab;
     }
+
+    /* Unsaved-change highlight - a plain hex value instead of a design-token
+       utility class since this page doesn't otherwise use a "pending edit"
+       token anywhere to borrow from. */
+    .permission-matrix-grid tr.row-changed {
+        background-color: #fff4d6;
+    }
+    .permission-matrix-grid tr.row-changed:hover {
+        background-color: #ffe9b3;
+    }
 </style>
 }
 
@@ -48,7 +58,7 @@
     </div>
 }
 
-<form method="POST" action="/Admin/Staff/SavePermissionMatrix">
+<form id="permissionMatrixForm" method="POST" action="/Admin/Staff/SavePermissionMatrix">
     @Html.AntiForgeryToken()
 
     <div class="permission-matrix-grid w-full min-w-0 max-w-full bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
@@ -96,6 +106,7 @@
                                         <label class="inline-flex items-center @(row.Locked ? "cursor-not-allowed opacity-60" : "cursor-pointer")">
                                             <input type="checkbox" name="allowedKeys" value="@(row.OwningRole)|@(row.ModuleKey)"
                                                    class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/40"
+                                                   data-original="@(row.Allowed ? "1" : "0")"
                                                    @(row.Allowed ? "checked" : "") disabled="@row.Locked" />
                                             @if (row.Locked)
                                             {
@@ -120,7 +131,7 @@
     </div>
 
     <div class="flex items-center gap-unit-md pt-unit-lg">
-        <button type="submit" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">
+        <button type="button" onclick="openConfirmModal()" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">
             <span class="material-symbols-outlined text-[20px]">save</span>
             Lưu ma trận phân quyền
         </button>
@@ -129,3 +140,125 @@
         </a>
     </div>
 </form>
+
+<!-- Confirmation modal - populated via PreviewMatrixChanges before anything is
+     actually saved. "Xác nhận & Lưu" is a real submit button tied to the form
+     above (form="permissionMatrixForm"), so committing reuses the exact same
+     POST/redirect/TempData flow as before - only the preview step is new. -->
+<div id="confirmModal" class="hidden fixed inset-0 bg-on-background/40 z-[60] items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        <div class="p-4 border-b border-outline-variant flex items-center justify-between shrink-0">
+            <h3 class="font-bold text-title-md text-on-surface">Xác nhận thay đổi ma trận phân quyền</h3>
+            <button type="button" onclick="closeConfirmModal()" class="text-on-surface-variant hover:text-on-surface cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div id="confirmChangesList" class="flex-1 overflow-y-auto"></div>
+        <div class="p-4 border-t border-outline-variant flex justify-end gap-2 shrink-0">
+            <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container cursor-pointer font-label-md">
+                Hủy
+            </button>
+            <button type="submit" form="permissionMatrixForm" onclick="confirmSaveMatrix()"
+                    class="px-4 py-2 rounded-lg bg-primary text-white font-bold cursor-pointer font-label-md">
+                Xác nhận &amp; Lưu
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const checkboxes = Array.from(document.querySelectorAll('.permission-matrix-grid input[type="checkbox"][name="allowedKeys"]'));
+            let isSubmitting = false;
+
+            function hasUnsavedChanges() {
+                return checkboxes.some(function (cb) { return (cb.checked ? '1' : '0') !== cb.dataset.original; });
+            }
+
+            function syncRowHighlight(cb) {
+                const row = cb.closest('tr');
+                if (!row) return;
+                const changed = (cb.checked ? '1' : '0') !== cb.dataset.original;
+                row.classList.toggle('row-changed', changed);
+            }
+
+            checkboxes.forEach(function (cb) {
+                cb.addEventListener('change', function () { syncRowHighlight(cb); });
+            });
+
+            window.addEventListener('beforeunload', function (e) {
+                if (isSubmitting || !hasUnsavedChanges()) return;
+                e.preventDefault();
+                e.returnValue = '';
+            });
+
+            function collectFormData() {
+                const fd = new FormData();
+                const token = document.querySelector('#permissionMatrixForm input[name="__RequestVerificationToken"]');
+                if (token) fd.append('__RequestVerificationToken', token.value);
+                checkboxes.forEach(function (cb) {
+                    if (cb.checked) fd.append('allowedKeys', cb.value);
+                });
+                // Locked modules resend their fixed value via a hidden input even
+                // though the visible checkbox is disabled (disabled inputs never post).
+                document.querySelectorAll('.permission-matrix-grid input[type="hidden"][name="allowedKeys"]').forEach(function (hidden) {
+                    fd.append('allowedKeys', hidden.value);
+                });
+                return fd;
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text == null ? '' : text;
+                return div.innerHTML;
+            }
+
+            function renderConfirmModal(changes) {
+                const list = document.getElementById('confirmChangesList');
+                if (!changes || changes.length === 0) {
+                    list.innerHTML = '<p class="p-4 text-on-surface-variant italic">Không có thay đổi nào để lưu.</p>';
+                } else {
+                    list.innerHTML = changes.map(function (c) {
+                        var warningHtml = c.riskWarning
+                            ? '<p class="text-caption font-bold text-error flex items-center gap-1 mt-1"><span class="material-symbols-outlined text-[16px]">warning</span>' + escapeHtml(c.riskWarning) + '</p>'
+                            : '';
+                        var newColorClass = c.newLabel === 'Bật' ? 'text-secondary' : 'text-error';
+                        return '<div class="p-4 border-b border-outline-variant last:border-0">'
+                            + '<p class="font-label-md font-bold text-on-surface">' + escapeHtml(c.moduleLabel)
+                            + ' <span class="font-mono text-caption text-on-surface-variant">(' + escapeHtml(c.moduleKey) + ')</span>'
+                            + ' — ' + escapeHtml(c.roleLabel) + '</p>'
+                            + '<p class="text-body-md text-on-surface-variant">' + escapeHtml(c.oldLabel) + ' → <span class="font-bold ' + newColorClass + '">' + escapeHtml(c.newLabel) + '</span>'
+                            + ' — ảnh hưởng ' + c.affectedAccountCount + ' tài khoản</p>'
+                            + warningHtml
+                            + '</div>';
+                    }).join('');
+                }
+
+                document.getElementById('confirmModal').classList.remove('hidden');
+                document.getElementById('confirmModal').classList.add('flex');
+            }
+
+            window.openConfirmModal = function () {
+                if (!hasUnsavedChanges()) {
+                    alert('Không có thay đổi nào để lưu.');
+                    return;
+                }
+
+                fetch('/Admin/Staff/PreviewMatrixChanges', { method: 'POST', body: collectFormData() })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) { renderConfirmModal(data.changes); })
+                    .catch(function () { alert('Không tải được bản xem trước thay đổi. Vui lòng thử lại.'); });
+            };
+
+            window.closeConfirmModal = function () {
+                document.getElementById('confirmModal').classList.add('hidden');
+                document.getElementById('confirmModal').classList.remove('flex');
+            };
+
+            window.confirmSaveMatrix = function () {
+                isSubmitting = true;
+            };
+        })();
+    </script>
+}

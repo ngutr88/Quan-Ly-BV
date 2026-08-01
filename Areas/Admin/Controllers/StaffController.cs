@@ -552,20 +552,96 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
             return View(model);
         }
 
+        // POST: Admin/Staff/PreviewMatrixChanges - read-only diff preview for the
+        // "màn xác nhận tóm tắt" modal shown before SavePermissionMatrix commits
+        // anything. Shares ComputeMatrixDiffAsync with the real save so the
+        // preview can never show something different from what actually happens.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PreviewMatrixChanges([FromForm] List<string> allowedKeys)
+        {
+            allowedKeys ??= new List<string>();
+            var changes = await ComputeMatrixDiffAsync(allowedKeys, applyChanges: false);
+
+            return Json(new
+            {
+                changes = changes.Select(c => new
+                {
+                    moduleLabel = c.ModuleLabel,
+                    moduleKey = c.ModuleKey,
+                    roleLabel = c.RoleLabel,
+                    oldLabel = c.NewAllowed ? "Tắt" : "Bật",
+                    newLabel = c.NewAllowed ? "Bật" : "Tắt",
+                    affectedAccountCount = c.AffectedAccountCount,
+                    riskWarning = c.RiskWarning
+                })
+            });
+        }
+
         // POST: Admin/Staff/SavePermissionMatrix
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SavePermissionMatrix([FromForm] List<string> allowedKeys)
         {
             allowedKeys ??= new List<string>();
+            var changes = await ComputeMatrixDiffAsync(allowedKeys, applyChanges: true);
+
+            if (changes.Count == 0)
+            {
+                TempData["SuccessMessage"] = "Không có thay đổi nào để lưu.";
+                return RedirectToAction(nameof(PermissionMatrix));
+            }
+
+            // Lưu trước để các RolePermission mới có Id thật - audit log bên dưới
+            // cần Id đó để DoiTuongId trỏ đúng record, không chỉ ghi tên suông.
+            await _context.SaveChangesAsync();
+
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+            var userId = GetCurrentUserId();
+
+            // Một dòng Audit Log RIÊNG cho mỗi ô thay đổi (không gộp chung 1 dòng
+            // như trước) - để sau này tra cứu ngược theo module/vai trò/thời điểm
+            // không phải substring-match một chuỗi dài.
+            foreach (var change in changes)
+            {
+                var oldLabel = change.NewAllowed ? "Tắt" : "Bật";
+                var newLabel = change.NewAllowed ? "Bật" : "Tắt";
+                var detail = $"{change.ModuleLabel} ({change.RoleLabel}): {oldLabel} → {newLabel} (ảnh hưởng {change.AffectedAccountCount} tài khoản).";
+                if (!string.IsNullOrEmpty(change.RiskWarning))
+                {
+                    detail += $" Cảnh báo: {change.RiskWarning}";
+                }
+
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    NguoiDungId = userId,
+                    HanhDong = "Cập nhật ma trận phân quyền",
+                    ChiTiet = detail,
+                    IpAddress = ip,
+                    DoiTuongLoai = "RolePermission",
+                    DoiTuongId = change.Row?.Id
+                });
+            }
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Đã lưu ma trận phân quyền thành công.";
+            return RedirectToAction(nameof(PermissionMatrix));
+        }
+
+        // Nguồn logic diff DUY NHẤT cho cả preview (chỉ đọc) lẫn save (áp dụng
+        // thật) - tránh 2 action lệch nhau về việc gì tính là "thay đổi".
+        private async Task<List<MatrixChangeDto>> ComputeMatrixDiffAsync(List<string> allowedKeys, bool applyChanges)
+        {
             var allowedSet = allowedKeys.ToHashSet();
 
-            var existing = await _context.RolePermissions.ToListAsync();
+            var existing = applyChanges
+                ? await _context.RolePermissions.ToListAsync()
+                : await _context.RolePermissions.AsNoTracking().ToListAsync();
             var existingLookup = existing.ToDictionary(p => p.VaiTro + "|" + p.ModuleKey, p => p);
 
-            var changedModules = new List<string>();
+            var changes = new List<MatrixChangeDto>();
 
-            foreach (var (role, _, modules) in QuanLyBenhVien.Helpers.ModulePermissionRegistry.AllGroups())
+            foreach (var (role, roleLabel, modules) in QuanLyBenhVien.Helpers.ModulePermissionRegistry.AllGroups())
             {
                 foreach (var module in modules)
                 {
@@ -575,51 +651,61 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
                     var combo = role + "|" + module.Key;
                     var wantAllowed = isLocked || allowedSet.Contains(combo);
 
-                    if (existingLookup.TryGetValue(combo, out var row))
+                    existingLookup.TryGetValue(combo, out var row);
+                    var currentAllowed = row?.DuocPhep ?? true; // missing row = fail-open default
+
+                    if (currentAllowed == wantAllowed) continue;
+
+                    var affectedAccountCount = await _context.Users.CountAsync(u => u.VaiTro == role && !u.DaXoa);
+                    // Chỉ cảnh báo dữ liệu hoạt động khi đang TẮT - bật lại một
+                    // module không có gì rủi ro để cảnh báo.
+                    var riskWarning = !wantAllowed
+                        ? QuanLyBenhVien.Helpers.PermissionMatrixActivityProbes.GetWarning(_context, module.Key)
+                        : null;
+
+                    var change = new MatrixChangeDto
                     {
-                        if (row.DuocPhep != wantAllowed)
+                        Role = role,
+                        RoleLabel = roleLabel,
+                        ModuleKey = module.Key,
+                        ModuleLabel = module.Label,
+                        NewAllowed = wantAllowed,
+                        AffectedAccountCount = affectedAccountCount,
+                        RiskWarning = riskWarning
+                    };
+
+                    if (applyChanges)
+                    {
+                        if (row != null)
                         {
                             row.DuocPhep = wantAllowed;
                             row.CapNhatLuc = DateTime.Now;
                             row.CapNhatBoiId = GetCurrentUserId();
                             _context.Entry(row).State = EntityState.Modified;
-                            changedModules.Add($"{module.Label} ({role}) -> {(wantAllowed ? "Bật" : "Tắt")}");
+                            change.Row = row;
+                        }
+                        else
+                        {
+                            // Only insert a row when explicitly turning a module off;
+                            // "allowed" is already the default for any missing row.
+                            var newRow = new RolePermission
+                            {
+                                VaiTro = role,
+                                ModuleKey = module.Key,
+                                DuocPhep = false,
+                                CapNhatLuc = DateTime.Now,
+                                CapNhatBoiId = GetCurrentUserId()
+                            };
+                            _context.RolePermissions.Add(newRow);
+                            change.Row = newRow;
                         }
                     }
-                    else if (!wantAllowed)
-                    {
-                        // Only insert a row when explicitly turning a module off;
-                        // "allowed" is already the default for any missing row.
-                        _context.RolePermissions.Add(new RolePermission
-                        {
-                            VaiTro = role,
-                            ModuleKey = module.Key,
-                            DuocPhep = false,
-                            CapNhatLuc = DateTime.Now,
-                            CapNhatBoiId = GetCurrentUserId()
-                        });
-                        changedModules.Add($"{module.Label} ({role}) -> Tắt");
-                    }
+
+                    changes.Add(change);
                 }
             }
 
-            if (changedModules.Count > 0)
-            {
-                _context.AuditLogs.Add(new AuditLog
-                {
-                    NguoiDungId = GetCurrentUserId(),
-                    HanhDong = "Cập nhật ma trận phân quyền",
-                    ChiTiet = $"Thay đổi quyền truy cập module: {string.Join("; ", changedModules)}."
-                });
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Đã lưu ma trận phân quyền thành công.";
-            }
-            else
-            {
-                TempData["SuccessMessage"] = "Không có thay đổi nào để lưu.";
-            }
-
-            return RedirectToAction(nameof(PermissionMatrix));
+            return changes;
         }
 
         private int GetCurrentUserId()
@@ -627,6 +713,22 @@ namespace QuanLyBenhVien.Areas.Admin.Controllers
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             return claim != null && int.TryParse(claim.Value, out var userId) ? userId : 0;
         }
+    }
+
+    public class MatrixChangeDto
+    {
+        public string Role { get; set; } = string.Empty;
+        public string RoleLabel { get; set; } = string.Empty;
+        public string ModuleKey { get; set; } = string.Empty;
+        public string ModuleLabel { get; set; } = string.Empty;
+        public bool NewAllowed { get; set; }
+        public int AffectedAccountCount { get; set; }
+        public string? RiskWarning { get; set; }
+
+        // Chỉ gán khi ComputeMatrixDiffAsync chạy với applyChanges=true - dùng
+        // để lấy Id thật cho AuditLog.DoiTuongId sau SaveChanges. Không phải
+        // JSON DTO thuần vì thuộc tính này không nên lộ ra response preview.
+        public RolePermission? Row { get; set; }
     }
 
     public class StaffPermissionMatrixViewModel
