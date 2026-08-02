@@ -1,9 +1,39 @@
+@inject QuanLyBenhVien.Services.HospitalSettingsProvider SettingsProvider
 @{
     Layout = "_Layout";
     var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var settings = SettingsProvider.Load();
+    var hotlineTel = settings.Hotline.Replace(" ", "");
+    var emergencyTel = settings.HotlineCapCuu.Replace(".", "");
 }
 
 <div class="home-shell w-full max-w-full overflow-x-hidden bg-surface text-on-surface min-h-screen flex flex-col font-sans">
+    <!-- Utility bar: hours + hotline, shown above the header on every public page -->
+    <div class="bg-primary text-white text-[13px]">
+        <div class="w-full min-w-0 max-w-[1440px] mx-auto px-3 sm:px-4 md:px-unit-lg h-9 flex items-center justify-between gap-3 overflow-x-auto whitespace-nowrap">
+            <div class="hidden md:flex items-center gap-4 font-medium text-white/90 min-w-0">
+                <span class="flex items-center gap-1.5 truncate">
+                    <span class="material-symbols-outlined text-[15px] shrink-0">location_on</span>
+                    <span class="truncate">@settings.DiaChi</span>
+                </span>
+                <span class="hidden lg:flex items-center gap-1.5 shrink-0">
+                    <span class="material-symbols-outlined text-[15px]">schedule</span>
+                    <span>@settings.GioLamViec</span>
+                </span>
+            </div>
+            <div class="flex items-center gap-4 font-semibold ml-auto">
+                <a href="tel:@emergencyTel" class="flex items-center gap-1 text-[#ffd7d0] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-[15px]">emergency</span>
+                    Cấp cứu: @settings.HotlineCapCuu
+                </a>
+                <a href="tel:@hotlineTel" class="flex items-center gap-1 hover:text-white/80 transition-colors">
+                    <span class="material-symbols-outlined text-[15px]">call</span>
+                    Hotline: @settings.Hotline
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- Header Navigation -->
     <header class="sticky top-0 z-50 bg-white/88 backdrop-blur-md border-b border-outline-variant/60 shadow-[0_8px_30px_-24px_rgba(15,45,85,0.5)]">
         <div class="w-full min-w-0 max-w-[1440px] mx-auto px-3 sm:px-4 md:px-unit-lg min-h-20 flex items-center justify-between gap-2 sm:gap-3">
@@ -88,9 +118,8 @@
                 <div class="space-y-4">
                     <h5 class="font-bold text-body-lg text-white">Giờ làm việc</h5>
                     <ul class="text-caption text-outline-variant space-y-2">
-                        <li>Thứ Hai - Chủ Nhật: 07:30 - 21:00</li>
+                        <li>@settings.GioLamViec</li>
                         <li>Cấp cứu khẩn cấp: 24/7</li>
-                        <li>Phòng khám yêu cầu: 08:00 - 18:00</li>
                     </ul>
                 </div>
 
@@ -118,15 +147,15 @@
                     <ul class="text-caption text-outline-variant space-y-2">
                         <li class="flex items-start gap-2">
                             <span class="material-symbols-outlined text-[16px] text-primary pt-0.5">location_on</span>
-                            <span>Số 120 Đường Ba Tháng Hai, Quận 10, TP. Hồ Chí Minh</span>
+                            <span>@settings.DiaChi</span>
                         </li>
                         <li class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-[16px] text-primary">call</span>
-                            <span>Hotline: 1900 6868 (Cấp cứu: 028.115)</span>
+                            <span>Hotline: @settings.Hotline (Cấp cứu: @settings.HotlineCapCuu)</span>
                         </li>
                         <li class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-[16px] text-primary">mail</span>
-                            <span>support@mediflow.vn</span>
+                            <span>@settings.EmailHoTro</span>
                         </li>
                     </ul>
                 </div>
@@ -142,6 +171,13 @@
             </div>
         </div>
     </footer>
+
+    <!-- Floating quick-call button -->
+    <a href="tel:@hotlineTel" aria-label="Gọi hotline @settings.Hotline"
+       class="fixed bottom-6 right-5 z-40 w-14 h-14 rounded-full bg-primary text-white shadow-[0_18px_40px_-12px_rgba(0,63,135,0.6)] flex items-center justify-center hover:bg-primary-container hover:scale-105 transition-all">
+        <span class="absolute inset-0 rounded-full bg-primary/50 animate-ping"></span>
+        <span class="material-symbols-outlined relative text-[26px]" style="font-variation-settings: 'FILL' 1;">call</span>
+    </a>
 </div>
 
 @section Scripts {

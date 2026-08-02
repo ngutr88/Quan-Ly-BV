@@ -1,7 +1,11 @@
 @using QuanLyBenhVien.Models
+@inject QuanLyBenhVien.Services.HospitalSettingsProvider SettingsProvider
 @{
     Layout = "~/Views/Shared/_HomeLayout.cshtml";
     ViewData["Title"] = "MediFlow HMS - Chăm sóc sức khỏe toàn diện";
+
+    var settings = SettingsProvider.Load();
+    var hotlineTel = settings.Hotline.Replace(" ", "");
 
     var departments = ViewBag.Departments as List<Department> ?? new List<Department>();
     var allDepartments = ViewBag.AllDepartments as List<Department> ?? departments;
@@ -154,12 +158,16 @@
                 </p>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-4">
-                <a href="/Home/Doctors" class="px-7 py-3.5 rounded-xl border border-outline-variant bg-white text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <a href="/Home/Doctors" class="px-5 py-3.5 rounded-xl border border-outline-variant bg-white text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-[20px]">stethoscope</span>
                     Tìm bác sĩ
                 </a>
-                <a href="/Home/Guide" class="px-7 py-3.5 rounded-xl border border-outline-variant bg-white text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
+                <a href="tel:@hotlineTel" class="px-5 py-3.5 rounded-xl border border-outline-variant bg-white text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">call</span>
+                    Gọi tổng đài
+                </a>
+                <a href="/Home/Guide" class="px-5 py-3.5 rounded-xl border border-outline-variant bg-white text-primary font-bold hover:bg-primary/5 transition-all flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-[20px]">menu_book</span>
                     Hướng dẫn khám
                 </a>
@@ -224,6 +232,54 @@
             <span class="text-caption text-on-surface-variant font-semibold">
                 @(reviewCount > 0 ? $"Từ {reviewCount} đánh giá" : "Chưa có đánh giá")
             </span>
+        </div>
+    </div>
+</section>
+
+<!-- Why choose us -->
+<section class="bg-white py-14 border-b border-outline-variant/40">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-unit-lg">
+        <div class="mb-8 text-center">
+            <p class="home-section-label mb-1">Vì sao chọn chúng tôi</p>
+            <h3 class="home-section-title">Vì sao chọn MediFlow</h3>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div class="home-card p-6 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-[26px]">groups</span>
+                </div>
+                <h4 class="font-bold text-on-surface">Đội ngũ giàu kinh nghiệm</h4>
+                <p class="text-body-md text-on-surface-variant mt-2">
+                    @doctorCount bác sĩ thuộc @departmentCount chuyên khoa, được đào tạo chuyên sâu và cập nhật phác đồ liên tục.
+                </p>
+            </div>
+            <div class="home-card p-6 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-[26px]">fact_check</span>
+                </div>
+                <h4 class="font-bold text-on-surface">Quy trình khám minh bạch</h4>
+                <p class="text-body-md text-on-surface-variant mt-2">
+                    Từ đặt lịch, khám, kê đơn đến thanh toán đều được số hóa và theo dõi rõ ràng từng bước.
+                </p>
+            </div>
+            <div class="home-card p-6 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-[26px]">encrypted</span>
+                </div>
+                <h4 class="font-bold text-on-surface">Bảo mật hồ sơ y tế</h4>
+                <p class="text-body-md text-on-surface-variant mt-2">
+                    Dữ liệu sức khỏe được mã hóa, chỉ bạn và bác sĩ điều trị trực tiếp mới có quyền truy cập.
+                </p>
+            </div>
+            <div class="home-card p-6 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-[26px]">forum</span>
+                </div>
+                <h4 class="font-bold text-on-surface">Tư vấn trực tuyến</h4>
+                <p class="text-body-md text-on-surface-variant mt-2">
+                    Nhắn tin trao đổi trực tiếp với bác sĩ điều trị, cam kết phản hồi trong @settings.TuVanCamKetPhanHoiTuGio–@settings.TuVanCamKetPhanHoiDenGio giờ.
+                </p>
+            </div>
         </div>
     </div>
 </section>
@@ -325,9 +381,17 @@
                 @foreach (var doc in doctors)
                 {
                     <div class="home-card p-5 text-center">
-                        <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3 text-xl font-black">
-                            @(string.IsNullOrEmpty(doc.User.HoTen) ? "?" : doc.User.HoTen.Trim().Split(' ').Last()[0].ToString().ToUpper())
-                        </div>
+                        @if (!string.IsNullOrEmpty(doc.User.AnhDaiDien))
+                        {
+                            <img src="~/uploads/avatars/@doc.User.AnhDaiDien" alt="@FormatDoctorName(doc)"
+                                 class="w-16 h-16 rounded-full object-cover mx-auto mb-3 border border-outline-variant/60" />
+                        }
+                        else
+                        {
+                            <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3 text-xl font-black">
+                                @(string.IsNullOrEmpty(doc.User.HoTen) ? "?" : doc.User.HoTen.Trim().Split(' ').Last()[0].ToString().ToUpper())
+                            </div>
+                        }
                         <h4 class="font-bold text-on-surface">@FormatDoctorName(doc)</h4>
                         <p class="text-caption text-primary font-semibold mt-0.5">@doc.ChuyenKhoa</p>
                         <p class="text-caption text-on-surface-variant mt-1">@doc.Department.TenKhoa</p>
