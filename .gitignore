@@ -6,6 +6,7 @@ obj/
 **/obj/
 build-check/
 .tmp/
+.tmp-build/
 *.db
 *.db-shm
 *.db-wal
