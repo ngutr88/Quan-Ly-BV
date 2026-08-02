@@ -30,10 +30,14 @@ builder.Logging.AddDebug();
 // Add services to the container.
 builder.Services.AddScoped<QuanLyBenhVien.Helpers.ModulePermissionFilter>();
 builder.Services.AddScoped<QuanLyBenhVien.Helpers.ForcePasswordChangeFilter>();
+builder.Services.AddScoped<QuanLyBenhVien.Helpers.ForceTwoFactorSetupFilter>();
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.AddService<QuanLyBenhVien.Helpers.ModulePermissionFilter>();
     options.Filters.AddService<QuanLyBenhVien.Helpers.ForcePasswordChangeFilter>();
+    // Đăng ký SAU ForcePasswordChangeFilter - đổi mật khẩu tạm luôn được xử
+    // lý trước khi ép bật 2FA.
+    options.Filters.AddService<QuanLyBenhVien.Helpers.ForceTwoFactorSetupFilter>();
 });
 builder.Services.AddScoped<QuanLyBenhVien.Services.ExcelExportService>();
 builder.Services.AddScoped<DoctorDashboardNotifier>();
@@ -555,6 +559,114 @@ using (var scope = app.Services.CreateScope())
                             FOREIGN KEY (TinNhanId) REFERENCES TinNhanTuVan (Id) ON DELETE CASCADE
                     );
                     CREATE INDEX IX_TepDinhKemTinNhan_TinNhanId ON TepDinhKemTinNhan (TinNhanId);
+                END");
+
+                // Hồ sơ & Cài đặt bác sĩ - Tab "Thông tin cá nhân & hành nghề"
+                // (Sprint 2) - cùng lý do như các khối trên. Kiểm tra cột
+                // DuocDuyetHoSoHanhNghe đã tồn tại chưa TRƯỚC ở phía C# (đúng
+                // khuôn kiểm tra CK_BenhNhan_MucDoDiUng ở trên) vì UPDATE bên
+                // dưới tham chiếu đúng cột này - đặt UPDATE cùng batch với
+                // ALTER TABLE ADD COLUMN của chính nó sẽ lỗi "Invalid column
+                // name" do SQL Server phân giải tên ở thời điểm biên dịch CẢ
+                // batch, trước khi ALTER TABLE thật sự chạy.
+                var hoSoHanhNgheColumnExists = context.Database.SqlQueryRaw<int>(
+                        "SELECT CAST(1 AS INT) AS Value WHERE COL_LENGTH('NguoiDung','DuocDuyetHoSoHanhNghe') IS NOT NULL")
+                    .AsEnumerable().Any();
+
+                context.Database.ExecuteSqlRaw(@"
+                IF COL_LENGTH('NguoiDung','DuocDuyetHoSoHanhNghe') IS NULL
+                    ALTER TABLE NguoiDung ADD DuocDuyetHoSoHanhNghe BIT NOT NULL DEFAULT 0;
+
+                IF COL_LENGTH('BacSi','NgaySinh') IS NULL
+                    ALTER TABLE BacSi ADD NgaySinh DATETIME2 NULL;
+                IF COL_LENGTH('BacSi','SoCCHN') IS NULL
+                    ALTER TABLE BacSi ADD SoCCHN NVARCHAR(50) NULL;
+                IF COL_LENGTH('BacSi','NgayCapCCHN') IS NULL
+                    ALTER TABLE BacSi ADD NgayCapCCHN DATETIME2 NULL;
+                IF COL_LENGTH('BacSi','NoiCapCCHN') IS NULL
+                    ALTER TABLE BacSi ADD NoiCapCCHN NVARCHAR(200) NULL;
+                IF COL_LENGTH('BacSi','PhamViHanhNghe') IS NULL
+                    ALTER TABLE BacSi ADD PhamViHanhNghe NVARCHAR(500) NULL;
+                IF COL_LENGTH('BacSi','GioiThieuNgan') IS NULL
+                    ALTER TABLE BacSi ADD GioiThieuNgan NVARCHAR(500) NULL;
+                IF COL_LENGTH('BacSi','QuaTrinhDaoTao') IS NULL
+                    ALTER TABLE BacSi ADD QuaTrinhDaoTao NVARCHAR(2000) NULL;");
+
+                // Batch riêng, CHẠY SAU khi ALTER TABLE ở trên đã thật sự áp
+                // dụng - cấp sẵn quyền duyệt cho Admin hiện có, chỉ đúng 1 lần
+                // (lúc cột chưa tồn tại trước đó). Admin tạo sau này mặc định
+                // DuocDuyetHoSoHanhNghe=0, cần được cấp thủ công.
+                if (!hoSoHanhNgheColumnExists)
+                {
+                    context.Database.ExecuteSqlRaw("UPDATE NguoiDung SET DuocDuyetHoSoHanhNghe = 1 WHERE VaiTro = 'Admin';");
+                }
+
+                context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'YeuCauThayDoiHoSo')
+                BEGIN
+                    CREATE TABLE YeuCauThayDoiHoSo (
+                        Id INT NOT NULL CONSTRAINT PK_YeuCauThayDoiHoSo PRIMARY KEY IDENTITY,
+                        BacSiId INT NOT NULL,
+                        NgayDeXuat DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        TrangThai NVARCHAR(20) NOT NULL DEFAULT 'ChoDuyet',
+                        DuLieuCuJson NVARCHAR(4000) NOT NULL,
+                        DuLieuMoiJson NVARCHAR(4000) NOT NULL,
+                        NguoiDuyetId INT NULL,
+                        NgayDuyet DATETIME2 NULL,
+                        LyDoTuChoi NVARCHAR(500) NULL,
+                        CONSTRAINT CK_YeuCauThayDoiHoSo_TrangThai CHECK (TrangThai IN ('ChoDuyet','DaDuyet','TuChoi')),
+                        CONSTRAINT FK_YeuCauThayDoiHoSo_BacSi_BacSiId FOREIGN KEY (BacSiId) REFERENCES BacSi (Id) ON DELETE CASCADE,
+                        CONSTRAINT FK_YeuCauThayDoiHoSo_NguoiDung_NguoiDuyetId FOREIGN KEY (NguoiDuyetId) REFERENCES NguoiDung (Id)
+                    );
+                    CREATE INDEX IX_YeuCauThayDoiHoSo_BacSiId ON YeuCauThayDoiHoSo (BacSiId);
+                    CREATE INDEX IX_YeuCauThayDoiHoSo_NguoiDuyetId ON YeuCauThayDoiHoSo (NguoiDuyetId);
+                END");
+
+                // Hồ sơ & Cài đặt bác sĩ - Tab "Tài khoản & Bảo mật" (Sprint 3):
+                // 2FA + phiên đăng nhập + tuỳ chọn giao diện. Cột trước, bảng
+                // mới sau - cùng lý do các khối trên.
+                context.Database.ExecuteSqlRaw(@"
+                IF COL_LENGTH('NguoiDung','TotpBiMat') IS NULL
+                    ALTER TABLE NguoiDung ADD TotpBiMat NVARCHAR(MAX) NULL;
+                IF COL_LENGTH('NguoiDung','TotpBatDau') IS NULL
+                    ALTER TABLE NguoiDung ADD TotpBatDau BIT NOT NULL DEFAULT 0;
+                IF COL_LENGTH('NguoiDung','SidebarThuGonMacDinh') IS NULL
+                    ALTER TABLE NguoiDung ADD SidebarThuGonMacDinh BIT NOT NULL DEFAULT 0;
+                IF COL_LENGTH('NguoiDung','SoDongMoiTrangMacDinh') IS NULL
+                    ALTER TABLE NguoiDung ADD SoDongMoiTrangMacDinh INT NULL;");
+
+                context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'MaDuPhongTOTP')
+                BEGIN
+                    CREATE TABLE MaDuPhongTOTP (
+                        Id INT NOT NULL CONSTRAINT PK_MaDuPhongTOTP PRIMARY KEY IDENTITY,
+                        NguoiDungId INT NOT NULL,
+                        MaHash NVARCHAR(200) NOT NULL,
+                        DaDung BIT NOT NULL DEFAULT 0,
+                        NgayDung DATETIME2 NULL,
+                        NgayTao DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        CONSTRAINT FK_MaDuPhongTOTP_NguoiDung_NguoiDungId
+                            FOREIGN KEY (NguoiDungId) REFERENCES NguoiDung (Id) ON DELETE CASCADE
+                    );
+                    CREATE INDEX IX_MaDuPhongTOTP_NguoiDungId ON MaDuPhongTOTP (NguoiDungId);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'PhienDangNhap')
+                BEGIN
+                    CREATE TABLE PhienDangNhap (
+                        Id INT NOT NULL CONSTRAINT PK_PhienDangNhap PRIMARY KEY IDENTITY,
+                        NguoiDungId INT NOT NULL,
+                        SessionToken NVARCHAR(64) NOT NULL,
+                        ThietBi NVARCHAR(200) NOT NULL,
+                        IpAddress NVARCHAR(50) NULL,
+                        ThoiGianDangNhap DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        ThoiGianHoatDongCuoi DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        TrangThai NVARCHAR(20) NOT NULL DEFAULT 'HoatDong',
+                        CONSTRAINT FK_PhienDangNhap_NguoiDung_NguoiDungId
+                            FOREIGN KEY (NguoiDungId) REFERENCES NguoiDung (Id) ON DELETE CASCADE
+                    );
+                    CREATE INDEX IX_PhienDangNhap_NguoiDungId ON PhienDangNhap (NguoiDungId);
+                    CREATE INDEX IX_PhienDangNhap_SessionToken ON PhienDangNhap (SessionToken);
                 END");
             }
         }

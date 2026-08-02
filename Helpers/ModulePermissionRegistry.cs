@@ -37,6 +37,7 @@ public static class ModulePermissionRegistry
         new("Admin.Invoices", "Hóa đơn"),
         new("Admin.News", "Tin tức & Thông báo"),
         new("Admin.Staff", "Nhân sự & Phân quyền"),
+        new("Admin.ProfileApprovals", "Duyệt hồ sơ hành nghề"),
         new("Admin.Reports", "Báo cáo"),
         new("Admin.Settings", "Cấu hình hệ thống"),
         new("Admin.Logs", "Nhật ký hệ thống")

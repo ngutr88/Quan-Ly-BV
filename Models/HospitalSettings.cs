@@ -23,5 +23,9 @@ namespace QuanLyBenhVien.Models
         public System.DayOfWeek TuVanNgayApDungDen { get; set; } = System.DayOfWeek.Saturday;
         public int TuVanCamKetPhanHoiTuGio { get; set; } = 24;
         public int TuVanCamKetPhanHoiDenGio { get; set; } = 48;
+
+        // Bắt buộc bác sĩ bật xác thực 2 lớp - ForceTwoFactorSetupFilter đọc
+        // cờ này để chặn mọi trang khác cho tới khi bật xong.
+        public bool BatBuoc2FABacSi { get; set; } = false;
     }
 }

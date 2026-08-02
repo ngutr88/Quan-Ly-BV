@@ -1,3 +1,4 @@
+@model DoctorProfileViewModel
 @{
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
     ViewData["Title"] = "Hồ sơ & Cài đặt";
@@ -5,18 +6,566 @@
     var header = new PageHeaderViewModel
     {
         Title = "Hồ sơ & Cài đặt",
-        Subtitle = "Thông tin hành nghề, chữ ký số, đổi mật khẩu và cài đặt thông báo.",
+        Subtitle = "Thông tin hành nghề, đổi mật khẩu và cài đặt thông báo.",
         Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
         CurrentCrumb = "Hồ sơ & Cài đặt"
     };
 
-    var comingSoon = new ComingSoonViewModel
-    {
-        Icon = "manage_accounts",
-        Message = "Tính năng đang được phát triển.",
-        SubMessage = "Trang quản lý thông tin hành nghề, chữ ký số và cài đặt thông báo sẽ được xây dựng ở một đợt riêng."
-    };
+    var doctor = Model.Doctor;
+    var pending = Model.PendingFields;
+    string AvatarUrl() => string.IsNullOrEmpty(doctor.User.AnhDaiDien) ? null : $"/uploads/avatars/{doctor.User.AnhDaiDien}";
 }
 
 <partial name="_PageHeader" model="header" />
-<partial name="_ComingSoon" model="comingSoon" />
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="hms-table-scroll overflow-x-auto border-b border-outline-variant" role="tablist" aria-label="Hồ sơ & Cài đặt">
+        <nav class="flex min-w-max">
+            <button type="button" class="profile-tab-btn" data-tab="info" role="tab" aria-selected="true">
+                Thông tin cá nhân &amp; hành nghề
+            </button>
+            <button type="button" class="profile-tab-btn" data-tab="notifications" role="tab" aria-selected="false">
+                <span class="material-symbols-outlined text-[18px] text-outline">lock</span>
+                Cài đặt thông báo
+            </button>
+            <button type="button" class="profile-tab-btn" data-tab="security" role="tab" aria-selected="false">
+                Tài khoản &amp; Bảo mật
+            </button>
+            <button type="button" class="profile-tab-btn" data-tab="signature" role="tab" aria-selected="false">
+                <span class="material-symbols-outlined text-[18px] text-outline">lock</span>
+                Chữ ký &amp; Chứng thư số
+                <span class="ml-1 text-[10px] font-bold uppercase tracking-wide text-outline">Sắp ra mắt</span>
+            </button>
+        </nav>
+    </div>
+
+    <div class="p-unit-lg">
+        <div class="profile-tab-panel" data-panel="info">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-unit-xl">
+                <!-- Nhóm tự cập nhật - lưu ngay -->
+                <div>
+                    <h3 class="font-title-lg text-title-lg text-on-surface font-bold mb-1">Tự cập nhật</h3>
+                    <p class="text-body-md text-on-surface-variant mb-unit-lg">Các trường này lưu ngay, không cần Admin duyệt.</p>
+
+                    <form id="avatar-form" method="POST" action="/Doctor/Profile/UploadAvatar" enctype="multipart/form-data" class="flex items-center gap-unit-md mb-unit-lg">
+                        @Html.AntiForgeryToken()
+                        <div class="w-20 h-20 rounded-full border border-outline-variant overflow-hidden bg-surface-container-high flex items-center justify-center shrink-0">
+                            @if (AvatarUrl() != null)
+                            {
+                                <img id="avatar-preview" src="@AvatarUrl()" class="w-full h-full object-cover" alt="Ảnh đại diện" />
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined text-[36px] text-outline">person</span>
+                            }
+                        </div>
+                        <div>
+                            <label for="avatar-input" class="bg-surface-container-high hover:bg-surface-container-highest px-unit-md py-2 rounded-lg font-label-md transition-colors text-on-surface-variant font-semibold cursor-pointer inline-flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[18px]">upload</span> Đổi ảnh đại diện
+                            </label>
+                            <input type="file" name="file" id="avatar-input" accept=".jpg,.jpeg,.png" class="hidden" />
+                            <p class="text-caption text-on-surface-variant mt-1">JPG/PNG, tối đa 5MB. Nên dùng ảnh chân dung vuông.</p>
+                        </div>
+                    </form>
+
+                    <form id="contact-form" method="POST" action="/Doctor/Profile/SaveContactInfo" class="space-y-unit-md">
+                        @Html.AntiForgeryToken()
+
+                        <div class="space-y-unit-xs">
+                            <label class="block text-caption font-semibold text-on-surface-variant" for="sdt">Số điện thoại</label>
+                            <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                   id="sdt" name="sdt" value="@doctor.User.Sdt" type="tel" required />
+                        </div>
+
+                        <div class="space-y-unit-xs">
+                            <label class="block text-caption font-semibold text-on-surface-variant" for="email">Email cá nhân</label>
+                            <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                   id="email" name="email" value="@doctor.User.Email" type="email" required />
+                        </div>
+
+                        <div class="space-y-unit-xs">
+                            <label class="block text-caption font-semibold text-on-surface-variant" for="gioiThieuNgan">Giới thiệu ngắn <span class="text-caption text-on-surface-variant">(hiển thị công khai)</span></label>
+                            <textarea class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" rows="3"
+                                      id="gioiThieuNgan" name="gioiThieuNgan" maxlength="500">@doctor.GioiThieuNgan</textarea>
+                        </div>
+
+                        <div class="space-y-unit-xs">
+                            <label class="block text-caption font-semibold text-on-surface-variant" for="quaTrinhDaoTao">Quá trình đào tạo <span class="text-caption text-on-surface-variant">(hiển thị công khai)</span></label>
+                            <textarea class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" rows="5"
+                                      id="quaTrinhDaoTao" name="quaTrinhDaoTao" maxlength="2000">@doctor.QuaTrinhDaoTao</textarea>
+                        </div>
+
+                        <button type="submit" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[20px]">save</span> Lưu thông tin
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Nhóm đề xuất-duyệt -->
+                <div>
+                    <h3 class="font-title-lg text-title-lg text-on-surface font-bold mb-1">Thông tin hành nghề</h3>
+                    <p class="text-body-md text-on-surface-variant mb-unit-lg">Ảnh hưởng pháp lý/hiển thị công khai — mọi thay đổi cần Admin duyệt trước khi áp dụng.</p>
+
+                    @if (Model.PendingRequest != null && pending != null)
+                    {
+                        <div class="mb-unit-md p-4 bg-tertiary-fixed/20 border-l-4 border-tertiary text-on-tertiary-fixed-variant rounded-r flex items-start gap-2">
+                            <span class="material-symbols-outlined shrink-0">hourglass_top</span>
+                            <p class="text-body-md">Bạn đang có 1 yêu cầu thay đổi <strong>chờ Admin duyệt</strong> (gửi lúc @Model.PendingRequest.NgayDeXuat.ToString("HH:mm dd/MM/yyyy")). Không thể gửi yêu cầu mới cho tới khi yêu cầu này được xử lý.</p>
+                        </div>
+                    }
+
+                    <form id="propose-form" method="POST" action="/Doctor/Profile/ProposeProfileChange" class="space-y-unit-md">
+                        @Html.AntiForgeryToken()
+                        <fieldset id="propose-fieldset" class="space-y-unit-md" disabled="@(Model.PendingRequest != null)">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-unit-md">
+                                <div class="space-y-unit-xs sm:col-span-2">
+                                    <label class="block text-caption font-semibold text-on-surface-variant" for="hoTen">Họ và tên</label>
+                                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                           id="hoTen" name="hoTen" value="@(pending?.HoTen ?? doctor.User.HoTen)" required />
+                                </div>
+
+                                <div class="space-y-unit-xs">
+                                    <label class="block text-caption font-semibold text-on-surface-variant" for="ngaySinh">Ngày sinh</label>
+                                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                           id="ngaySinh" name="ngaySinh" type="date"
+                                           value="@((pending?.NgaySinh ?? doctor.NgaySinh)?.ToString("yyyy-MM-dd"))" />
+                                </div>
+
+                                <div class="space-y-unit-xs">
+                                    <label class="block text-caption font-semibold text-on-surface-variant" for="hocVi">Học hàm / Học vị</label>
+                                    <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="hocVi" name="hocVi" required>
+                                        @{ var currentHocVi = pending?.HocVi ?? doctor.HocVi; }
+                                        @foreach (var option in QuanLyBenhVien.Helpers.DoctorTitleCatalog.Options)
+                                        {
+                                            <option value="@option.Value" selected="@(currentHocVi == option.Value)">@option.Label</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="space-y-unit-xs">
+                                    <label class="block text-caption font-semibold text-on-surface-variant" for="chuyenKhoa">Chuyên khoa</label>
+                                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                           id="chuyenKhoa" name="chuyenKhoa" value="@(pending?.ChuyenKhoa ?? doctor.ChuyenKhoa)" required />
+                                </div>
+
+                                <div class="space-y-unit-xs">
+                                    <label class="block text-caption font-semibold text-on-surface-variant" for="khoaId">Khoa/phòng công tác</label>
+                                    <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="khoaId" name="khoaId" required>
+                                        @{ var currentKhoaId = pending?.KhoaId ?? doctor.KhoaId; }
+                                        @foreach (var dept in Model.Departments)
+                                        {
+                                            <option value="@dept.Id" selected="@(currentKhoaId == dept.Id)">@dept.TenKhoa</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="space-y-unit-xs">
+                                    <label class="block text-caption font-semibold text-on-surface-variant" for="chucVu">Chức vụ</label>
+                                    @{ var currentChucVu = pending?.ChucVu ?? doctor.ChucVu; }
+                                    <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" id="chucVu" name="chucVu" required>
+                                        <option value="Bác sĩ" selected="@(currentChucVu == "Bác sĩ")">Bác sĩ</option>
+                                        <option value="Trưởng khoa" selected="@(currentChucVu == "Trưởng khoa")">Trưởng khoa</option>
+                                        <option value="Phó trưởng khoa" selected="@(currentChucVu == "Phó trưởng khoa")">Phó trưởng khoa</option>
+                                    </select>
+                                </div>
+
+                                <div class="space-y-unit-xs">
+                                    <label class="block text-caption font-semibold text-on-surface-variant" for="soCCHN">Số chứng chỉ hành nghề (CCHN)</label>
+                                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                           id="soCCHN" name="soCCHN" value="@(pending?.SoCCHN ?? doctor.SoCCHN)" />
+                                </div>
+
+                                <div class="space-y-unit-xs">
+                                    <label class="block text-caption font-semibold text-on-surface-variant" for="ngayCapCCHN">Ngày cấp CCHN</label>
+                                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                           id="ngayCapCCHN" name="ngayCapCCHN" type="date"
+                                           value="@((pending?.NgayCapCCHN ?? doctor.NgayCapCCHN)?.ToString("yyyy-MM-dd"))" />
+                                </div>
+
+                                <div class="space-y-unit-xs sm:col-span-2">
+                                    <label class="block text-caption font-semibold text-on-surface-variant" for="noiCapCCHN">Nơi cấp CCHN</label>
+                                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                           id="noiCapCCHN" name="noiCapCCHN" value="@(pending?.NoiCapCCHN ?? doctor.NoiCapCCHN)" />
+                                </div>
+
+                                <div class="space-y-unit-xs sm:col-span-2">
+                                    <label class="block text-caption font-semibold text-on-surface-variant" for="phamViHanhNghe">Phạm vi hành nghề</label>
+                                    <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                           id="phamViHanhNghe" name="phamViHanhNghe" value="@(pending?.PhamViHanhNghe ?? doctor.PhamViHanhNghe)" />
+                                </div>
+                            </div>
+
+                            <div class="p-3 bg-surface-container-low rounded-lg text-body-md">
+                                <span class="text-caption text-on-surface-variant uppercase font-bold tracking-wide">Tên hiển thị</span>
+                                <p id="display-name-preview" class="font-semibold text-on-surface"></p>
+                            </div>
+
+                            @if (Model.PendingRequest == null)
+                            {
+                                <button type="submit" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[20px]">send</span> Gửi yêu cầu duyệt
+                                </button>
+                            }
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-tab-panel" data-panel="notifications">
+            <partial name="_ComingSoon" model="@(new ComingSoonViewModel {
+                Icon = "notifications_active",
+                Message = "Đang phát triển — sẽ có ở Sprint 4.",
+                SubMessage = "Bật/tắt thông báo theo từng loại và kênh (trong app / push / email) sẽ có ở đợt sau."
+            })" />
+        </div>
+
+        <div class="profile-tab-panel" data-panel="security">
+            <div class="max-w-xl">
+                <h3 class="font-title-lg text-title-lg text-on-surface font-bold mb-1">Đổi mật khẩu</h3>
+                <p class="text-body-md text-on-surface-variant mb-unit-lg">
+                    Sau khi đổi mật khẩu, mọi thiết bị khác đang đăng nhập bằng tài khoản này sẽ cần đăng nhập lại.
+                </p>
+
+                <form id="change-password-form" method="POST" action="/Doctor/Profile/ChangePassword" class="space-y-unit-md" novalidate>
+                    @Html.AntiForgeryToken()
+
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="matKhauHienTai">Mật khẩu hiện tại</label>
+                        <div class="relative">
+                            <input class="w-full px-4 pr-11 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                   id="matKhauHienTai" name="matKhauHienTai" type="password" autocomplete="current-password" />
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-on-surface-variant" data-toggle-for="matKhauHienTai" aria-label="Hiện mật khẩu">
+                                <span class="material-symbols-outlined">visibility</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="matKhauMoi">Mật khẩu mới</label>
+                        <div class="relative">
+                            <input class="w-full px-4 pr-11 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                   id="matKhauMoi" name="matKhauMoi" type="password" autocomplete="new-password" />
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-on-surface-variant" data-toggle-for="matKhauMoi" aria-label="Hiện mật khẩu">
+                                <span class="material-symbols-outlined">visibility</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <partial name="_PasswordStrengthField" model='new PasswordStrengthFieldViewModel { NewPasswordInputId = "matKhauMoi", ConfirmPasswordInputId = "xacNhanMatKhauMoi" }' />
+
+                    <div class="space-y-unit-xs">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="xacNhanMatKhauMoi">Xác nhận mật khẩu mới</label>
+                        <div class="relative">
+                            <input class="w-full px-4 pr-11 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                                   id="xacNhanMatKhauMoi" name="xacNhanMatKhauMoi" type="password" autocomplete="new-password" />
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-on-surface-variant" data-toggle-for="xacNhanMatKhauMoi" aria-label="Hiện mật khẩu">
+                                <span class="material-symbols-outlined">visibility</span>
+                            </button>
+                        </div>
+                        <p id="confirm-error" class="text-caption text-error hidden"></p>
+                    </div>
+
+                    <button id="change-password-submit" type="submit"
+                            class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[20px]">password</span>
+                        <span id="change-password-submit-label">Đổi mật khẩu</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Xác thực 2 lớp -->
+            <div class="max-w-xl mt-unit-xl pt-unit-lg border-t border-outline-variant">
+                <h3 class="font-title-lg text-title-lg text-on-surface font-bold mb-1">Xác thực 2 lớp (2FA)</h3>
+                <p class="text-body-md text-on-surface-variant mb-unit-md">Yêu cầu thêm mã 6 số từ ứng dụng authenticator mỗi lần đăng nhập.</p>
+
+                @if (Model.TwoFactorEnabled)
+                {
+                    <div class="flex items-center gap-2 mb-unit-md">
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-tight bg-secondary-container/20 text-on-secondary-container">Đang bật</span>
+                    </div>
+                    <button type="button" onclick="openDisable2faModal()"
+                            class="bg-surface-container-high hover:bg-surface-container-highest px-unit-lg py-2.5 rounded-lg font-label-md transition-colors text-on-surface-variant font-semibold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[20px]">lock_open</span> Tắt 2FA
+                    </button>
+                }
+                else
+                {
+                    <div class="flex items-center gap-2 mb-unit-md flex-wrap">
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-tight bg-surface-container-high text-on-surface-variant">Chưa bật</span>
+                        @if (Model.TwoFactorForced)
+                        {
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-tight bg-error-container text-error">Bắt buộc bởi quản trị</span>
+                        }
+                    </div>
+                    <a href="/Doctor/Profile/TwoFactorSetup" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1 w-fit">
+                        <span class="material-symbols-outlined text-[20px]">shield</span> Bật 2FA
+                    </a>
+                }
+            </div>
+
+            <!-- Phiên đăng nhập đang hoạt động -->
+            <div class="mt-unit-xl pt-unit-lg border-t border-outline-variant">
+                <div class="flex items-center justify-between flex-wrap gap-unit-sm mb-1">
+                    <h3 class="font-title-lg text-title-lg text-on-surface font-bold">Phiên đăng nhập đang hoạt động</h3>
+                    @if (Model.ActiveSessions.Count(s => s.SessionToken != Model.CurrentSessionToken) > 0)
+                    {
+                        <form method="POST" action="/Doctor/Profile/EndAllOtherSessions" onsubmit="return confirm('Đăng xuất tất cả thiết bị khác?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="text-error font-label-md font-semibold hover:underline">Đăng xuất tất cả thiết bị khác</button>
+                        </form>
+                    }
+                </div>
+                <p class="text-body-md text-on-surface-variant mb-unit-md">Giải pháp cho máy trạm khoa phòng dùng chung - đăng xuất từ xa thiết bị bạn không còn dùng.</p>
+
+                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+                    <div class="hms-table-scroll overflow-x-auto">
+                        <table class="w-full text-left text-body-md">
+                            <thead>
+                                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                                    <th class="px-3 py-2">Thiết bị</th>
+                                    <th class="px-3 py-2">IP</th>
+                                    <th class="px-3 py-2">Đăng nhập lúc</th>
+                                    <th class="px-3 py-2">Hoạt động gần nhất</th>
+                                    <th class="px-3 py-2"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant">
+                                @foreach (var session in Model.ActiveSessions)
+                                {
+                                    var isCurrent = session.SessionToken == Model.CurrentSessionToken;
+                                    <tr>
+                                        <td class="px-3 py-2">
+                                            @session.ThietBi
+                                            @if (isCurrent)
+                                            {
+                                                <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-primary/10 text-primary">Phiên này</span>
+                                            }
+                                        </td>
+                                        <td class="px-3 py-2 font-mono text-caption text-on-surface-variant">@session.IpAddress</td>
+                                        <td class="px-3 py-2 text-caption text-on-surface-variant">@session.ThoiGianDangNhap.ToString("HH:mm dd/MM/yyyy")</td>
+                                        <td class="px-3 py-2 text-caption text-on-surface-variant">@session.ThoiGianHoatDongCuoi.ToString("HH:mm dd/MM/yyyy")</td>
+                                        <td class="px-3 py-2 text-right">
+                                            @if (!isCurrent)
+                                            {
+                                                <form method="POST" action="/Doctor/Profile/EndSession" onsubmit="return confirm('Đăng xuất thiết bị này?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="sessionId" value="@session.Id" />
+                                                    <button type="submit" class="text-error font-label-md font-semibold hover:underline">Đăng xuất</button>
+                                                </form>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lịch sử đăng nhập -->
+            <div class="mt-unit-xl pt-unit-lg border-t border-outline-variant">
+                <h3 class="font-title-lg text-title-lg text-on-surface font-bold mb-1">Lịch sử đăng nhập (30 ngày)</h3>
+                <p class="text-body-md text-on-surface-variant mb-unit-md">Tự phát hiện truy cập lạ - dòng thất bại được tô đỏ.</p>
+
+                <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+                    <div class="hms-table-scroll overflow-x-auto max-h-[360px] overflow-y-auto">
+                        <table class="w-full text-left text-body-md">
+                            <thead>
+                                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                                    <th class="px-3 py-2">Thời gian</th>
+                                    <th class="px-3 py-2">IP</th>
+                                    <th class="px-3 py-2">Kết quả</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-outline-variant">
+                                @if (Model.LoginHistory.Count == 0)
+                                {
+                                    <tr><td colspan="3" class="px-3 py-6 text-center text-on-surface-variant">Chưa có dữ liệu.</td></tr>
+                                }
+                                else
+                                {
+                                    @foreach (var log in Model.LoginHistory)
+                                    {
+                                        var failed = log.HanhDong == "Đăng nhập thất bại";
+                                        <tr class="@(failed ? "bg-error-container/20" : "")">
+                                            <td class="px-3 py-2 text-caption text-on-surface-variant">@log.ThoiGian.ToString("HH:mm dd/MM/yyyy")</td>
+                                            <td class="px-3 py-2 font-mono text-caption text-on-surface-variant">@log.IpAddress</td>
+                                            <td class="px-3 py-2">
+                                                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold @(failed ? "text-error" : "text-secondary")">
+                                                    @(failed ? "Thất bại" : "Thành công")
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tuỳ chọn giao diện -->
+            <div class="max-w-xl mt-unit-xl pt-unit-lg border-t border-outline-variant">
+                <h3 class="font-title-lg text-title-lg text-on-surface font-bold mb-1">Tuỳ chọn giao diện</h3>
+                <p class="text-body-md text-on-surface-variant mb-unit-md">Đồng bộ theo tài khoản trên mọi thiết bị (khác localStorage vốn chỉ theo trình duyệt).</p>
+
+                <form method="POST" action="/Doctor/Profile/SaveUiPreferences" class="space-y-unit-md">
+                    @Html.AntiForgeryToken()
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="sidebarThuGonMacDinh" name="sidebarThuGonMacDinh" value="true"
+                               class="rounded text-primary focus:ring-primary h-4 w-4" checked="@doctor.User.SidebarThuGonMacDinh" />
+                        <label for="sidebarThuGonMacDinh" class="font-label-md text-on-surface cursor-pointer select-none">Thu gọn sidebar mặc định</label>
+                    </div>
+                    <div class="space-y-unit-xs max-w-[200px]">
+                        <label class="block text-caption font-semibold text-on-surface-variant" for="soDongMoiTrang">Số dòng mỗi trang (danh sách có bảng)</label>
+                        <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
+                               id="soDongMoiTrang" name="soDongMoiTrang" type="number" min="1" max="100"
+                               value="@doctor.User.SoDongMoiTrangMacDinh" placeholder="Mặc định hệ thống" />
+                    </div>
+                    <button type="submit" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[20px]">save</span> Lưu tuỳ chọn
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        @if (Model.TwoFactorEnabled)
+        {
+            <div id="disable2faModal" class="hidden fixed inset-0 bg-on-background/40 z-[100] flex items-center justify-center p-4">
+                <div class="bg-surface-container-lowest rounded-xl shadow-2xl p-unit-lg max-w-md w-full">
+                    <h4 class="font-title-md text-title-md text-on-surface mb-2">Tắt xác thực 2 lớp</h4>
+                    <p class="text-body-md text-on-surface-variant mb-unit-sm">Nhập lại mật khẩu hiện tại để xác nhận.</p>
+                    <form method="POST" action="/Doctor/Profile/DisableTwoFactor">
+                        @Html.AntiForgeryToken()
+                        <input type="password" name="matKhauHienTai" required autocomplete="current-password"
+                               class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" />
+                        <div class="flex justify-end gap-unit-sm mt-unit-md">
+                            <button type="button" onclick="document.getElementById('disable2faModal').classList.add('hidden')"
+                                    class="px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container cursor-pointer font-label-md">Huỷ</button>
+                            <button type="submit" class="px-4 py-2 rounded-lg bg-error text-white font-bold cursor-pointer font-label-md">Xác nhận tắt 2FA</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+
+        <div class="profile-tab-panel" data-panel="signature">
+            <partial name="_ComingSoon" model="@(new ComingSoonViewModel {
+                Icon = "lock",
+                Message = "Sắp ra mắt.",
+                SubMessage = "Chữ ký số và chứng thư số sẽ được xây dựng cùng đợt với trang Hồ sơ chờ ký, sau khi hạ tầng ký số dùng chung sẵn sàng."
+            })" />
+        </div>
+    </div>
+</div>
+
+@section Styles {
+<style>
+    .profile-tab-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        white-space: nowrap;
+        padding: 0.9rem 1.25rem;
+        font-family: var(--font-label-md, inherit);
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: var(--md-sys-color-on-surface-variant, #49454f);
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        background: none;
+    }
+    .profile-tab-btn[aria-selected="true"] {
+        color: var(--md-sys-color-primary, #0b5cab);
+        border-bottom-color: var(--md-sys-color-primary, #0b5cab);
+    }
+    .profile-tab-panel[hidden] {
+        display: none;
+    }
+</style>
+}
+
+@section Scripts {
+<script>
+    (function () {
+        const tabButtons = Array.from(document.querySelectorAll('.profile-tab-btn'));
+        const panels = Array.from(document.querySelectorAll('.profile-tab-panel'));
+
+        function activateTab(tabKey) {
+            tabButtons.forEach(function (btn) { btn.setAttribute('aria-selected', btn.dataset.tab === tabKey ? 'true' : 'false'); });
+            panels.forEach(function (panel) { panel.hidden = panel.dataset.panel !== tabKey; });
+        }
+
+        window.openDisable2faModal = function () {
+            var modal = document.getElementById('disable2faModal');
+            if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+        };
+
+        tabButtons.forEach(function (btn) {
+            btn.addEventListener('click', function () { activateTab(btn.dataset.tab); });
+        });
+
+        activateTab('info');
+
+        const avatarInput = document.getElementById('avatar-input');
+        if (avatarInput) {
+            avatarInput.addEventListener('change', function () {
+                if (avatarInput.files && avatarInput.files.length > 0) {
+                    document.getElementById('avatar-form').submit();
+                }
+            });
+        }
+
+        const hoTenInput = document.getElementById('hoTen');
+        const hocViSelect = document.getElementById('hocVi');
+        const displayNamePreview = document.getElementById('display-name-preview');
+        function updateDisplayNamePreview() {
+            if (!hoTenInput || !hocViSelect || !displayNamePreview) return;
+            const hocVi = hocViSelect.value.trim().replace(/\.+$/, '');
+            const hoTen = hoTenInput.value.trim();
+            displayNamePreview.textContent = hoTen ? (hocVi ? hocVi + '. ' + hoTen : hoTen) : '—';
+        }
+        if (hoTenInput && hocViSelect) {
+            hoTenInput.addEventListener('input', updateDisplayNamePreview);
+            hocViSelect.addEventListener('change', updateDisplayNamePreview);
+            updateDisplayNamePreview();
+        }
+
+        document.querySelectorAll('[data-toggle-for]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const input = document.getElementById(button.getAttribute('data-toggle-for'));
+                const icon = button.querySelector('.material-symbols-outlined');
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                icon.textContent = show ? 'visibility_off' : 'visibility';
+            });
+        });
+
+        const matKhauMoi = document.getElementById('matKhauMoi');
+        const xacNhanMatKhauMoi = document.getElementById('xacNhanMatKhauMoi');
+        const confirmError = document.getElementById('confirm-error');
+
+        document.getElementById('change-password-form').addEventListener('submit', function (event) {
+            confirmError.classList.add('hidden');
+            if (!window.isPasswordPolicyCompliant_matKhauMoi(matKhauMoi.value)) {
+                event.preventDefault();
+                confirmError.textContent = 'Mật khẩu mới chưa đáp ứng đủ yêu cầu tối thiểu.';
+                confirmError.classList.remove('hidden');
+                return;
+            }
+            if (matKhauMoi.value !== xacNhanMatKhauMoi.value) {
+                event.preventDefault();
+                confirmError.textContent = 'Xác nhận mật khẩu mới không khớp.';
+                confirmError.classList.remove('hidden');
+                return;
+            }
+            const submitButton = document.getElementById('change-password-submit');
+            const submitLabel = document.getElementById('change-password-submit-label');
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-70', 'cursor-not-allowed');
+            submitLabel.textContent = 'Đang xử lý...';
+        });
+    })();
+</script>
+}

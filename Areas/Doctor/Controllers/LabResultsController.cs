@@ -32,7 +32,7 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
 
         // GET: /Doctor/LabResults?tab=ChuaXem
         [HttpGet]
-        public async Task<IActionResult> Index(string tab = "ChuaXem", int page = 1)
+        public async Task<IActionResult> Index(string tab = "ChuaXem", int page = 1, int? pageSize = null)
         {
             var doctorId = await GetCurrentDoctorIdAsync();
             if (!doctorId.HasValue) return Forbid();
@@ -55,7 +55,14 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                 ? query.OrderBy(i => i.PhieuChiDinh.NgayChiDinh)
                 : query.OrderByDescending(i => i.KetQua != null ? i.KetQua.NgayTra : i.PhieuChiDinh.NgayChiDinh);
 
-            var paged = await ordered.ToPagedListAsync(page, PagedList<LabOrderItem>.DefaultPageSize);
+            // pageSize không truyền qua query string -> dùng tuỳ chọn "Số dòng
+            // mỗi trang" lưu theo tài khoản (Doctor/Profile/SaveUiPreferences),
+            // null (chưa từng đặt) mới rơi về mặc định hệ thống.
+            var effectivePageSize = pageSize ?? await _context.Users
+                .Where(u => u.Id == GetCurrentUserId())
+                .Select(u => u.SoDongMoiTrangMacDinh)
+                .FirstOrDefaultAsync() ?? PagedList<LabOrderItem>.DefaultPageSize;
+            var paged = await ordered.ToPagedListAsync(page, effectivePageSize);
 
             ViewBag.Tab = tab;
             ViewBag.PendingThresholdHours = PendingResultThresholdHours;

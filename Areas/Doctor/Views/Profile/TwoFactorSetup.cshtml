@@ -1,0 +1,69 @@
+@{
+    Layout = "~/Views/Shared/_DoctorLayout.cshtml";
+    ViewData["Title"] = "Bật xác thực 2 lớp";
+
+    var header = new PageHeaderViewModel
+    {
+        Title = "Bật xác thực 2 lớp (2FA)",
+        Subtitle = "Quét mã QR bằng ứng dụng authenticator (Google Authenticator, Authy...) rồi nhập mã 6 số để xác nhận.",
+        Breadcrumbs = new[]
+        {
+            new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard"),
+            new BreadcrumbItem("Hồ sơ & Cài đặt", "/Doctor/Profile")
+        },
+        CurrentCrumb = "Bật xác thực 2 lớp"
+    };
+
+    var completed = ViewBag.Completed as bool? ?? false;
+}
+
+<partial name="_PageHeader" model="header" />
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-unit-lg shadow-sm max-w-xl">
+    @if (completed)
+    {
+        var backupCodes = ViewBag.BackupCodes as List<string> ?? new List<string>();
+        <div class="flex items-center gap-2 mb-unit-md text-secondary">
+            <span class="material-symbols-outlined">check_circle</span>
+            <h3 class="font-title-lg text-title-lg font-bold">Đã bật xác thực 2 lớp</h3>
+        </div>
+
+        <div class="p-4 bg-error-container/20 border-l-4 border-error rounded-r mb-unit-md">
+            <p class="font-bold text-error mb-1">Lưu lại 10 mã dự phòng này ngay - sẽ không hiển thị lại</p>
+            <p class="text-body-md text-on-surface-variant">Dùng khi mất thiết bị authenticator. Mỗi mã chỉ dùng được 1 lần.</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 font-mono text-body-lg font-bold text-on-surface bg-surface-container-low rounded-lg p-4 mb-unit-lg">
+            @foreach (var code in backupCodes)
+            {
+                <div>@code</div>
+            }
+        </div>
+
+        <a href="/Doctor/Profile" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold inline-flex items-center gap-1">
+            <span class="material-symbols-outlined text-[20px]">arrow_back</span> Quay lại Hồ sơ &amp; Cài đặt
+        </a>
+    }
+    else
+    {
+        <div class="flex flex-col items-center text-center mb-unit-lg">
+            <img src="@ViewBag.QrCodeDataUri" alt="Mã QR thiết lập 2FA" class="w-48 h-48 border border-outline-variant rounded-lg p-2 bg-white" />
+            <p class="text-caption text-on-surface-variant mt-unit-sm">Không quét được? Nhập tay khoá bên dưới vào ứng dụng authenticator:</p>
+            <p class="font-mono text-body-md font-bold text-on-surface bg-surface-container-low rounded-lg px-3 py-1.5 mt-1 break-all">@ViewBag.Secret</p>
+        </div>
+
+        <form method="POST" action="/Doctor/Profile/TwoFactorSetup" class="space-y-unit-md">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="secret" value="@ViewBag.Secret" />
+            <div class="space-y-unit-xs">
+                <label class="block text-caption font-semibold text-on-surface-variant" for="code">Mã 6 số từ ứng dụng authenticator</label>
+                <input class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus text-center tracking-[0.3em] text-title-lg"
+                       id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required autofocus />
+            </div>
+            <button type="submit" class="bg-primary text-white px-unit-lg py-2.5 rounded-lg font-label-md hover:bg-primary-container transition-colors shadow-sm font-bold flex items-center gap-1">
+                <span class="material-symbols-outlined text-[20px]">check_circle</span> Xác nhận &amp; bật 2FA
+            </button>
+            <a href="/Doctor/Profile" class="block text-center text-on-surface-variant hover:underline font-label-md">Huỷ</a>
+        </form>
+    }
+</div>

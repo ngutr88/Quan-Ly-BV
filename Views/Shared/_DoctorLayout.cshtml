@@ -1,5 +1,22 @@
+@using Microsoft.EntityFrameworkCore
+@inject QuanLyBenhVien.Data.ApplicationDbContext DbContext
 @{
     Layout = "_Layout";
+
+    // Mặc định thu gọn sidebar lưu theo TÀI KHOẢN (User.SidebarThuGonMacDinh,
+    // đổi qua Doctor/Profile/SaveUiPreferences) - chỉ dùng làm giá trị khởi
+    // tạo cho trình duyệt CHƯA từng bấm thu gọn/mở rộng (chưa có localStorage
+    // riêng); trình duyệt đã từng bấm thì localStorage luôn thắng, xem script
+    // ngay dưới đây.
+    var sidebarDefaultCollapsed = false;
+    var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+    if (currentUserIdClaim != null && int.TryParse(currentUserIdClaim.Value, out var currentUserId))
+    {
+        sidebarDefaultCollapsed = await DbContext.Users.AsNoTracking()
+            .Where(u => u.Id == currentUserId)
+            .Select(u => u.SidebarThuGonMacDinh)
+            .FirstOrDefaultAsync();
+    }
 }
 
 @Html.AntiForgeryToken()
@@ -14,9 +31,16 @@
         <script>
             // Applied inline (before nav renders) to avoid a flash of the
             // expanded sidebar before the deferred layout scripts run.
-            if (window.innerWidth >= 1024 && localStorage.getItem('doctorSidebarCollapsed') === '1') {
-                document.currentScript.closest('#doctor-sidebar').classList.add('sidebar-collapsed');
-            }
+            // localStorage (đã từng bấm thu gọn/mở rộng TRÊN TRÌNH DUYỆT NÀY)
+            // luôn thắng; chỉ khi trình duyệt này chưa từng có giá trị mới
+            // dùng mặc định lưu theo tài khoản từ server.
+            (function () {
+                var stored = localStorage.getItem('doctorSidebarCollapsed');
+                var collapsed = stored === null ? @Json.Serialize(sidebarDefaultCollapsed) : stored === '1';
+                if (window.innerWidth >= 1024 && collapsed) {
+                    document.currentScript.closest('#doctor-sidebar').classList.add('sidebar-collapsed');
+                }
+            })();
         </script>
         <button type="button" aria-label="Đóng menu" onclick="closeDoctorSidebar()"
                 class="lg:hidden absolute top-4 right-3 w-9 h-9 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high">

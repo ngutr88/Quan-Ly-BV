@@ -1,0 +1,110 @@
+@model IEnumerable<QuanLyBenhVien.Models.ProfileChangeRequest>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Duyệt hồ sơ hành nghề";
+    var recent = (IEnumerable<QuanLyBenhVien.Models.ProfileChangeRequest>)ViewBag.Recent;
+
+    string StatusBadge(string trangThai) => trangThai switch
+    {
+        "ChoDuyet" => "bg-tertiary-fixed/30 text-on-tertiary-fixed-variant",
+        "DaDuyet" => "bg-secondary-container/20 text-on-secondary-container",
+        "TuChoi" => "bg-error-container text-error",
+        _ => "bg-surface-container-high text-on-surface-variant"
+    };
+
+    string StatusLabel(string trangThai) => trangThai switch
+    {
+        "ChoDuyet" => "Chờ duyệt",
+        "DaDuyet" => "Đã duyệt",
+        "TuChoi" => "Từ chối",
+        _ => trangThai
+    };
+}
+
+<div class="mb-unit-lg">
+    <h2 class="font-headline-lg text-headline-lg text-on-surface">Duyệt hồ sơ hành nghề</h2>
+    <p class="text-body-md text-on-surface-variant">Yêu cầu thay đổi các trường ảnh hưởng pháp lý/hiển thị công khai do bác sĩ tự đề xuất từ trang Hồ sơ &amp; Cài đặt.</p>
+</div>
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-unit-lg">
+    <div class="px-unit-md py-3 bg-surface-container-low border-b border-outline-variant font-label-md font-bold text-on-surface uppercase text-[12px] tracking-wide">
+        Đang chờ duyệt (@Model.Count())
+    </div>
+    <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Yêu cầu chờ duyệt" tabindex="0">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Bác sĩ</th>
+                    <th class="px-unit-md py-3">Ngày đề xuất</th>
+                    <th class="px-unit-md py-3">Trạng thái</th>
+                    <th class="px-unit-md py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant text-body-md">
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="4" class="px-unit-md py-8 text-center text-on-surface-variant">Không có yêu cầu nào đang chờ duyệt.</td></tr>
+                }
+                else
+                {
+                    @foreach (var r in Model)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="px-unit-md py-4 font-semibold text-on-surface">@r.Doctor.User.HoTen</td>
+                            <td class="px-unit-md py-4">@r.NgayDeXuat.ToString("HH:mm dd/MM/yyyy")</td>
+                            <td class="px-unit-md py-4">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-tight @StatusBadge(r.TrangThai)">@StatusLabel(r.TrangThai)</span>
+                            </td>
+                            <td class="px-unit-md py-4 text-right">
+                                <a href="/Admin/ProfileApprovals/Details/@r.Id" class="text-primary hover:underline font-semibold">Xem</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+    <div class="px-unit-md py-3 bg-surface-container-low border-b border-outline-variant font-label-md font-bold text-on-surface uppercase text-[12px] tracking-wide">
+        Đã xử lý gần đây
+    </div>
+    <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Yêu cầu đã xử lý" tabindex="0">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Bác sĩ</th>
+                    <th class="px-unit-md py-3">Người duyệt</th>
+                    <th class="px-unit-md py-3">Ngày xử lý</th>
+                    <th class="px-unit-md py-3">Trạng thái</th>
+                    <th class="px-unit-md py-3"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant text-body-md">
+                @if (!recent.Any())
+                {
+                    <tr><td colspan="5" class="px-unit-md py-8 text-center text-on-surface-variant">Chưa có yêu cầu nào được xử lý.</td></tr>
+                }
+                else
+                {
+                    @foreach (var r in recent)
+                    {
+                        <tr class="hover:bg-surface-container-low transition-colors">
+                            <td class="px-unit-md py-4 font-semibold text-on-surface">@r.Doctor.User.HoTen</td>
+                            <td class="px-unit-md py-4">@(r.NguoiDuyet?.HoTen ?? "--")</td>
+                            <td class="px-unit-md py-4">@(r.NgayDuyet?.ToString("HH:mm dd/MM/yyyy") ?? "--")</td>
+                            <td class="px-unit-md py-4">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-tight @StatusBadge(r.TrangThai)">@StatusLabel(r.TrangThai)</span>
+                            </td>
+                            <td class="px-unit-md py-4 text-right">
+                                <a href="/Admin/ProfileApprovals/Details/@r.Id" class="text-primary hover:underline font-semibold">Xem</a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -15,6 +15,7 @@ namespace QuanLyBenhVien.Data
             // seeding. Keeping this method data-only avoids a second exclusive
             // migration lock when more than one development process starts.
             SynchronizeDemoAccountCredentials(context);
+            NormalizeDoctorTitlePrefixes(context);
             SynchronizePatientCccd(context);
             SynchronizeCompletedAppointmentStates(context);
             SeedAdditionalRoleAccounts(context);
@@ -1932,6 +1933,42 @@ namespace QuanLyBenhVien.Data
                 // đã xác nhận để bác sĩ có thể tiếp tục và hoàn tất đúng quy trình.
                 appointment.TrangThai = "DaXacNhan";
             }
+            context.SaveChanges();
+        }
+
+        // Một số bác sĩ seed có tiền tố học hàm ("BS.", "ThS.BS."...) bị nhúng
+        // thẳng vào NguoiDung.HoTen thay vì nằm ở cột BacSi.HocVi riêng - dữ
+        // liệu bẩn này làm sai chữ viết tắt avatar (NameInitialsHelper nhận họ
+        // tên thuần, không phải "HoTen kèm chức danh"). Idempotent như
+        // SynchronizePatientCccd bên dưới: chạy mỗi lần khởi động, lần chạy
+        // sau là no-op tự nhiên vì không còn tiền tố nào để tách.
+        private static void NormalizeDoctorTitlePrefixes(ApplicationDbContext context)
+        {
+            var doctors = context.Doctors.Include(d => d.User)
+                .Where(d => d.User != null)
+                .ToList();
+
+            var changedCount = 0;
+            foreach (var doctor in doctors)
+            {
+                var (clean, extracted) = DoctorTitlePrefixHelper.StripLeadingTitle(doctor.User.HoTen);
+                if (extracted == null) continue;
+
+                doctor.User.HoTen = clean;
+                // Không ghi đè HocVi đã có sẵn (đáng tin hơn) - chỉ điền khi
+                // đang trống, để không mất thông tin nếu đây là nơi DUY NHẤT
+                // ghi nhận học hàm của bác sĩ này.
+                if (string.IsNullOrWhiteSpace(doctor.HocVi)) doctor.HocVi = extracted;
+                changedCount++;
+            }
+
+            if (changedCount == 0) return;
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                HanhDong = "Dọn dữ liệu tên bác sĩ",
+                ChiTiet = $"Tự động tách tiền tố học hàm khỏi họ tên cho {changedCount} bác sĩ."
+            });
             context.SaveChanges();
         }
 

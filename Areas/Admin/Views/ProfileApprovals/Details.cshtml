@@ -1,0 +1,129 @@
+@using QuanLyBenhVien.Models
+@using QuanLyBenhVien.Helpers
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết yêu cầu thay đổi hồ sơ";
+    var request = (ProfileChangeRequest)ViewBag.Request;
+    var diff = (List<ProfileChangeDiffHelper.FieldDiff>)ViewBag.Diff;
+    var canApprove = (bool)ViewBag.CanApprove;
+
+    string StatusBadge(string trangThai) => trangThai switch
+    {
+        "ChoDuyet" => "bg-tertiary-fixed/30 text-on-tertiary-fixed-variant",
+        "DaDuyet" => "bg-secondary-container/20 text-on-secondary-container",
+        "TuChoi" => "bg-error-container text-error",
+        _ => "bg-surface-container-high text-on-surface-variant"
+    };
+
+    string StatusLabel(string trangThai) => trangThai switch
+    {
+        "ChoDuyet" => "Chờ duyệt",
+        "DaDuyet" => "Đã duyệt",
+        "TuChoi" => "Từ chối",
+        _ => trangThai
+    };
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/ProfileApprovals" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách
+    </a>
+    <div class="flex items-center gap-unit-sm flex-wrap">
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Yêu cầu #@request.Id — @request.Doctor.User.HoTen</h2>
+        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-tight @StatusBadge(request.TrangThai)">@StatusLabel(request.TrangThai)</span>
+    </div>
+    <p class="text-body-md text-on-surface-variant">Đề xuất lúc @request.NgayDeXuat.ToString("HH:mm dd/MM/yyyy")</p>
+</div>
+
+@if (request.TrangThai == "TuChoi" && !string.IsNullOrWhiteSpace(request.LyDoTuChoi))
+{
+    <div class="mb-unit-md p-4 bg-error-container/20 border-l-4 border-error text-error rounded-r">
+        <span class="font-bold">Lý do từ chối:</span> @request.LyDoTuChoi
+    </div>
+}
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-unit-lg">
+    <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Bảng so sánh thay đổi" tabindex="0">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                    <th class="px-unit-md py-3">Trường</th>
+                    <th class="px-unit-md py-3">Giá trị hiện tại</th>
+                    <th class="px-unit-md py-3">Giá trị đề xuất</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant text-body-md">
+                @foreach (var f in diff)
+                {
+                    <tr class="@(f.Changed ? "bg-tertiary-fixed/10" : "")">
+                        <td class="px-unit-md py-3 font-semibold text-on-surface">@f.Label</td>
+                        <td class="px-unit-md py-3 text-on-surface-variant">@f.OldDisplay</td>
+                        <td class="px-unit-md py-3 @(f.Changed ? "font-bold text-primary" : "text-on-surface-variant")">@f.NewDisplay</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (request.TrangThai == "ChoDuyet")
+{
+    @if (canApprove)
+    {
+        <div class="flex flex-wrap gap-unit-sm">
+            <button type="button" class="hms-btn hms-btn-primary" onclick="postAction('/Admin/ProfileApprovals/Approve/@request.Id')">
+                <span class="material-symbols-outlined">check_circle</span> Duyệt
+            </button>
+            <button type="button" class="hms-btn hms-btn-secondary" onclick="openRejectModal()">
+                <span class="material-symbols-outlined">block</span> Từ chối
+            </button>
+        </div>
+    }
+    else
+    {
+        <p class="text-body-md text-on-surface-variant italic">Tài khoản của bạn chưa được cấp quyền duyệt hồ sơ hành nghề.</p>
+    }
+}
+
+<!-- Reject reason modal -->
+<div id="modalReject" class="hidden fixed inset-0 bg-on-background/40 z-[100] flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest rounded-xl shadow-2xl p-unit-lg max-w-md w-full">
+        <h4 class="font-title-md text-title-md text-on-surface mb-2">Từ chối yêu cầu #@request.Id</h4>
+        <label class="hms-field-label">Lý do từ chối <span class="text-error">*</span></label>
+        <textarea id="rejectReason" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg mt-1" rows="3" placeholder="Nhập lý do từ chối yêu cầu này..."></textarea>
+        <div class="flex justify-end gap-unit-sm mt-unit-md">
+            <button type="button" class="hms-btn hms-btn-secondary" onclick="document.getElementById('modalReject').classList.add('hidden')">Đóng</button>
+            <button type="button" class="hms-btn hms-btn-primary" onclick="submitReject()">Xác nhận từ chối</button>
+        </div>
+    </div>
+</div>
+
+<form id="actionForm" method="POST" class="hidden">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="lyDo" id="actionLyDo" />
+</form>
+
+@section Scripts {
+    <script>
+        function postAction(url) {
+            const form = document.getElementById('actionForm');
+            form.action = url;
+            document.getElementById('actionLyDo').value = '';
+            form.submit();
+        }
+
+        function openRejectModal() { document.getElementById('modalReject').classList.remove('hidden'); }
+
+        function submitReject() {
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) {
+                showGlobalToast('Thiếu thông tin', 'Vui lòng nhập lý do từ chối.', 'error');
+                return;
+            }
+            const form = document.getElementById('actionForm');
+            form.action = '/Admin/ProfileApprovals/Reject/@request.Id';
+            document.getElementById('actionLyDo').value = reason;
+            form.submit();
+        }
+    </script>
+}

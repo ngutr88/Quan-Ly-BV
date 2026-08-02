@@ -76,6 +76,7 @@ namespace QuanLyBenhVien.Controllers
 
             if (user == null || !HashHelper.VerifyPassword(password, user.MatKhauHash))
             {
+                await LogFailedLoginAsync(user, identifier);
                 TempData["ErrorMessage"] = "Thông tin tài khoản hoặc mật khẩu không chính xác.";
                 return View();
             }
@@ -88,12 +89,14 @@ namespace QuanLyBenhVien.Controllers
 
             if (user.PhaiDoiMatKhau && user.MatKhauTamHetHan.HasValue && user.MatKhauTamHetHan.Value < DateTime.Now)
             {
+                await LogFailedLoginAsync(user, identifier);
                 TempData["ErrorMessage"] = "Mật khẩu tạm đã hết hạn. Vui lòng liên hệ quản trị viên để được cấp lại.";
                 return View();
             }
 
             if (!string.IsNullOrEmpty(role) && user.VaiTro != role)
             {
+                await LogFailedLoginAsync(user, identifier);
                 var roleName = role switch
                 {
                     "Admin" => "Quản trị viên",
@@ -106,11 +109,98 @@ namespace QuanLyBenhVien.Controllers
 
             if (user.TrangThai == "Blocked")
             {
+                await LogFailedLoginAsync(user, identifier);
                 TempData["ErrorMessage"] = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin.";
                 return View();
             }
 
-            // Create user claims
+            if (user.TotpBatDau)
+            {
+                HttpContext.Session.SetInt32("PendingLogin_UserId", user.Id);
+                HttpContext.Session.SetString("PendingLogin_RememberMe", rememberMe ? "1" : "0");
+                HttpContext.Session.SetString("PendingLogin_ReturnUrl", returnUrl ?? string.Empty);
+                return RedirectToAction(nameof(VerifyTotp));
+            }
+
+            return await CompleteSignInAsync(user, rememberMe, returnUrl);
+        }
+
+        // GET: /Auth/VerifyTotp - bước 2 đăng nhập cho tài khoản đã bật 2FA.
+        // userId tạm giữ qua Session (không phải TempData) vì cần sống qua cả
+        // GET lẫn POST, cùng khuôn luồng đăng ký (Reg_* trong Session).
+        [HttpGet]
+        public IActionResult VerifyTotp()
+        {
+            if (HttpContext.Session.GetInt32("PendingLogin_UserId") == null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+            return View();
+        }
+
+        // POST: /Auth/VerifyTotp
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyTotp(string? code, string? backupCode)
+        {
+            var userId = HttpContext.Session.GetInt32("PendingLogin_UserId");
+            if (userId == null) return RedirectToAction(nameof(Login));
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId.Value);
+            if (user == null) return RedirectToAction(nameof(Login));
+
+            var verified = false;
+            if (!string.IsNullOrWhiteSpace(code))
+            {
+                verified = TotpHelper.ValidateCode(user.TotpBiMat, code, DateTime.UtcNow);
+            }
+            else if (!string.IsNullOrWhiteSpace(backupCode))
+            {
+                var unusedCodes = await _context.TotpBackupCodes
+                    .Where(c => c.NguoiDungId == user.Id && !c.DaDung)
+                    .ToListAsync();
+                var match = unusedCodes.FirstOrDefault(c => HashHelper.VerifyPassword(backupCode.Trim(), c.MaHash));
+                if (match != null)
+                {
+                    match.DaDung = true;
+                    match.NgayDung = DateTime.Now;
+                    await _context.SaveChangesAsync();
+                    verified = true;
+                }
+            }
+
+            if (!verified)
+            {
+                await LogFailedLoginAsync(user, user.Email);
+                TempData["ErrorMessage"] = "Mã xác thực không đúng hoặc mã dự phòng đã được dùng.";
+                return View();
+            }
+
+            var rememberMe = HttpContext.Session.GetString("PendingLogin_RememberMe") == "1";
+            var pendingReturnUrl = HttpContext.Session.GetString("PendingLogin_ReturnUrl");
+            HttpContext.Session.Remove("PendingLogin_UserId");
+            HttpContext.Session.Remove("PendingLogin_RememberMe");
+            HttpContext.Session.Remove("PendingLogin_ReturnUrl");
+
+            return await CompleteSignInAsync(user, rememberMe, string.IsNullOrEmpty(pendingReturnUrl) ? null : pendingReturnUrl);
+        }
+
+        // Chỉ chạy khi mọi bước xác thực (mật khẩu, vai trò, trạng thái tài
+        // khoản, 2FA nếu có) đã qua - tạo phiên đăng nhập THẬT (cookie + dòng
+        // PhienDangNhap mới, không phải re-sign-in giữ nguyên "sid" như
+        // ForcedPasswordChange/ProfileController.ChangePassword).
+        private async Task<IActionResult> CompleteSignInAsync(User user, bool rememberMe, string? returnUrl)
+        {
+            var session = new LoginSession
+            {
+                NguoiDungId = user.Id,
+                SessionToken = Guid.NewGuid().ToString("N"),
+                ThietBi = UserAgentHelper.Summarize(Request.Headers["User-Agent"].ToString()),
+                IpAddress = ClientIp()
+            };
+            _context.LoginSessions.Add(session);
+            await _context.SaveChangesAsync();
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -118,7 +208,8 @@ namespace QuanLyBenhVien.Controllers
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.VaiTro),
                 new Claim(ClaimTypes.MobilePhone, user.Sdt),
-                new Claim("SecurityStamp", user.SecurityStamp)
+                new Claim("SecurityStamp", user.SecurityStamp),
+                new Claim("sid", session.SessionToken)
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -135,7 +226,7 @@ namespace QuanLyBenhVien.Controllers
                 NguoiDungId = user.Id,
                 HanhDong = "Đăng nhập",
                 ChiTiet = $"{user.HoTen} ({user.VaiTro}) đăng nhập thành công.",
-                IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1"
+                IpAddress = session.IpAddress
             });
             await _context.SaveChangesAsync();
 
@@ -150,6 +241,21 @@ namespace QuanLyBenhVien.Controllers
             if (user.VaiTro == "Admin") return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
             if (user.VaiTro == "Doctor") return RedirectToAction("Index", "Dashboard", new { area = "Doctor" });
             return RedirectToAction("Index", "Dashboard", new { area = "Patient" });
+        }
+
+        // Không log được vào chính tài khoản đích khi identifier không khớp
+        // ai (user null) - vẫn ghi 1 dòng NguoiDungId=null để Admin có góc
+        // nhìn toàn hệ thống; ChiTiet không lặp lại mật khẩu đã nhập.
+        private async Task LogFailedLoginAsync(User? user, string identifier)
+        {
+            _context.AuditLogs.Add(new AuditLog
+            {
+                NguoiDungId = user?.Id,
+                HanhDong = "Đăng nhập thất bại",
+                ChiTiet = $"Thử đăng nhập với định danh '{identifier}' không thành công.",
+                IpAddress = ClientIp()
+            });
+            await _context.SaveChangesAsync();
         }
 
         /// <summary>
@@ -294,21 +400,11 @@ namespace QuanLyBenhVien.Controllers
             HttpContext.Session.Remove("Reg_CCCD");
             HttpContext.Session.Remove("Reg_OTP");
 
-            // Auto Sign In after successful registration
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.HoTen),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.VaiTro),
-                new Claim(ClaimTypes.MobilePhone, user.Sdt),
-                new Claim("SecurityStamp", user.SecurityStamp)
-            };
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-
-            TempData["SuccessMessage"] = "Kích hoạt tài khoản và đăng nhập thành công!";
-            return RedirectToAction("Index", "Dashboard", new { area = "Patient" });
+            // Auto Sign In after successful registration - đăng nhập THẬT sự
+            // đầu tiên của tài khoản này, dùng chung CompleteSignInAsync để
+            // có luôn dòng PhienDangNhap + claim "sid" như mọi lượt đăng nhập
+            // khác (không lặp lại logic build claims/audit log ở đây).
+            return await CompleteSignInAsync(user, false, null);
         }
 
         // GET: /Auth/ForgotPassword (bước 1)
@@ -703,7 +799,10 @@ namespace QuanLyBenhVien.Controllers
 
             // Ký lại phiên với claim SecurityStamp mới ngay lập tức - nếu không,
             // chính phiên vừa chứng minh mật khẩu tạm sẽ bị OnValidatePrincipal
-            // từ chối ở request kế tiếp (vì cookie còn mang stamp cũ).
+            // từ chối ở request kế tiếp (vì cookie còn mang stamp cũ). Giữ
+            // nguyên claim "sid" cũ - đây là TIẾP DIỄN cùng phiên đăng nhập
+            // (không phải đăng nhập mới), không tạo dòng PhienDangNhap mới.
+            var oldSid = User.FindFirst("sid")?.Value;
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -713,6 +812,7 @@ namespace QuanLyBenhVien.Controllers
                 new Claim(ClaimTypes.MobilePhone, user.Sdt),
                 new Claim("SecurityStamp", user.SecurityStamp)
             };
+            if (!string.IsNullOrEmpty(oldSid)) claims.Add(new Claim("sid", oldSid));
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
 
@@ -768,11 +868,7 @@ namespace QuanLyBenhVien.Controllers
 
         private string ClientIp() => HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
 
-        private static bool IsPasswordPolicyCompliant(string? password)
-        {
-            if (string.IsNullOrEmpty(password) || password.Length < 8) return false;
-            return password.Any(char.IsUpper) && password.Any(char.IsLower) && password.Any(char.IsDigit);
-        }
+        private static bool IsPasswordPolicyCompliant(string? password) => PasswordPolicyHelper.IsCompliant(password);
 
         private static string GenerateOtp() => RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
 
@@ -816,6 +912,18 @@ namespace QuanLyBenhVien.Controllers
                     ChiTiet = $"{User.Identity?.Name} đăng xuất khỏi hệ thống.",
                     IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1"
                 });
+
+                // Đóng đúng dòng PhienDangNhap của phiên này - nếu không, phiên
+                // đã đăng xuất chủ động vẫn hiện "Hoạt động" trong danh sách
+                // Phiên đăng nhập cho tới khi tự hết hạn.
+                var sid = User.FindFirst("sid")?.Value;
+                if (!string.IsNullOrEmpty(sid))
+                {
+                    var session = await _context.LoginSessions
+                        .FirstOrDefaultAsync(s => s.SessionToken == sid && s.NguoiDungId == userId);
+                    if (session != null) session.TrangThai = "DaDangXuat";
+                }
+
                 await _context.SaveChangesAsync();
             }
 

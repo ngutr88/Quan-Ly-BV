@@ -26,7 +26,7 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
         public IActionResult Index() => RedirectToAction(nameof(List));
 
         // GET: /Doctor/Prescriptions/List
-        public async Task<IActionResult> List(DateTime? from, DateTime? to, string? patientQuery, string? status, int page = 1)
+        public async Task<IActionResult> List(DateTime? from, DateTime? to, string? patientQuery, string? status, int page = 1, int? pageSize = null)
         {
             var doctorId = await GetCurrentDoctorIdAsync();
             if (!doctorId.HasValue) return Forbid();
@@ -56,7 +56,14 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
                     TrangThai = p.TrangThai
                 });
 
-            var paged = await projected.ToPagedListAsync(page, PagedList<PrescriptionListItemViewModel>.DefaultPageSize);
+            // pageSize không truyền qua query string -> dùng tuỳ chọn "Số dòng
+            // mỗi trang" lưu theo tài khoản (Doctor/Profile/SaveUiPreferences),
+            // null (chưa từng đặt) mới rơi về mặc định hệ thống.
+            var effectivePageSize = pageSize ?? await _context.Users
+                .Where(u => u.Id == GetCurrentUserId())
+                .Select(u => u.SoDongMoiTrangMacDinh)
+                .FirstOrDefaultAsync() ?? PagedList<PrescriptionListItemViewModel>.DefaultPageSize;
+            var paged = await projected.ToPagedListAsync(page, effectivePageSize);
 
             ViewBag.From = from?.ToString("yyyy-MM-dd");
             ViewBag.To = to?.ToString("yyyy-MM-dd");

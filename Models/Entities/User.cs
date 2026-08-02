@@ -63,6 +63,27 @@ namespace QuanLyBenhVien.Models
         // DuocDuyetPhieuNhapKho ở trên, không mở rộng danh sách VaiTro.
         public bool DuocXuLyCLS { get; set; } = false;
 
+        // Cho phép tài khoản Admin này duyệt/từ chối Yêu cầu thay đổi hồ sơ
+        // hành nghề của bác sĩ (vai trò nghiệp vụ "nhân sự") - cùng cách làm
+        // như 2 cờ phía trên. Module RBAC "Admin.ProfileApprovals" chỉ quyết
+        // định có VÀO ĐƯỢC trang duyệt không (theo cả vai trò Admin); cờ này
+        // mới quyết định TÀI KHOẢN Admin cụ thể nào thấy nút Duyệt/Từ chối.
+        public bool DuocDuyetHoSoHanhNghe { get; set; } = false;
+
+        // Xác thực 2 lớp (TOTP) - null/false nghĩa là chưa bật. TotpBiMat lưu
+        // dạng Base32 thô (không mã hoá riêng) - cùng mức bảo vệ như các
+        // trường nhạy cảm khác trong hệ thống (SoBHYT, SoCCCD...), không phải
+        // hạ tầng mã hoá mới.
+        public string? TotpBiMat { get; set; }
+
+        public bool TotpBatDau { get; set; } = false;
+
+        // Tuỳ chọn giao diện đồng bộ theo tài khoản (khác localStorage vốn
+        // chỉ theo trình duyệt) - null nghĩa là dùng mặc định hệ thống.
+        public bool SidebarThuGonMacDinh { get; set; } = false;
+
+        public int? SoDongMoiTrangMacDinh { get; set; }
+
         // Đổi mỗi khi mật khẩu tài khoản này thay đổi (tự phục vụ hoặc do
         // Admin) - phiên đăng nhập cũ mang claim SecurityStamp cũ sẽ bị
         // SecurityStampCookieValidator từ chối ở lần request kế tiếp, tức
@@ -120,6 +141,33 @@ namespace QuanLyBenhVien.Models
         [Required]
         [StringLength(50)]
         public string ChucVu { get; set; } = "Bác sĩ"; // Trưởng khoa, Phó trưởng khoa, Bác sĩ
+
+        // Nhóm trường "hồ sơ hành nghề" - sửa qua luồng đề xuất/Admin duyệt
+        // (Areas/Doctor/Controllers/ProfileController.ProposeProfileChange),
+        // không sửa trực tiếp như các trường phía trên.
+        public DateTime? NgaySinh { get; set; }
+
+        [StringLength(50)]
+        public string? SoCCHN { get; set; }
+
+        public DateTime? NgayCapCCHN { get; set; }
+
+        [StringLength(200)]
+        public string? NoiCapCCHN { get; set; }
+
+        [StringLength(500)]
+        public string? PhamViHanhNghe { get; set; }
+
+        // Nhóm trường bác sĩ tự sửa - lưu ngay, không qua duyệt (rủi ro pháp
+        // lý thấp, hiển thị công khai trên cổng bệnh nhân). Lưu văn bản thuần,
+        // KHÔNG phải HTML thật - repo chưa có thư viện rich-text nào, và nhận
+        // HTML tự do từ người dùng sẽ mở lỗ hổng lưu trữ XSS khi hiển thị lại
+        // cho bệnh nhân; hiển thị chỉ mã hoá HTML + đổi xuống dòng thành <br>.
+        [StringLength(500)]
+        public string? GioiThieuNgan { get; set; }
+
+        [StringLength(2000)]
+        public string? QuaTrinhDaoTao { get; set; }
 
         // Soft-delete: gỡ một bác sĩ khỏi hoạt động không được xóa cứng, để giữ
         // lại lịch sử LichKham/DanhGia đã gắn với BacSiId này.

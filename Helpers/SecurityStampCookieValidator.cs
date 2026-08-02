@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -34,6 +35,34 @@ namespace QuanLyBenhVien.Helpers
             if (currentStamp == null || stampClaim == null || currentStamp != stampClaim.Value)
             {
                 context.RejectPrincipal();
+                return;
+            }
+
+            // Lớp thứ 2, song song SecurityStamp toàn cục ở trên: claim "sid"
+            // trỏ tới ĐÚNG 1 dòng PhienDangNhap, cho phép thu hồi 1 phiên
+            // riêng lẻ (Đăng xuất 1 thiết bị) mà không phải bump SecurityStamp
+            // và đá hết mọi phiên khác. Không phải mọi cookie đều có "sid"
+            // (phiên tạo trước Sprint 3) - coi như hợp lệ nếu thiếu claim này.
+            var sidClaim = context.Principal?.FindFirst("sid");
+            if (sidClaim != null)
+            {
+                var session = await db.LoginSessions
+                    .FirstOrDefaultAsync(s => s.SessionToken == sidClaim.Value && s.NguoiDungId == userId);
+
+                if (session == null || session.TrangThai != "HoatDong")
+                {
+                    context.RejectPrincipal();
+                    return;
+                }
+
+                // Throttle ghi DB - chỉ cập nhật "hoạt động gần nhất" khi đã
+                // cũ quá 5 phút, tránh ghi mỗi request (validator này chạy
+                // trên MỌI request đã đăng nhập).
+                if ((DateTime.Now - session.ThoiGianHoatDongCuoi).TotalMinutes >= 5)
+                {
+                    session.ThoiGianHoatDongCuoi = DateTime.Now;
+                    await db.SaveChangesAsync();
+                }
             }
         }
     }

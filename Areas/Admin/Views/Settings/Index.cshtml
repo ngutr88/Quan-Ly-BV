@@ -147,6 +147,21 @@
                     <div class="relative w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                 </label>
             </div>
+
+            <div class="md:col-span-2 flex items-center justify-between p-3 bg-surface-container-low/40 border border-outline-variant/60 rounded-lg">
+                <div>
+                    <span class="font-label-md font-bold text-on-surface flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[20px] text-secondary">verified_user</span>
+                        Bắt buộc bác sĩ bật xác thực 2 lớp (2FA)
+                    </span>
+                    <p class="text-caption text-on-surface-variant">Bác sĩ chưa bật 2FA sẽ bị chuyển hướng về trang thiết lập ở mọi trang khác cho tới khi hoàn tất.</p>
+                </div>
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="BatBuoc2FABacSi" value="true" class="sr-only peer" @(Model.BatBuoc2FABacSi ? "checked" : "") />
+                    <input type="hidden" name="BatBuoc2FABacSi" value="false" />
+                    <div class="relative w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
+            </div>
         </div>
     </div>
 

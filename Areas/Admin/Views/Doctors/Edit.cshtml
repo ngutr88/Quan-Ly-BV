@@ -71,13 +71,12 @@
 
             <div class="space-y-unit-xs">
                 <label class="block text-caption font-semibold text-on-surface-variant" for="hocVi">Học hàm / Học vị <span class="text-error">*</span></label>
-                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus" 
+                <select class="w-full px-4 py-2.5 bg-surface border border-outline-variant rounded-lg font-body-md input-focus"
                         id="hocVi" name="hocVi" required>
-                    <option value="BS" selected="@(Model.HocVi == "BS")">BS</option>
-                    <option value="ThS.BS" selected="@(Model.HocVi == "ThS.BS")">ThS.BS (Thạc sĩ Bác sĩ)</option>
-                    <option value="TS.BS" selected="@(Model.HocVi == "TS.BS")">TS.BS (Tiến sĩ Bác sĩ)</option>
-                    <option value="PGS.TS.BS" selected="@(Model.HocVi == "PGS.TS.BS")">PGS.TS.BS</option>
-                    <option value="GS.TS.BS" selected="@(Model.HocVi == "GS.TS.BS")">GS.TS.BS</option>
+                    @foreach (var option in QuanLyBenhVien.Helpers.DoctorTitleCatalog.Options)
+                    {
+                        <option value="@option.Value" selected="@(Model.HocVi == option.Value)">@option.Label</option>
+                    }
                 </select>
             </div>
 

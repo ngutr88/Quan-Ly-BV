@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using QuanLyBenhVien.Data;
 
@@ -10,9 +11,11 @@ using QuanLyBenhVien.Data;
 namespace QuanLyBenhVien.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260802040411_ProfileApprovalWorkflow")]
+    partial class ProfileApprovalWorkflow
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
@@ -1271,47 +1274,6 @@ namespace QuanLyBenhVien.Migrations
                         });
                 });
 
-            modelBuilder.Entity("QuanLyBenhVien.Models.LoginSession", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("NguoiDungId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("SessionToken")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ThietBi")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ThoiGianDangNhap")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ThoiGianHoatDongCuoi")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TrangThai")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NguoiDungId");
-
-                    b.ToTable("PhienDangNhap");
-                });
-
             modelBuilder.Entity("QuanLyBenhVien.Models.Medicine", b =>
                 {
                     b.Property<int>("Id")
@@ -2024,36 +1986,6 @@ namespace QuanLyBenhVien.Migrations
                     b.ToTable("NhaCungCap");
                 });
 
-            modelBuilder.Entity("QuanLyBenhVien.Models.TotpBackupCode", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("DaDung")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("MaHash")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("NgayDung")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("NgayTao")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("NguoiDungId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NguoiDungId");
-
-                    b.ToTable("MaDuPhongTOTP");
-                });
-
             modelBuilder.Entity("QuanLyBenhVien.Models.User", b =>
                 {
                     b.Property<int>("Id")
@@ -2113,18 +2045,6 @@ namespace QuanLyBenhVien.Migrations
                     b.Property<string>("SecurityStamp")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("SidebarThuGonMacDinh")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("SoDongMoiTrangMacDinh")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("TotpBatDau")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TotpBiMat")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("TrangThai")
@@ -2514,17 +2434,6 @@ namespace QuanLyBenhVien.Migrations
                     b.Navigation("KetQua");
                 });
 
-            modelBuilder.Entity("QuanLyBenhVien.Models.LoginSession", b =>
-                {
-                    b.HasOne("QuanLyBenhVien.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("NguoiDungId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("QuanLyBenhVien.Models.MedicineBatch", b =>
                 {
                     b.HasOne("QuanLyBenhVien.Models.Supplier", "NhaCungCap")
@@ -2721,17 +2630,6 @@ namespace QuanLyBenhVien.Migrations
                         .IsRequired();
 
                     b.Navigation("Department");
-                });
-
-            modelBuilder.Entity("QuanLyBenhVien.Models.TotpBackupCode", b =>
-                {
-                    b.HasOne("QuanLyBenhVien.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("NguoiDungId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.User", b =>

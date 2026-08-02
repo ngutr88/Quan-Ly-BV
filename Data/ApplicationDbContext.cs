@@ -37,6 +37,9 @@ namespace QuanLyBenhVien.Data
         public DbSet<GoodsReceipt> GoodsReceipts { get; set; } = null!;
         public DbSet<GoodsReceiptDetail> GoodsReceiptDetails { get; set; } = null!;
         public DbSet<PasswordResetRequest> PasswordResetRequests { get; set; } = null!;
+        public DbSet<ProfileChangeRequest> ProfileChangeRequests { get; set; } = null!;
+        public DbSet<LoginSession> LoginSessions { get; set; } = null!;
+        public DbSet<TotpBackupCode> TotpBackupCodes { get; set; } = null!;
         public DbSet<DrugInteraction> DrugInteractions { get; set; } = null!;
         public DbSet<DrugAllergyGroup> DrugAllergyGroups { get; set; } = null!;
         public DbSet<DrugAllergyGroupMember> DrugAllergyGroupMembers { get; set; } = null!;
