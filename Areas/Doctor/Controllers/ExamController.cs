@@ -495,13 +495,14 @@ namespace QuanLyBenhVien.Areas.Doctor.Controllers
             appointment.TrangThai = "HoanThanh";
             _context.Entry(appointment).State = EntityState.Modified;
 
-            // 4. Auto-generate Invoice (HoaDon)
+            // 4. Auto-generate Invoice (HoaDon) - PhuongThuc để trống (null): hóa
+            // đơn mới CHƯA được thanh toán nên chưa có phương thức nào được
+            // chọn, không giả định "Tiền mặt".
             var invoice = new Invoice
             {
                 PhieuKhamId = exam.Id,
                 TongTien = 150000 + drugCost, // Consult fee (150K) + drug charges
                 TrangThaiThanhToan = "ChuaThanhToan",
-                PhuongThuc = "TienMat",
                 NgayTao = DateTime.Now
             };
             _context.Invoices.Add(invoice);

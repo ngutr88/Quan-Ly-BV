@@ -1,20 +1,52 @@
 @model IEnumerable<QuanLyBenhVien.Models.Invoice>
 @using System.Text.Json
+@using System.Globalization
+@using System.Text.RegularExpressions
 
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
     ViewData["Title"] = "Hóa đơn & Thanh toán";
 
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
     var allInvoices = Model.ToList();
-    
-    // Financial metrics
+
+    // "Cần thanh toán" (Yêu cầu 1) = 3 trạng thái này - hóa đơn Thất bại VẪN
+    // đang nợ, không được bỏ sót khỏi thẻ đếm/khối ghim.
     var unpaidStatuses = new[] { "ChuaThanhToan", "QuaHan", "ThanhToanThatBai" };
-    var unpaidInvoices = allInvoices.Where(i => unpaidStatuses.Contains(i.TrangThaiThanhToan)).ToList();
+    var unpaidInvoices = allInvoices.Where(i => unpaidStatuses.Contains(i.TrangThaiThanhToan))
+        .OrderBy(i => i.TrangThaiThanhToan == "QuaHan" ? 0 : i.TrangThaiThanhToan == "ThanhToanThatBai" ? 1 : 2)
+        .ThenByDescending(i => i.NgayTao)
+        .ToList();
     var totalDebt = unpaidInvoices.Sum(i => i.TongTien);
     var totalPaid = allInvoices.Where(i => i.TrangThaiThanhToan == "DaThanhToan").Sum(i => i.TongTien);
     var unpaidCount = unpaidInvoices.Count;
     var overdueCount = allInvoices.Count(i => i.TrangThaiThanhToan == "QuaHan");
     var hasOverdue = overdueCount > 0;
+
+    // "Đặt lịch hộ người thân" hiện chỉ là tiền tố văn bản trong LyDoKham
+    // (BookController.ConfirmBooking) - không đổi schema (đã thống nhất),
+    // chỉ nhận diện lại để hiện "Đang thanh toán cho: [tên]".
+    string DependentLabel(QuanLyBenhVien.Models.Invoice invoice)
+    {
+        var reason = invoice.ExaminationRecord?.Appointment?.LyDoKham;
+        if (string.IsNullOrEmpty(reason)) return null;
+        var match = Regex.Match(reason, @"^\[Đặt lịch hộ: (.+?) \(");
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    // Nhãn tiếng Việt cho phương thức thanh toán (khớp mapper phía Admin -
+    // InvoicesController.MethodLabel) - "TienMat" không được lộ ra UI.
+    string MethodLabel(string method) => method switch
+    {
+        "TienMat" => "Tiền mặt",
+        "ChuyenKhoan" => "Chuyển khoản",
+        "Online (VNPay)" => "Online (VNPay)",
+        "Online (MoMo)" => "Online (MoMo)",
+        "Online (ZaloPay)" => "Online (ZaloPay)",
+        "Online" => "Thanh toán online",
+        null => "Chưa chọn phương thức",
+        _ => method
+    };
 }
 
 <!-- html2pdf dependency for client-side PDF download -->
@@ -50,12 +82,21 @@
                 </div>
                 <div>
                     <p class="text-caption font-bold text-outline uppercase tracking-wider">Tổng nợ hiện tại</p>
-                    <h3 class="text-headline-md font-black text-primary mt-2">@totalDebt.ToString("N0") <span class="text-body-md font-normal text-on-surface-variant">đ</span></h3>
+                    <h3 class="text-headline-md font-black text-primary mt-2 whitespace-nowrap">@totalDebt.ToString("N0", vi) <span class="text-body-md font-normal text-on-surface-variant">đ</span></h3>
                 </div>
-                <div class="mt-4 flex items-center gap-1.5 text-caption font-medium @(totalDebt > 0 ? "text-error" : "text-secondary")">
-                    <span class="material-symbols-outlined text-[16px]">@(totalDebt > 0 ? "error" : "check_circle")</span>
-                    <span>@(totalDebt > 0 ? "Yêu cầu thanh toán" : "Đã thanh toán đủ")</span>
-                </div>
+                @if (totalDebt > 0)
+                {
+                    <a href="#unpaid-section" class="mt-4 bg-primary text-white text-center py-2.5 rounded-xl font-bold text-caption flex items-center justify-center gap-1.5 hover:bg-primary-container transition-all active:scale-[0.98]" style="min-height:44px">
+                        <span class="material-symbols-outlined text-[18px]">bolt</span> Thanh toán ngay
+                    </a>
+                }
+                else
+                {
+                    <div class="mt-4 flex items-center gap-1.5 text-caption font-medium text-secondary">
+                        <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                        <span>Đã thanh toán đủ</span>
+                    </div>
+                }
             </div>
 
             <!-- 2. Total Paid -->
@@ -65,11 +106,11 @@
                 </div>
                 <div>
                     <p class="text-caption font-bold text-outline uppercase tracking-wider">Tổng đã thanh toán</p>
-                    <h3 class="text-headline-md font-black text-secondary mt-2">@totalPaid.ToString("N0") <span class="text-body-md font-normal text-on-surface-variant">đ</span></h3>
+                    <h3 class="text-headline-md font-black text-secondary mt-2 whitespace-nowrap">@totalPaid.ToString("N0", vi) <span class="text-body-md font-normal text-on-surface-variant">đ</span></h3>
                 </div>
                 <div class="mt-4 flex items-center gap-1.5 text-secondary text-caption font-medium">
                     <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                    <span>Hoàn thành thanh toán</span>
+                    <span>Tổng cộng đến nay</span>
                 </div>
             </div>
 
@@ -104,6 +145,80 @@
             </div>
         </div>
     </div>
+
+    @if (unpaidInvoices.Count > 0)
+    {
+        <!-- Khối "Cần thanh toán" - ghim trên cùng, tách khỏi Lịch sử hóa đơn
+             (Yêu cầu 1). Gồm cả hóa đơn Thất bại - vẫn đang nợ. -->
+        <div id="unpaid-section" class="bg-white border-2 border-error/30 rounded-2xl overflow-hidden shadow-sm scroll-mt-20">
+            <div class="p-unit-md bg-error-container/15 border-b border-error/20 flex items-center justify-between flex-wrap gap-2">
+                <h3 class="font-title-lg font-bold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-error">priority_high</span>
+                    Cần thanh toán (@unpaidInvoices.Count)
+                </h3>
+                <button type="button" onclick="selectAllUnpaid()" class="bg-primary text-white text-caption font-bold px-4 py-2.5 rounded-xl hover:bg-primary-container transition-all active:scale-[0.98] flex items-center gap-1.5" style="min-height:44px">
+                    <span class="material-symbols-outlined text-[18px]">payments</span>
+                    Thanh toán tất cả — @totalDebt.ToString("N0", vi) đ
+                </button>
+            </div>
+
+            <form id="unpaid-payment-form" method="POST" action="/Patient/Payment/Confirm">
+                @Html.AntiForgeryToken()
+                <div class="divide-y divide-outline-variant/40">
+                    @foreach (var invoice in unpaidInvoices)
+                    {
+                        var dependentName = DependentLabel(invoice);
+                        var statusLabel = invoice.TrangThaiThanhToan switch
+                        {
+                            "QuaHan" => ("Quá hạn", "bg-error text-white"),
+                            "ThanhToanThatBai" => ("Thất bại - thử lại", "bg-error/10 text-error border border-error/30"),
+                            _ => ("Chưa thanh toán", "bg-error-container/20 text-error border border-error/20")
+                        };
+                        <div class="flex items-center gap-3 px-unit-md py-3.5">
+                            <input type="checkbox" name="invoiceIds" value="@invoice.Id" data-amount="@invoice.TongTien"
+                                   class="unpaid-checkbox accent-primary shrink-0" style="width:22px;height:22px"
+                                   onchange="updateSelectedBar()" />
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-mono font-bold text-primary">#HD-@invoice.Id.ToString("D5")</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold @statusLabel.Item2">@statusLabel.Item1</span>
+                                </div>
+                                <p class="text-caption text-on-surface-variant truncate">
+                                    @(invoice.ExaminationRecord?.Appointment?.Doctor != null ? FormatDoctorName(invoice.ExaminationRecord.Appointment.Doctor) : "N/A")
+                                    · @invoice.NgayTao.ToString("dd/MM/yyyy", vi)
+                                </p>
+                                @if (dependentName != null)
+                                {
+                                    <p class="text-caption text-tertiary font-semibold truncate">
+                                        <span class="material-symbols-outlined text-[14px] align-middle">group</span>
+                                        Đang thanh toán cho: @dependentName
+                                    </p>
+                                }
+                            </div>
+                            <div class="flex flex-col items-end gap-1.5 shrink-0">
+                                <span class="font-black text-title-md text-on-surface whitespace-nowrap">@invoice.TongTien.ToString("N0", vi) đ</span>
+                                <button type="button" onclick="payOne(@invoice.Id)" class="text-primary font-bold text-caption hover:underline px-2 py-1.5" style="min-height:44px">
+                                    Thanh toán ngay
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </form>
+        </div>
+
+        <!-- Thanh dính dưới cùng khi có hóa đơn được chọn (mobile-first) -->
+        <div id="selected-bar" class="hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-outline-variant shadow-[0_-4px_16px_rgba(0,0,0,0.08)] p-unit-md flex items-center justify-between gap-3">
+            <div>
+                <p class="text-caption text-on-surface-variant">Đã chọn <strong id="selected-count">0</strong> hóa đơn</p>
+                <p class="font-black text-title-lg text-primary whitespace-nowrap" id="selected-total">0 đ</p>
+            </div>
+            <button type="button" onclick="submitSelected()" class="bg-primary text-white font-bold px-6 py-3.5 rounded-2xl hover:bg-primary-container transition-all active:scale-[0.98] flex items-center gap-1.5" style="min-height:48px">
+                <span class="material-symbols-outlined text-[20px]">lock</span>
+                Thanh toán đã chọn
+            </button>
+        </div>
+    }
 
     <!-- Interactive Filters Bento -->
     <div class="bg-white border border-outline-variant rounded-2xl p-4 shadow-sm flex flex-col gap-4">
@@ -219,11 +334,11 @@
                 <div class="p-unit-md border-b border-outline-variant/60 bg-surface-container-lowest">
                     <h3 class="font-title-lg font-bold text-on-surface flex items-center gap-2">
                         <span class="material-symbols-outlined text-secondary">history</span>
-                        Lịch sử giao dịch trực tuyến
+                        Lịch sử thanh toán
                     </h3>
                 </div>
 
-                <div class="hms-table-scroll w-full min-w-0 max-w-full overflow-auto custom-scrollbar" role="region" aria-label="Lịch sử giao dịch trực tuyến" tabindex="0">
+                <div class="hms-table-scroll w-full min-w-0 max-w-full overflow-auto custom-scrollbar" role="region" aria-label="Lịch sử thanh toán" tabindex="0">
                     <table class="w-full min-w-[700px] text-left border-collapse" id="transactions-table">
                         <thead>
                             <tr class="bg-surface-container-low border-b border-outline-variant">
@@ -326,68 +441,21 @@
                 </div>
             </section>
 
-            <!-- Payment Options Section (For Unpaid/Failed/Overdue Invoices) -->
+            <!-- Payment Section (For Unpaid/Failed/Overdue Invoices) - chọn
+                 phương thức đã chuyển sang bước xác nhận riêng (Confirm.cshtml,
+                 Yêu cầu 2), ở đây chỉ còn 1 nút dẫn sang đó cho đúng hóa đơn
+                 đang xem. -->
             <section class="bg-white border border-outline-variant rounded-2xl p-5 shadow-sm transition-all" id="payment-section">
                 <h3 class="font-title-lg font-bold text-on-background mb-3 flex items-center gap-1">
                     <span class="material-symbols-outlined text-primary">credit_card</span>
-                    Thanh toán trực tuyến
+                    Thanh toán hóa đơn này
                 </h3>
-                <p class="text-caption text-on-surface-variant mb-4">Vui lòng lựa chọn phương thức thanh toán bảo mật bên dưới:</p>
-                
-                <div class="flex flex-col gap-2.5 mb-6">
-                    <!-- VNPay -->
-                    <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                        <input checked="" class="accent-primary w-4 h-4" name="paymentMethod" type="radio" value="vnpay"/>
-                        <img class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0y0s8Y8k7DVQXcDdFl-uUOeBJnD3Vn9lYucgaViDlj7dgf22d9ODHoaxZ8-4L1hywHZuBLo84Vz5FASVtv8jKO1HveIPsRw_HXtAod6c6lAUKRGvRU58O-xXX2KZp8qPFWegYFnJF-g2Yrab4zsOXjImS59w8ioHalFuqS_JAEUO8QmNxwonTZKBWIa3C7H_sg33u8t7gmXqwRbmiBy6zpRANKLQZKTcl6W6mRqn9e3J5CTEV6lO7BTb3biak3qlLaY9-6n-Si8c"/>
-                        <div class="flex flex-col">
-                            <span class="text-caption font-bold">Cổng thanh toán VNPay</span>
-                            <span class="text-[10px] text-outline">Thanh toán qua ví VNPay hoặc Mobile Banking</span>
-                        </div>
-                    </label>
+                <p class="text-caption text-on-surface-variant mb-4" id="payment-section-note">Bạn sẽ được chuyển sang bước xác nhận số tiền và chọn phương thức thanh toán.</p>
 
-                    <!-- MoMo -->
-                    <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                        <input class="accent-primary w-4 h-4" name="paymentMethod" type="radio" value="momo"/>
-                        <img class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvKWGBnJMWWOFYp3nk2-UJpu5CJejqhDIOenoH6gKeoiT3kEy59xtSIeUN5djbUBzUkLpqhDoJnajayAy9SiQ3qFWJZpVMMXBwO2IgaJC8DsdyWZ89np7dRWPIydFrZYl4bc2Vru6GIqNJzzTLKpn7Qme6r03kpDyN3Hy7BlZ9BAvxbZJ84hB5FEKCCIpsU_JW7wo9XVLg77E6q4WDmNLZjgN-YOPirmabVGsc9tj8YrW8X592ZIU1Z2RBhZYf2GnijDkca13OnU4"/>
-                        <div class="flex flex-col">
-                            <span class="text-caption font-bold">Ví điện tử MoMo</span>
-                            <span class="text-[10px] text-outline">Thanh toán tức thời qua ứng dụng ví MoMo</span>
-                        </div>
-                    </label>
-
-                    <!-- ZaloPay -->
-                    <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                        <input class="accent-primary w-4 h-4" name="paymentMethod" type="radio" value="zalopay"/>
-                        <span class="w-8 h-8 bg-[#002f87] text-white flex items-center justify-center font-black rounded-lg text-[9px] uppercase">Zalo</span>
-                        <div class="flex flex-col">
-                            <span class="text-caption font-bold">Ví điện tử ZaloPay</span>
-                            <span class="text-[10px] text-outline">Quét mã QR thanh toán nhanh qua ZaloPay</span>
-                        </div>
-                    </label>
-
-                    <!-- Bank Transfer (ChuyenKhoan) -->
-                    <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                        <input class="accent-primary w-4 h-4" name="paymentMethod" type="radio" value="chuyenkhoan"/>
-                        <span class="w-8 h-8 bg-surface-container flex items-center justify-center rounded-lg text-primary"><span class="material-symbols-outlined text-[20px]">account_balance</span></span>
-                        <div class="flex flex-col">
-                            <span class="text-caption font-bold">Chuyển khoản Ngân hàng</span>
-                            <span class="text-[10px] text-outline">Mô phỏng chuyển khoản Napas247</span>
-                        </div>
-                    </label>
-
-                    <!-- Over the Counter (Tại quầy) -->
-                    <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all group has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                        <input class="accent-primary w-4 h-4" name="paymentMethod" type="radio" value="tai_quay"/>
-                        <span class="w-8 h-8 bg-surface-container flex items-center justify-center rounded-lg text-secondary"><span class="material-symbols-outlined text-[20px]">store</span></span>
-                        <div class="flex flex-col">
-                            <span class="text-caption font-bold">Thanh toán tại quầy</span>
-                            <span class="text-[10px] text-outline">Yêu cầu thanh toán tiền mặt/quẹt thẻ tại bệnh viện</span>
-                        </div>
-                    </label>
-                </div>
-                
-                <form id="paymentForm" action="" method="GET">
-                    <button id="payButton" type="submit" class="w-full bg-primary text-white py-3.5 rounded-2xl font-bold text-caption flex items-center justify-center gap-2 hover:bg-primary-container shadow-md shadow-primary/10 transition-all active:scale-[0.98]">
+                <form id="paymentForm" method="POST" action="/Patient/Payment/Confirm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="invoiceIds" id="paymentFormInvoiceId" value="" />
+                    <button id="payButton" type="submit" class="w-full bg-primary text-white py-4 rounded-2xl font-bold text-body-md flex items-center justify-center gap-2 hover:bg-primary-container shadow-md shadow-primary/10 transition-all active:scale-[0.98]" style="min-height:48px">
                         <span class="material-symbols-outlined text-[20px]">lock</span>
                         <span id="pay-button-text">Tiến hành thanh toán</span>
                     </button>
@@ -488,9 +556,9 @@
             id = i.Id,
             code = "HD-" + i.Id.ToString("D5"),
             total = i.TongTien,
-            formattedTotal = i.TongTien.ToString("N0") + " đ",
+            formattedTotal = i.TongTien.ToString("N0", vi) + " đ",
             status = i.TrangThaiThanhToan,
-            method = i.PhuongThuc == "ChuaThanhToan" ? "Chưa thanh toán" : i.PhuongThuc,
+            method = MethodLabel(i.PhuongThuc),
             dateCreated = i.NgayTao.ToString("yyyy-MM-ddTHH:mm:ss"),
             dateCreatedFormatted = i.NgayTao.ToString("dd/MM/yyyy HH:mm"),
             datePaidFormatted = i.NgayThanhToan.HasValue ? i.NgayThanhToan.Value.ToString("dd/MM/yyyy HH:mm") : "N/A",
@@ -501,7 +569,7 @@
             appointmentCode = "LK-" + (i.ExaminationRecord?.LichKhamId.ToString("D5") ?? "00000"),
             details = i.InvoiceDetails.Select(d => new {
                 name = d.LoaiPhi,
-                amount = d.SoTien.ToString("N0") + " đ"
+                amount = d.SoTien.ToString("N0", vi) + " đ"
             }).ToList()
         })));
 
@@ -609,7 +677,7 @@
                         <td class="px-6 py-4.5 font-mono text-body-md text-primary font-bold">${inv.code}</td>
                         <td class="px-6 py-4.5 text-caption text-on-surface-variant">${inv.dateCreatedFormatted}</td>
                         <td class="px-6 py-4.5 text-caption font-semibold text-on-surface">${inv.doctorName} <span class="text-[10px] font-normal text-outline block">${inv.departmentName}</span></td>
-                        <td class="px-6 py-4.5 text-body-md font-bold text-on-surface">${inv.formattedTotal}</td>
+                        <td class="px-6 py-4.5 text-body-md font-bold text-on-surface whitespace-nowrap">${inv.formattedTotal}</td>
                         <td class="px-6 py-4.5">${statusBadge}</td>
                     `;
                     invoiceTableBody.appendChild(tr);
@@ -646,7 +714,7 @@
                         <td class="px-6 py-4 font-mono text-outline">${inv.datePaidFormatted !== "N/A" ? inv.datePaidFormatted : inv.dateCreatedFormatted}</td>
                         <td class="px-6 py-4 font-mono text-on-surface font-semibold">${inv.transactionId}</td>
                         <td class="px-6 py-4 text-on-surface-variant font-medium">${inv.method}</td>
-                        <td class="px-6 py-4 font-bold text-on-surface">${inv.formattedTotal}</td>
+                        <td class="px-6 py-4 font-bold text-on-surface whitespace-nowrap">${inv.formattedTotal}</td>
                         <td class="px-6 py-4">${statusBadge}</td>
                     `;
                     transactionTableBody.appendChild(tr);
@@ -687,13 +755,13 @@
             const inv = invoicesData.find(i => i.id === id);
             if (!inv) return;
 
-            // Update watermark
+            // Update watermark (tiếng Việt - khớp bộ chữ đã dùng ở populatePrintArea)
             const watermark = document.getElementById("status-watermark");
-            watermark.innerText = inv.status === "DaThanhToan" ? "PAID" : 
-                                  inv.status === "ChuaThanhToan" ? "UNPAID" : 
-                                  inv.status === "QuaHan" ? "OVERDUE" : 
-                                  inv.status === "ThanhToanThatBai" ? "FAILED" : 
-                                  inv.status === "DangXuLy" ? "PENDING" : "CANCELLED";
+            watermark.innerText = inv.status === "DaThanhToan" ? "ĐÃ THANH TOÁN" :
+                                  inv.status === "ChuaThanhToan" ? "CHƯA THANH TOÁN" :
+                                  inv.status === "QuaHan" ? "QUÁ HẠN" :
+                                  inv.status === "ThanhToanThatBai" ? "THẤT BẠI" :
+                                  inv.status === "DangXuLy" ? "ĐANG XỬ LÝ" : "ĐÃ HỦY";
             watermark.className = `absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-black text-[52px] uppercase select-none opacity-[0.06] rotate-12 z-0 pointer-events-none ${
                 inv.status === "DaThanhToan" ? "text-secondary" : 
                 inv.status === "ChuaThanhToan" || inv.status === "QuaHan" || inv.status === "ThanhToanThatBai" ? "text-error" : 
@@ -724,15 +792,26 @@
                 listContainer.appendChild(div);
             });
 
-            // Update Payments Forms Section
+            // Update Payments Forms Section - form POST cố định tới /Patient/Payment/Confirm,
+            // chỉ cần cập nhật hidden invoiceIds đúng hóa đơn đang xem.
             const paymentPanel = document.getElementById("payment-section");
-            const form = document.getElementById("paymentForm");
             const canPay = inv.status === "ChuaThanhToan" || inv.status === "QuaHan" || inv.status === "ThanhToanThatBai";
+            const isPending = inv.status === "DangXuLy";
 
             if (canPay) {
                 paymentPanel.style.display = "block";
-                document.getElementById("pay-button-text").innerText = inv.status === "ThanhToanThatBai" ? "Thanh toán lại" : "Tiến hành thanh toán";
-                form.action = `/Patient/Payment/Simulate/${inv.id}`;
+                document.getElementById("payButton").disabled = false;
+                document.getElementById("payButton").classList.remove("opacity-50", "cursor-not-allowed");
+                document.getElementById("pay-button-text").innerText = inv.status === "ThanhToanThatBai" ? "Thử thanh toán lại" : "Tiến hành thanh toán";
+                document.getElementById("payment-section-note").innerText = "Bạn sẽ được chuyển sang bước xác nhận số tiền và chọn phương thức thanh toán.";
+                document.getElementById("paymentFormInvoiceId").value = inv.id;
+            } else if (isPending) {
+                // Vô hiệu nút khi đang xử lý - chống trả trùng (Yêu cầu 3).
+                paymentPanel.style.display = "block";
+                document.getElementById("payButton").disabled = true;
+                document.getElementById("payButton").classList.add("opacity-50", "cursor-not-allowed");
+                document.getElementById("pay-button-text").innerText = "Đang xử lý...";
+                document.getElementById("payment-section-note").innerText = "Giao dịch đang được xác nhận, vui lòng đợi ít phút - nếu đã bị trừ tiền hệ thống sẽ tự cập nhật.";
             } else {
                 paymentPanel.style.display = "none";
             }
@@ -902,14 +981,43 @@
             filterData();
         }
 
-        // Intercept form submit to append checked radio method
-        document.getElementById("paymentForm").addEventListener("submit", (e) => {
-            const checkedRadio = document.querySelector('input[name="paymentMethod"]:checked');
-            if (checkedRadio) {
-                const method = checkedRadio.value;
-                const form = document.getElementById("paymentForm");
-                form.action = `/Patient/Payment/Simulate/${activeInvoiceId}?paymentMethod=${method}`;
+        // ===== Khối "Cần thanh toán" (Yêu cầu 1-2): chọn nhiều hóa đơn, thanh
+        // toán từng dòng, hoặc thanh toán tất cả. =====
+        function updateSelectedBar() {
+            const checked = Array.from(document.querySelectorAll(".unpaid-checkbox:checked"));
+            const bar = document.getElementById("selected-bar");
+            if (!bar) return;
+
+            if (checked.length === 0) {
+                bar.classList.add("hidden");
+                return;
             }
-        });
+
+            const total = checked.reduce((sum, cb) => sum + parseFloat(cb.dataset.amount), 0);
+            document.getElementById("selected-count").innerText = checked.length;
+            document.getElementById("selected-total").innerText = total.toLocaleString("vi-VN") + " đ";
+            bar.classList.remove("hidden");
+        }
+
+        function submitSelected() {
+            const form = document.getElementById("unpaid-payment-form");
+            if (form) form.requestSubmit();
+        }
+
+        function selectAllUnpaid() {
+            document.querySelectorAll(".unpaid-checkbox").forEach(cb => { cb.checked = true; });
+            const form = document.getElementById("unpaid-payment-form");
+            if (form) form.requestSubmit();
+        }
+
+        // "Thanh toán ngay" trên 1 dòng cụ thể - chỉ tick đúng dòng đó rồi gửi
+        // chung form (không dùng form lồng nhau - HTML không cho phép).
+        function payOne(invoiceId) {
+            document.querySelectorAll(".unpaid-checkbox").forEach(cb => {
+                cb.checked = (parseInt(cb.value, 10) === invoiceId);
+            });
+            const form = document.getElementById("unpaid-payment-form");
+            if (form) form.requestSubmit();
+        }
     </script>
 }

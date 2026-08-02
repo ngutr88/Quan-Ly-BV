@@ -1,8 +1,18 @@
 @model QuanLyBenhVien.Models.Invoice
+@using System.Globalization
 
 @{
     Layout = "~/Views/Shared/_PatientLayout.cshtml";
     ViewData["Title"] = "Chi tiết hóa đơn";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+
+    string MethodLabel(string method) => method switch
+    {
+        "TienMat" => "Tiền mặt",
+        "ChuyenKhoan" => "Chuyển khoản",
+        null => "Chưa chọn phương thức",
+        _ => method
+    };
 }
 
 <div class="mb-unit-lg">
@@ -36,14 +46,14 @@
             {
                 <tr>
                     <td class="py-3 text-on-surface">@detail.LoaiPhi</td>
-                    <td class="py-3 text-right font-semibold text-on-surface">@detail.SoTien.ToString("N0") đ</td>
+                    <td class="py-3 text-right font-semibold text-on-surface whitespace-nowrap">@detail.SoTien.ToString("N0", vi) đ</td>
                 </tr>
             }
         </tbody>
         <tfoot>
             <tr class="border-t-2 border-outline-variant font-bold text-[16px] text-primary">
                 <td class="py-3">Tổng cộng thanh toán</td>
-                <td class="py-3 text-right">@Model.TongTien.ToString("N0") đ</td>
+                <td class="py-3 text-right whitespace-nowrap">@Model.TongTien.ToString("N0", vi) đ</td>
             </tr>
         </tfoot>
     </table>
@@ -51,7 +61,7 @@
 
     <!-- Billing detail -->
     <div class="bg-surface p-unit-md rounded border border-outline-variant/30 text-body-md space-y-unit-xs">
-        <div>Trạng thái: 
+        <div>Trạng thái:
             @if (Model.TrangThaiThanhToan == "DaThanhToan")
             {
                 <span class="font-bold text-secondary">Đã thanh toán</span>
@@ -60,6 +70,18 @@
             {
                 <span class="font-bold text-error animate-pulse">Chưa thanh toán</span>
             }
+            else if (Model.TrangThaiThanhToan == "ThanhToanThatBai")
+            {
+                <span class="font-bold text-error">Thanh toán thất bại - thử lại</span>
+            }
+            else if (Model.TrangThaiThanhToan == "QuaHan")
+            {
+                <span class="font-bold text-error">Quá hạn</span>
+            }
+            else if (Model.TrangThaiThanhToan == "DangXuLy")
+            {
+                <span class="font-bold text-primary">Đang xử lý...</span>
+            }
             else
             {
                 <span class="font-bold text-on-surface-variant">Đã hủy</span>
@@ -67,18 +89,21 @@
         </div>
         @if (Model.TrangThaiThanhToan == "DaThanhToan")
         {
-            <div>Phương thức thanh toán: <strong>@Model.PhuongThuc</strong></div>
+            <div>Phương thức thanh toán: <strong>@MethodLabel(Model.PhuongThuc)</strong></div>
             <div>Thời gian thanh toán: <strong>@Model.NgayThanhToan?.ToString("dd/MM/yyyy HH:mm:ss")</strong></div>
         }
     </div>
 
     <!-- Action Section -->
-    @if (Model.TrangThaiThanhToan == "ChuaThanhToan")
+    @if (Model.TrangThaiThanhToan == "ChuaThanhToan" || Model.TrangThaiThanhToan == "ThanhToanThatBai" || Model.TrangThaiThanhToan == "QuaHan")
     {
-        <div class="flex justify-end pt-unit-md border-t border-outline-variant/60">
-            <a href="/Patient/Payment/Simulate/@Model.Id" class="bg-secondary text-white font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-on-secondary-container transition-all active:scale-[0.98] flex items-center gap-1 shadow-md">
-                <span class="material-symbols-outlined">credit_card</span> Thanh toán trực tuyến
-            </a>
-        </div>
+        <form method="POST" action="/Patient/Payment/Confirm" class="flex justify-end pt-unit-md border-t border-outline-variant/60">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="invoiceIds" value="@Model.Id" />
+            <button type="submit" class="bg-secondary text-white font-body-lg font-semibold px-unit-lg py-3 rounded-lg hover:bg-on-secondary-container transition-all active:scale-[0.98] flex items-center gap-1 shadow-md" style="min-height:44px">
+                <span class="material-symbols-outlined">credit_card</span>
+                @(Model.TrangThaiThanhToan == "ThanhToanThatBai" ? "Thử thanh toán lại" : "Thanh toán trực tuyến")
+            </button>
+        </form>
     }
 </div>

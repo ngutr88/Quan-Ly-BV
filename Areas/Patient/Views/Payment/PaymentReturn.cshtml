@@ -1,0 +1,104 @@
+@model QuanLyBenhVien.Models.PaymentTransaction
+@using System.Globalization
+
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Kết quả thanh toán";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    var isProcessing = Model.TrangThai == "ChoXuLy" || Model.TrangThai == "DangXuLy";
+    var isSuccess = Model.TrangThai == "ThanhCong";
+    var isFailed = Model.TrangThai == "ThatBai" || Model.TrangThai == "DaHuy";
+}
+
+<div class="flex flex-col items-center gap-unit-lg w-full min-w-0 max-w-full animate-fade-in max-w-xl mx-auto">
+    <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm w-full text-center p-unit-xl">
+        @if (isSuccess)
+        {
+            <div class="w-20 h-20 mx-auto rounded-full bg-secondary-container/30 flex items-center justify-center mb-unit-md">
+                <span class="material-symbols-outlined text-[48px] text-secondary">check_circle</span>
+            </div>
+            <h1 class="text-headline-md font-black text-on-surface mb-1">Thanh toán thành công!</h1>
+            <p class="text-body-md text-on-surface-variant mb-unit-lg">Giao dịch của bạn đã hoàn tất, cảm ơn bạn đã thanh toán đúng hạn.</p>
+
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 text-left mb-unit-lg">
+                <div class="flex justify-between text-caption text-on-surface-variant mb-2">
+                    <span>Số hóa đơn đã thanh toán</span>
+                    <span class="font-bold text-on-surface">@Model.Invoices.Count</span>
+                </div>
+                <div class="flex justify-between text-caption text-on-surface-variant mb-2">
+                    <span>Phương thức</span>
+                    <span class="font-bold text-on-surface">@Model.PhuongThuc</span>
+                </div>
+                <div class="flex justify-between text-caption text-on-surface-variant mb-2">
+                    <span>Mã giao dịch</span>
+                    <span class="font-bold text-on-surface font-mono text-[11px]">@Model.MaGiaoDichCong</span>
+                </div>
+                <div class="flex justify-between items-center border-t border-outline-variant/50 pt-2 mt-2">
+                    <span class="font-bold text-caption uppercase">Tổng đã thanh toán</span>
+                    <span class="font-black text-title-lg text-secondary whitespace-nowrap">@Model.SoTien.ToString("N0", vi) đ</span>
+                </div>
+            </div>
+        }
+        else if (isFailed)
+        {
+            <div class="w-20 h-20 mx-auto rounded-full bg-error-container/40 flex items-center justify-center mb-unit-md">
+                <span class="material-symbols-outlined text-[48px] text-error">error</span>
+            </div>
+            <h1 class="text-headline-md font-black text-on-surface mb-1">Thanh toán chưa hoàn tất</h1>
+            <p class="text-body-md text-on-surface-variant mb-unit-lg"><strong>Bạn chưa bị trừ tiền.</strong> Giao dịch không thành công, vui lòng thử lại hoặc chọn phương thức khác.</p>
+
+            <form method="POST" action="/Patient/Payment/Confirm" class="mb-unit-sm">
+                @Html.AntiForgeryToken()
+                @foreach (var invoice in Model.Invoices)
+                {
+                    <input type="hidden" name="invoiceIds" value="@invoice.Id" />
+                }
+                <button type="submit" class="w-full bg-primary text-white py-3.5 rounded-2xl font-bold text-body-md flex items-center justify-center gap-2 hover:bg-primary-container shadow-md transition-all active:scale-[0.98]" style="min-height:48px">
+                    <span class="material-symbols-outlined text-[20px]">refresh</span>
+                    Thử thanh toán lại
+                </button>
+            </form>
+        }
+        else
+        {
+            <div class="w-20 h-20 mx-auto rounded-full bg-primary-fixed flex items-center justify-center mb-unit-md">
+                <span class="material-symbols-outlined text-[48px] text-primary animate-spin">sync</span>
+            </div>
+            <h1 class="text-headline-md font-black text-on-surface mb-1">Đang xác nhận giao dịch...</h1>
+            <p class="text-body-md text-on-surface-variant mb-unit-lg">
+                Giao dịch đang được xác nhận, vui lòng đợi ít phút. <strong>Nếu bạn đã bị trừ tiền, hệ thống sẽ tự động cập nhật</strong> — không cần thanh toán lại.
+            </p>
+            <p class="text-caption text-on-surface-variant" id="auto-refresh-note">Trang sẽ tự làm mới sau vài giây...</p>
+        }
+
+        <a href="/Patient/Payment" class="inline-flex items-center gap-1 text-primary hover:underline font-semibold text-body-md mt-unit-md">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span> Về Hóa đơn &amp; thanh toán
+        </a>
+    </div>
+</div>
+
+@if (isProcessing)
+{
+    @section Scripts {
+        <script>
+            // Tự làm mới để phản ánh kết quả webhook mới nhất - giới hạn số lần
+            // để không refresh vô hạn nếu cổng thật gặp sự cố kéo dài.
+            (function () {
+                var attempts = parseInt(sessionStorage.getItem('paymentReturnRefreshAttempts') || '0', 10);
+                var maxAttempts = 12; // ~1 phút với chu kỳ 5s
+                if (attempts >= maxAttempts) {
+                    document.getElementById('auto-refresh-note').textContent = 'Vẫn đang xử lý lâu hơn dự kiến - bạn có thể tự tải lại trang hoặc quay lại sau.';
+                    return;
+                }
+                sessionStorage.setItem('paymentReturnRefreshAttempts', String(attempts + 1));
+                setTimeout(function () { window.location.reload(); }, 5000);
+            })();
+        </script>
+    }
+}
+else
+{
+    @section Scripts {
+        <script>sessionStorage.removeItem('paymentReturnRefreshAttempts');</script>
+    }
+}

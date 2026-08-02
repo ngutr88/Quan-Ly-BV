@@ -16,12 +16,14 @@ namespace QuanLyBenhVien.Data
             // migration lock when more than one development process starts.
             SynchronizeDemoAccountCredentials(context);
             NormalizeDoctorTitlePrefixes(context);
+            NormalizeInvoicePaymentMethod(context);
             SynchronizePatientCccd(context);
             SynchronizeCompletedAppointmentStates(context);
             SeedAdditionalRoleAccounts(context);
             SeedRoleOverviewDemoData(context);
             SeedDoctorDailyQueueDemoData(context);
             SeedHospitalWideActivityDemoData(context);
+            NormalizeDemoInvoiceTransactionCodes(context);
             SeedConsultationChatDemoData(context);
             SeedRolePermissionDefaults(context);
             SeedGoodsReceiptDemoData(context);
@@ -1972,6 +1974,32 @@ namespace QuanLyBenhVien.Data
             context.SaveChanges();
         }
 
+        // Hóa đơn CHƯA từng có ai thanh toán (chưa trả/quá hạn/đã huỷ) không
+        // được có PhuongThuc - trước đây Invoice.PhuongThuc mặc định "TienMat"
+        // ngay từ lúc entity khởi tạo (đã sửa) khiến hóa đơn chưa trả hiện nhầm
+        // "Tiền mặt". Idempotent - dọn dữ liệu cũ đã seed trước bản sửa này.
+        private static void NormalizeInvoicePaymentMethod(ApplicationDbContext context)
+        {
+            var neverPaidStatuses = new[] { "ChuaThanhToan", "QuaHan", "DaHuy" };
+            var dirtyInvoices = context.Invoices
+                .Where(i => neverPaidStatuses.Contains(i.TrangThaiThanhToan) && i.PhuongThuc != null)
+                .ToList();
+
+            if (dirtyInvoices.Count == 0) return;
+
+            foreach (var invoice in dirtyInvoices)
+            {
+                invoice.PhuongThuc = null;
+            }
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                HanhDong = "Dọn dữ liệu phương thức thanh toán",
+                ChiTiet = $"Xoá phương thức thanh toán khỏi {dirtyInvoices.Count} hóa đơn chưa từng được thanh toán."
+            });
+            context.SaveChanges();
+        }
+
         private static void SynchronizePatientCccd(ApplicationDbContext context)
         {
             var patientsWithoutCccd = context.Patients
@@ -2997,15 +3025,16 @@ namespace QuanLyBenhVien.Data
                 }
 
                 var paid = seed.DaysAgo != 1;
+                var paidMethod = seed.DaysAgo % 2 == 0 ? "TienMat" : "Online (VNPay)";
                 var invoice = new Invoice
                 {
                     PhieuKhamId = examination.Id,
                     TongTien = seed.Amount,
                     TrangThaiThanhToan = paid ? "DaThanhToan" : "ChuaThanhToan",
-                    PhuongThuc = paid ? (seed.DaysAgo % 2 == 0 ? "TienMat" : "Online (VNPay)") : "ChuaThanhToan",
-                    MaGiaoDich = paid ? $"DEMO-{appointmentTime:yyyyMMdd}-{appointment.Id}" : null,
+                    PhuongThuc = paid ? paidMethod : null,
+                    MaGiaoDich = paid && paidMethod == "Online (VNPay)" ? $"VNP{appointmentTime:yyMMddHHmm}{appointment.Id:D4}" : null,
                     NgayTao = appointmentTime,
-                    NgayThanhToan = paid ? appointmentTime.AddMinutes(35) : null
+                    NgayThanhToan = paid ? appointmentTime.AddMinutes(2 + (appointment.Id % 27)) : null
                 };
                 context.Invoices.Add(invoice);
                 context.SaveChanges();
@@ -3285,24 +3314,43 @@ namespace QuanLyBenhVien.Data
 
             // Hóa đơn đã thanh toán cùng ngày khám - đây là nguồn số liệu thật
             // cho "Doanh thu hôm nay"/"theo khoa"/"7 ngày qua" trên Dashboard.
+            // Đa dạng phương thức + mã giao dịch giống thật (không lộ tiền tố
+            // "DEMO-ACT-"), thời điểm thanh toán lệch giờ khám vài phút thay vì
+            // luôn cố định +30 - không đổi TỔNG SoTien nên không ảnh hưởng số
+            // liệu doanh thu Dashboard.
             var feeOptions = new decimal[] { 250000m, 300000m, 350000m, 420000m, 480000m };
+            var methodOptions = new[] { "TienMat", "ChuyenKhoan", "Online (VNPay)", "Online (MoMo)", "Online (ZaloPay)" };
             var feeIndex = 0;
             var newInvoices = new List<Invoice>();
             foreach (var appointment in completedAppointments)
             {
                 var examination = examinationsByAppointmentId[appointment.Id];
                 var fee = feeOptions[feeIndex % feeOptions.Length];
+                var method = methodOptions[feeIndex % methodOptions.Length];
                 feeIndex++;
+
+                // Thanh toán tại quầy không phát sinh mã giao dịch điện tử -
+                // khớp đúng hành vi PayCounter thật (Admin/Invoices/PayCounter
+                // không set MaGiaoDich cho tiền mặt/chuyển khoản).
+                string? transactionCode = method switch
+                {
+                    "ChuyenKhoan" => $"CK{appointment.ThoiGian:yyMMdd}{appointment.Id:D5}",
+                    "Online (VNPay)" => $"VNP{appointment.ThoiGian:yyMMddHHmm}{appointment.Id:D4}",
+                    "Online (MoMo)" => $"MOMO{appointment.Id:D8}",
+                    "Online (ZaloPay)" => $"ZP{appointment.ThoiGian:yyMMdd}{appointment.Id:D6}",
+                    _ => null
+                };
+                var settleMinutesOffset = 2 + (appointment.Id % 27); // 2-28 phút, đa dạng thay vì luôn +30
 
                 var invoice = new Invoice
                 {
                     PhieuKhamId = examination.Id,
                     TongTien = fee,
                     TrangThaiThanhToan = "DaThanhToan",
-                    PhuongThuc = feeIndex % 2 == 0 ? "TienMat" : "Online (VNPay)",
-                    MaGiaoDich = $"DEMO-ACT-{appointment.ThoiGian:yyyyMMdd}-{appointment.Id}",
+                    PhuongThuc = method,
+                    MaGiaoDich = transactionCode,
                     NgayTao = appointment.ThoiGian,
-                    NgayThanhToan = appointment.ThoiGian.AddMinutes(30)
+                    NgayThanhToan = appointment.ThoiGian.AddMinutes(settleMinutesOffset)
                 };
                 context.Invoices.Add(invoice);
                 newInvoices.Add(invoice);
@@ -3317,6 +3365,43 @@ namespace QuanLyBenhVien.Data
                     LoaiPhi = "Phí khám chuyên khoa",
                     SoTien = newInvoices[i].TongTien
                 });
+            }
+            context.SaveChanges();
+        }
+
+        // Dọn dữ liệu demo cũ tạo ra trước khi mã giao dịch thật hơn được thêm
+        // vào SeedHospitalWideActivityDemoData/SeedRoleOverviewDemoData ở trên -
+        // các hàm đó chỉ sinh hóa đơn cho appointment/bản ghi MỚI (idempotent
+        // theo slot hoặc audit-log marker), nên hóa đơn demo đã tồn tại từ
+        // trước vẫn giữ nguyên tiền tố lộ "DEMO-" (cả "DEMO-ACT-..." lẫn
+        // "DEMO-yyyyMMdd-...") nếu không có bước dọn riêng này. Idempotent:
+        // chỉ còn việc để làm khi vẫn còn hàng dính tiền tố cũ, không đổi
+        // TongTien nên không ảnh hưởng số liệu doanh thu.
+        private static void NormalizeDemoInvoiceTransactionCodes(ApplicationDbContext context)
+        {
+            var staleInvoices = context.Invoices
+                .Where(i => i.MaGiaoDich != null && i.MaGiaoDich.StartsWith("DEMO-"))
+                .ToList();
+            if (staleInvoices.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var invoice in staleInvoices)
+            {
+                var settleMinutesOffset = 2 + (invoice.Id % 27); // 2-28 phút, đa dạng thay vì luôn +30
+                invoice.MaGiaoDich = invoice.PhuongThuc switch
+                {
+                    "ChuyenKhoan" => $"CK{invoice.NgayTao:yyMMdd}{invoice.Id:D5}",
+                    "Online (VNPay)" => $"VNP{invoice.NgayTao:yyMMddHHmm}{invoice.Id:D4}",
+                    "Online (MoMo)" => $"MOMO{invoice.Id:D8}",
+                    "Online (ZaloPay)" => $"ZP{invoice.NgayTao:yyMMdd}{invoice.Id:D6}",
+                    _ => null // TienMat: khớp đúng hành vi PayCounter thật, không set mã GD
+                };
+                if (invoice.NgayThanhToan.HasValue)
+                {
+                    invoice.NgayThanhToan = invoice.NgayTao.AddMinutes(settleMinutesOffset);
+                }
             }
             context.SaveChanges();
         }

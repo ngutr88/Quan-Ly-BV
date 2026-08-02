@@ -1,10 +1,10 @@
-@model QuanLyBenhVien.Models.Invoice
+@model QuanLyBenhVien.Models.PaymentTransaction
 
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "MediPay Gateway - Cổng thanh toán mô phỏng";
+    ViewData["Title"] = "Cổng thanh toán mô phỏng";
 
-    string method = ViewBag.PaymentMethod ?? "vnpay";
+    string method = Model.PhuongThuc;
 
     // Setup brand color scheme and styling based on payment method
     string brandName = "MediPay";
@@ -30,11 +30,6 @@
             brandName = "Chuyển khoản Ngân hàng (Napas247)";
             brandColorClasses = "from-slate-700 to-slate-900";
             methodDisplayName = "Chuyển khoản ngân hàng";
-            break;
-        case "tai_quay":
-            brandName = "Xác nhận Thanh toán tại quầy";
-            brandColorClasses = "from-teal-600 to-teal-800";
-            methodDisplayName = "Thanh toán tại quầy";
             break;
         case "vnpay":
         default:
@@ -64,9 +59,9 @@
             <!-- Payment Overview Card -->
             <div class="text-center bg-surface p-4.5 rounded-2xl border border-outline-variant/50 flex flex-col gap-1">
                 <span class="text-caption text-outline uppercase tracking-wider block font-bold">Số tiền cần thanh toán</span>
-                <strong class="text-[30px] font-black text-on-surface">@Model.TongTien.ToString("N0") <span class="text-[18px] font-bold">VND</span></strong>
+                <strong class="text-[30px] font-black text-on-surface whitespace-nowrap">@Model.SoTien.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("vi-VN")) <span class="text-[18px] font-bold">đ</span></strong>
                 <span class="text-caption text-on-surface-variant block mt-1">
-                    Phương thức: <strong>@methodDisplayName</strong> | Hóa đơn: <strong class="font-mono text-primary">#HD-@Model.Id.ToString("D5")</strong>
+                    Phương thức: <strong>@methodDisplayName</strong> | @Model.Invoices.Count hóa đơn
                 </span>
             </div>
 
@@ -88,16 +83,8 @@
                             <p class="font-bold text-on-surface">NH: VietinBank (Chi nhánh TP.HCM)</p>
                             <p>Số tài khoản: <strong class="font-mono">1098 7654 3210</strong></p>
                             <p>Chủ TK: <strong class="uppercase">MEDIFLOW HOSPITAL</strong></p>
-                            <p class="text-[10px] text-outline">Nội dung chuyển khoản: <strong class="font-mono text-primary">MEDIFLOW HD-@Model.Id.ToString("D5")</strong></p>
+                            <p class="text-[10px] text-outline">Nội dung chuyển khoản: <strong class="font-mono text-primary">MEDIFLOW @Model.IdempotencyKey.Substring(0, 8).ToUpper()</strong></p>
                         </div>
-                    </div>
-                }
-                else if (method == "tai_quay")
-                {
-                    <div class="flex flex-col items-center gap-unit-sm text-center py-4">
-                        <span class="material-symbols-outlined text-[64px] text-teal-600">storefront</span>
-                        <p class="text-body-md font-bold text-on-surface">Vui lòng cung cấp mã hóa đơn cho quầy thu ngân</p>
-                        <p class="text-caption text-outline max-w-xs">Nhân viên thu ngân sẽ tiến hành quét mã và nhận tiền mặt hoặc quẹt thẻ POS của bạn tại quầy hành chính.</p>
                     </div>
                 }
                 else
@@ -128,37 +115,36 @@
             </div>
 
             <!-- Interactive simulation forms -->
-            <form action="/Patient/Payment/PaymentCallback/@Model.Id" method="POST" id="callbackForm" class="flex flex-col gap-4">
+            <form action="/Patient/Payment/Webhook" method="POST" id="callbackForm" class="flex flex-col gap-4">
                 @Html.AntiForgeryToken()
-                
-                <!-- Hidden paymentMethod parameter -->
-                <input type="hidden" name="paymentMethod" value="@method" />
-                <input type="hidden" name="paymentStatus" id="paymentStatus" value="success" />
+
+                <input type="hidden" name="key" value="@Model.IdempotencyKey" />
+                <input type="hidden" name="status" id="paymentStatus" value="success" />
 
                 <!-- Transaction ID Configuration -->
                 <div class="flex flex-col gap-1">
                     <label class="text-[11px] font-bold text-outline uppercase tracking-wider">Mã giao dịch (Có thể chỉnh sửa để test)</label>
-                    <input type="text" name="transactionId" id="transactionId" value="@defaultTxnId" class="w-full px-3 py-2 border border-outline-variant rounded-xl text-caption font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface transition-all"/>
+                    <input type="text" name="gatewayTransactionId" id="transactionId" value="@defaultTxnId" class="w-full px-3 py-2 border border-outline-variant rounded-xl text-caption font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-surface transition-all"/>
                 </div>
 
                 <div class="border-t border-outline-variant/30 pt-4 flex flex-col gap-2.5">
                     <!-- Outcomes configuration buttons -->
-                    <button type="button" onclick="submitOutcome('success')" class="w-full bg-secondary text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 shadow hover:opacity-90">
+                    <button type="button" onclick="submitOutcome('success')" class="w-full bg-secondary text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 shadow hover:opacity-90" style="min-height:44px">
                         <span class="material-symbols-outlined text-[20px]">check_circle</span>
                         Mô phỏng THANH TOÁN THÀNH CÔNG
                     </button>
-                    
-                    <button type="button" onclick="submitOutcome('failed')" class="w-full bg-error text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 shadow hover:opacity-90">
+
+                    <button type="button" onclick="submitOutcome('failed')" class="w-full bg-error text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 shadow hover:opacity-90" style="min-height:44px">
                         <span class="material-symbols-outlined text-[20px]">cancel</span>
                         Mô phỏng THANH TOÁN THẤT BẠI
                     </button>
 
-                    <button type="button" onclick="submitOutcome('processing')" class="w-full bg-primary text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 shadow hover:opacity-90">
+                    <button type="button" onclick="submitOutcome('processing')" class="w-full bg-primary text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 shadow hover:opacity-90" style="min-height:44px">
                         <span class="material-symbols-outlined text-[20px]">hourglass_empty</span>
                         Mô phỏng ĐANG CHỜ XỬ LÝ (PENDING)
                     </button>
                 </div>
-                
+
                 <a href="/Patient/Payment" class="w-full border border-outline-variant text-on-surface font-semibold py-3 rounded-xl hover:bg-surface transition-all text-center block text-caption">
                     Hủy bỏ giao dịch và Quay lại
                 </a>

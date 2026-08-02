@@ -1,0 +1,101 @@
+@model List<QuanLyBenhVien.Models.Invoice>
+@using System.Globalization
+
+@{
+    Layout = "~/Views/Shared/_PatientLayout.cshtml";
+    ViewData["Title"] = "Xác nhận thanh toán";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    var totalAmount = (decimal)ViewBag.TotalAmount;
+    var invoiceIds = (int[])ViewBag.InvoiceIds;
+}
+
+<div class="flex flex-col gap-unit-lg w-full min-w-0 max-w-full animate-fade-in">
+    <div>
+        <a href="/Patient/Payment" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-2">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách hóa đơn
+        </a>
+        <h1 class="hms-page-title mb-1">Xác nhận thanh toán</h1>
+        <p class="text-body-md text-on-surface-variant">Kiểm tra lại thông tin trước khi chuyển sang bước thanh toán. Số tiền dưới đây do hệ thống tính toán, không thể chỉnh sửa.</p>
+    </div>
+
+    <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+        <div class="p-unit-md border-b border-outline-variant/60 bg-surface-container-lowest">
+            <h3 class="font-title-lg font-bold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">receipt_long</span>
+                @Model.Count hóa đơn được chọn
+            </h3>
+        </div>
+        <div class="divide-y divide-outline-variant/50">
+            @foreach (var invoice in Model)
+            {
+                <div class="flex items-center justify-between gap-3 px-unit-md py-3">
+                    <div class="min-w-0">
+                        <p class="font-mono font-bold text-primary">#HD-@invoice.Id.ToString("D5")</p>
+                        <p class="text-caption text-on-surface-variant truncate">@invoice.NgayTao.ToString("dd/MM/yyyy", vi)</p>
+                    </div>
+                    <p class="font-bold text-on-surface whitespace-nowrap">@invoice.TongTien.ToString("N0", vi) đ</p>
+                </div>
+            }
+        </div>
+        <div class="p-unit-md bg-primary-fixed text-on-primary-fixed flex justify-between items-center">
+            <span class="font-bold uppercase tracking-wider text-caption">Tổng cộng</span>
+            <span class="font-black text-headline-md whitespace-nowrap" id="confirm-total">@totalAmount.ToString("N0", vi) đ</span>
+        </div>
+    </div>
+
+    <div class="bg-white border border-outline-variant rounded-2xl p-5 shadow-sm">
+        <h3 class="font-title-lg font-bold text-on-background mb-3 flex items-center gap-1">
+            <span class="material-symbols-outlined text-primary">credit_card</span>
+            Chọn phương thức thanh toán
+        </h3>
+
+        <form method="POST" action="/Patient/Payment/InitiatePayment" class="flex flex-col gap-2.5">
+            @Html.AntiForgeryToken()
+            @foreach (var id in invoiceIds)
+            {
+                <input type="hidden" name="invoiceIds" value="@id" />
+            }
+
+            <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5" style="min-height:44px">
+                <input checked class="accent-primary w-5 h-5" name="paymentMethod" type="radio" value="vnpay"/>
+                <div class="flex flex-col">
+                    <span class="text-body-md font-bold">Cổng thanh toán VNPay</span>
+                    <span class="text-caption text-outline">Thanh toán qua ví VNPay hoặc Mobile Banking</span>
+                </div>
+            </label>
+
+            <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5" style="min-height:44px">
+                <input class="accent-primary w-5 h-5" name="paymentMethod" type="radio" value="momo"/>
+                <div class="flex flex-col">
+                    <span class="text-body-md font-bold">Ví điện tử MoMo</span>
+                    <span class="text-caption text-outline">Thanh toán tức thời qua ứng dụng ví MoMo</span>
+                </div>
+            </label>
+
+            <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5" style="min-height:44px">
+                <input class="accent-primary w-5 h-5" name="paymentMethod" type="radio" value="zalopay"/>
+                <div class="flex flex-col">
+                    <span class="text-body-md font-bold">Ví điện tử ZaloPay</span>
+                    <span class="text-caption text-outline">Quét mã QR thanh toán nhanh qua ZaloPay</span>
+                </div>
+            </label>
+
+            <label class="relative flex items-center gap-3 p-3 border border-outline-variant rounded-xl cursor-pointer hover:bg-surface-container-low transition-all has-[:checked]:border-primary has-[:checked]:bg-primary/5" style="min-height:44px">
+                <input class="accent-primary w-5 h-5" name="paymentMethod" type="radio" value="chuyenkhoan"/>
+                <div class="flex flex-col">
+                    <span class="text-body-md font-bold">Chuyển khoản ngân hàng</span>
+                    <span class="text-caption text-outline">Chuyển khoản qua Napas247</span>
+                </div>
+            </label>
+
+            <button type="submit" class="w-full bg-primary text-white py-4 rounded-2xl font-bold text-body-lg flex items-center justify-center gap-2 hover:bg-primary-container shadow-md shadow-primary/10 transition-all active:scale-[0.98] mt-2" style="min-height:52px">
+                <span class="material-symbols-outlined text-[22px]">lock</span>
+                Xác nhận thanh toán @totalAmount.ToString("N0", vi) đ
+            </button>
+
+            <p class="text-caption text-on-surface-variant text-center mt-1">
+                Bạn cũng có thể thanh toán trực tiếp bằng tiền mặt/thẻ tại quầy viện phí của bệnh viện.
+            </p>
+        </form>
+    </div>
+</div>

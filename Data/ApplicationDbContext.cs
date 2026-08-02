@@ -22,6 +22,7 @@ namespace QuanLyBenhVien.Data
         public DbSet<MedicineBatch> MedicineBatches { get; set; } = null!;
         public DbSet<Invoice> Invoices { get; set; } = null!;
         public DbSet<InvoiceDetail> InvoiceDetails { get; set; } = null!;
+        public DbSet<PaymentTransaction> PaymentTransactions { get; set; } = null!;
         public DbSet<Review> Reviews { get; set; } = null!;
         public DbSet<Notification> Notifications { get; set; } = null!;
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
@@ -380,6 +381,21 @@ namespace QuanLyBenhVien.Data
 
             modelBuilder.Entity<InvoiceDetail>()
                 .ToTable(t => t.HasCheckConstraint("CK_ChiTietHoaDon_SoTien", "SoTien >= 0"));
+
+            modelBuilder.Entity<PaymentTransaction>(e =>
+            {
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_GiaoDichThanhToan_SoTien", "SoTien >= 0");
+                    t.HasCheckConstraint("CK_GiaoDichThanhToan_TrangThai",
+                        "TrangThai IN ('ChoXuLy','DangXuLy','ThanhCong','ThatBai','DaHuy')");
+                });
+                e.HasIndex(p => p.IdempotencyKey).IsUnique();
+                // Filtered unique index: mã giao dịch từ cổng chỉ cần duy nhất khi
+                // đã có (NULL nghĩa là chưa có phản hồi từ cổng - nhiều dòng NULL
+                // vẫn hợp lệ).
+                e.HasIndex(p => p.MaGiaoDichCong).IsUnique().HasFilter("[MaGiaoDichCong] IS NOT NULL");
+            });
 
             modelBuilder.Entity<DoctorWorkSchedule>(e =>
             {

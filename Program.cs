@@ -668,6 +668,49 @@ using (var scope = app.Services.CreateScope())
                     CREATE INDEX IX_PhienDangNhap_NguoiDungId ON PhienDangNhap (NguoiDungId);
                     CREATE INDEX IX_PhienDangNhap_SessionToken ON PhienDangNhap (SessionToken);
                 END");
+
+                // Thanh toán hóa đơn (Cổng bệnh nhân) - khái niệm "Giao dịch thanh
+                // toán" tách khỏi Hóa đơn (1 giao dịch phủ được nhiều hóa đơn,
+                // webhook là nguồn chân lý duy nhất cho trạng thái). Batch 1: cột
+                // mới trên HoaDon (chưa có FK) + bảng mới GiaoDichThanhToan (chưa
+                // bị tham chiếu) - không có gì trong batch này phụ thuộc lẫn nhau.
+                context.Database.ExecuteSqlRaw(@"
+                IF COL_LENGTH('HoaDon','GiaoDichThanhToanHienTaiId') IS NULL
+                    ALTER TABLE HoaDon ADD GiaoDichThanhToanHienTaiId INT NULL;
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GiaoDichThanhToan')
+                BEGIN
+                    CREATE TABLE GiaoDichThanhToan (
+                        Id INT NOT NULL CONSTRAINT PK_GiaoDichThanhToan PRIMARY KEY IDENTITY,
+                        NguoiKhoiTaoId INT NOT NULL,
+                        IdempotencyKey NVARCHAR(64) NOT NULL,
+                        SoTien DECIMAL(18,2) NOT NULL,
+                        PhuongThuc NVARCHAR(50) NOT NULL,
+                        TrangThai NVARCHAR(20) NOT NULL DEFAULT 'ChoXuLy',
+                        MaGiaoDichCong NVARCHAR(100) NULL,
+                        NgayTao DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        NgayCapNhat DATETIME2 NULL,
+                        CONSTRAINT CK_GiaoDichThanhToan_SoTien CHECK (SoTien >= 0),
+                        CONSTRAINT CK_GiaoDichThanhToan_TrangThai CHECK (TrangThai IN ('ChoXuLy','DangXuLy','ThanhCong','ThatBai','DaHuy')),
+                        CONSTRAINT FK_GiaoDichThanhToan_NguoiDung_NguoiKhoiTaoId
+                            FOREIGN KEY (NguoiKhoiTaoId) REFERENCES NguoiDung (Id)
+                    );
+                    CREATE UNIQUE INDEX IX_GiaoDichThanhToan_IdempotencyKey ON GiaoDichThanhToan (IdempotencyKey);
+                    CREATE UNIQUE INDEX IX_GiaoDichThanhToan_MaGiaoDichCong ON GiaoDichThanhToan (MaGiaoDichCong) WHERE MaGiaoDichCong IS NOT NULL;
+                    CREATE INDEX IX_GiaoDichThanhToan_NguoiKhoiTaoId ON GiaoDichThanhToan (NguoiKhoiTaoId);
+                END");
+
+                // Batch 2: FK từ HoaDon sang GiaoDichThanhToan - CHẠY SAU khi
+                // bảng đích đã thật sự tồn tại (bài học lỗi biên dịch cả batch ở
+                // các khối trên: statement tham chiếu đối tượng vừa tạo ở batch
+                // trước phải nằm ở batch riêng).
+                context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_HoaDon_GiaoDichThanhToan_GiaoDichThanhToanHienTaiId')
+                BEGIN
+                    ALTER TABLE HoaDon ADD CONSTRAINT FK_HoaDon_GiaoDichThanhToan_GiaoDichThanhToanHienTaiId
+                        FOREIGN KEY (GiaoDichThanhToanHienTaiId) REFERENCES GiaoDichThanhToan (Id);
+                    CREATE INDEX IX_HoaDon_GiaoDichThanhToanHienTaiId ON HoaDon (GiaoDichThanhToanHienTaiId);
+                END");
             }
         }
         else
