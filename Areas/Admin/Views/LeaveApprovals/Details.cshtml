@@ -1,0 +1,153 @@
+@model QuanLyBenhVien.Models.LeaveRequest
+@using System.Globalization
+@using QuanLyBenhVien.Services
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết yêu cầu nghỉ phép";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
+    var hasConflict = (bool)ViewBag.HasConflict;
+    var remaining = (decimal)ViewBag.Remaining;
+
+    string StatusBadge(string trangThai) => trangThai switch
+    {
+        "ChoDuyet" => "bg-tertiary-fixed/30 text-on-tertiary-fixed-variant",
+        "DaDuyet" => "bg-secondary-container/20 text-on-secondary-container",
+        "TuChoi" => "bg-error-container text-error",
+        _ => "bg-surface-container-high text-on-surface-variant"
+    };
+
+    string StatusLabel(string trangThai) => trangThai switch
+    {
+        "ChoDuyet" => "Chờ duyệt",
+        "DaDuyet" => "Đã duyệt",
+        "TuChoi" => "Từ chối",
+        _ => trangThai
+    };
+
+    var dateRange = Model.TuNgay.Date == Model.DenNgay.Date
+        ? Model.TuNgay.ToString("dd/MM/yyyy", vi)
+        : $"{Model.TuNgay:dd/MM/yyyy} - {Model.DenNgay:dd/MM/yyyy}";
+    if (Model.Buoi != null) dateRange += Model.Buoi == "Sang" ? " (Buổi sáng)" : " (Buổi chiều)";
+}
+
+<div class="mb-unit-lg">
+    <a href="/Admin/LeaveApprovals" class="inline-flex items-center gap-1 text-primary hover:underline text-body-md font-semibold mb-unit-sm">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Quay lại danh sách
+    </a>
+    <div class="flex items-center gap-unit-sm flex-wrap">
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Yêu cầu #@Model.Id — @Model.Doctor.User.HoTen</h2>
+        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-tight @StatusBadge(Model.TrangThai)">@StatusLabel(Model.TrangThai)</span>
+    </div>
+    <p class="text-body-md text-on-surface-variant">Khoa @Model.Doctor.Department.TenKhoa · Gửi lúc @Model.NgayTao.ToString("HH:mm dd/MM/yyyy")</p>
+</div>
+
+@if (Model.TrangThai == "TuChoi" && !string.IsNullOrWhiteSpace(Model.LyDoTuChoi))
+{
+    <div class="mb-unit-md p-4 bg-error-container/20 border-l-4 border-error text-error rounded-r">
+        <span class="font-bold">Lý do từ chối:</span> @Model.LyDoTuChoi
+    </div>
+}
+
+@if (hasConflict)
+{
+    <div class="mb-unit-md p-4 bg-tertiary-fixed/20 border-l-4 border-tertiary text-on-tertiary-fixed-variant rounded-r flex items-center gap-2">
+        <span class="material-symbols-outlined">warning</span>
+        <span><span class="font-bold">Lưu ý:</span> khoảng ngày này đang trùng với lịch khám đã có của bác sĩ.</span>
+    </div>
+}
+
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm mb-unit-lg">
+    <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Chi tiết yêu cầu" tabindex="0">
+        <table class="w-full text-left">
+            <tbody class="divide-y divide-outline-variant text-body-md">
+                <tr>
+                    <td class="px-unit-md py-3 font-semibold text-on-surface w-1/3">Loại nghỉ</td>
+                    <td class="px-unit-md py-3 text-on-surface-variant">@LeaveRequestService.LoaiNghiLabel(Model.LoaiNghi)</td>
+                </tr>
+                <tr>
+                    <td class="px-unit-md py-3 font-semibold text-on-surface">Khoảng ngày</td>
+                    <td class="px-unit-md py-3 text-on-surface-variant">@dateRange</td>
+                </tr>
+                <tr>
+                    <td class="px-unit-md py-3 font-semibold text-on-surface">Số ngày trừ phép năm</td>
+                    <td class="px-unit-md py-3 text-on-surface-variant">@(Model.LoaiNghi == "Om" ? "Không trừ (nghỉ ốm tách riêng)" : $"{Model.SoNgayTru.ToString("0.#", vi)} ngày")</td>
+                </tr>
+                <tr>
+                    <td class="px-unit-md py-3 font-semibold text-on-surface">Số dư phép năm còn lại</td>
+                    <td class="px-unit-md py-3 text-on-surface-variant">@remaining.ToString("0.#", vi) ngày</td>
+                </tr>
+                <tr>
+                    <td class="px-unit-md py-3 font-semibold text-on-surface">Lý do</td>
+                    <td class="px-unit-md py-3 text-on-surface-variant">@Model.LyDo</td>
+                </tr>
+                @if (!string.IsNullOrEmpty(Model.DinhKemUrl))
+                {
+                    <tr>
+                        <td class="px-unit-md py-3 font-semibold text-on-surface">Đính kèm</td>
+                        <td class="px-unit-md py-3">
+                            <a href="@Model.DinhKemUrl" target="_blank" rel="noopener" class="text-primary hover:underline font-semibold inline-flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[18px]">attach_file</span> Xem giấy tờ đính kèm
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (Model.TrangThai == "ChoDuyet")
+{
+    <div class="flex flex-wrap gap-unit-sm">
+        <button type="button" class="hms-btn hms-btn-primary" onclick="postAction('/Admin/LeaveApprovals/Approve/@Model.Id')">
+            <span class="material-symbols-outlined">check_circle</span> Duyệt
+        </button>
+        <button type="button" class="hms-btn hms-btn-secondary" onclick="openRejectModal()">
+            <span class="material-symbols-outlined">block</span> Từ chối
+        </button>
+    </div>
+}
+
+<!-- Reject reason modal -->
+<div id="modalReject" class="hidden fixed inset-0 bg-on-background/40 z-[100] flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest rounded-xl shadow-2xl p-unit-lg max-w-md w-full">
+        <h4 class="font-title-md text-title-md text-on-surface mb-2">Từ chối yêu cầu #@Model.Id</h4>
+        <label class="hms-field-label">Lý do từ chối <span class="text-error">*</span></label>
+        <textarea id="rejectReason" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg mt-1" rows="3" placeholder="Nhập lý do từ chối yêu cầu này..."></textarea>
+        <div class="flex justify-end gap-unit-sm mt-unit-md">
+            <button type="button" class="hms-btn hms-btn-secondary" onclick="document.getElementById('modalReject').classList.add('hidden')">Đóng</button>
+            <button type="button" class="hms-btn hms-btn-primary" onclick="submitReject()">Xác nhận từ chối</button>
+        </div>
+    </div>
+</div>
+
+<form id="actionForm" method="POST" class="hidden">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="lyDo" id="actionLyDo" />
+</form>
+
+@section Scripts {
+    <script>
+        function postAction(url) {
+            const form = document.getElementById('actionForm');
+            form.action = url;
+            document.getElementById('actionLyDo').value = '';
+            form.submit();
+        }
+
+        function openRejectModal() { document.getElementById('modalReject').classList.remove('hidden'); }
+
+        function submitReject() {
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) {
+                showGlobalToast('Thiếu thông tin', 'Vui lòng nhập lý do từ chối.', 'error');
+                return;
+            }
+            const form = document.getElementById('actionForm');
+            form.action = '/Admin/LeaveApprovals/Reject/@Model.Id';
+            document.getElementById('actionLyDo').value = reason;
+            form.submit();
+        }
+    </script>
+}

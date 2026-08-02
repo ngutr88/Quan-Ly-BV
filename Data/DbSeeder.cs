@@ -30,6 +30,7 @@ namespace QuanLyBenhVien.Data
             SeedPrescriptionSafetyDemoData(context);
             SeedLabCatalogAndDemoData(context);
             SeedLabOrderDemoData(context);
+            SeedLeaveManagementDemoData(context);
 
             // Runs before the "complete dataset" shortcut below so existing
             // databases also pick up the public-site articles.
@@ -3404,6 +3405,94 @@ namespace QuanLyBenhVien.Data
                 }
             }
             context.SaveChanges();
+        }
+
+        // Dữ liệu minh họa cho "Lịch làm việc" (Sprint 1 - Nghỉ phép). Bác sĩ
+        // demo (doctor@hms.com) vốn đã là "Trưởng khoa" của khoa mình trong dữ
+        // liệu gốc, nên chỉ cần seed thêm: 1 yêu cầu Chờ duyệt của 1 đồng
+        // nghiệp cùng khoa (để demo khối "Duyệt yêu cầu của khoa" ngay khi
+        // đăng nhập) + 1 yêu cầu Đã duyệt của chính bác sĩ demo (để lịch tháng
+        // có ngày nghỉ hiển thị ngay mà không cần thao tác gì trước).
+        // Idempotent qua AuditLog marker, đúng khuôn SeedRoleOverviewDemoData.
+        private static void SeedLeaveManagementDemoData(ApplicationDbContext context)
+        {
+            const string seedMarker = "SEED_LEAVE_MANAGEMENT_20260802_V1";
+            if (context.AuditLogs.Any(l => l.HanhDong == seedMarker)) return;
+
+            var demoDoctor = context.Doctors.Include(d => d.User).FirstOrDefault(d => d.User.Email == "doctor@hms.com");
+            if (demoDoctor == null) return;
+
+            var adminUserId = context.Users.Where(u => u.Email == "admin@hms.com").Select(u => u.Id).FirstOrDefault();
+            var today = DateTime.Today;
+
+            var colleague = context.Doctors
+                .Where(d => d.KhoaId == demoDoctor.KhoaId && d.Id != demoDoctor.Id && d.ChucVu == "Bác sĩ")
+                .OrderBy(d => d.Id)
+                .FirstOrDefault();
+
+            if (colleague != null)
+            {
+                var soNgay = 2m;
+                var balance = GetOrSeedLeaveBalance(context, colleague, today.Year);
+                balance.DaTamGiu += soNgay;
+
+                context.LeaveRequests.Add(new LeaveRequest
+                {
+                    BacSiId = colleague.Id,
+                    TuNgay = today.AddDays(5),
+                    DenNgay = today.AddDays(6),
+                    SoNgayTru = soNgay,
+                    LoaiNghi = "PhepNam",
+                    LyDo = "Về quê giải quyết việc gia đình.",
+                    TrangThai = "ChoDuyet"
+                });
+            }
+
+            {
+                var soNgay = 2m;
+                var balance = GetOrSeedLeaveBalance(context, demoDoctor, today.Year);
+                balance.DaDung += soNgay;
+
+                context.LeaveRequests.Add(new LeaveRequest
+                {
+                    BacSiId = demoDoctor.Id,
+                    TuNgay = today.AddDays(-2),
+                    DenNgay = today.AddDays(-1),
+                    SoNgayTru = soNgay,
+                    LoaiNghi = "PhepNam",
+                    LyDo = "Nghỉ phép cá nhân.",
+                    TrangThai = "DaDuyet",
+                    NguoiDuyetId = adminUserId > 0 ? adminUserId : null,
+                    NgayDuyet = DateTime.Now
+                });
+            }
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                HanhDong = seedMarker,
+                ChiTiet = "Khởi tạo dữ liệu minh họa cho Lịch làm việc / Nghỉ phép."
+            });
+            context.SaveChanges();
+        }
+
+        private static LeaveBalance GetOrSeedLeaveBalance(ApplicationDbContext context, Doctor doctor, int year)
+        {
+            var balance = context.LeaveBalances.FirstOrDefault(b => b.BacSiId == doctor.Id && b.Nam == year);
+            if (balance == null)
+            {
+                balance = new LeaveBalance
+                {
+                    BacSiId = doctor.Id,
+                    Nam = year,
+                    TongSoNgay = 12 + (doctor.SoNamKinhNghiem / 5),
+                    CongDonTuNamTruoc = 0,
+                    DaDung = 0,
+                    DaTamGiu = 0
+                };
+                context.LeaveBalances.Add(balance);
+                context.SaveChanges();
+            }
+            return balance;
         }
 
         // Dữ liệu minh họa cho module Tin nhắn tư vấn - 5 hội thoại phủ đủ các

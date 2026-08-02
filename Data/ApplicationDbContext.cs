@@ -55,6 +55,8 @@ namespace QuanLyBenhVien.Data
         public DbSet<Conversation> Conversations { get; set; } = null!;
         public DbSet<ConversationMessage> ConversationMessages { get; set; } = null!;
         public DbSet<ConversationMessageAttachment> ConversationMessageAttachments { get; set; } = null!;
+        public DbSet<LeaveRequest> LeaveRequests { get; set; } = null!;
+        public DbSet<LeaveBalance> LeaveBalances { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -769,6 +771,24 @@ namespace QuanLyBenhVien.Data
                 .HasForeignKey(a => a.TinNhanId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<ConversationMessageAttachment>().Property(a => a.NgayTaiLen).HasDefaultValueSql(NowSql());
+
+            modelBuilder.Entity<LeaveRequest>(e =>
+            {
+                e.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_YeuCauNghiPhep_TrangThai", "TrangThai IN ('ChoDuyet','DaDuyet','TuChoi')");
+                    t.HasCheckConstraint("CK_YeuCauNghiPhep_LoaiNghi", "LoaiNghi IN ('PhepNam','Om','ViecRieng','Khac')");
+                    t.HasCheckConstraint("CK_YeuCauNghiPhep_Buoi", "Buoi IS NULL OR Buoi IN ('Sang','Chieu')");
+                    t.HasCheckConstraint("CK_YeuCauNghiPhep_KhoangNgay", "DenNgay >= TuNgay");
+                });
+            });
+            modelBuilder.Entity<LeaveRequest>().Property(r => r.NgayTao).HasDefaultValueSql(NowSql());
+
+            modelBuilder.Entity<LeaveBalance>(e =>
+            {
+                e.HasIndex(b => new { b.BacSiId, b.Nam }).IsUnique();
+            });
+            modelBuilder.Entity<LeaveBalance>().Property(b => b.NgayCapNhat).HasDefaultValueSql(NowSql());
         }
     }
 }

@@ -50,6 +50,7 @@ builder.Services.AddScoped<QuanLyBenhVien.Services.IEmailSender, QuanLyBenhVien.
 builder.Services.AddScoped<QuanLyBenhVien.Services.ISmsSender, QuanLyBenhVien.Services.MockSmsSender>();
 builder.Services.AddScoped<QuanLyBenhVien.Services.IPrescriptionSafetyChecker, QuanLyBenhVien.Services.PrescriptionSafetyChecker>();
 builder.Services.AddScoped<QuanLyBenhVien.Services.MedicineStockAllocator>();
+builder.Services.AddScoped<QuanLyBenhVien.Services.LeaveRequestService>();
 
 // Previously defaulted to Path.GetTempPath() ("%TEMP%\QuanLyBenhVien\..."):
 // the OS temp folder is expected to be cleared at any time (disk cleanup,
@@ -710,6 +711,58 @@ using (var scope = app.Services.CreateScope())
                     ALTER TABLE HoaDon ADD CONSTRAINT FK_HoaDon_GiaoDichThanhToan_GiaoDichThanhToanHienTaiId
                         FOREIGN KEY (GiaoDichThanhToanHienTaiId) REFERENCES GiaoDichThanhToan (Id);
                     CREATE INDEX IX_HoaDon_GiaoDichThanhToanHienTaiId ON HoaDon (GiaoDichThanhToanHienTaiId);
+                END");
+
+                // Lịch làm việc (Khu vực bác sĩ) - Nghỉ phép + số dư phép năm.
+                // 2 bảng đều chỉ tham chiếu BacSi/NguoiDung đã tồn tại từ trước
+                // nên gộp 1 batch là an toàn (không có nguy cơ tham chiếu đối
+                // tượng vừa tạo cùng batch như bài học ở khối GiaoDichThanhToan).
+                context.Database.ExecuteSqlRaw(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'SoDuPhepNam')
+                BEGIN
+                    CREATE TABLE SoDuPhepNam (
+                        Id INT NOT NULL CONSTRAINT PK_SoDuPhepNam PRIMARY KEY IDENTITY,
+                        BacSiId INT NOT NULL,
+                        Nam INT NOT NULL,
+                        TongSoNgay DECIMAL(5,1) NOT NULL,
+                        CongDonTuNamTruoc DECIMAL(5,1) NOT NULL,
+                        DaDung DECIMAL(5,1) NOT NULL,
+                        DaTamGiu DECIMAL(5,1) NOT NULL,
+                        NgayCapNhat DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        CONSTRAINT FK_SoDuPhepNam_BacSi_BacSiId
+                            FOREIGN KEY (BacSiId) REFERENCES BacSi (Id) ON DELETE CASCADE
+                    );
+                    CREATE UNIQUE INDEX IX_SoDuPhepNam_BacSiId_Nam ON SoDuPhepNam (BacSiId, Nam);
+                END
+
+                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'YeuCauNghiPhep')
+                BEGIN
+                    CREATE TABLE YeuCauNghiPhep (
+                        Id INT NOT NULL CONSTRAINT PK_YeuCauNghiPhep PRIMARY KEY IDENTITY,
+                        BacSiId INT NOT NULL,
+                        TuNgay DATETIME2 NOT NULL,
+                        DenNgay DATETIME2 NOT NULL,
+                        Buoi NVARCHAR(10) NULL,
+                        SoNgayTru DECIMAL(5,1) NOT NULL,
+                        LoaiNghi NVARCHAR(20) NOT NULL,
+                        LyDo NVARCHAR(1000) NOT NULL,
+                        DinhKemUrl NVARCHAR(300) NULL,
+                        TrangThai NVARCHAR(20) NOT NULL DEFAULT 'ChoDuyet',
+                        NguoiDuyetId INT NULL,
+                        NgayDuyet DATETIME2 NULL,
+                        LyDoTuChoi NVARCHAR(500) NULL,
+                        NgayTao DATETIME2 NOT NULL DEFAULT GETDATE(),
+                        CONSTRAINT CK_YeuCauNghiPhep_TrangThai CHECK (TrangThai IN ('ChoDuyet','DaDuyet','TuChoi')),
+                        CONSTRAINT CK_YeuCauNghiPhep_LoaiNghi CHECK (LoaiNghi IN ('PhepNam','Om','ViecRieng','Khac')),
+                        CONSTRAINT CK_YeuCauNghiPhep_Buoi CHECK (Buoi IS NULL OR Buoi IN ('Sang','Chieu')),
+                        CONSTRAINT CK_YeuCauNghiPhep_KhoangNgay CHECK (DenNgay >= TuNgay),
+                        CONSTRAINT FK_YeuCauNghiPhep_BacSi_BacSiId
+                            FOREIGN KEY (BacSiId) REFERENCES BacSi (Id) ON DELETE CASCADE,
+                        CONSTRAINT FK_YeuCauNghiPhep_NguoiDung_NguoiDuyetId
+                            FOREIGN KEY (NguoiDuyetId) REFERENCES NguoiDung (Id)
+                    );
+                    CREATE INDEX IX_YeuCauNghiPhep_BacSiId ON YeuCauNghiPhep (BacSiId);
+                    CREATE INDEX IX_YeuCauNghiPhep_NguoiDuyetId ON YeuCauNghiPhep (NguoiDuyetId);
                 END");
             }
         }

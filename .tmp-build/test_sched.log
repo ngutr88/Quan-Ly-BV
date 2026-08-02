@@ -1,0 +1,108 @@
+  Determining projects to restore...
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.net.test.sdk/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.net.test.sdk.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/xunit/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_xunit.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/xunit.runner.visualstudio/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_xunit.runner.visualstudio.dat-new'.
+  Restored D:\QuanLyBenhVien\QuanLyBenhVien.csproj (in 861 ms).
+  Failed to download package 'coverlet.collector.6.0.4' from 'https://api.nuget.org/v3-flatcontainer/coverlet.collector/6.0.4/coverlet.collector.6.0.4.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_coverlet.collector.6.0.4.dat-new'.
+  Failed to download package 'Microsoft.NET.Test.Sdk.17.14.1' from 'https://api.nuget.org/v3-flatcontainer/microsoft.net.test.sdk/17.14.1/microsoft.net.test.sdk.17.14.1.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.net.test.sdk.17.14.1.dat-new'.
+  Failed to download package 'xunit.2.9.3' from 'https://api.nuget.org/v3-flatcontainer/xunit/2.9.3/xunit.2.9.3.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_xunit.2.9.3.dat-new'.
+  Failed to download package 'xunit.runner.visualstudio.3.1.4' from 'https://api.nuget.org/v3-flatcontainer/xunit.runner.visualstudio/3.1.4/xunit.runner.visualstudio.3.1.4.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_xunit.runner.visualstudio.3.1.4.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.testplatform.testhost/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.testplatform.testhost.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.codecoverage/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.codecoverage.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/xunit.core/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_xunit.core.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/xunit.assert/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_xunit.assert.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/xunit.analyzers/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_xunit.analyzers.dat-new'.
+  Failed to download package 'xunit.core.2.9.3' from 'https://api.nuget.org/v3-flatcontainer/xunit.core/2.9.3/xunit.core.2.9.3.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_xunit.core.2.9.3.dat-new'.
+  Failed to download package 'xunit.analyzers.1.18.0' from 'https://api.nuget.org/v3-flatcontainer/xunit.analyzers/1.18.0/xunit.analyzers.1.18.0.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_xunit.analyzers.1.18.0.dat-new'.
+  Failed to download package 'Microsoft.CodeCoverage.17.14.1' from 'https://api.nuget.org/v3-flatcontainer/microsoft.codecoverage/17.14.1/microsoft.codecoverage.17.14.1.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.codecoverage.17.14.1.dat-new'.
+  Failed to download package 'xunit.assert.2.9.3' from 'https://api.nuget.org/v3-flatcontainer/xunit.assert/2.9.3/xunit.assert.2.9.3.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_xunit.assert.2.9.3.dat-new'.
+  Failed to download package 'Microsoft.TestPlatform.TestHost.17.14.1' from 'https://api.nuget.org/v3-flatcontainer/microsoft.testplatform.testhost/17.14.1/microsoft.testplatform.testhost.17.14.1.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.testplatform.testhost.17.14.1.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.testplatform.objectmodel/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.testplatform.objectmodel.dat-new'.
+  Failed to download package 'Microsoft.TestPlatform.ObjectModel.17.14.1' from 'https://api.nuget.org/v3-flatcontainer/microsoft.testplatform.objectmodel/17.14.1/microsoft.testplatform.objectmodel.17.14.1.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.testplatform.objectmodel.17.14.1.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/xunit.extensibility.core/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_xunit.extensibility.core.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/xunit.extensibility.execution/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_xunit.extensibility.execution.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.caching.memory/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.extensions.caching.memory.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.configuration.abstractions/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.extensions.configuration.abstractions.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.logging/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.extensions.logging.dat-new'.
+  Failed to download package 'xunit.extensibility.execution.2.9.3' from 'https://api.nuget.org/v3-flatcontainer/xunit.extensibility.execution/2.9.3/xunit.extensibility.execution.2.9.3.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_xunit.extensibility.execution.2.9.3.dat-new'.
+  Failed to download package 'xunit.extensibility.core.2.9.3' from 'https://api.nuget.org/v3-flatcontainer/xunit.extensibility.core/2.9.3/xunit.extensibility.core.2.9.3.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_xunit.extensibility.core.2.9.3.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Caching.Memory.10.0.9' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.caching.memory/10.0.9/microsoft.extensions.caching.memory.10.0.9.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.caching.memory.10.0.9.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Logging.10.0.9' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.logging/10.0.9/microsoft.extensions.logging.10.0.9.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.logging.10.0.9.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Configuration.Abstractions.10.0.9' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.configuration.abstractions/10.0.9/microsoft.extensions.configuration.abstractions.10.0.9.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.configuration.abstractions.10.0.9.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/xunit.abstractions/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_xunit.abstractions.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.caching.abstractions/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.extensions.caching.abstractions.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.dependencyinjection.abstractions/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.extensions.dependencyinjection.abstractions.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.logging.abstractions/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.extensions.logging.abstractions.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Caching.Memory.10.0.7' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.caching.memory/10.0.7/microsoft.extensions.caching.memory.10.0.7.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.caching.memory.10.0.7.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.primitives/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.extensions.primitives.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Caching.Memory.9.0.4' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.caching.memory/9.0.4/microsoft.extensions.caching.memory.9.0.4.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.caching.memory.9.0.4.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.options/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.extensions.options.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Logging.10.0.7' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.logging/10.0.7/microsoft.extensions.logging.10.0.7.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.logging.10.0.7.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.dependencyinjection/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_microsoft.extensions.dependencyinjection.dat-new'.
+  Failed to download package 'Microsoft.Extensions.DependencyInjection.Abstractions.10.0.9' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.dependencyinjection.abstractions/10.0.9/microsoft.extensions.dependencyinjection.abstractions.10.0.9.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.dependencyinjection.abstractions.10.0.9.dat-new'.
+  Failed to download package 'xunit.abstractions.2.0.3' from 'https://api.nuget.org/v3-flatcontainer/xunit.abstractions/2.0.3/xunit.abstractions.2.0.3.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_xunit.abstractions.2.0.3.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Caching.Abstractions.10.0.9' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.caching.abstractions/10.0.9/microsoft.extensions.caching.abstractions.10.0.9.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.caching.abstractions.10.0.9.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Logging.Abstractions.10.0.9' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.logging.abstractions/10.0.9/microsoft.extensions.logging.abstractions.10.0.9.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.logging.abstractions.10.0.9.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Primitives.10.0.9' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.primitives/10.0.9/microsoft.extensions.primitives.10.0.9.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.primitives.10.0.9.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Options.10.0.9' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.options/10.0.9/microsoft.extensions.options.10.0.9.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.options.10.0.9.dat-new'.
+  Failed to download package 'Microsoft.Extensions.DependencyInjection.10.0.9' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.dependencyinjection/10.0.9/microsoft.extensions.dependencyinjection.10.0.9.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.dependencyinjection.10.0.9.dat-new'.
+  Failed to download package 'Microsoft.Extensions.Logging.Abstractions.8.0.3' from 'https://api.nuget.org/v3-flatcontainer/microsoft.extensions.logging.abstractions/8.0.3/microsoft.extensions.logging.abstractions.8.0.3.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_microsoft.extensions.logging.abstractions.8.0.3.dat-new'.
+  Retrying 'FindPackagesByIdAsync' for source 'https://api.nuget.org/v3-flatcontainer/system.diagnostics.eventlog/index.json'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\list_system.diagnostics.eventlog.dat-new'.
+  Failed to download package 'System.Diagnostics.EventLog.9.0.4' from 'https://api.nuget.org/v3-flatcontainer/system.diagnostics.eventlog/9.0.4/system.diagnostics.eventlog.9.0.4.nupkg'.
+  There is not enough space on the disk. : 'C:\Users\HP ZBOOK STUDIO G4\AppData\Local\NuGet\v3-cache\670c1461c29885f9aa22c281d8b7da90845b38e4$ps_api.nuget.org_v3_index.json\nupkg_system.diagnostics.eventlog.9.0.4.dat-new'.
+  Restored D:\QuanLyBenhVien\Tests\QuanLyBenhVien.Tests.csproj (in 39,56 sec).
+C:\Program Files\dotnet\sdk\10.0.400-preview.0.26322.102\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(383,5): message NETSDK1057: You are using a preview version of .NET. See: https://aka.ms/dotnet-support-policy [D:\QuanLyBenhVien\Tests\QuanLyBenhVien.Tests.csproj]
+  QuanLyBenhVien -> D:\QuanLyBenhVien\bin\Debug\net10.0\QuanLyBenhVien.dll
+  QuanLyBenhVien.Tests -> D:\QuanLyBenhVien\Tests\bin\Debug\net10.0\QuanLyBenhVien.Tests.dll
+Test run for D:\QuanLyBenhVien\Tests\bin\Debug\net10.0\QuanLyBenhVien.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    21, Skipped:     0, Total:    21, Duration: 655 ms - QuanLyBenhVien.Tests.dll (net10.0)

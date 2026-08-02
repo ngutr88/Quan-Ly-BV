@@ -1276,6 +1276,117 @@ namespace QuanLyBenhVien.Migrations
                         });
                 });
 
+            modelBuilder.Entity("QuanLyBenhVien.Models.LeaveBalance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BacSiId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("CongDonTuNamTruoc")
+                        .HasColumnType("decimal(5,1)");
+
+                    b.Property<decimal>("DaDung")
+                        .HasColumnType("decimal(5,1)");
+
+                    b.Property<decimal>("DaTamGiu")
+                        .HasColumnType("decimal(5,1)");
+
+                    b.Property<int>("Nam")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("NgayCapNhat")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<decimal>("TongSoNgay")
+                        .HasColumnType("decimal(5,1)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BacSiId", "Nam")
+                        .IsUnique();
+
+                    b.ToTable("SoDuPhepNam");
+                });
+
+            modelBuilder.Entity("QuanLyBenhVien.Models.LeaveRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BacSiId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Buoi")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DenNgay")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DinhKemUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LoaiNghi")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LyDo")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LyDoTuChoi")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("NgayDuyet")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("NgayTao")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int?>("NguoiDuyetId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("SoNgayTru")
+                        .HasColumnType("decimal(5,1)");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("TuNgay")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BacSiId");
+
+                    b.HasIndex("NguoiDuyetId");
+
+                    b.ToTable("YeuCauNghiPhep", t =>
+                        {
+                            t.HasCheckConstraint("CK_YeuCauNghiPhep_Buoi", "Buoi IS NULL OR Buoi IN ('Sang','Chieu')");
+
+                            t.HasCheckConstraint("CK_YeuCauNghiPhep_KhoangNgay", "DenNgay >= TuNgay");
+
+                            t.HasCheckConstraint("CK_YeuCauNghiPhep_LoaiNghi", "LoaiNghi IN ('PhepNam','Om','ViecRieng','Khac')");
+
+                            t.HasCheckConstraint("CK_YeuCauNghiPhep_TrangThai", "TrangThai IN ('ChoDuyet','DaDuyet','TuChoi')");
+                        });
+                });
+
             modelBuilder.Entity("QuanLyBenhVien.Models.LoginSession", b =>
                 {
                     b.Property<int>("Id")
@@ -2579,6 +2690,34 @@ namespace QuanLyBenhVien.Migrations
                         .IsRequired();
 
                     b.Navigation("KetQua");
+                });
+
+            modelBuilder.Entity("QuanLyBenhVien.Models.LeaveBalance", b =>
+                {
+                    b.HasOne("QuanLyBenhVien.Models.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("BacSiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+                });
+
+            modelBuilder.Entity("QuanLyBenhVien.Models.LeaveRequest", b =>
+                {
+                    b.HasOne("QuanLyBenhVien.Models.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("BacSiId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("QuanLyBenhVien.Models.User", "NguoiDuyet")
+                        .WithMany()
+                        .HasForeignKey("NguoiDuyetId");
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("NguoiDuyet");
                 });
 
             modelBuilder.Entity("QuanLyBenhVien.Models.LoginSession", b =>

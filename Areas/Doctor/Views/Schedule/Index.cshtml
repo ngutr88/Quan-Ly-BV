@@ -1,22 +1,360 @@
+@using System.Globalization
+@using QuanLyBenhVien.Models
+@using QuanLyBenhVien.Services
 @{
     Layout = "~/Views/Shared/_DoctorLayout.cshtml";
     ViewData["Title"] = "Lịch làm việc";
+    var vi = CultureInfo.GetCultureInfo("vi-VN");
 
     var header = new PageHeaderViewModel
     {
         Title = "Lịch làm việc",
-        Subtitle = "Lịch tuần/tháng cá nhân, đăng ký nghỉ phép và đề xuất đổi ca.",
+        Subtitle = "Lịch tháng cá nhân và đăng ký nghỉ phép.",
         Breadcrumbs = new[] { new BreadcrumbItem("Bảng điều khiển", "/Doctor/Dashboard") },
         CurrentCrumb = "Lịch làm việc"
     };
 
-    var comingSoon = new ComingSoonViewModel
+    var doctor = (Doctor)ViewBag.Doctor;
+    var balance = (LeaveBalance)ViewBag.Balance;
+    var remaining = (decimal)ViewBag.Remaining;
+    var viewYear = (int)ViewBag.ViewYear;
+    var viewMonth = (int)ViewBag.ViewMonth;
+    var monthStart = (DateTime)ViewBag.MonthStart;
+    var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+    var approvedThisMonth = (List<LeaveRequest>)ViewBag.ApprovedThisMonth;
+    var myRequests = (List<LeaveRequest>)ViewBag.MyRequests;
+    var pendingCount = (int)ViewBag.PendingCount;
+    var isHead = doctor.ChucVu == "Trưởng khoa";
+
+    var deptPending = isHead ? (List<LeaveRequest>)ViewBag.DeptPending : new List<LeaveRequest>();
+    var conflictByRequestId = isHead ? (Dictionary<int, bool>)ViewBag.ConflictByRequestId : new Dictionary<int, bool>();
+    var remainingByRequestId = isHead ? (Dictionary<int, decimal>)ViewBag.RemainingByRequestId : new Dictionary<int, decimal>();
+
+    // Loại nghỉ đã tô màu trên lịch tháng Sprint 1. Các loại khác (Ca khám/Ca
+    // trực/Lịch phẫu thuật/Họp) đã định nghĩa nhãn+màu cho Sprint 2 nhưng cờ
+    // DaCoNguon=false nên KHÔNG render ở đây - chỉ bật lên khi module nguồn
+    // tương ứng sẵn sàng (Ca trực/Lịch phẫu thuật hiện chưa có Model nào).
+    var activityTypes = new[]
     {
-        Icon = "calendar_month",
-        Message = "Tính năng đang được phát triển.",
-        SubMessage = "Trang lịch tuần/tháng kèm quy trình xin nghỉ/đổi ca sẽ được xây dựng ở một đợt riêng."
+        new { Key = "NghiPhep", Label = "Nghỉ phép", ColorClass = "bg-primary text-white", DaCoNguon = true },
+        new { Key = "CaKham", Label = "Ca khám", ColorClass = "bg-secondary text-white", DaCoNguon = false },
+        new { Key = "CaTruc", Label = "Ca trực", ColorClass = "bg-tertiary text-white", DaCoNguon = false },
+        new { Key = "LichMo", Label = "Lịch phẫu thuật", ColorClass = "bg-error text-white", DaCoNguon = false }
     };
+
+    var leaveDaysInMonth = new HashSet<int>();
+    foreach (var r in approvedThisMonth)
+    {
+        var start = r.TuNgay < monthStart ? monthStart : r.TuNgay.Date;
+        var end = r.DenNgay > monthEnd ? monthEnd : r.DenNgay.Date;
+        for (var d = start; d <= end; d = d.AddDays(1))
+        {
+            if (d.Month == viewMonth) leaveDaysInMonth.Add(d.Day);
+        }
+    }
+
+    var leadingBlanks = ((int)monthStart.DayOfWeek + 6) % 7; // Thứ 2 = 0 ... Chủ nhật = 6
+    var daysInMonth = DateTime.DaysInMonth(viewYear, viewMonth);
+    var today = DateTime.Today;
+
+    string StatusBadge(string trangThai) => trangThai switch
+    {
+        "ChoDuyet" => "bg-tertiary-fixed/30 text-on-tertiary-fixed-variant",
+        "DaDuyet" => "bg-secondary-container/20 text-on-secondary-container",
+        "TuChoi" => "bg-error-container text-error",
+        _ => "bg-surface-container-high text-on-surface-variant"
+    };
+    string StatusLabel(string trangThai) => trangThai switch
+    {
+        "ChoDuyet" => "Chờ duyệt",
+        "DaDuyet" => "Đã duyệt",
+        "TuChoi" => "Từ chối",
+        _ => trangThai
+    };
+    string DateRange(LeaveRequest r)
+    {
+        var range = r.TuNgay.Date == r.DenNgay.Date ? r.TuNgay.ToString("dd/MM/yyyy", vi) : $"{r.TuNgay:dd/MM/yyyy} - {r.DenNgay:dd/MM/yyyy}";
+        return r.Buoi != null ? $"{range} ({(r.Buoi == "Sang" ? "Buổi sáng" : "Buổi chiều")})" : range;
+    }
+
+    var monthNames = new[] { "", "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12" };
 }
 
 <partial name="_PageHeader" model="header" />
-<partial name="_ComingSoon" model="comingSoon" />
+
+@{
+    var prevMonth = monthStart.AddMonths(-1);
+    var nextMonth = monthStart.AddMonths(1);
+}
+
+<div class="flex flex-col gap-unit-lg w-full min-w-0 max-w-full">
+
+    <!-- Thẻ tóm tắt -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-unit-md">
+        <div class="bg-white border border-outline-variant rounded-2xl p-unit-md shadow-sm">
+            <p class="text-caption text-on-surface-variant font-bold uppercase tracking-wide">Số dư phép năm @today.Year</p>
+            <p class="text-headline-md font-black text-primary mt-1">@remaining.ToString("0.#", vi) <span class="text-body-md font-semibold text-on-surface-variant">ngày còn lại</span></p>
+            <p class="text-caption text-on-surface-variant mt-1">Tổng @((balance.TongSoNgay + balance.CongDonTuNamTruoc).ToString("0.#", vi)) ngày (gồm @balance.CongDonTuNamTruoc.ToString("0.#", vi) ngày cộng dồn) · Đang tạm giữ @balance.DaTamGiu.ToString("0.#", vi) ngày</p>
+        </div>
+        <div class="bg-white border border-outline-variant rounded-2xl p-unit-md shadow-sm">
+            <p class="text-caption text-on-surface-variant font-bold uppercase tracking-wide">Yêu cầu đang chờ duyệt</p>
+            <p class="text-headline-md font-black text-on-surface mt-1">@pendingCount</p>
+            <p class="text-caption text-on-surface-variant mt-1">Yêu cầu nghỉ phép của chính bạn</p>
+        </div>
+        <div class="bg-white border border-outline-variant rounded-2xl p-unit-md shadow-sm">
+            <p class="text-caption text-on-surface-variant font-bold uppercase tracking-wide">Ngày nghỉ đã duyệt trong tháng</p>
+            <p class="text-headline-md font-black text-on-surface mt-1">@leaveDaysInMonth.Count</p>
+            <p class="text-caption text-on-surface-variant mt-1">@monthNames[viewMonth] @viewYear</p>
+        </div>
+    </div>
+
+    <!-- Form đăng ký nghỉ phép -->
+    <div class="bg-white border border-outline-variant rounded-2xl p-unit-md shadow-sm">
+        <h3 class="font-title-lg font-bold text-on-surface mb-unit-sm flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">event_busy</span>
+            Đăng ký nghỉ phép
+        </h3>
+        <form method="POST" action="/Doctor/Schedule/RequestLeave" enctype="multipart/form-data" class="grid grid-cols-1 sm:grid-cols-2 gap-unit-sm">
+            @Html.AntiForgeryToken()
+            <div>
+                <label class="hms-field-label">Từ ngày</label>
+                <input type="date" name="tuNgay" id="leaveTuNgay" required class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg mt-1" />
+            </div>
+            <div>
+                <label class="hms-field-label">Đến ngày</label>
+                <input type="date" name="denNgay" id="leaveDenNgay" required class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg mt-1" />
+            </div>
+            <div id="leaveBuoiWrap" class="hidden">
+                <label class="hms-field-label">Buổi (chỉ khi nghỉ 1 ngày)</label>
+                <select name="buoi" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg mt-1">
+                    <option value="">Cả ngày</option>
+                    <option value="Sang">Buổi sáng</option>
+                    <option value="Chieu">Buổi chiều</option>
+                </select>
+            </div>
+            <div>
+                <label class="hms-field-label">Loại nghỉ</label>
+                <select name="loaiNghi" id="leaveLoaiNghi" required class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg mt-1">
+                    <option value="PhepNam">Phép năm</option>
+                    <option value="Om">Ốm (không trừ phép năm)</option>
+                    <option value="ViecRieng">Việc riêng</option>
+                    <option value="Khac">Khác</option>
+                </select>
+            </div>
+            <div class="sm:col-span-2">
+                <label class="hms-field-label">Lý do</label>
+                <textarea name="lyDo" required rows="2" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg mt-1" placeholder="Nhập lý do nghỉ..."></textarea>
+            </div>
+            <div id="leaveDinhKemWrap" class="hidden sm:col-span-2">
+                <label class="hms-field-label">Đính kèm giấy tờ (tuỳ chọn, cho nghỉ ốm)</label>
+                <input type="file" name="dinhKem" accept=".jpg,.jpeg,.png,.pdf" class="w-full px-3 py-2 bg-surface border border-outline-variant rounded-lg mt-1" />
+            </div>
+            <div class="sm:col-span-2">
+                <button type="submit" class="hms-btn hms-btn-primary" style="min-height:44px">
+                    <span class="material-symbols-outlined">send</span> Gửi yêu cầu
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lịch tháng -->
+    <div class="bg-white border border-outline-variant rounded-2xl p-unit-md shadow-sm">
+        <div class="flex items-center justify-between mb-unit-sm flex-wrap gap-2">
+            <h3 class="font-title-lg font-bold text-on-surface">@monthNames[viewMonth] @viewYear</h3>
+            <div class="flex items-center gap-2">
+                <a href="?year=@prevMonth.Year&month=@prevMonth.Month" class="w-9 h-9 flex items-center justify-center rounded-full border border-outline-variant hover:bg-surface-container-low">
+                    <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                </a>
+                <a href="?year=@today.Year&month=@today.Month" class="px-3 py-2 rounded-lg border border-outline-variant text-caption font-bold hover:bg-surface-container-low">Hôm nay</a>
+                <a href="?year=@nextMonth.Year&month=@nextMonth.Month" class="w-9 h-9 flex items-center justify-center rounded-full border border-outline-variant hover:bg-surface-container-low">
+                    <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-unit-md mb-unit-sm text-caption">
+            @foreach (var t in activityTypes.Where(t => t.DaCoNguon))
+            {
+                <span class="flex items-center gap-1"><span class="w-3 h-3 rounded @t.ColorClass"></span> @t.Label</span>
+            }
+        </div>
+
+        <div class="grid grid-cols-7 gap-1 text-center text-caption font-bold text-on-surface-variant mb-1">
+            <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+        </div>
+        <div class="grid grid-cols-7 gap-1">
+            @for (var i = 0; i < leadingBlanks; i++)
+            {
+                <div class="aspect-square"></div>
+            }
+            @for (var day = 1; day <= daysInMonth; day++)
+            {
+                var isToday = today.Year == viewYear && today.Month == viewMonth && today.Day == day;
+                var isLeave = leaveDaysInMonth.Contains(day);
+                <div class="aspect-square rounded-lg border @(isToday ? "border-primary border-2" : "border-outline-variant/50") p-1 flex flex-col items-center justify-start gap-0.5 @(isLeave ? "bg-primary/10" : "")">
+                    <span class="text-caption font-bold @(isToday ? "text-primary" : "text-on-surface")">@day</span>
+                    @if (isLeave)
+                    {
+                        <span class="w-full text-center rounded text-[9px] font-bold px-0.5 bg-primary text-white leading-tight">Nghỉ phép</span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Yêu cầu của tôi -->
+    <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+        <div class="px-unit-md py-3 bg-surface-container-low border-b border-outline-variant font-label-md font-bold text-on-surface uppercase text-[12px] tracking-wide">
+            Yêu cầu của tôi
+        </div>
+        <div class="hms-table-scroll overflow-x-auto" role="region" aria-label="Yêu cầu nghỉ phép của tôi" tabindex="0">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-surface-container-low text-on-surface-variant font-label-md text-[12px] uppercase">
+                        <th class="px-unit-md py-3">Loại nghỉ</th>
+                        <th class="px-unit-md py-3">Khoảng ngày</th>
+                        <th class="px-unit-md py-3">Trạng thái</th>
+                        <th class="px-unit-md py-3">Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant text-body-md">
+                    @if (myRequests.Count == 0)
+                    {
+                        <tr><td colspan="4" class="px-unit-md py-8 text-center text-on-surface-variant">Bạn chưa gửi yêu cầu nghỉ phép nào.</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var r in myRequests)
+                        {
+                            <tr class="hover:bg-surface-container-low transition-colors">
+                                <td class="px-unit-md py-3">@LeaveRequestService.LoaiNghiLabel(r.LoaiNghi)</td>
+                                <td class="px-unit-md py-3">@DateRange(r)</td>
+                                <td class="px-unit-md py-3">
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-tight @StatusBadge(r.TrangThai)">@StatusLabel(r.TrangThai)</span>
+                                </td>
+                                <td class="px-unit-md py-3 text-on-surface-variant">@(r.TrangThai == "TuChoi" ? r.LyDoTuChoi : "")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (isHead)
+    {
+        <!-- Duyệt yêu cầu của khoa (Trưởng khoa) -->
+        <div class="bg-white border-2 border-tertiary/40 rounded-2xl overflow-hidden shadow-sm">
+            <div class="px-unit-md py-3 bg-tertiary-fixed/20 border-b border-outline-variant font-label-md font-bold text-on-surface uppercase text-[12px] tracking-wide flex items-center gap-2">
+                <span class="material-symbols-outlined text-tertiary text-[18px]">approval</span>
+                Duyệt yêu cầu của khoa (@deptPending.Count)
+            </div>
+            <div class="divide-y divide-outline-variant/60">
+                @if (deptPending.Count == 0)
+                {
+                    <p class="px-unit-md py-6 text-center text-on-surface-variant text-body-md">Không có yêu cầu nào đang chờ bạn duyệt.</p>
+                }
+                else
+                {
+                    @foreach (var r in deptPending)
+                    {
+                        <div class="px-unit-md py-4 flex flex-col gap-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <div>
+                                    <p class="font-bold text-on-surface">@r.Doctor.User.HoTen <span class="font-normal text-on-surface-variant">— @LeaveRequestService.LoaiNghiLabel(r.LoaiNghi)</span></p>
+                                    <p class="text-caption text-on-surface-variant">@DateRange(r) · Số dư còn lại: @remainingByRequestId[r.Id].ToString("0.#", vi) ngày</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" onclick="approveAsHead(@r.Id)" class="hms-btn hms-btn-primary" style="min-height:40px">
+                                        <span class="material-symbols-outlined text-[18px]">check_circle</span> Duyệt
+                                    </button>
+                                    <button type="button" onclick="openRejectHeadModal(@r.Id)" class="hms-btn hms-btn-secondary" style="min-height:40px">
+                                        <span class="material-symbols-outlined text-[18px]">block</span> Từ chối
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-caption text-on-surface-variant italic">Lý do: @r.LyDo</p>
+                            @if (conflictByRequestId[r.Id])
+                            {
+                                <p class="text-caption text-error font-semibold flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[16px]">warning</span> Trùng lịch khám đã có của bác sĩ này.
+                                </p>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Reject reason modal (Trưởng khoa) -->
+        <div id="modalRejectHead" class="hidden fixed inset-0 bg-on-background/40 z-[100] flex items-center justify-center p-4">
+            <div class="bg-surface-container-lowest rounded-xl shadow-2xl p-unit-lg max-w-md w-full">
+                <h4 class="font-title-md text-title-md text-on-surface mb-2">Từ chối yêu cầu nghỉ phép</h4>
+                <label class="hms-field-label">Lý do từ chối <span class="text-error">*</span></label>
+                <textarea id="rejectHeadReason" class="w-full px-3 py-2.5 bg-surface border border-outline-variant rounded-lg mt-1" rows="3" placeholder="Nhập lý do từ chối yêu cầu này..."></textarea>
+                <div class="flex justify-end gap-unit-sm mt-unit-md">
+                    <button type="button" class="hms-btn hms-btn-secondary" onclick="document.getElementById('modalRejectHead').classList.add('hidden')">Đóng</button>
+                    <button type="button" class="hms-btn hms-btn-primary" onclick="submitRejectHead()">Xác nhận từ chối</button>
+                </div>
+            </div>
+        </div>
+
+        <form id="headActionForm" method="POST" class="hidden">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="lyDo" id="headActionLyDo" />
+        </form>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var tu = document.getElementById('leaveTuNgay');
+            var den = document.getElementById('leaveDenNgay');
+            var buoiWrap = document.getElementById('leaveBuoiWrap');
+            var loaiNghi = document.getElementById('leaveLoaiNghi');
+            var dinhKemWrap = document.getElementById('leaveDinhKemWrap');
+
+            function updateBuoiVisibility() {
+                if (tu.value && den.value && tu.value === den.value) {
+                    buoiWrap.classList.remove('hidden');
+                } else {
+                    buoiWrap.classList.add('hidden');
+                }
+            }
+            function updateDinhKemVisibility() {
+                if (loaiNghi.value === 'Om') {
+                    dinhKemWrap.classList.remove('hidden');
+                } else {
+                    dinhKemWrap.classList.add('hidden');
+                }
+            }
+            tu.addEventListener('change', updateBuoiVisibility);
+            den.addEventListener('change', updateBuoiVisibility);
+            loaiNghi.addEventListener('change', updateDinhKemVisibility);
+        })();
+
+        let rejectHeadTargetId = null;
+        function approveAsHead(id) {
+            const form = document.getElementById('headActionForm');
+            form.action = '/Doctor/Schedule/ApproveAsHead/' + id;
+            document.getElementById('headActionLyDo').value = '';
+            form.submit();
+        }
+        function openRejectHeadModal(id) {
+            rejectHeadTargetId = id;
+            document.getElementById('modalRejectHead').classList.remove('hidden');
+        }
+        function submitRejectHead() {
+            const reason = document.getElementById('rejectHeadReason').value.trim();
+            if (!reason) {
+                showGlobalToast('Thiếu thông tin', 'Vui lòng nhập lý do từ chối.', 'error');
+                return;
+            }
+            const form = document.getElementById('headActionForm');
+            form.action = '/Doctor/Schedule/RejectAsHead/' + rejectHeadTargetId;
+            document.getElementById('headActionLyDo').value = reason;
+            form.submit();
+        }
+    </script>
+}

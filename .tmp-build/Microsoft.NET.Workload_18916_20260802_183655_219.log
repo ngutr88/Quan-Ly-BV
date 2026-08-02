@@ -1,0 +1,14 @@
+[2026-08-02 18:36:55.226] [000049E4] === Logging started ===
+[2026-08-02 18:36:55.457] [000049E4] Executing: "C:\Program Files\dotnet\dotnet.exe" test Tests/QuanLyBenhVien.Tests.csproj --filter LeaveBalanceCalculatorTests, PID: 18916, PPID: 33340
+[2026-08-02 18:36:55.461] [000049E4] IsElevated: False
+[2026-08-02 18:36:55.461] [000049E4] Is64BitProcess: True
+[2026-08-02 18:36:55.461] [000049E4] RebootPending: False
+[2026-08-02 18:36:55.461] [000049E4] ProcessorArchitecture: amd64
+[2026-08-02 18:36:55.461] [000049E4] HostArchitecture: x64
+[2026-08-02 18:36:55.461] [000049E4] SdkDirectory: 10.0.400-preview.0.26322.102
+[2026-08-02 18:36:55.461] [000049E4] VerifySignatures: False
+[2026-08-02 18:36:55.461] [000049E4] SDK feature band: 10.0.400-preview.0
+[2026-08-02 18:38:13.228] [000049E4] Shutting down
+[2026-08-02 18:38:13.228] [000049E4] Shutdown completed.
+[2026-08-02 18:38:13.228] [000049E4] Restart required: False
+[2026-08-02 18:38:13.230] [000049E4] === Logging ended ===

@@ -1,0 +1,18 @@
+[2026-08-02 18:12:28.182] [0000539C] === Logging started ===
+[2026-08-02 18:12:28.480] [0000539C] Executing: "dotnet" build D:\QuanLyBenhVien\QuanLyBenhVien.csproj /verbosity:quiet /nologo /p:PublishAot=false, PID: 21404, PPID: 21184
+[2026-08-02 18:12:28.484] [0000539C] IsElevated: False
+[2026-08-02 18:12:28.484] [0000539C] Is64BitProcess: True
+[2026-08-02 18:12:28.484] [0000539C] RebootPending: False
+[2026-08-02 18:12:28.484] [0000539C] ProcessorArchitecture: amd64
+[2026-08-02 18:12:28.484] [0000539C] HostArchitecture: x64
+[2026-08-02 18:12:28.484] [0000539C] SdkDirectory: 10.0.400-preview.0.26322.102
+[2026-08-02 18:12:28.484] [0000539C] VerifySignatures: False
+[2026-08-02 18:12:28.484] [0000539C] SDK feature band: 10.0.400-preview.0
+[2026-08-02 18:12:33.415] [0000539C] ExtractManifestAsync: Extracting 'D:\QuanLyBenhVien\.tmp-build\4o4ethqn.smy\microsoft.net.workloads.10.0.400-preview.0.msi.x64\10.400.0-preview.0.26311.2\microsoft.net.workloads.10.0.400-preview.0.msi.x64.10.400.0-preview.0.26311.2.nupkg' to 'D:\QuanLyBenhVien\.tmp-build\.dotnet\sdk-advertising\10.0.400-preview.0\microsoft.net.workloads'
+[2026-08-02 18:12:33.426] [0000539C] ExtractManifestAsync: Temporary extraction path: 'D:\QuanLyBenhVien\.tmp-build\vf5cwnxa.o41'
+[2026-08-02 18:12:33.517] [0000539C] ExtractManifestAsync: Running admin install for 'D:\QuanLyBenhVien\.tmp-build\vf5cwnxa.o41\msi'.  Log file: 'D:\QuanLyBenhVien\.tmp-build\Microsoft.NET.Workload_21404_20260802_181228_136_8c0eba5ca249d8664fc1eab473962fcb-x64_AdminInstall.log'
+[2026-08-02 18:12:34.957] [0000539C] ExtractManifestAsync: Admin install failed: 1603
+[2026-08-02 18:14:49.104] [0000539C] Shutting down
+[2026-08-02 18:14:49.105] [0000539C] Shutdown completed.
+[2026-08-02 18:14:49.105] [0000539C] Restart required: False
+[2026-08-02 18:14:49.105] [0000539C] === Logging ended ===
