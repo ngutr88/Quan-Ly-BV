@@ -10,6 +10,9 @@ build-check/
 *.db
 *.db-shm
 *.db-wal
+# hms.db is the checked-in SQLite snapshot the Dockerfile copies into the
+# production image on Render — it must stay tracked despite the *.db rule.
+!hms.db
 *.vsidx
 *.user
 .dataprotection-keys/
